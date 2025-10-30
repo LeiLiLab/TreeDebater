@@ -155,3 +155,24 @@ python compare_env.py --config test2/case1/compare_deepseek-chat.yml
 If you wish to use Agent4Debate as a baseline or component, install and run its backend server following their documentation:
 - Repo: [Agent4Debate](https://github.com/zhangyiqun018/agent-for-debate)
 - Typical usage: run `python main.py` in its backend to start the debate server.
+
+
+## 📚 Citation
+
+If you find this project helpful, please consider citing the following work:
+
+```bibtex
+@article{wang2025treedebater,
+  title   = {Strategic Planning and Rationalizing on Trees Make LLMs Better Debaters},
+  author  = {Danqing Wang and Zhuorui Ye and Xinran Zhao and Fei Fang and Lei Li},
+  journal = {arXiv preprint arXiv:2505.14886},
+  year    = {2025}
+}
+```
+
+
+## 🙏 Acknowledgements
+
+- Baseline implementation and inspiration: [Agent4Debate](https://github.com/zhangyiqun018/agent-for-debate)
+- Speech time estimation components: [FastSpeech2](https://github.com/ming024/FastSpeech2)
+- We thank all contributors and the broader research community for open-source tools and discussions that made this project possible.
