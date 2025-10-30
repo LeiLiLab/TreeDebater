@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  ci:
+    name: CI (Python ${{ matrix.python-version }})
+    if: ${{ !cancelled() && !failure() }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: requirements.txt
+
+      - name: Show environment
+        run: env | sort
+
+      - name: Upgrade pip tooling
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Sanity build (byte-compile sources)
+        run: |
+          python -m compileall -q src || (echo "Byte-compilation failed" && exit 1)
+
+      - name: Verify dependency resolution
+        run: |
+          python -m pip check || true
+
+  dependabot:
+    name: Dependabot validation
+    if: ${{ github.actor == 'dependabot[bot]' && startsWith(github.head_ref, 'dependabot/pip/') }}
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Set up Git
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+
+      - name: Validate requirements on Python 3.10 and 3.11
+        run: |
+          set -euo pipefail
+          for PYV in 3.10 3.11; do
+            echo "Setting up Python ${PYV}..."
+            echo "python-version: ${PYV}" >> $GITHUB_OUTPUT
+            echo "Installing with Python ${PYV}..."
+            pyenv global ${PYV} || true
+            python -V
+            python -m pip install --upgrade pip setuptools wheel
+            if [ -f requirements.txt ]; then
+              pip install -r requirements.txt
+              pip check || true
+            fi
+          done
+
+      - name: Push changes if applicable
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            git commit -a -m "build: Apply automated updates for dependabot."
+            git push
+          fi
+
+

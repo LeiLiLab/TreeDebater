@@ -28,7 +28,7 @@ Evidence and reasoning used to support their claims
 Effectiveness in addressing and countering the opposing team's points
 Overall persuasiveness and impact of each team's case
 
-Your final vote should reflect your honest opinion of which team presented the more convincing argument, taking into account your initial leaning. Give your vote in the format: "My vote is [For/Against]." """      
+Your final vote should reflect your honest opinion of which team presented the more convincing argument, taking into account your initial leaning. Give your vote in the format: "My vote is [For/Against]." """
 
 
 Impactful_finegrained = """Topic: {root}
@@ -51,8 +51,8 @@ The response should be in JSON format with the following structure:
     }}
 Here, score is 0, 1 or 2, where 0 is not impactful, 1 is medium impactful, and 2 is impactful."""
 
-import os
 import json
+import os
 
 file_path = os.path.join(os.path.dirname(__file__), "tree_list.json")
 if os.path.exists(file_path):

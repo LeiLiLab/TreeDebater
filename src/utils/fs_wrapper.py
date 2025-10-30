@@ -1,25 +1,23 @@
-import numpy as np
-import yaml
-import torch
-
-import sys
 import os
+import sys
 
-fastspeech_path = os.path.join(os.path.dirname(__file__), '..', '..','dependencies')
+import numpy as np
+import torch
+import yaml
+
+fastspeech_path = os.path.join(os.path.dirname(__file__), "..", "..", "dependencies")
 sys.path.append(fastspeech_path)
 
 from fastspeech2.synthesize import preprocess_english
-from fastspeech2.utils.model import get_vocoder, get_model_2
-from fastspeech2.utils.tools import to_device, synth_samples_for_length, synth_samples
-
+from fastspeech2.utils.model import get_model_2, get_vocoder
+from fastspeech2.utils.tools import synth_samples, synth_samples_for_length, to_device
 
 root = f"{fastspeech_path}/fastspeech2/"
 
+
 def pad_1D(inputs, PAD=0):
     def pad_data(x, length, PAD):
-        x_padded = np.pad(
-            x, (0, length - x.shape[0]), mode="constant", constant_values=PAD
-        )
+        x_padded = np.pad(x, (0, length - x.shape[0]), mode="constant", constant_values=PAD)
         return x_padded
 
     max_len = max((len(x) for x in inputs))
@@ -27,17 +25,12 @@ def pad_1D(inputs, PAD=0):
 
     return padded
 
+
 class FastSpeechWrapper:
     def __init__(self, batch_size=8):
-        preprocess_config = yaml.load(
-                open(f"{root}/config/LJSpeech/preprocess.yaml", "r"), Loader=yaml.FullLoader
-            )
-        model_config = yaml.load(
-                open(f"{root}/config/LJSpeech/model.yaml", "r"), Loader=yaml.FullLoader
-            )
-        train_config = yaml.load(
-                open(f"{root}/config/LJSpeech/train.yaml", "r"), Loader=yaml.FullLoader
-            )
+        preprocess_config = yaml.load(open(f"{root}/config/LJSpeech/preprocess.yaml", "r"), Loader=yaml.FullLoader)
+        model_config = yaml.load(open(f"{root}/config/LJSpeech/model.yaml", "r"), Loader=yaml.FullLoader)
+        train_config = yaml.load(open(f"{root}/config/LJSpeech/train.yaml", "r"), Loader=yaml.FullLoader)
         self.configs = (preprocess_config, model_config, train_config)
 
         pitch_control, energy_control, duration_control = 1.0, 1.0, 1.0
@@ -72,7 +65,7 @@ class FastSpeechWrapper:
         pitch_control, energy_control, duration_control = self.control_values
 
         lengths = []
-        batchs = [batchs[i:i + self.batch_size] for i in range(0, len(batchs), self.batch_size)]
+        batchs = [batchs[i : i + self.batch_size] for i in range(0, len(batchs), self.batch_size)]
         for batch in batchs:
             ids = [d[0] for d in batch]
             speakers = np.array([d[2] for d in batch])
@@ -81,15 +74,12 @@ class FastSpeechWrapper:
             text_lens = np.array([d[4] for d in batch])
             texts = pad_1D(texts)
             data = (ids, raw_texts, speakers, texts, text_lens, max(text_lens))
-        
+
             data = to_device(data, self.device)
             with torch.no_grad():
                 # Forward
                 output = self.model(
-                    *(data[2:]),
-                    p_control=pitch_control,
-                    e_control=energy_control,
-                    d_control=duration_control
+                    *(data[2:]), p_control=pitch_control, e_control=energy_control, d_control=duration_control
                 )
                 length = synth_samples_for_length(
                     data,
@@ -101,7 +91,6 @@ class FastSpeechWrapper:
                 )
                 lengths.extend(length)
         return lengths
-
 
 
 if __name__ == "__main__":
@@ -125,9 +114,9 @@ In conclusion, a well-designed, transparent system overseen by the government is
 We believe the answer lies in carefully designed government oversight.  Think of it like traffic lights – they're there to ensure everyone gets through the intersection safely and fairly, not just the fastest cars.  Government frameworks, with clear rules and open communication, bring that same fairness to healthcare.  Research, like the 2022 study by Leider et al. published in *[Journal Name]*, shows that transparency builds public trust, especially during tough times.  Remember the early days of the pandemic?  Clear government guidance was crucial then, unlike the often confusing messages from private systems.
 Now, our opponents talk about market-based solutions and charity.  But even in well-off countries like Switzerland, as the 2023 King's Fund report shows, not everyone gets equal access.  And charity, while kind, is like patching potholes – it helps a few, but it doesn't fix the whole road.  It can't guarantee everyone gets the care they deserve.  Our opponents also claim government slows innovation.  But look at the pandemic!  The rapid development of vaccines and telehealth happened *because* of government funding and coordination.
 So, when healthcare is limited, we must prioritize fairness.  Government rationing, with clear rules and public input, isn't perfect, but it's the most just way to ensure everyone, regardless of their income, has a fair chance.  It's about ensuring everyone has access to the care they need, not just those who can afford it.  We urge you to support this vital measure.""",
-        """Thank you very much. So I think that if you want to invest in tires, you should invest in tires. I think that there is income inequality happening in the United States. There is education inequality. There is a planet which is slowly becoming uninhabitable if you look at the Flint water crisis. If you look at droughts that happen in California all the time and if you want to help, these are real problems that exist that we need to help people who are currently not having all of their basic human rights fulfilled. These are things that the government should be investing money in and should probably be investing more money in because we see them being problems in our society that are hurting people. What I’m going to do in this speech is I’m going to continue talking about these criteria, continue talking about why we're not meeting basic needs and why also the market itself is probably solving this problem already. Before that, two points of rebuttal to what we just heard from Project Debater. So firstly, we heard that this is technology that would end up benefiting society but we're not sure we haven't yet heard evidence that shows us why it would benefit all of society, perhaps some parts of society, maybe upper middle class or upper class citizens could benefit from these inspiring research, could benefit from the technological innovations. But most of society, people who are currently in the United States have resource scarcity, people who are hungry, people who do not have access to good education, aren't really helped by this. So we think it is like that, a government subsidy should go to something that helps everyone particularly weaker classes in society. Second point is this idea of an exploding industry which creates jobs and international cooperation. So firstly, we've heard evidence that this already exists, right? We've heard evidence that companies are investing in this as is. And secondly, we think that international cooperation or the specific things have alternatives. We can cooperate over other types of economic trade deals. We can cooperate in other ways with different countries. It's not necessary to very specifically fund space 98  exploration to get these benefits. So as we remember, there are two criteria that I believe the government needs to meet before subsidizing something. It being a basic human need, we don't see space exploration meeting that and B, that this is something that can't otherwise exist, right? So we've already heard from Project Debater how huge this industry is, right? How much investment there's already going on in the private sector and we think this is because there's lots of curiosity especially among wealthy people who maybe want to get to space for personal use or who want to build a colony on Mars and then rent out the rooms there. We know that Elon Musk is doing this already. We know that other people are doing it and we think they're spending money and willing to spend even more money because of the competition between them. So Project Debater should know better than all of us how competitions often bear extremely impressive fruit, right? We think that when wealthy philanthropist or people who are willing to fund research on their own race each other to be the first to achieve new heights in terms of space exploration, that brings us to great achievements already and we think that the private market is doing this well enough already. Considering that we already have movement in that direction, again we see Elon Musk's company, we see all of these companies working already. We think that it's not that the government money won't help out if it were to be given, we just think it doesn't meet the criteria in comparison to other things, right? So given the fact that the market already has a lot of money invested in this, already has movement in those research directions, and given the fact that we still don't think this is a good enough plan to prioritize over other basic needs that the government should be providing people. We think that at the end of the day, given the fact that there are also alternatives to getting all of these benefits of international cooperation, it simply doesn't justify specifically the government allocating its funds for this purpose when it should be allocating them towards other needs of other people."""
-        ]
-    
+        """Thank you very much. So I think that if you want to invest in tires, you should invest in tires. I think that there is income inequality happening in the United States. There is education inequality. There is a planet which is slowly becoming uninhabitable if you look at the Flint water crisis. If you look at droughts that happen in California all the time and if you want to help, these are real problems that exist that we need to help people who are currently not having all of their basic human rights fulfilled. These are things that the government should be investing money in and should probably be investing more money in because we see them being problems in our society that are hurting people. What I’m going to do in this speech is I’m going to continue talking about these criteria, continue talking about why we're not meeting basic needs and why also the market itself is probably solving this problem already. Before that, two points of rebuttal to what we just heard from Project Debater. So firstly, we heard that this is technology that would end up benefiting society but we're not sure we haven't yet heard evidence that shows us why it would benefit all of society, perhaps some parts of society, maybe upper middle class or upper class citizens could benefit from these inspiring research, could benefit from the technological innovations. But most of society, people who are currently in the United States have resource scarcity, people who are hungry, people who do not have access to good education, aren't really helped by this. So we think it is like that, a government subsidy should go to something that helps everyone particularly weaker classes in society. Second point is this idea of an exploding industry which creates jobs and international cooperation. So firstly, we've heard evidence that this already exists, right? We've heard evidence that companies are investing in this as is. And secondly, we think that international cooperation or the specific things have alternatives. We can cooperate over other types of economic trade deals. We can cooperate in other ways with different countries. It's not necessary to very specifically fund space 98  exploration to get these benefits. So as we remember, there are two criteria that I believe the government needs to meet before subsidizing something. It being a basic human need, we don't see space exploration meeting that and B, that this is something that can't otherwise exist, right? So we've already heard from Project Debater how huge this industry is, right? How much investment there's already going on in the private sector and we think this is because there's lots of curiosity especially among wealthy people who maybe want to get to space for personal use or who want to build a colony on Mars and then rent out the rooms there. We know that Elon Musk is doing this already. We know that other people are doing it and we think they're spending money and willing to spend even more money because of the competition between them. So Project Debater should know better than all of us how competitions often bear extremely impressive fruit, right? We think that when wealthy philanthropist or people who are willing to fund research on their own race each other to be the first to achieve new heights in terms of space exploration, that brings us to great achievements already and we think that the private market is doing this well enough already. Considering that we already have movement in that direction, again we see Elon Musk's company, we see all of these companies working already. We think that it's not that the government money won't help out if it were to be given, we just think it doesn't meet the criteria in comparison to other things, right? So given the fact that the market already has a lot of money invested in this, already has movement in those research directions, and given the fact that we still don't think this is a good enough plan to prioritize over other basic needs that the government should be providing people. We think that at the end of the day, given the fact that there are also alternatives to getting all of these benefits of international cooperation, it simply doesn't justify specifically the government allocating its funds for this purpose when it should be allocating them towards other needs of other people.""",
+    ]
+
     fs = FastSpeechWrapper(batch_size=2)
     lengths = fs.query_time(texts)
     print(lengths)

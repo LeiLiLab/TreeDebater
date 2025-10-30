@@ -1,17 +1,16 @@
+import argparse
+import json
 import os
 import sys
-import json
-import argparse
+from functools import partial
 
 import numpy as np
 import pandas as pd
-
 from tqdm import tqdm
-from functools import partial
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from src.utils.tool import find_json, logger, extract_numbers
+from src.utils.tool import extract_numbers, find_json, logger
 
 
 def extract_claims(llm, title, side, content, verbose=False):
@@ -46,7 +45,6 @@ def extract_claims(llm, title, side, content, verbose=False):
 
     Return the main claims and supporting statements in a Json format. The key is the main claim and the value is the support materials.
     """
-
 
     prompt = TEMPLATE.format(title=title, myside=side, content=content)
     if verbose:
@@ -125,8 +123,9 @@ def extract_obj_aspect(llm, title, side, content, claim_against=None):
     except:
         scores = {}
         print("Error in extracting scores")
-    
+
     return scores, response[0]
+
 
 def eval_surprise(llm, title, side, claims, n=3, reduction=False, verbose=False):
     system_prompt = """You are an advanced debate analysis tool designed to assess the surprise factor of claims and arguments presented in debates. Your task is to evaluate how unexpected, novel, or counterintuitive the claims are within the context of the debate topic. Follow these guidelines in your assessment:
@@ -194,8 +193,10 @@ def eval_surprise(llm, title, side, claims, n=3, reduction=False, verbose=False)
             print("Error in extracting surprise scores")
             surprise = {}
             continue
-        
-        non_number_score = [v for v in surprise if ("surprise_score" not in v) or not isinstance(v["surprise_score"], (int, float))]
+
+        non_number_score = [
+            v for v in surprise if ("surprise_score" not in v) or not isinstance(v["surprise_score"], (int, float))
+        ]
         if len(non_number_score) > 0:
             print("There is non-number values in the surprise scores")
             # print(non_number_score)
@@ -205,7 +206,7 @@ def eval_surprise(llm, title, side, claims, n=3, reduction=False, verbose=False)
             scores[v["claim"]] = v["surprise_score"]
         surprises.append(surprise)
         score_list.append(scores)
-    
+
     if reduction:
         result = {}
         for key in score_list[0].keys():
@@ -216,40 +217,46 @@ def eval_surprise(llm, title, side, claims, n=3, reduction=False, verbose=False)
 
     return score_list, surprises
 
+
 def evaluate_support_strength(llm, motion, argument1, argument2, history=None):
-    if llm.func.__name__ == 'reward_model': # trained reward model, should be partial() type
-        relation_ship = 'supporting'
+    if llm.func.__name__ == "reward_model":  # trained reward model, should be partial() type
+        relation_ship = "supporting"
         assert history[-1] == argument1 and history[-3] == argument2
         prompt = f"You are given a chain of arguments, each one supporting or attacking the previous one. The first argument is: {history[0]} The second last one is: {history[-3]} The last one is: {history[-1]} Now you need to determine the impact of the last one to the second last one, given their relationship {relation_ship}. Output only a number among 0, 1, or 2 in your response. 0 means not impactful; 1 means medium impactful; 2 means impactful."
         return llm(prompt)
-    
-    prompt = (f"""There is a debate with a title \"{motion}\" Please evaluate the support strength of the first argument to the second argument.\n""" 
-                f"Argument 1: {argument1}\n"
-                f"Argument 2: {argument2}\n"
-                f"""The two arguments are from the same side in a debate, and the support strength refers to how well the first argument adds to the second argument. Each score ranges from 1 to 3, with 1 being the lowest and 3 being the highest. Provide your evaluation as a single number in the format "Score: [score]". You can additionally provide a brief explanation of your evaluation.""")
-    logger.debug("[Support-Strength-Prompt] {}".format(prompt.strip().replace('\n',' ||| ')))
+
+    prompt = (
+        f"""There is a debate with a title \"{motion}\" Please evaluate the support strength of the first argument to the second argument.\n"""
+        f"Argument 1: {argument1}\n"
+        f"Argument 2: {argument2}\n"
+        f"""The two arguments are from the same side in a debate, and the support strength refers to how well the first argument adds to the second argument. Each score ranges from 1 to 3, with 1 being the lowest and 3 being the highest. Provide your evaluation as a single number in the format "Score: [score]". You can additionally provide a brief explanation of your evaluation."""
+    )
+    logger.debug("[Support-Strength-Prompt] {}".format(prompt.strip().replace("\n", " ||| ")))
     response = llm(prompt=prompt, temperature=0)[0]
-    logger.debug("[Support-Strength-Response] {}".format(response.strip().replace('\n',' ||| ')))
-    response = response.replace('*','')
+    logger.debug("[Support-Strength-Response] {}".format(response.strip().replace("\n", " ||| ")))
+    response = response.replace("*", "")
     pos = response.find("Score: ")
-    numbers = extract_numbers(response[pos:pos+15])
+    numbers = extract_numbers(response[pos : pos + 15])
     return numbers[0]
 
+
 def evaluate_defense_strength(llm, motion, argument1, argument2, history=None):
-    if llm.func.__name__ == 'reward_model': # trained reward model, should be partial() type
-        relation_ship = 'attacking'
+    if llm.func.__name__ == "reward_model":  # trained reward model, should be partial() type
+        relation_ship = "attacking"
         # print('[DEBUG]', argument1, argument2, history)
         assert history[-1] == argument1 and history[-2] == argument2
         prompt = f"You are given a chain of arguments, each one supporting or attacking the previous one. The first argument is: {history[0]} The second last one is: {history[-2]} The last one is: {history[-1]} Now you need to determine the impact of the last one to the second last one, given their relationship {relation_ship}. Output only a number among 0, 1, or 2 in your response. 0 means not impactful; 1 means medium impactful; 2 means impactful."
         return llm(prompt)
-    
-    prompt = (f"""There is a debate with a title \"{motion}\" Please evaluate the rebuttal strength of the first argument to the second argument.\n"""
-                f"Argument 1: {argument1}\n"
-                f"Argument 2: {argument2}\n"
-                """The two arguments are from the different sides in a debate, and the rebuttal strength refers to how well the first argument undermines the second argument. Each score ranges from 1 to 3, with 1 being the lowest and 3 being the highest. Provide your evaluation as a single number in the format "Score: [score]". You can additionally provide a brief explanation of your evaluation.""")
-    logger.debug("[Support-Defense-Prompt] {}".format(prompt.strip().replace('\n',' ||| ')))
+
+    prompt = (
+        f"""There is a debate with a title \"{motion}\" Please evaluate the rebuttal strength of the first argument to the second argument.\n"""
+        f"Argument 1: {argument1}\n"
+        f"Argument 2: {argument2}\n"
+        """The two arguments are from the different sides in a debate, and the rebuttal strength refers to how well the first argument undermines the second argument. Each score ranges from 1 to 3, with 1 being the lowest and 3 being the highest. Provide your evaluation as a single number in the format "Score: [score]". You can additionally provide a brief explanation of your evaluation."""
+    )
+    logger.debug("[Support-Defense-Prompt] {}".format(prompt.strip().replace("\n", " ||| ")))
     response = llm(prompt=prompt, temperature=0)[0]
-    logger.debug("[Support-Defense-Response] {}".format(response.strip().replace('\n',' ||| ')))
+    logger.debug("[Support-Defense-Response] {}".format(response.strip().replace("\n", " ||| ")))
     pos = response.find("Score: ")
-    numbers = extract_numbers(response[pos:pos+15])
+    numbers = extract_numbers(response[pos : pos + 15])
     return numbers[0]

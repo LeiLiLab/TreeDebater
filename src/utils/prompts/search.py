@@ -46,7 +46,8 @@ iterative_search_prompt = search_prompt + (
     "If you think current information is enough, return [Finish] to end the search process."
 )
 
-summarize_result_prompt = ("## Task: Organize retrieved information into an argument (within 100 words) to answer the query and support the claim\n"
+summarize_result_prompt = (
+    "## Task: Organize retrieved information into an argument (within 100 words) to answer the query and support the claim\n"
     "- When citing data and academic research, provide sources within the context and avoid using information not present in the provided materials. Ensure your arguments are supported by data and academic evidence.\n"
     "- When citing data, **using specific figures** instead of just descriptive language will make your argument more persuasive.\n"
     "- When citing data and academic research, **don't just** list the information, **but also explain** how it supports your point.\n"
@@ -57,10 +58,10 @@ summarize_result_prompt = ("## Task: Organize retrieved information into an argu
 
 extract_author_prompt = (
     "## Extract the author of the article from the given content.\n"
-    "1. Identify the author of the article based on the **raw_content** of the evidence. If the information of the author is not available, just output \"Unknown\" for **author**.\n"
-    "2. Provide the information of the author, such as the affiliation, the position, and the expertise. If the information of the author is not available, just output \"Unknown\" for **author_info**.\n"
-    "3. Extract the publication information, such as the journal or conference name and year. If the information of the author is not available, just output \"Unknown\" for **publication**.\n"
-    "4. Make sure the author's expertise is related to the evidence, the source and the publication. If the author is an expert in medicine while the article is about economic, output \"Unknown\" for and **author** and **author_info** for this mismatch.\n"
+    '1. Identify the author of the article based on the **raw_content** of the evidence. If the information of the author is not available, just output "Unknown" for **author**.\n'
+    '2. Provide the information of the author, such as the affiliation, the position, and the expertise. If the information of the author is not available, just output "Unknown" for **author_info**.\n'
+    '3. Extract the publication information, such as the journal or conference name and year. If the information of the author is not available, just output "Unknown" for **publication**.\n'
+    '4. Make sure the author\'s expertise is related to the evidence, the source and the publication. If the author is an expert in medicine while the article is about economic, output "Unknown" for and **author** and **author_info** for this mismatch.\n'
     "### Input Information\n"
     "**Evidence**: \n{evidence}. \n\n"
     "### Response Format\n"

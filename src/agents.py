@@ -1,23 +1,24 @@
-import os
-import re
+import copy
 import json
 import math
-from openai import OpenAI
-from functools import partial
-import traceback, random
-from dataclasses import dataclass
-import requests
-import copy
+import os
+import random
+import re
 import time
+import traceback
+from dataclasses import dataclass
+from functools import partial
 
 import litellm
+import requests
+from openai import OpenAI
 
-from utils.model import HelperClient, safety_setting
-from utils.tool import logger, log_file_path
-from utils.prompts import *
-from utils.constants import WORDRATIO, OPENING_TIME, REBUTTAL_TIME, CLOSING_TIME, deepseek_api_key
+from evaluator import eval_surprise, extract_claims, extract_obj_aspect
 from tts import convert_text_to_speech, trim_audio_by_sentences
-from evaluator import extract_claims, eval_surprise, extract_obj_aspect
+from utils.constants import CLOSING_TIME, OPENING_TIME, REBUTTAL_TIME, WORDRATIO, deepseek_api_key
+from utils.model import HelperClient, safety_setting
+from utils.prompts import *
+from utils.tool import log_file_path, logger
 
 
 @dataclass
@@ -26,6 +27,7 @@ class AgentConfig:
     temperature: float = 0.7
     max_tokens: int = 4096
     system_prompt: str = ""
+
 
 @dataclass
 class DebaterConfig(AgentConfig):
@@ -39,11 +41,13 @@ class DebaterConfig(AgentConfig):
     use_debate_flow_tree: bool = True
     url: str = "http://127.0.0.1:8081/"
 
+
 @dataclass
 class JudgeConfig(AgentConfig):
     system_prompt: str = judge_system_prompt
     temperature: float = 0.0
-    
+
+
 @dataclass
 class AudienceConfig(AgentConfig):
     pre_prompt: str = audience_system_prompt_pre
@@ -58,38 +62,48 @@ class Agent:
         self.system_prompt = config.system_prompt
         print(f"[Agent Init] Model: {self.config.model}")
         if self.config.model.startswith("gpt") or self.config.model.startswith("o1"):
-            self.client = partial(litellm.completion,
-                                  model=self.config.model, 
-                                  temperature=self.config.temperature, 
-                                  max_tokens=self.config.max_tokens)   
+            self.client = partial(
+                litellm.completion,
+                model=self.config.model,
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens,
+            )
         elif self.config.model.startswith("gemini"):
-            self.client = partial(litellm.completion,
-                                  model="gemini/" + self.config.model, 
-                                  api_key=os.environ["GOOGLE_API_KEY"],
-                                  temperature=self.config.temperature, 
-                                  max_tokens=self.config.max_tokens,
-                                  safety_settings=safety_setting)       
+            self.client = partial(
+                litellm.completion,
+                model="gemini/" + self.config.model,
+                api_key=os.environ["GOOGLE_API_KEY"],
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens,
+                safety_settings=safety_setting,
+            )
         elif "llama" in self.config.model.lower():
-            self.client = partial(litellm.completion,
-                                  model="together_ai/" + self.config.model, 
-                                  temperature=self.config.temperature, 
-                                  max_tokens=self.config.max_tokens)
+            self.client = partial(
+                litellm.completion,
+                model="together_ai/" + self.config.model,
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens,
+            )
         elif "deepseek" in self.config.model.lower():
-            self.client = partial(litellm.completion,
-                                  model="deepseek/" + self.config.model, 
-                                  api_key=deepseek_api_key,
-                                  temperature=self.config.temperature, 
-                                  max_tokens=self.config.max_tokens) 
+            self.client = partial(
+                litellm.completion,
+                model="deepseek/" + self.config.model,
+                api_key=deepseek_api_key,
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens,
+            )
         elif "moonshot" in self.config.model.lower():
-            self.client = partial(litellm.completion,
-                                  model="moonshot/" + self.config.model, 
-                                  api_base="https://api.moonshot.cn/v1",
-                                  api_key=os.environ["MOONSHOT_API_KEY"],
-                                  temperature=self.config.temperature, 
-                                  max_tokens=self.config.max_tokens)                      
+            self.client = partial(
+                litellm.completion,
+                model="moonshot/" + self.config.model,
+                api_base="https://api.moonshot.cn/v1",
+                api_key=os.environ["MOONSHOT_API_KEY"],
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens,
+            )
         else:
             raise ValueError(f"Invalid model: {self.config.model}")
-    
+
         self.conversation = []
         if self.config.system_prompt != "":
             self._add_message("system", self.config.system_prompt)
@@ -99,21 +113,21 @@ class Agent:
     def speak(self, prompt, **kwargs):
         self._add_message("user", prompt)
         logger.debug(f"[Conversation-History] {json.dumps(self.conversation)}")
-        logger.debug("[Prompt] " + prompt.strip().replace('\n',' ||| '))
+        logger.debug("[Prompt] " + prompt.strip().replace("\n", " ||| "))
         response = self._get_response(self.conversation, **kwargs)
         if kwargs.get("n", 1) > 1:
             logger.info(f"[Response] {response}")
             return response
-        logger.debug("[Response-Before-Post-Process] " + response.strip().replace('\n',' ||| '))
+        logger.debug("[Response-Before-Post-Process] " + response.strip().replace("\n", " ||| "))
         response = self.post_process(response, **kwargs)
-        logger.debug("[Response-After-Post-Process] " + response.strip().replace('\n',' ||| '))
+        logger.debug("[Response-After-Post-Process] " + response.strip().replace("\n", " ||| "))
         return response
 
     def post_process(self, statement, **kwargs):
         self._add_message("assistant", f"{statement}")
-        logger.info("[Response] " + statement.strip().replace('\n',' ||| '))
+        logger.info("[Response] " + statement.strip().replace("\n", " ||| "))
         return statement
-    
+
     def _get_response(self, messages, **kwargs):
         kwargs.pop("max_time", None)
         kwargs.pop("history", None)
@@ -139,10 +153,10 @@ class Agent:
             else:
                 return response
         return ""
-    
+
     def _add_message(self, role, content):
         if isinstance(content, list):
-            content = '\n'.join(content)
+            content = "\n".join(content)
         self.conversation.append({"role": role, "content": content})
 
     def reset(self):
@@ -152,6 +166,7 @@ class Agent:
 
 
 ##################### Debater #####################
+
 
 class Debater(Agent):
     def __init__(self, config, motion) -> None:
@@ -172,7 +187,7 @@ class Debater(Agent):
         self.listen(history)
         prompt = default_opening_prompt.format(motion=self.motion, act=self.act)
         prompt = prompt.replace("{n_words}", str(math.ceil(kwargs.get("max_time", OPENING_TIME) / WORDRATIO["time"])))
-        response = self.speak(prompt, **kwargs)        
+        response = self.speak(prompt, **kwargs)
         return response
 
     def rebuttal_generation(self, history, **kwargs):
@@ -181,16 +196,16 @@ class Debater(Agent):
         opponent = history[-1]["content"]
         prompt = default_rebuttal_prompt.format(counter_act=self.counter_act, opponent=opponent, act=self.act)
         prompt = prompt.replace("{n_words}", str(math.ceil(kwargs.get("max_time", REBUTTAL_TIME) / WORDRATIO["time"])))
-        response = self.speak(prompt, **kwargs)        
+        response = self.speak(prompt, **kwargs)
         return response
-    
+
     def closing_generation(self, history, **kwargs):
         self.status = "closing"
         self.listen(history)
         opponent = history[-1]["content"]
         prompt = default_closing_prompt.format(counter_act=self.counter_act, opponent=opponent, act=self.act)
         prompt = prompt.replace("{n_words}", str(math.ceil(kwargs.get("max_time", CLOSING_TIME) / WORDRATIO["time"])))
-        response = self.speak(prompt, **kwargs)        
+        response = self.speak(prompt, **kwargs)
         return response
 
     def post_process(self, statement, max_time=-1, time_control=False, **kwargs):
@@ -204,7 +219,7 @@ class Debater(Agent):
             self._add_message("assistant", f"")
             logger.warning("[Response] Statement is None. Return empty string.")
             return ""
-        
+
         # TODO: 这里没有设置固定去提取LLM回答的函数嘛？
         start_idx = statement.find("```")
         end_idx = statement.find("```", start_idx + 1)
@@ -215,7 +230,7 @@ class Debater(Agent):
                 length = len(format)
             else:
                 length = 3
-            statement = statement[start_idx+length:end_idx].strip()
+            statement = statement[start_idx + length : end_idx].strip()
         else:
             format = re.search(r"```(.*)\n", statement)
             if format is not None:
@@ -224,16 +239,15 @@ class Debater(Agent):
                 if len(trunc_statement) > 0:
                     statement = trunc_statement
 
-
         if max_time <= 0 or not time_control:
             self._add_message("assistant", f"{statement}")
-            logger.info("[Response] " + statement.strip().replace('\n',' ||| '))
+            logger.info("[Response] " + statement.strip().replace("\n", " ||| "))
             return statement
 
-        #NOTE the below part is time-consuming, can comment them and add "new_statement = statement" when developing
+        # NOTE the below part is time-consuming, can comment them and add "new_statement = statement" when developing
         prefix = log_file_path.replace(".log", "")
         audio_file = f"{prefix}_{self.config.type}_{self.status}_{self.side}.mp3"
-        logger.debug("[Time-Control] Statement: " + statement.replace('\n', ' ||| '))
+        logger.debug("[Time-Control] Statement: " + statement.replace("\n", " ||| "))
         content, reference, duration = convert_text_to_speech(statement, audio_file)
         logger.debug(f"[Time-Control] Save Audio: {audio_file}")
         logger.debug(f"[Time-Control] Original Time: {duration:0.2f}")
@@ -248,23 +262,23 @@ class Debater(Agent):
             # TODO: 这里可以优化？
             duration, new_sentences = trim_audio_by_sentences(audio_file, save_file, max_duration=max_time * 1000)
             last_sentence = new_sentences[-1]
-            idx = content.lower().find(last_sentence[:-1].lower()) # remove the punctuation
+            idx = content.lower().find(last_sentence[:-1].lower())  # remove the punctuation
             if idx == -1:
                 print(f"Last sentence not found in content")
                 new_content = " ".join(new_sentences)
             else:
-                new_content = content[:idx+len(last_sentence)]
-            
+                new_content = content[: idx + len(last_sentence)]
+
             logger.debug(f"[Time-Control] Final Time: {duration:0.2f}")
-        
+
         if new_content is None or len(new_content) == 0:
             logger.warning(f"[Time-Control] Trimmed Content is None. Use the original content as the transcript.")
             new_content = content
-        
-        new_statement = new_content + "\n\n**Reference**\n"+ reference
+
+        new_statement = new_content + "\n\n**Reference**\n" + reference
         # new_statement = statement
         self._add_message("assistant", f"{new_statement}")
-        logger.info("[Response] " + new_statement.strip().replace('\n',' ||| '))
+        logger.info("[Response] " + new_statement.strip().replace("\n", " ||| "))
 
         return new_statement
 
@@ -288,26 +302,29 @@ class Debater(Agent):
             else:
                 return "finished"
 
+
 class HumanDebater(Debater):
     def __init__(self, config, motion) -> None:
         super().__init__(config, motion)
 
     def get_multiline_input(self, instruction):
-        print('\n[User Input]' + instruction)
+        print("\n[User Input]" + instruction)
         print("Please input your response in the command. End with 'END'.")
         lines = []
         while True:
             line = input()
-            if line == 'END':
+            if line == "END":
                 break
             lines.append(line)
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def opening_generation(self, **kwargs):
         self.status = "opening"
         max_time = kwargs.get("max_time", OPENING_TIME)
         max_words = math.ceil(max_time / WORDRATIO["time"])
-        response = self.get_multiline_input(f"Please give an opening statement using three claims with {max_words} words, do not output other things. Please input the response in the command.")
+        response = self.get_multiline_input(
+            f"Please give an opening statement using three claims with {max_words} words, do not output other things. Please input the response in the command."
+        )
         response = self.post_process(response, **kwargs)
         return response
 
@@ -315,17 +332,22 @@ class HumanDebater(Debater):
         self.status = "rebuttal"
         max_time = kwargs.get("max_time", REBUTTAL_TIME)
         max_words = math.ceil(max_time / WORDRATIO["time"])
-        response = self.get_multiline_input(f"Now it comes the rebuttal phase, where you respond to your opponent. You should stand firm on your position and attack the opponent's weak points. Give your response within {max_words} words and do not output other things than our response. Please input the response in the command.")
+        response = self.get_multiline_input(
+            f"Now it comes the rebuttal phase, where you respond to your opponent. You should stand firm on your position and attack the opponent's weak points. Give your response within {max_words} words and do not output other things than our response. Please input the response in the command."
+        )
         response = self.post_process(response, **kwargs)
         return response
-    
+
     def closing_generation(self, history, **kwargs):
         self.status = "closing"
         max_time = kwargs.get("max_time", CLOSING_TIME)
         max_words = math.ceil(max_time / WORDRATIO["time"])
-        response = self.get_multiline_input(f"Now it comes the closing statement, where you summarize your key points and reaffirm your position. Give your response within {max_words} words and do not output other things than our response. Please input the response in the command.")
+        response = self.get_multiline_input(
+            f"Now it comes the closing statement, where you summarize your key points and reaffirm your position. Give your response within {max_words} words and do not output other things than our response. Please input the response in the command."
+        )
         response = self.post_process(response, **kwargs)
         return response
+
 
 class BaselineDebater(Debater):
     def __init__(self, config, motion, port=8081) -> None:
@@ -363,14 +385,14 @@ class BaselineDebater(Debater):
         if len(history) > 0:
             self.input["PositiveArgument"] = history[0]["content"]
             assert len(history) == 1 and self.oppo_side == "for"
-        
+
         opening_response = self._make_request(self.BASE_URL + "v1/argument", self.input)
         opening = opening_response["Result"]
         self.input["Reference"] = opening_response["Reference"]
-        logger.debug("[Baseline-opening-input] " + str(self.input).replace('\n',' ||| '))
-        logger.debug("[Baseline-opening-before] " + opening.strip().replace('\n',' ||| '))
+        logger.debug("[Baseline-opening-input] " + str(self.input).replace("\n", " ||| "))
+        logger.debug("[Baseline-opening-before] " + opening.strip().replace("\n", " ||| "))
         opening = self.post_process(opening, **kwargs)
-        logger.debug("[Baseline-opening-after] " + opening.strip().replace('\n',' ||| '))
+        logger.debug("[Baseline-opening-after] " + opening.strip().replace("\n", " ||| "))
         return opening
 
     def rebuttal_generation(self, history, **kwargs):
@@ -387,12 +409,12 @@ class BaselineDebater(Debater):
         rebuttal_response = self._make_request(self.BASE_URL + "v1/rebuttal", self.input)
         rebuttal = rebuttal_response["Result"]
         self.input["Reference"] = rebuttal_response["Reference"]
-        logger.debug("[Baseline-rebuttal-input] " + str(self.input).replace('\n',' ||| '))
-        logger.debug("[Baseline-rebuttal-before] " + rebuttal.strip().replace('\n',' ||| '))
+        logger.debug("[Baseline-rebuttal-input] " + str(self.input).replace("\n", " ||| "))
+        logger.debug("[Baseline-rebuttal-before] " + rebuttal.strip().replace("\n", " ||| "))
         rebuttal = self.post_process(rebuttal, **kwargs)
-        logger.debug("[Baseline-rebuttal-after] " + rebuttal.strip().replace('\n',' ||| '))
+        logger.debug("[Baseline-rebuttal-after] " + rebuttal.strip().replace("\n", " ||| "))
         return rebuttal
-    
+
     def closing_generation(self, history, **kwargs):
         self.status = "closing"
         self.input.update(
@@ -408,10 +430,10 @@ class BaselineDebater(Debater):
         summary_response = self._make_request(self.BASE_URL + "v1/summary", self.input)
         summary = summary_response["Result"]
         self.input["Reference"] = summary_response["Reference"]
-        logger.debug("[Baseline-summary-input] " + str(self.input).replace('\n',' ||| '))
-        logger.debug("[Baseline-summary-before] " + summary.strip().replace('\n',' ||| '))
+        logger.debug("[Baseline-summary-input] " + str(self.input).replace("\n", " ||| "))
+        logger.debug("[Baseline-summary-before] " + summary.strip().replace("\n", " ||| "))
         summary = self.post_process(summary, **kwargs)
-        logger.debug("[Baseline-summary-after] " + summary.strip().replace('\n',' ||| '))
+        logger.debug("[Baseline-summary-after] " + summary.strip().replace("\n", " ||| "))
         return summary
 
     def reset_stage(self, stage, side, new_content):
@@ -428,32 +450,40 @@ class BaselineDebater(Debater):
                 self.input["NegativeRebuttal"] = new_content
         elif stage == "closing":
             return
-        
+
 
 ##################### Judge #####################
+
 
 class Judge(Agent):
     def __init__(self, config) -> None:
         super().__init__(config)
 
-        self.helper_client = partial(HelperClient, model=self.config.model, temperature=0, max_tokens=config.max_tokens, n=1)
+        self.helper_client = partial(
+            HelperClient, model=self.config.model, temperature=0, max_tokens=config.max_tokens, n=1
+        )
 
     def eval(self, motion, debate_process, **kwargs):
-        prompt = f"The debate topic is {motion}. The for side is to support this motion while the against side is to oppose it. The debate process is as follows: \n" + json.dumps(debate_process, indent=2)
-        prompt += "By adhering to these principles and criteria, you will provide an impartial and comprehensive evaluation of each side's performance, ensuring a fair and constructive outcome for the debate. Do determine the winner even if you find the two sides perform similarly. Please output your final judgment in the format: \"The winning side is [For/Against] due to [reasons].\""
+        prompt = (
+            f"The debate topic is {motion}. The for side is to support this motion while the against side is to oppose it. The debate process is as follows: \n"
+            + json.dumps(debate_process, indent=2)
+        )
+        prompt += 'By adhering to these principles and criteria, you will provide an impartial and comprehensive evaluation of each side\'s performance, ensuring a fair and constructive outcome for the debate. Do determine the winner even if you find the two sides perform similarly. Please output your final judgment in the format: "The winning side is [For/Against] due to [reasons]."'
         response = self.speak(prompt, **kwargs)
         winner = self.extract_winner(response)
         return winner, response
-    
+
     def comparison(self, motion, context, side, a, b, **kwargs):
         self.reset()
-        prompt = (f"The debate topic is {motion}. The for side is to support this motion while the against side is to oppose it. "
-                  f"The debate process is as follows: \n{json.dumps(context, indent=2)}\n\n" 
-                  f"Here are the two versions of the {side} side's response based on the debate process: \n\n"
-                  f"=========Version A Start======== \n{a}\n=========Version A End========\n\n"
-                  f"=========Version B Start======== \n{b}\n=========Version B End========\n\n"
-                  f"By adhering to these principles and criteria, you will provide an impartial and comprehensive evaluation of each version's performance, ensuring a fair and constructive outcome for the debate. Do determine the version even if you find the two sides perform similarly. "
-                  "Please output your final judgment in the format: \"The better version is Version [A/B] due to [reasons].\"")
+        prompt = (
+            f"The debate topic is {motion}. The for side is to support this motion while the against side is to oppose it. "
+            f"The debate process is as follows: \n{json.dumps(context, indent=2)}\n\n"
+            f"Here are the two versions of the {side} side's response based on the debate process: \n\n"
+            f"=========Version A Start======== \n{a}\n=========Version A End========\n\n"
+            f"=========Version B Start======== \n{b}\n=========Version B End========\n\n"
+            f"By adhering to these principles and criteria, you will provide an impartial and comprehensive evaluation of each version's performance, ensuring a fair and constructive outcome for the debate. Do determine the version even if you find the two sides perform similarly. "
+            'Please output your final judgment in the format: "The better version is Version [A/B] due to [reasons]."'
+        )
         response = self.speak(prompt, **kwargs)
         winner = self.extract_version(response)
         self.reset()
@@ -461,29 +491,31 @@ class Judge(Agent):
 
     def extract_winner(self, comments):
         pos = comments.find("The winning side is")
-        if "For" in comments[pos+20:pos+33]:
+        if "For" in comments[pos + 20 : pos + 33]:
             return "For wins"
-        elif "Against" in comments[pos+20:pos+33]:
+        elif "Against" in comments[pos + 20 : pos + 33]:
             return "Against wins"
         else:
             return "[GGG judge not detected]"
-        
+
     def extract_version(self, comments):
         pos = comments.find("better version is")
-        if "A" in comments[pos+18:pos+36]:
+        if "A" in comments[pos + 18 : pos + 36]:
             return "A"
-        elif "B" in comments[pos+18:pos+36]:
+        elif "B" in comments[pos + 18 : pos + 36]:
             return "B"
         else:
             return "[GGG judge not detected]"
-        
+
     def finegrained_check(self, motion, side_info, side):
         oppo = "against" if side == "for" else "for"
         claims = extract_claims(self.helper_client, motion, side, side_info[side]["content"])
         side_info[side]["claims"] = claims
 
         try:
-            obj_scores, obj_scores_explanation = extract_obj_aspect(self.helper_client, motion, side, side_info[side]["content"], side_info[oppo]["claims"])
+            obj_scores, obj_scores_explanation = extract_obj_aspect(
+                self.helper_client, motion, side, side_info[side]["content"], side_info[oppo]["claims"]
+            )
         except:
             traceback.print_exc()
             exit(0)
@@ -495,7 +527,9 @@ class Audience(Agent):
         super().__init__(config)
 
         self.n = config.n
-        self.helper_client = partial(HelperClient, model=self.config.model, temperature=0, max_tokens=config.max_tokens, n=1)
+        self.helper_client = partial(
+            HelperClient, model=self.config.model, temperature=0, max_tokens=config.max_tokens, n=1
+        )
 
     def vote(self, process, motion):
         prompt = f"{self.config.pre_prompt}\n\n The for side is to support the motion of {motion}. The against side is to oppose the motion. "
@@ -504,20 +538,22 @@ class Audience(Agent):
         post_vote = self.speak(prompt)
 
         return self.extract_winner(pre_vote) + " -> " + self.extract_winner(post_vote)
-    
+
     def comparison(self, motion, context, side, a, b, **kwargs):
         self.reset()
-        prompt = (f"The debate topic is {motion}. The for side is to support this motion while the against side is to oppose it. "
-                  f"The debate process is as follows: \n{json.dumps(context, indent=2)}\n\n" 
-                  f"Here are the two versions of the {side} side's response based on the debate process: \n\n"
-                  f"=========Version A Start======== \n{a}\n=========Version A End========\n\n"
-                  f"=========Version B Start======== \n{b}\n=========Version B End========\n\n"
-                  "Now that you've heard arguments from both sides, it's time to cast your final vote. Consider the following factors: \n"
-                  "Strength and clarity of each team's arguments \n"
-                  "Evidence and reasoning used to support their claims \n"
-                  "Effectiveness in addressing and countering the opposing team's points \n"
-                  "Overall persuasiveness and impact of each team's case \n"
-                  "Please output your final judgment in the format: \"The better version is Version [A/B] due to [reasons].\"")
+        prompt = (
+            f"The debate topic is {motion}. The for side is to support this motion while the against side is to oppose it. "
+            f"The debate process is as follows: \n{json.dumps(context, indent=2)}\n\n"
+            f"Here are the two versions of the {side} side's response based on the debate process: \n\n"
+            f"=========Version A Start======== \n{a}\n=========Version A End========\n\n"
+            f"=========Version B Start======== \n{b}\n=========Version B End========\n\n"
+            "Now that you've heard arguments from both sides, it's time to cast your final vote. Consider the following factors: \n"
+            "Strength and clarity of each team's arguments \n"
+            "Evidence and reasoning used to support their claims \n"
+            "Effectiveness in addressing and countering the opposing team's points \n"
+            "Overall persuasiveness and impact of each team's case \n"
+            'Please output your final judgment in the format: "The better version is Version [A/B] due to [reasons]."'
+        )
         response = self.speak(prompt, n=self.n, **kwargs)
         if self.n > 1:
             winner = [self.extract_version(r) for r in response]
@@ -528,27 +564,26 @@ class Audience(Agent):
 
     def extract_winner(self, response):
         pos = response.find("vote is")
-        if "For" in response[pos+8:pos+21]:
+        if "For" in response[pos + 8 : pos + 21]:
             return "For"
-        elif "Against" in response[pos+8:pos+21]:
+        elif "Against" in response[pos + 8 : pos + 21]:
             return "Against"
         else:
             return "[GGG]"
-        
+
     def extract_version(self, response):
         pos = response.find("better version is")
-        if "A" in response[pos+18:pos+36]:
+        if "A" in response[pos + 18 : pos + 36]:
             return "A"
-        elif "B" in response[pos+18:pos+36]:
+        elif "B" in response[pos + 18 : pos + 36]:
             return "B"
         else:
             return "[GGG]"
-        
+
     def surprise(self, motion, side, claims):
         scores, explanations = eval_surprise(self.helper_client, motion, side, claims, n=1)
         return scores, explanations
-    
+
     def feedback(self, prompt, **kwargs):
         response = self.speak(prompt, **kwargs)
         return response
-

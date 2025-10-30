@@ -5,8 +5,8 @@ context = (
 )
 
 default_opening_prompt = context + (
-                          "Please give an opening statement using three claims with {{n_words}} words, do not output other things.\n"
-                          )
+    "Please give an opening statement using three claims with {{n_words}} words, do not output other things.\n"
+)
 
 expert_opening_prompt = context + (
     "\n## Rules\n"
@@ -22,23 +22,21 @@ expert_opening_prompt = context + (
 expert_opening_prompt_2 = context + (
     "\n\n## Workflow \n"
     "1. Create a opening plan based on the current debate flow trees. It should include the definition, judging criteria, and the battlefields to discuss. \n"
-        "- If the position is to support the topic, discuss the given definition with necessary details and address uncertainties. "
-        "- If the position is to oppose the topic, discuss the opponent's EXISTING definition in their debate flow tree if unclear or problematic. Make only necessary clarifications. \n"
-        "- If the definition concerns a specific subset of a broader category, clearly distinguish it by highlighting unique characteristics, mechanisms, or impacts. "
+    "- If the position is to support the topic, discuss the given definition with necessary details and address uncertainties. "
+    "- If the position is to oppose the topic, discuss the opponent's EXISTING definition in their debate flow tree if unclear or problematic. Make only necessary clarifications. \n"
+    "- If the definition concerns a specific subset of a broader category, clearly distinguish it by highlighting unique characteristics, mechanisms, or impacts. "
     "2. Select among the definition, judging criteria, and battlefields and allocate your word budget based on the importance of each point. You should allocate more words to the more important points and can ignore the less important points. \n"
-        "\t- If the definition is selected to discuss, discuss it first. \n"
-        "\t- If the judging criteria is selected to discuss, discuss it next. \n"
-        "\t- Among the selected battlefields, discuss the battlefield in the order of importance. \n"
+    "\t- If the definition is selected to discuss, discuss it first. \n"
+    "\t- If the judging criteria is selected to discuss, discuss it next. \n"
+    "\t- Among the selected battlefields, discuss the battlefield in the order of importance. \n"
     "3. Follow the opening plan to generate conversational arguments. Write as you would speak, with VARIED sentence lengths. Use short and simple words and sentences that are easy to understand.\n"
     "4. Deliver a {{n_words}}-word opening statement. Present only the final text in clear, flowing prose without bullet points, asterisks, or numbered lists. \n"
     "Note that it's possible that the debate flow tree is not provided, in this case, you can just generate a opening statement without following the debate flow tree.\n"
-
     "## Debate Flow Tree Structure\n"
     "You are given two debate trees that model the back-and-forth between you and your opponent. Each node contains:\n"
     "* Data: The specific claims and arguments\n"
     "* Visit Count: Number of times addressed in debate\n"
     "* Status: 'proposed' (new), 'attacked' (challenged), or 'solved' (resolved)\n\n"
-
     "Your Debate Tree:\n"
     "* Level-1 Nodes: Your main claims and arguments\n"
     "* Level-2 Nodes: Opponent's attacks on your claims and arguments\n"
@@ -47,30 +45,24 @@ expert_opening_prompt_2 = context + (
     "* Level-1 Nodes: Opponent's main claims and arguments\n"
     "* Level-2 Nodes: Your attacks on their claims and arguments\n"
     "* Level-3 Nodes: Opponent's rebuttal on your attacks\n\n"
-
-
-    "## Input Information \n" 
+    "## Input Information \n"
     "Debate flow trees with node data:\n"
     "**Your Tree**: \n{tree}\n\n"
     "**Opponent's Tree**: \n{oppo_tree}\n\n"
     "**Your Main Claims**: \n{claims}\n\n"
     "{{definition}}\n\n"
-
     "## Battlefields\n"
     "{{tips}}\n\n"
-
-
     "## Important Notes\n"
     "1. Organize your points logically with clear purpose statements. \n"
-        "   - Clearly mention the actions you will take in each point. For example, 'we will address [X] concerns mentioned by the opponent, which are ' for attack / rebut actions or 'after that, we will propose our claims that' for propose action.\n"
-        "   - Use clear indicators like first, second, third, etc. to organize your points.\n"
+    "   - Clearly mention the actions you will take in each point. For example, 'we will address [X] concerns mentioned by the opponent, which are ' for attack / rebut actions or 'after that, we will propose our claims that' for propose action.\n"
+    "   - Use clear indicators like first, second, third, etc. to organize your points.\n"
     "2. Avoid restating or simply repeating the same evidence or arguments across different points.\n"
     "3. Avoid repeating the similar arguments in your previous statement. Use the phrase 'as we have discussed' to refer to the previous statement.\n"
     "4. Only use facts that are generally accepted and don't require specific citation. Don't hallucinate any particular experimental results, statistical findings from named studies, or quotes from specific researchers until the evidence pool is provided\n"
     "5. When presenting alternatives or counterarguments, offer specific, implementable solutions rather than just criticism.\n"
     "6. Address both systemic and individual factors when relevant, showing how they can complement rather than contradict each other.\n"
     "\n"
-
     "## Output with the format (two parts, start with **Opening Plan** and then **Statement**):\n"
     "**Opening Plan**: Allocate your word budget and explain your rationale. Briefly mention one or two rhetorical techniques and logical fallacies to discuss. Ensure the total is {{n_words}} words. \n"
     "**Statement**: Generate an opening statement of {{n_words}} words in total, with no additional text\n"
@@ -78,51 +70,44 @@ expert_opening_prompt_2 = context + (
 
 
 propose_definition_prompt = (
-                            "The debate topic is: {motion}. You side is to {act} this topic .\n"
-                            "Please clarify the topic to address any:\n"
-                                "\t- Target groups, such as age, gender, income, etc.\n"
-                                "\t- Ambiguous or technical terms, such as 'ration'.\n"
-                                "\t- Important time, such as 'still', 'current', 'recent'.\n"
-                                "\t- Difference between two similar terms, such as 'matter' and 'crucial', 'writer' and 'writing'.\n"
-                                "\t- Multiple interpretations of key phrases\n"
-                                "\t- Scope-related uncertainties\n"
-                            "3. If there are some similar existing policies, you can refer to them for inspiration.\n\n"
-                            "Provide your response in the format: '**Definition**: [your one or two-sentence definition]'\n"
-                            "Don't output anything else."
-                            )
+    "The debate topic is: {motion}. You side is to {act} this topic .\n"
+    "Please clarify the topic to address any:\n"
+    "\t- Target groups, such as age, gender, income, etc.\n"
+    "\t- Ambiguous or technical terms, such as 'ration'.\n"
+    "\t- Important time, such as 'still', 'current', 'recent'.\n"
+    "\t- Difference between two similar terms, such as 'matter' and 'crucial', 'writer' and 'writing'.\n"
+    "\t- Multiple interpretations of key phrases\n"
+    "\t- Scope-related uncertainties\n"
+    "3. If there are some similar existing policies, you can refer to them for inspiration.\n\n"
+    "Provide your response in the format: '**Definition**: [your one or two-sentence definition]'\n"
+    "Don't output anything else."
+)
 
 main_claim_selection = (
     "## Task: Select Persuasive Claims for Debate\n"
     "You are participating in a formal debate on the topic: {motion}. Your position is {side}.\n"
     "Select most persuasive claims from the provided options, using the debate tree information.\n\n"
     "Note that it's possible that the debate tree is not provided, in this case, you can select claims without considering the debate tree.\n\n"
-
     "## Simulated Debate Flow Tree Structure\n"
     "Each claim has a simulated debate flow tree that simluate the potential back-and-forth between you and your opponent under this claim:\n"
     "* Level-0: The root claim (potential main claim for selection)\n"
     "* Level-1: Your opponent's rebuttal to the root claim\n"
     "* Level-2: Your defense against the opponent's rebuttal\n\n"
-
     "## Selection Criteria\n"
     "1. Diversity and Contrastive: Selected claims should cover different perspectives of the topic and be contrastive to each other without overlap\n"
     "2. Comprehensiveness: Claims should form a logical framework that addresses the most important aspects of the topic and distinguishes the specific subject from its broader category\n"
     "3. Consistency: Claims must be logically consistent with each other and with their Level-2 defenses\n"
     "4. Defensibility: Claims should have strong defenses at Level-2 against opponent rebuttals\n"
     "5. Context-aware: Consider the opponent's opening statement when selecting claims if it is provided\n\n"
-
     "## Input\n"
     "**Definition of the debate topic**:\n"
     "{definition}\n\n"
-
     "**Simulated Debate Flow Tree for each claim**:\n"
     "{tree}\n\n"
-
     "**Opponent's opening statement**:\n"
     "{context}\n\n"
-
     "**Claims to select from (All Level-0 claims)**:\n"
     "{claims}\n\n"
-
     "## Output\n"
     "Provide results in JSON format with three fields under the key of *selection*:\n"
     "* claims: a list of your selected claims. Each claim is a string. It usually contains 3 *very different claims* from non-overlapping perspectives.\n"

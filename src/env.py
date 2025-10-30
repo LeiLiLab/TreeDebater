@@ -1,21 +1,19 @@
-import os, json
-import yaml
 import argparse
+import json
+import os
 import time
-from functools import partial
 from dataclasses import dataclass
+from functools import partial
 from typing import List
 
+import yaml
 
-from utils.model import HelperClient
-from utils.constants import OPENING_TIME, REBUTTAL_TIME, CLOSING_TIME
-from utils.tool import logger
-from agents import (
-    Debater, HumanDebater, BaselineDebater, 
-    Judge, Audience, 
-    DebaterConfig, JudgeConfig, AudienceConfig
-) 
+from agents import Audience, AudienceConfig, BaselineDebater, Debater, DebaterConfig, HumanDebater, Judge, JudgeConfig
 from ouragents import TreeDebater
+from utils.constants import CLOSING_TIME, OPENING_TIME, REBUTTAL_TIME
+from utils.model import HelperClient
+from utils.tool import logger
+
 
 @dataclass
 class EnvConfig:
@@ -30,15 +28,18 @@ class EnvConfig:
     time_control: bool = True
 
 
-def extract_overall_score(obj_scores): # larger is better
-    return -obj_scores["Logical Inconsistencies"] \
-        - obj_scores["Unsupported Assertions"] \
-        + obj_scores["Inferences"] \
-        + obj_scores["Statistics"] \
-        + obj_scores["Case Studies"] \
+def extract_overall_score(obj_scores):  # larger is better
+    return (
+        -obj_scores["Logical Inconsistencies"]
+        - obj_scores["Unsupported Assertions"]
+        + obj_scores["Inferences"]
+        + obj_scores["Statistics"]
+        + obj_scores["Case Studies"]
         - obj_scores["Unanswered Arguments"]
+    )
 
-class Env():
+
+class Env:
     def __init__(self, config, debug) -> None:
         self.config = config
         self.motion = config.motion
@@ -46,7 +47,7 @@ class Env():
         self.reverse = config.reverse
         self.time_control = config.time_control
         self.debug = debug
-        
+
         # init players
         self.debaters = {}
         for conf in config.debater_config:
@@ -57,10 +58,9 @@ class Env():
             elif conf.type == "baseline":
                 self.debaters[conf.side] = BaselineDebater(conf, motion=self.motion)
             elif conf.type == "treedebater":
-                self.debaters[conf.side] = TreeDebater(conf, motion=self.motion) # prompt-based with expert prompt
+                self.debaters[conf.side] = TreeDebater(conf, motion=self.motion)  # prompt-based with expert prompt
             else:
                 raise ValueError(f"Type {conf.type} is not supported.")
-        
 
         # init judge
         if config.judge_num > 1:
@@ -71,15 +71,15 @@ class Env():
         self.audiences = [Audience(config.audience_config) for _ in range(config.audience_num)]
 
         self.debate_process = []
-        self.debate_process.append({
-            "stage": "settings",
-            "motion": self.motion,
-            "debaters": {
-                side: debater.config for side, debater in self.debaters.items()
-            },
-            "judges": self.judge.config,
-            "audiences": [audience.config for audience in self.audiences],
-        })
+        self.debate_process.append(
+            {
+                "stage": "settings",
+                "motion": self.motion,
+                "debaters": {side: debater.config for side, debater in self.debaters.items()},
+                "judges": self.judge.config,
+                "audiences": [audience.config for audience in self.audiences],
+            }
+        )
 
     def play(self, pre_only=False):
         order = ["for", "against"] if not self.reverse else ["against", "for"]
@@ -93,37 +93,30 @@ class Env():
             elif stage == "opening":
                 for side in order:
                     player = self.debaters[side]
-                    response = player.opening_generation(history=self.debate_process[1:], max_time=OPENING_TIME, time_control=self.time_control)
-                    self.debate_process.append({
-                        "stage": stage,
-                        "side": side,
-                        "content": response
-                    })
+                    response = player.opening_generation(
+                        history=self.debate_process[1:], max_time=OPENING_TIME, time_control=self.time_control
+                    )
+                    self.debate_process.append({"stage": stage, "side": side, "content": response})
             elif stage == "rebuttal":
                 for side in order:
                     player = self.debaters[side]
-                    response = player.rebuttal_generation(history=self.debate_process[1:], max_time=REBUTTAL_TIME, time_control=self.time_control)
-                    self.debate_process.append({
-                        "stage": stage,
-                        "side": side,
-                        "content": response
-                    })
+                    response = player.rebuttal_generation(
+                        history=self.debate_process[1:], max_time=REBUTTAL_TIME, time_control=self.time_control
+                    )
+                    self.debate_process.append({"stage": stage, "side": side, "content": response})
             elif stage == "closing":
-                for side in order: # reverse to make compatible with agent4debate
+                for side in order:  # reverse to make compatible with agent4debate
                     player = self.debaters[side]
-                    response = player.closing_generation(history=self.debate_process[1:], max_time=CLOSING_TIME, time_control=self.time_control)
-                    self.debate_process.append({
-                        "stage": stage,
-                        "side": side,
-                        "content": response
-                    })
+                    response = player.closing_generation(
+                        history=self.debate_process[1:], max_time=CLOSING_TIME, time_control=self.time_control
+                    )
+                    self.debate_process.append({"stage": stage, "side": side, "content": response})
             logger.info(f"[{stage}] Done")
             if self.debug:
                 response = input("Press N to stop: ")
                 if response.lower() == "n":
                     break
 
-    
     def eval(self, process=None):
         logger.info("[Evaluation] Start")
         output = {}
@@ -137,13 +130,16 @@ class Env():
 
         side_info = {
             "for": {"content": [p["content"] for p in process if p["side"] == "for"], "claims": [], "surprises": []},
-            "against": {"content": [p["content"] for p in process if p["side"] == "against"], "claims": [], "surprises": []}
+            "against": {
+                "content": [p["content"] for p in process if p["side"] == "against"],
+                "claims": [],
+                "surprises": [],
+            },
         }
         for side in ["for", "against"]:
             obj_scores, obj_scores_explanation = self.judge.finegrained_check(self.motion, side_info, side)
             output[f"{side}_objective_scores"] = extract_overall_score(obj_scores)
             output[f"{side}_objective_scores_explanation"] = obj_scores_explanation
-
 
         # audience
         output["audience_votes"] = []
@@ -155,7 +151,9 @@ class Env():
             for side in ["for", "against"]:
                 surprise_scores, surprise_explanation = audience.surprise(self.motion, side, side_info[side]["claims"])
                 side_info[side]["surprises"] = surprise_scores[0]
-                output[f"{side}_surprise"].append(sum(side_info[side]["surprises"].values()) / len(side_info[side]["surprises"]))
+                output[f"{side}_surprise"].append(
+                    sum(side_info[side]["surprises"].values()) / len(side_info[side]["surprises"])
+                )
                 output[f"{side}_surprise_explanation"].append(surprise_explanation[0])
 
         logger.info("[Evaluation] Done")
@@ -176,7 +174,9 @@ class Env():
             versionb = comparison_process[phase][order[1]].split("**Reference**")[0]
 
             # judge
-            winner, comments = self.judge.comparison(motion=self.motion, context=context, side=side, a=versiona, b=versionb, max_tokens=200)
+            winner, comments = self.judge.comparison(
+                motion=self.motion, context=context, side=side, a=versiona, b=versionb, max_tokens=200
+            )
             output[phase]["judge_version"] = winner
             output[phase]["judge_version_comment"] = comments
 
@@ -184,7 +184,9 @@ class Env():
             output[phase]["audience_version"] = []
             output[phase]["audience_version_comment"] = []
             for audience in self.audiences:
-                winner, comments = audience.comparison(motion=self.motion, context=context, side=side, a=versiona, b=versionb, max_tokens=200)
+                winner, comments = audience.comparison(
+                    motion=self.motion, context=context, side=side, a=versiona, b=versionb, max_tokens=200
+                )
                 output[phase]["audience_version"].append(winner)
                 output[phase]["audience_version_comment"].append(comments)
 
@@ -196,7 +198,7 @@ class Env():
                 {
                     "stage": stage,
                     "side": side,
-                    "content": comparison_process[phase]["keep_response"].split("**Reference**")[0]
+                    "content": comparison_process[phase]["keep_response"].split("**Reference**")[0],
                 }
             )
 
@@ -231,23 +233,23 @@ if __name__ == "__main__":
     # Set use_rehearsal_tree and use_debate_flow_tree based on command line arguments
     # use_rehearsal_tree = not args.no_rehearsal_tree
     # use_debate_flow_tree = not args.no_debate_flow_tree
-    
+
     # if "env" not in config:
     #     config["env"] = {}
     # config["env"]["use_rehearsal_tree"] = use_rehearsal_tree
     # config["env"]["use_debate_flow_tree"] = use_debate_flow_tree
-    
+
     # use_rehearsal_tree = config["env"]["use_rehearsal_tree"]
     # use_debate_flow_tree = config["env"]["use_debate_flow_tree"]
     # logger.info(f"Use rehearsal tree: {use_rehearsal_tree}")
     # logger.info(f"Use debate flow tree: {use_debate_flow_tree}")
 
     env_config = EnvConfig(
-                            debater_config=[DebaterConfig(**config) for config in config["debater"]], 
-                            judge_config=JudgeConfig(**config["judge"]), 
-                            audience_config=AudienceConfig(**config["audience"]), 
-                            **config["env"]
-                            )    
+        debater_config=[DebaterConfig(**config) for config in config["debater"]],
+        judge_config=JudgeConfig(**config["judge"]),
+        audience_config=AudienceConfig(**config["audience"]),
+        **config["env"],
+    )
     env = Env(env_config, args.debug)
 
     if args.pre_only:
@@ -279,31 +281,40 @@ if __name__ == "__main__":
             "debate_process": env.debate_process[1:],
             "debate_thoughts": {
                 "for": env.debaters["for"].debate_thoughts,
-                "against": env.debaters["against"].debate_thoughts
+                "against": env.debaters["against"].debate_thoughts,
             },
             "debate_tree": {
                 "for": [
-                    env.debaters["for"].debate_tree.get_tree_info() if env.debaters["for"].type in ["treedebater"] else {},
-                    env.debaters["for"].oppo_debate_tree.get_tree_info() if env.debaters["for"].type in ["treedebater"] else {},
+                    (
+                        env.debaters["for"].debate_tree.get_tree_info()
+                        if env.debaters["for"].type in ["treedebater"]
+                        else {}
+                    ),
+                    (
+                        env.debaters["for"].oppo_debate_tree.get_tree_info()
+                        if env.debaters["for"].type in ["treedebater"]
+                        else {}
+                    ),
                 ],
                 "against": [
-                    env.debaters["against"].debate_tree.get_tree_info() if env.debaters["against"].type in ["treedebater"] else {},
-                    env.debaters["against"].oppo_debate_tree.get_tree_info() if env.debaters["against"].type in ["treedebater"] else {},
-                ]
+                    (
+                        env.debaters["against"].debate_tree.get_tree_info()
+                        if env.debaters["against"].type in ["treedebater"]
+                        else {}
+                    ),
+                    (
+                        env.debaters["against"].oppo_debate_tree.get_tree_info()
+                        if env.debaters["against"].type in ["treedebater"]
+                        else {}
+                    ),
+                ],
             },
-            "conversation": {
-                "for": env.debaters["for"].conversation,
-                "against": env.debaters["against"].conversation
-            }
+            "conversation": {"for": env.debaters["for"].conversation, "against": env.debaters["against"].conversation},
         }
         json.dump(record, open(save_file, "w"), indent=2)
 
         if not args.debug:
             evaluation, side_into = env.eval()
             logger.info(f"Result: {evaluation}")
-            record.update({
-                "evaluation": evaluation,
-                "eval_side_info": side_into
-            })
+            record.update({"evaluation": evaluation, "eval_side_info": side_into})
             json.dump(record, open(save_file, "w"), indent=2)
-
