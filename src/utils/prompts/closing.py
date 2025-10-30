@@ -1,0 +1,105 @@
+context = (
+        "Now it comes the closing statement, where you summarize your key points and reaffirm your position ({act} the topic) .\n" 
+        "Your position is to {act} the topic. The opponent is to {counter_act} the topic.\n\n"
+)
+
+default_closing_prompt = context + (
+        "Your response should be about {{n_words}} words and do not output other things than our response.\n"
+    )
+
+expert_closing_prompt = context + (
+        "## Primary Objectives of a Closing Statement\n"
+        "- Convince the judges that your team won more battlegrounds.\n"
+        "- Demonstrate your team's strengths and the opponent's weaknesses within each battleground based on the clash outcomes.\n"
+        "\n"
+        "## Rules \n"
+        "- Ensure your writing is fluent, natural, and indistinguishable from human writing.\n"
+        "- Avoid empty appeals to values. Remember, value appeals should connect back to the topic and your stance.\n"
+        "- When citing data or theories, provide sources. Do not introduce new information or data in the closing statement.\n"
+        "- Avoid repeating arguments from previous speeches. Instead of mechanically listing points, focus on deepening your arguments and ensuring logical coherence.\n"
+        "- This is a closing statement, not the time for new arguments. Prioritize depth over breadth.\n"
+        "- Base your arguments on the identified battlegrounds and clashes.\n"
+        "\n"
+    )
+expert_closing_prompt_2 = expert_closing_prompt + (
+        "## Your Task \n"
+        "Deliver a compelling closing statement of {{n_words}} words that:\n\n"
+        "1. **Frames the Debate by Battlefield:** Clearly outline the core conflict between the two sides, highlighting the key issues at stake. \n"
+        "2. **Summarize Your Victory by Impact Analysis:** \n"
+            "- Show how your arguments achieved better outcomes for key stakeholders\n"
+            "- Demonstrate superior cost-benefit ratio with specific metrics\n"
+            "- Link outcomes back to judging criteria established in opening\n"
+        "3. **Expose Critical Flaws in Opposition:**\n"
+            "- Highlight unfulfilled burdens of proof\n"
+            "- Show major assumptions that were successfully challenged\n"
+            "- Demonstrate patterns of failed responses to your key arguments\n"
+        "4. **Delivers a Persuasive Conclusion:** Leave a lasting impression by reinforcing your key points and appealing to the audience's values. \n\n"
+        
+        "## Workflow \n"
+        "1. Analyze the debate flow trees to strategically allocate your word budget based on argument importance and status. Structure your response according to the above points.\n"
+        "2. Generate conversational yet language suitable arguments following the allocated word budget. Write as you would speak, Write as you would speak, with VARIED sentence lengths. Short sentences are preferred. Use ORATORICAL language while keeping the original argument sequence. \n"
+        "3. Use clear verbal signposting. Use clear transitions, including listener-oriented phrases: 'As you'll see ', 'Consider this '. Signal key points: 'The crucial issue here is ', 'What's particularly important '. \n"
+        "4. You SHOULD connect with your audience by:\n"
+            "- Reframe scenarios to directly involve the audience by using 'you' as the protagonist and describing how the situation would impact their lives, making abstract concepts personally relevant and emotionally resonant."
+            "- Use analogies, metaphors, or vivid imagery to make complex ideas more accessible and memorable."
+        "5. Deliver a {{n_words}}-word closing statement. The response should be written in clear, flowing transcript for the competitive debate game of prose without any bullet points, asterisks, or numbered lists. Present only the final text. \n\n"
+        "Note that it's possible that the debate flow tree is not provided, in this case, you can just generate a closing statement without following the debate flow tree.\n"
+
+        "## Tree Structures\n"
+        "Two debate flow trees track the exchange of arguments. Each node contains:\n"
+        "* Data: The specific claims and arguments\n"
+        "* Visit Count: Number of times addressed in debate\n"
+        "* Status: 'proposed' (new), 'attacked' (challenged), or 'solved' (resolved)\n\n"
+
+        "Your Tree:\n"
+        "* Level-1: Your main claims and arguments\n"
+        "* Level-2: Opponent's rebuttals on your main claims and arguments\n"
+        "* Level-3: Your defenses on the rebuttals\n"
+        "Opponent's Tree:\n"
+        "* Level-1: Opponent's main claims and arguments\n"
+        "* Level-2: Your rebuttals on the opponent's main claims and arguments\n"
+        "* Level-3: Opponent's defenses on your rebuttals\n\n"
+
+        "## Time Allocation Guidelines\n"
+        "1. Prioritize nodes with:\n"
+        "   * High visit counts which means the main conflict and battlefield\n"
+        "   * 'Attacked' status in your Level-2 which means the opponent's main claims that requires defense\n"
+        "   * 'Proposed' status in your opponent's Level-1 which means the opponent's main claims that you can attack\n"
+        "2. Balance time between:\n"
+        "   * Attacking the opponent's main claims\n"
+        "   * Defending your attacked claims\n"
+        "   * Reinforcing your successful defenses or unattacked claims\n"
+        "   * Pressing advantages in successful attacks\n"
+        "   * Countering the opponent's attacks\n"
+
+        "## Key Considerations \n"
+        "* **Track Record on Key Claims**: \n"
+            "- Which of our claims stood up to opposition challenges?\n"
+            "- Which opposition claims did we successfully refute?\n"
+            "- What assumptions did we successfully challenge?\n"
+        "* **Impact Comparison**:\n"
+            "- Compare concrete outcomes of both approaches\n"
+            "- Show superior achievement of debate objectives\n"
+            "- Link to established judging criteria\n"
+
+
+        "## Tips\n"
+        "{{tips}}\n\n"
+
+        "## Input Information\n"
+        "Debate flow trees with node data:\n"
+        "Your Tree: \n{tree}\n\n"
+        "Opponent's Tree: \n{oppo_tree}\n\n"
+
+        "## Important Notes\n"
+        "1. Revisit scenarios or examples from your opening and rebuttal statements to reinforce key points\n"
+        "2. Use contrasts to highlight the strengths of your position. When opponents emphasize their strengths or your weaknesses, demonstrate how your position offers greater advantages or fewer drawbacks through direct comparison\n\n"
+        "3. Do not use new evidences or arguments in the closing statement. Focus on summarizing and reinforcing your existing points. Do not need to include the reference section in the closing statement.\n\n"
+
+
+        "## Output with the format (two parts start with **Closing Plan** and **Statement**):\n"
+        "**Closing Plan**: allocate your word budget based on the debate flow trees and explain your rationale. Make sure the total words is {{n_words}}.\n"
+        "**Statement**: after the closing plan, generate a closing statement of {{n_words}} words in total, do not include any other text\n"
+
+        
+)

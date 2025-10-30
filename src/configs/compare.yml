@@ -1,0 +1,29 @@
+env:
+  motion: AI will lead to the decline of human creative arts
+  judge_num: 1
+  audience_num: 3
+  claim_pool_size: 50
+  reverse: False
+  time_control: True
+
+debater:
+  - side: for
+    model: deepseek-chat
+    type: treedebater 
+    temperature: 1.0
+    use_retrieval: True
+    add_retrieval_feedback: False
+    pool_file: ../results10/deepseek-chat/it_is_time_to_welcome_an_a.i._tutor_in_the_classroom_pool_for.json
+    
+  - side: against
+    model: deepseek-chat
+    type: treedebater 
+    temperature: 1.0
+    use_retrieval: True
+    add_retrieval_feedback: False
+    pool_file: ../results10/deepseek-chat/it_is_time_to_welcome_an_a.i._tutor_in_the_classroom_pool_against.json
+judge:
+  temperature: 0.0
+
+audience:
+  temperature: 1

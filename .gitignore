@@ -1,0 +1,27 @@
+
+# files
+*.log
+*.log/*
+*.pyc
+__pycache__/
+tmp*
+*.ipynb
+*.DS_Store
+
+api_key.json
+*.mp3
+
+# dir
+dataset/
+data/
+logs/
+results*
+checkpoints*
+log_files*
+archive*
+.vscode/
+src/wandb/
+src/configs/*/case*
+.cache/
+
+dependencies/
