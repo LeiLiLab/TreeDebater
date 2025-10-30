@@ -1,15 +1,18 @@
+import json
 import os
 import re
-import json
+from io import BytesIO
+from typing import Dict, List
+
 import syllables
 from g2p_en import G2p
-from typing import List, Dict
-from openai import OpenAI
 from mutagen.mp3 import MP3
-from io import BytesIO
-from .fs_wrapper import FastSpeechWrapper
+from openai import OpenAI
+
 from .constants import openai_api_key
+from .fs_wrapper import FastSpeechWrapper
 from .tool import remove_citation, remove_subtitles
+
 
 class LengthEstimator:
     def __init__(self, mode):
@@ -25,7 +28,7 @@ class LengthEstimator:
                 self.client = FastSpeechWrapper(batch_size=2)
             elif self.mode == "openai":
                 self.client = OpenAI(api_key=openai_api_key)
-        
+
         if isinstance(content, str):
             content = [content]
         clean_content = [remove_citation(c)[0] for c in content]
@@ -38,18 +41,13 @@ class LengthEstimator:
             length = [LengthEstimator.count_phonemes(c) for c in clean_content]
         elif self.mode == "fastspeech":
             length = self.client.query_time(clean_content)
-            length = [l * 1.11 - 7 if l > 100 else l for l in length] # fit openai speed
+            length = [l * 1.11 - 7 if l > 100 else l for l in length]  # fit openai speed
         elif self.mode == "openai":
             length = []
             for c in clean_content:
-                response = self.client.audio.speech.create(
-                    model="tts-1",
-                    voice="echo",
-                    input=c[:4096]
-                )
+                response = self.client.audio.speech.create(model="tts-1", voice="echo", input=c[:4096])
 
                 audio_bytes = BytesIO(response.content)
-        
 
                 length.append(MP3(audio_bytes).info.length)
         else:
@@ -57,19 +55,18 @@ class LengthEstimator:
         if len(length) == 1:
             return length[0]
         return length
-        
 
     @staticmethod
     def count_words(text):
         """
         Count the number of words in a text string.
-        
+
         Args:
             text (str): The input text to count words from
-            
+
         Returns:
             int: Number of words in the text
-            
+
         Features:
         - Handles multiple spaces/newlines
         - Considers hyphenated words as single words
@@ -79,68 +76,68 @@ class LengthEstimator:
         """
         if not isinstance(text, str):
             raise TypeError("Input must be a string")
-        
+
         if not text.strip():
             return 0
-            
+
         # Replace multiple spaces/newlines with single space
-        text = ' '.join(text.split())
-        
+        text = " ".join(text.split())
+
         # Handle special cases
         def is_word(token):
             # Check if token contains at least one letter or number
             return any(c.isalnum() for c in token)
-        
+
         # Split on spaces and filter out non-words
         words = [word for word in text.split() if is_word(word)]
-        
+
         return len(words)
 
     @staticmethod
     def count_syllables(text):
         if not isinstance(text, str):
             raise TypeError("Input must be a string")
-        
+
         if not text.strip():
             return 0
-            
+
         # Replace multiple spaces/newlines with single space
-        text = ' '.join(text.split())
-        
+        text = " ".join(text.split())
+
         # Handle special cases
         def is_word(token):
             # Check if token contains at least one letter or number
             return any(c.isalnum() for c in token)
-        
+
         # Split on spaces and filter out non-words
         words = [word for word in text.split() if is_word(word)]
         n_count = syllables.estimate(" ".join(words))
-        
+
         return n_count
 
     @staticmethod
     def count_phonemes(text):
         if not isinstance(text, str):
             raise TypeError("Input must be a string")
-        
+
         if not text.strip():
             return 0
-            
+
         # Replace multiple spaces/newlines with single space
-        text = ' '.join(text.split())
-        
+        text = " ".join(text.split())
+
         # Handle special cases
         def is_word(token):
             # Check if token contains at least one letter or number
             return any(c.isalnum() for c in token)
-        
+
         # Split on spaces and filter out non-words
         words = [word for word in text.split() if is_word(word)]
 
         g2p = G2p()
         phonemes = [x for x in g2p(" ".join(words)) if x != " "]
         n_count = len(phonemes)
-        
+
         return n_count
 
 

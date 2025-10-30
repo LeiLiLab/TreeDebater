@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling>=1.24.2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "debate"
+version = "0.0.0"
+description = "Debate project"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "LeiLi Lab"}]
+dependencies = []
+
+[tool.black]
+line-length = 120
+target-version = ["py310", "py311"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "if __name__ == \"__main__\":"
+]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.isort]
+profile = "black"
+line_length = 120
+skip = ["dataset"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unreachable = true
+strict_optional = false
+show_error_codes = true
+pretty = true
+files = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests", "test"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = []

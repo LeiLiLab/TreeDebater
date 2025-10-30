@@ -1,15 +1,15 @@
-import re
-import os
-import json
 import argparse
+import json
+import os
+import re
 from functools import partial
 
 from tavily import TavilyClient
 
-from utils.prompts import search_prompt, iterative_search_prompt, summarize_result_prompt
+from utils.db import get_cached_answer, save_query
 from utils.model import HelperClient
+from utils.prompts import iterative_search_prompt, search_prompt, summarize_result_prompt
 from utils.tool import logger
-from utils.db import save_query, get_cached_answer
 
 MAX_QUERY = 10
 
@@ -25,7 +25,7 @@ def find_tavily(text):
         ridx = text.find("```", lidx + 9)
         if ridx == -1:
             break
-        tavily_block = text[lidx + 9:ridx].strip().split("\n")
+        tavily_block = text[lidx + 9 : ridx].strip().split("\n")
         tavily_blocks.extend(tavily_block)
         start_idx = ridx + 3
 
@@ -35,11 +35,11 @@ def find_tavily(text):
 def clean_raw_content(raw_content):
     if raw_content is None:
         return ""
-    pattern = re.compile(r'  +')
+    pattern = re.compile(r"  +")
     raw_content = raw_content.replace("\n", " ")
     raw_content = raw_content.replace("\\n", " ")
     raw_content = raw_content.replace("\t", " ")
-    raw_content = pattern.sub(' ', raw_content)
+    raw_content = pattern.sub(" ", raw_content)
     return raw_content
 
 
@@ -52,16 +52,16 @@ def get_search_result(tavily_client, query_list):
             logger.debug(f"[Search-Helper] Searching Hit in Cache")
             response_list.extend(json.loads(cached_answer[0]))
             continue
-            
+
         max_retry = 3
         while max_retry > 0:
             try:
                 response = tavily_client.search(
                     query=query,
                     search_depth="advanced",
-                    max_results = 5,
+                    max_results=5,
                     include_raw_content=True,
-                    exclude_domains=["arxiv.org"]
+                    exclude_domains=["arxiv.org"],
                 )
                 break
             except Exception as e:
@@ -98,47 +98,51 @@ def get_search_result(tavily_client, query_list):
         response_list.extend(results)
     return response_list
 
+
 def get_search_query(llm_client, motion, stance, claim=None, extra_prompt=None):
     prompt = search_prompt
-    prompt += (
-        f"**Topic**: {motion}\n\n"
-        f"**Stance**: {stance}\n\n"
-    )
+    prompt += f"**Topic**: {motion}\n\n" f"**Stance**: {stance}\n\n"
     if claim is not None:
         prompt += "\n\n**Claim**: {claim}\n\n".format(claim=claim)
     if extra_prompt is not None:
         prompt += "\n\n" + extra_prompt
-    logger.debug("[Search-Helper-Prompt] " + prompt.strip().replace('\n',' ||| '))
+    logger.debug("[Search-Helper-Prompt] " + prompt.strip().replace("\n", " ||| "))
     response = llm_client(prompt=prompt)[0]
-    logger.debug("[Search-Helper-Response] " + response.strip().replace('\n',' ||| '))
+    logger.debug("[Search-Helper-Response] " + response.strip().replace("\n", " ||| "))
     queries = find_tavily(response)
-    queries = [q.replace("\"", "") for q in queries]
+    queries = [q.replace('"', "") for q in queries]
 
     logger.debug("[Search-Helper-Queries] " + " ||| ".join(queries))
     return queries
 
 
 def update_search_query(llm_client, motion, stance, claim, results):
-    simple_results = [{"query": r["query"], "title": r["title"], "url": r["url"], "content": r["content"]} for r in results]
-    prompt = iterative_search_prompt.format(motion=motion, stance=stance, claim=claim, results=json.dumps(simple_results, indent=2))
-    logger.debug("[Search-Helper-Update-Prompt] " + prompt.strip().replace('\n',' ||| '))
+    simple_results = [
+        {"query": r["query"], "title": r["title"], "url": r["url"], "content": r["content"]} for r in results
+    ]
+    prompt = iterative_search_prompt.format(
+        motion=motion, stance=stance, claim=claim, results=json.dumps(simple_results, indent=2)
+    )
+    logger.debug("[Search-Helper-Update-Prompt] " + prompt.strip().replace("\n", " ||| "))
     response = llm_client(prompt=prompt)[0]
-    logger.debug("[Search-Helper-Update-Response] " + response.strip().replace('\n',' ||| '))
+    logger.debug("[Search-Helper-Update-Response] " + response.strip().replace("\n", " ||| "))
     queries = find_tavily(response)
     logger.debug("[Search-Helper-Queries] " + " ||| ".join(queries))
     return queries
+
 
 def summarize_search_result(llm_client, claim, search_results):
     for r in search_results:
         query = r["query"]
         content = {"title": r["title"], "url": r["url"], "content": r["content"]}
         prompt = summarize_result_prompt.format(claim=claim, query=query, results=json.dumps(content, indent=2))
-        logger.debug("[Search-Summarize-Prompt] " + prompt.strip().replace('\n',' ||| '))
+        logger.debug("[Search-Summarize-Prompt] " + prompt.strip().replace("\n", " ||| "))
         response = llm_client(prompt=prompt)[0]
-        logger.debug("[Search-Summarize-Response] " + response.strip().replace('\n',' ||| '))
+        logger.debug("[Search-Summarize-Response] " + response.strip().replace("\n", " ||| "))
         r["argument"] = response
     return search_results
-        
+
+
 def get_source_info(llm, evidence):
     for e in evidence:
         e["raw_content"] = " ".join(e["raw_content"].split()[:256])
@@ -155,16 +159,25 @@ def get_source_info(llm, evidence):
             reliability += 1
         if "publication" in e and e["publication"] != "":
             reliability += 1
-        if "arxiv" in e.get("url", "").lower() or "arxiv" in e.get("source", "").lower() or "arxiv" in e.get("publication", "").lower():
+        if (
+            "arxiv" in e.get("url", "").lower()
+            or "arxiv" in e.get("source", "").lower()
+            or "arxiv" in e.get("publication", "").lower()
+        ):
             reliability = 0
         e["reliability"] = reliability
-    
+
     return evidence
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str, default="gemini-1.5-pro")
-    parser.add_argument("--claim", type=str, default="Fat taxes disproportionately burden low-income households, exacerbating existing inequalities.")
+    parser.add_argument(
+        "--claim",
+        type=str,
+        default="Fat taxes disproportionately burden low-income households, exacerbating existing inequalities.",
+    )
     parser.add_argument("--motion", type=str, default="we should use fat tax")
     parser.add_argument("--stance", type=str, default="support")
     args = parser.parse_args()
@@ -182,7 +195,7 @@ if __name__ == "__main__":
     # Step 3. Update search queries
     new_search_queries = update_search_query(llm_client, args.claim, search_results)
     if len(new_search_queries) + len(search_queries) > MAX_QUERY:
-        new_search_queries = new_search_queries[:MAX_QUERY - len(search_queries)]
+        new_search_queries = new_search_queries[: MAX_QUERY - len(search_queries)]
     new_search_results = get_search_result(tavily_client, new_search_queries)
 
     # Step 4. Save the results
@@ -190,5 +203,3 @@ if __name__ == "__main__":
     all_results = summarize_search_result(llm_client, args.claim, all_results)
     json.dump(all_results, open(f"{args.claim}_search_results.json", "w"), indent=2)
     print(f"Saved to {args.claim}_search_results.json")
-
-

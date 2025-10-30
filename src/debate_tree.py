@@ -1,25 +1,23 @@
+import argparse
+import json
 import os
 import sys
-import json
-import argparse
-import nltk
-import torch
 import time
+from functools import partial
+from typing import List
+
+import google.generativeai as genai
+import nltk
 import numpy as np
 import pandas as pd
-from typing import List
-import google.generativeai as genai
-from functools import partial
-from utils.tool import logger
+import torch
+from sentence_transformers.util import dot_score, semantic_search
 
-from utils.model import HelperClient, reward_model
-from utils.tool import logger, get_response_with_retry
+from evaluator import evaluate_defense_strength, evaluate_support_strength
 from utils.constants import EMBEDDING_MODEL
+from utils.model import HelperClient, reward_model
+from utils.tool import get_response_with_retry, logger
 
-from evaluator import evaluate_support_strength, evaluate_defense_strength
-
-from sentence_transformers.util import (semantic_search, 
-                                        dot_score)
 
 def propose_new_claims(proposer, motion, side, history, n):
     # generate the next layer of rebuttal claims
@@ -37,7 +35,6 @@ def propose_new_claims(proposer, motion, side, history, n):
         "## Task: Generate Strategic Counter-Arguments\n"
         f"You are participating in a formal debate on the motion: {motion}\n"
         f"Your position: {act} the motion\n\n"
-        
         "## Your Objective\n"
         f"Generate {num} persuasive counter-arguments that:\n"
         "1. Focus on countering the opponent's last argument\n"
@@ -45,25 +42,21 @@ def propose_new_claims(proposer, motion, side, history, n):
         "3. Strengthen your stance on the motion\n"
         "4. Cover distinct aspects without overlap\n"
         "5. Maintain consistency with your previous statements\n\n"
-
         "### Counter-Argument Techniques\n"
         "- **Logical fallacies:** Identify errors in reasoning (cause-effect reversal, equivocation, straw man arguments, circular reasoning, tautology)\n"
-        "    - **Example:** \"You've committed a false dilemma fallacy by suggesting only two possible outcomes when multiple alternatives exist.\"\n"
+        '    - **Example:** "You\'ve committed a false dilemma fallacy by suggesting only two possible outcomes when multiple alternatives exist."\n'
         "- **Factual errors:** Highlight inaccuracies in the opponent's factual statements\n"
-        "    - **Example:** \"Your argument relies on statistics from 2010, but more recent data from 2023 shows the opposite trend.\"\n"
+        '    - **Example:** "Your argument relies on statistics from 2010, but more recent data from 2023 shows the opposite trend."\n'
         "- **Logic errors:** Identify flawed underlying logic\n"
-        "    - **Example 1:** \"Your conclusion is based on premise A, but A is not always true. For example, ... Therefore, your conclusion is flawed.\"\n"
-        "    - **Example 2:** \"Your conclusion relies on premises A and B, but B is not always true. For example, ... Therefore, your conclusion is not always correct.\"\n"
-        "    - **Example 3:** \"You claim A and B lead to C, but that is not always the case. For example, ... Therefore, your conclusion is questionable.\"\n"
+        '    - **Example 1:** "Your conclusion is based on premise A, but A is not always true. For example, ... Therefore, your conclusion is flawed."\n'
+        '    - **Example 2:** "Your conclusion relies on premises A and B, but B is not always true. For example, ... Therefore, your conclusion is not always correct."\n'
+        '    - **Example 3:** "You claim A and B lead to C, but that is not always the case. For example, ... Therefore, your conclusion is questionable."\n'
         "- **Leveling the playing field:** Neutralize the opponent's advantage by showing both sides share the same issue or benefit\n"
-        "    - **Example 1:** \"You claim A, but B also has this problem. Therefore, both sides are equal in this regard.\"\n"
-        "    - **Example 2:** \"You mention the benefits of A, but B offers the same benefits. So, both sides are equally advantageous.\"\n"
-
-        
+        '    - **Example 1:** "You claim A, but B also has this problem. Therefore, both sides are equal in this regard."\n'
+        '    - **Example 2:** "You mention the benefits of A, but B offers the same benefits. So, both sides are equally advantageous."\n'
         "## Context\n"
         "Previous debate exchanges:\n"
         f"{history_str}\n\n"
-        
         "## Response Format\n"
         "Provide your response in JSON format:\n"
         "{{\n"
@@ -76,10 +69,11 @@ def propose_new_claims(proposer, motion, side, history, n):
         "    ]\n"
         "}}\n"
     )
-    logger.debug("[Proposer-Tree-Helper-Prompt] " + prompt.strip().replace('\n',' ||| '))
+    logger.debug("[Proposer-Tree-Helper-Prompt] " + prompt.strip().replace("\n", " ||| "))
     content, response = get_response_with_retry(proposer, prompt, "statements", temperature=1)
-    logger.debug("[Proposer-Tree-Helper-Response] " + response.strip().replace('\n',' ||| '))
+    logger.debug("[Proposer-Tree-Helper-Response] " + response.strip().replace("\n", " ||| "))
     return content
+
 
 def update_eval_score(node, scorer):
     if node.children:
@@ -115,18 +109,24 @@ class Node:
         while cur_node:
             history.append(cur_node.data)
             cur_node = cur_node.parent
-        history = history[::-1] #NOTE: history is from root to this node
+        history = history[::-1]  # NOTE: history is from root to this node
 
         defense, support = 0, 0
         if self.parent:
             defense = evaluate_defense_strength(scorer, self.motion, self.data, self.parent.data, history=history)
             if self.parent.parent:
-                support = evaluate_support_strength(scorer, self.motion, self.data, self.parent.parent.data, history=history)
+                support = evaluate_support_strength(
+                    scorer, self.motion, self.data, self.parent.parent.data, history=history
+                )
         else:
             if self.side == "for":
-                support = evaluate_support_strength(scorer, self.motion, self.data, self.motion, history=[self.motion, "", self.data])
+                support = evaluate_support_strength(
+                    scorer, self.motion, self.data, self.motion, history=[self.motion, "", self.data]
+                )
             else:
-                support = evaluate_defense_strength(scorer, self.motion, self.data, self.motion, history=[self.motion, self.data])
+                support = evaluate_defense_strength(
+                    scorer, self.motion, self.data, self.motion, history=[self.motion, self.data]
+                )
         self.scores = {"defense": defense, "support": support}
 
     def get_minimax_score(self, max_depth=2, level_decoy=0.8, support_weight=0.5, root_type="support"):
@@ -153,12 +153,15 @@ class Node:
             # self is player 1, child is player 2, child.children is player 1
             for child in self.children:
                 # player 1 choose the best rebuttal to player 2, maximize player 1's utility (defense + support)
-                child_scores = [(1-support_weight) * c.scores["defense"] + support_weight * c.scores["support"] for c in child.children]
+                child_scores = [
+                    (1 - support_weight) * c.scores["defense"] + support_weight * c.scores["support"]
+                    for c in child.children
+                ]
                 best_idx = np.argmax(child_scores).item()
                 best_child = child.children[best_idx]
 
                 # player 2's utility (towards player 1)
-                utility = - child.scores["defense"] + level_decoy * child_scores[best_idx]
+                utility = -child.scores["defense"] + level_decoy * child_scores[best_idx]
                 chosen_child_idx.append(best_idx)
                 chosen_child.append(best_child)
                 child_utility.append(utility)
@@ -175,7 +178,9 @@ class Node:
             # self is player 1, child is player 2
             for child in self.children:
                 # child_score is the score towards player 2
-                child_score_idx, child_path, child_score = child.get_minimax_score(max_depth=max_depth-1, level_decoy=level_decoy, support_weight=support_weight)
+                child_score_idx, child_path, child_score = child.get_minimax_score(
+                    max_depth=max_depth - 1, level_decoy=level_decoy, support_weight=support_weight
+                )
                 child_utility.append(-child_score)
                 chosen_child_idx.append(child_score_idx)
                 chosen_child.append(child_path)
@@ -186,11 +191,11 @@ class Node:
             return path_idx, path, root_score + level_decoy * child_utility[idx]
         else:
             raise ValueError("Currently only support depth 3")
-        
+
     def get_strength(self, max_depth=1, level_decoy=0.8, support_weight=0.5):
         strength = 0
         if self.scores["defense"] != 0 and self.scores["support"] != 0:
-            strength = support_weight * self.scores["defense"] + (1-support_weight) * self.scores["support"]
+            strength = support_weight * self.scores["defense"] + (1 - support_weight) * self.scores["support"]
         elif self.scores["defense"] != 0:
             strength = self.scores["defense"]
         elif self.scores["support"] != 0:
@@ -199,9 +204,12 @@ class Node:
         if max_depth == 0 or self.is_terminal():
             return strength
         else:
-            children_strength = [c.get_strength(max_depth=max_depth-1, level_decoy=level_decoy, support_weight=support_weight) for c in self.children]
+            children_strength = [
+                c.get_strength(max_depth=max_depth - 1, level_decoy=level_decoy, support_weight=support_weight)
+                for c in self.children
+            ]
             return strength - level_decoy * max(children_strength)
-    
+
     def add_node(self, data=None, new_claim=None, new_argument=None, side=None):
         if side is None:
             new_side = "against" if self.side == "for" else "for"
@@ -231,9 +239,11 @@ class Node:
         while cur_node:
             history.append(cur_node.data)
             cur_node = cur_node.parent
-        history = history[::-1] #NOTE: history is from root to this node
+        history = history[::-1]  # NOTE: history is from root to this node
 
-        new_data = propose_new_claims(proposer, self.motion, "against" if self.side=="for" else "for",  history, n=branch)
+        new_data = propose_new_claims(
+            proposer, self.motion, "against" if self.side == "for" else "for", history, n=branch
+        )
         for data in new_data:
             child_node = self.add_node(data)
             child_node.eval_score(scorer)
@@ -248,27 +258,27 @@ class Node:
             "status": self.status,
             "visit_count": self.visit_count,
             "scores": self.scores,
-            "children": []
+            "children": [],
         }
         for child in self.children:
             child_info = child.get_node_info()
             info["children"].append(child_info)
         return info
-    
+
     def update_status(self, status, keep_visit=False):
         self.status = status
         if status != "waiting" or not keep_visit:
             self.visit_count += 1
-    
+
     def is_terminal(self):
         return len(self.children) == 0
-    
+
     def update_evidence(self, new_evidence):
         if isinstance(new_evidence, list):
             self.evidence.extend(new_evidence)
         else:
             self.evidence.append(new_evidence)
-    
+
     @property
     def data(self):
         info = {
@@ -276,7 +286,7 @@ class Node:
             "argument": self.argument,
         }
         return json.dumps(info)
-    
+
     @property
     def statement(self):
         info = {
@@ -284,7 +294,7 @@ class Node:
             "argument": self.argument,
         }
         return json.dumps(info)
-    
+
     @staticmethod
     def from_json(motion, side, parent, json_info):
         node = Node(motion, side, parent)
@@ -299,6 +309,7 @@ class Node:
             node.children.append(child_node)
         return node
 
+
 class Tree:
     def __init__(self, motion, side):
         self.motion = motion
@@ -308,7 +319,7 @@ class Tree:
 
     def get_all_nodes(self):
         return self.get_all_nodes_recursive(self.root)
-    
+
     def get_all_nodes_recursive(self, node):
         all_nodes = []
         if node is None:
@@ -324,12 +335,12 @@ class Tree:
             if node.level == level:
                 nodes.append(node)
         return nodes
-    
+
     def get_node_by_side(self, side):
         if side is None:
             side = self.side
         return self.get_node_by_side_recursive(self.root, side)
-    
+
     def get_node_by_side_recursive(self, node, side):
         side_nodes = []
         if node is None:
@@ -349,7 +360,7 @@ class Tree:
         if node.claim == claim and (side is None or node.side == side):
             return node
         for child in node.children:
-            match =  self.get_node_by_claim_recursive(child, claim, side=side)
+            match = self.get_node_by_claim_recursive(child, claim, side=side)
             if match:
                 return match
         return None
@@ -363,7 +374,7 @@ class Tree:
                 status_nodes.extend(self.get_node_by_status_recursive(self.root, s, side=side))
             return status_nodes
         return self.get_node_by_status_recursive(self.root, status, side=side)
-    
+
     def get_node_by_status_recursive(self, node, status, side=None):
         status_nodes = []
         if node is None:
@@ -373,7 +384,7 @@ class Tree:
         for child in node.children:
             status_nodes.extend(self.search_status(child, status, side=side))
         return status_nodes
-    
+
     def print_tree_recursive(self, node, level=0, prefix="", include_status=False, max_print_level=None):
         if node is not None:
             if max_print_level is not None and level > max_print_level:
@@ -386,20 +397,27 @@ class Tree:
                     elif k == "support" and v != 0:
                         score_str += f"Support Score: {v:.1f}, "
             score_str = score_str.strip(", ")
-            prefix += ' ' * level * 4 + f"Level-{level} Data (Visit: {node.visit_count}, Status: {node.status}): {node.data}, Scores: {score_str}\n"
+            prefix += (
+                " " * level * 4
+                + f"Level-{level} Data (Visit: {node.visit_count}, Status: {node.status}): {node.data}, Scores: {score_str}\n"
+            )
             for child in node.children:
-                prefix += self.print_tree_recursive(child, level + 1, include_status=False, max_print_level=max_print_level)
+                prefix += self.print_tree_recursive(
+                    child, level + 1, include_status=False, max_print_level=max_print_level
+                )
         return prefix
 
     def print_tree(self, prefix="", include_status=False, max_print_level=None):
-        return self.print_tree_recursive(self.root, level=0, prefix=prefix, include_status=include_status, max_print_level=max_print_level)
+        return self.print_tree_recursive(
+            self.root, level=0, prefix=prefix, include_status=include_status, max_print_level=max_print_level
+        )
 
     def get_tree_info(self):
         info = {
             "motion": self.motion,
             "root": self.root.data,
             "side": self.side,
-            "structure": self.root.get_node_info()
+            "structure": self.root.get_node_info(),
         }
         return info
 
@@ -419,7 +437,7 @@ class Tree:
             if node.level > max_level:
                 max_level = node.level
         return max_level
-    
+
     def get_embedding_from_cache(self, contents: List[str]):
         if isinstance(contents, str):
             contents = [contents]
@@ -431,10 +449,10 @@ class Tree:
                 embeddings[idx] = self.embedding_cache[content]
             else:
                 new_content_idx.append(idx)
-                
+
         if len(new_content_idx) == 0:
             return embeddings
-        
+
         new_contents = [contents[i] for i in new_content_idx]
         max_retry = 3
         retry = 0
@@ -455,41 +473,46 @@ class Tree:
 
     def get_most_similar_node(self, query, query_embedding=None, side=None, level=None, top_k=1, threshold=0.5):
         """Returns the most similar node and its similarity score given a query.
-        
+
         Args:
             query (str): The query text to compare against
             side (str, optional): Filter nodes by side ("for" or "against"). If None, search all nodes.
-            
+
         Returns:
             tuple: (most_similar_node, similarity_score)
         """
-            
+
         nodes = self.get_node_by_side(side) if side else self.get_all_nodes()
         if level is not None:
             nodes = [node for node in nodes if node.level == level]
         nodes = [node for node in nodes if node.claim != ""]
         node_embedding = self.get_embedding_from_cache([node.claim for node in nodes])
-        
+
         if not nodes:
             return None, 0.0
-            
+
         query_embedding = self.get_embedding_from_cache(query) if query_embedding is None else query_embedding
-        hits = semantic_search(torch.tensor(query_embedding), torch.tensor(node_embedding), score_function=dot_score, top_k=top_k)[0]
+        hits = semantic_search(
+            torch.tensor(query_embedding), torch.tensor(node_embedding), score_function=dot_score, top_k=top_k
+        )[0]
         retrieval_idx = [x["corpus_id"] for x in hits if x["score"] >= threshold]
         retrieval_node = [nodes[idx] for idx in retrieval_idx]
         retrieval_similarity = [x["score"] for x in hits]
-        
+
         if len(retrieval_idx) == 0:
             highest_score = hits[0]["score"]
             highest_score_idx = hits[0]["corpus_id"]
             highest_score_claim = nodes[highest_score_idx].claim
-            logger.warning(f"No retrieval node for query: {query} (threshold: {threshold}). The highest score is {highest_score} for [{highest_score_claim}].")
+            logger.warning(
+                f"No retrieval node for query: {query} (threshold: {threshold}). The highest score is {highest_score} for [{highest_score_claim}]."
+            )
             return None, 0.0
         elif len(retrieval_idx) == 1:
             return retrieval_node[0], retrieval_similarity[0]
         else:
             return retrieval_node, retrieval_similarity
-        
+
+
 class PrepareTree(Tree):
     def __init__(self, root_data, motion, side, proposer, scorer, root_argument=None):
         super().__init__(motion, side)
@@ -523,7 +546,7 @@ class PrepareTree(Tree):
         if node is not None:
             if max_print_level is not None and level > max_print_level:
                 return ""
-            
+
             score_str = ""
             if node.scores is not None:
                 for k, v in node.scores.items():
@@ -534,13 +557,15 @@ class PrepareTree(Tree):
                     elif k == "minimax_strength" and v != 0:
                         score_str += f"Strength: {v:0.1f}, "
                 score_str = score_str.strip(", ")
-                    
+
             if include_status:
-                prefix += ' ' * level * 4 + f"Level-{level} {position}: {node.data}, Scores: {score_str}\n"
+                prefix += " " * level * 4 + f"Level-{level} {position}: {node.data}, Scores: {score_str}\n"
             else:
-                prefix += ' ' * level * 4 + f"Level-{level} {position}: {node.data}\n"
+                prefix += " " * level * 4 + f"Level-{level} {position}: {node.data}\n"
             for child in node.children:
-                prefix += self.print_tree_recursive(child, level + 1, include_status=include_status, max_print_level=max_print_level)
+                prefix += self.print_tree_recursive(
+                    child, level + 1, include_status=include_status, max_print_level=max_print_level
+                )
         return prefix
 
     def backward(self, level_decoy=0.8, support_weight=0.5):
@@ -563,8 +588,10 @@ class PrepareTree(Tree):
                 self.backward_recursive(child, level_decoy, support_weight)
             child_minimax_strength = [child.scores["minimax_strength"] for child in node.children]
             node.scores["minimax_strength"] = strength - level_decoy * max(child_minimax_strength)
-            logger.debug(f"Child Minimax Strength: {child_minimax_strength}, Max: {max(child_minimax_strength)}, Strength: {strength}, Level Decoy: {level_decoy}, Minimax Strength: {node.scores['minimax_strength']}")
-            
+            logger.debug(
+                f"Child Minimax Strength: {child_minimax_strength}, Max: {max(child_minimax_strength)}, Strength: {strength}, Level Decoy: {level_decoy}, Minimax Strength: {node.scores['minimax_strength']}"
+            )
+
     @staticmethod
     def from_json(json_info):
         motion = json_info["motion"]
@@ -574,7 +601,7 @@ class PrepareTree(Tree):
         tree = PrepareTree(root_data, motion, side, proposer=None, scorer=None)
         tree.root = Node.from_json(motion, side, None, root_json_info)
         return tree
-    
+
     @property
     def max_level(self):
         max_level = 0
@@ -582,7 +609,7 @@ class PrepareTree(Tree):
             if node.level > max_level:
                 max_level = node.level
         return max_level
-    
+
 
 class DebateTree(Tree):
     def __init__(self, motion, side):
@@ -606,25 +633,36 @@ class DebateTree(Tree):
             if max_print_level is not None and level > max_print_level:
                 return ""
             if level == 0:
-                prefix += ' ' * level * 4 + f"Level-{level} Motion: {self.motion}, Side: {self.side}\n"
+                prefix += " " * level * 4 + f"Level-{level} Motion: {self.motion}, Side: {self.side}\n"
             else:
                 if include_status:
-                    prefix += ' ' * level * 4 + f"Level-{level} {position} (Visit: {node.visit_count}, Status: {node.status}): {node.data}\n"
+                    prefix += (
+                        " " * level * 4
+                        + f"Level-{level} {position} (Visit: {node.visit_count}, Status: {node.status}): {node.data}\n"
+                    )
                 else:
-                    prefix += ' ' * level * 4 + f"Level-{level} {position}: {node.data}\n"
+                    prefix += " " * level * 4 + f"Level-{level} {position}: {node.data}\n"
             for child in node.children:
-                prefix += self.print_tree_recursive(child, level + 1, include_status=include_status, max_print_level=max_print_level, reverse=reverse)
+                prefix += self.print_tree_recursive(
+                    child, level + 1, include_status=include_status, max_print_level=max_print_level, reverse=reverse
+                )
         return prefix
 
     def print_tree(self, prefix="", include_status=False, max_print_level=None, meta_info=True, reverse=False):
-        info_str = self.print_tree_recursive(self.root, level=0, prefix=prefix, include_status=include_status, max_print_level=max_print_level, reverse=reverse)
+        info_str = self.print_tree_recursive(
+            self.root,
+            level=0,
+            prefix=prefix,
+            include_status=include_status,
+            max_print_level=max_print_level,
+            reverse=reverse,
+        )
         if meta_info:
             if len(self.meta_attack_list) > 0:
                 info_str += f"Meta Attack to this debate tree: {self.meta_attack_list}\n"
             if len(self.meta_rebuttal_list) > 0:
                 info_str += f"Meta Rebuttal to the attacks on this debate tree: {self.meta_rebuttal_list}"
         return info_str
-
 
     def update_node(self, action, new_claim=None, new_argument=None, target=None):
         if len(new_claim) == 0:
@@ -638,26 +676,28 @@ class DebateTree(Tree):
                 self.meta_attack_list.append(new_claim)
             elif action == "rebut":
                 self.meta_rebuttal_list.append(new_claim)
-            
+
             return
-        
+
         if action == "propose":
             new_node = self.root.add_node(new_claim=new_claim, new_argument=new_argument, side=self.root.side)
             new_node.update_status("proposed")
             return
-        
+
         if action == "rebut":
             target_node_side = "against" if self.root.side == "for" else "for"
-        else: # propose or reinforce or attack, the target is the same side
+        else:  # propose or reinforce or attack, the target is the same side
             target_node_side = self.root.side
-        
+
         match_node = self.get_node_by_claim(target, side=target_node_side)
         if match_node is None:
             match_node, similarity = self.get_most_similar_node(target, side=target_node_side, top_k=1, threshold=0.8)
-            
+
         # try to find the rebut node in the same side
         if match_node is None and action == "rebut":
-            logger.info(f"Cannot find the matched node for: action: {action}, target: {target}, try to find the reinforce node in the same side")
+            logger.info(
+                f"Cannot find the matched node for: action: {action}, target: {target}, try to find the reinforce node in the same side"
+            )
             action = "reinforce"
             match_node = self.get_node_by_claim(target, side=self.root.side)
             if match_node is None:
@@ -666,7 +706,7 @@ class DebateTree(Tree):
         if match_node is None:
             logger.warning(f"Cannot find the matched node for action: {action}, target: {target}")
             return
-        
+
         if action == "reinforce":
             match_node.argument.extend(new_argument)
             match_node.update_status(match_node.status)
@@ -685,7 +725,7 @@ class DebateTree(Tree):
             "side": self.side,
             "structure": self.root.get_node_info(),
             "meta_attack_list": self.meta_attack_list,
-            "meta_rebuttal_list": self.meta_rebuttal_list
+            "meta_rebuttal_list": self.meta_rebuttal_list,
         }
         return info
 
@@ -701,16 +741,21 @@ class DebateTree(Tree):
         tree.meta_attack_list = meta_attack_list
         tree.meta_rebuttal_list = meta_rebuttal_list
         return tree
-        
-        
-        
+
+
 # python debate_tree.py --mode update --save_suffix RMH --load_from ../results1217_3/gemini-1.5-pro/if_health_care_is_a_scarce_resource,_government_should_step_in_to_ration_care,_deciding_whose_life_is_worth_saving_pool_against.json --use_reward_model --soft_logits
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", type=str, default="prepare", choices=["prepare", "update", "backward"])
-    parser.add_argument("--motion", type=str, default="Artists should be free to borrow from cultures other than their own")
-    parser.add_argument("--root", type=str, default="Restricting cultural borrowing would undermine the universality of art and limit its ability to transcend cultural differences.")
+    parser.add_argument(
+        "--motion", type=str, default="Artists should be free to borrow from cultures other than their own"
+    )
+    parser.add_argument(
+        "--root",
+        type=str,
+        default="Restricting cultural borrowing would undermine the universality of art and limit its ability to transcend cultural differences.",
+    )
     parser.add_argument("--side", type=str, default="for")
     parser.add_argument("--level", type=int, default=3)
     parser.add_argument("--branch", type=int, default=2)
@@ -720,7 +765,6 @@ if __name__ == "__main__":
     parser.add_argument("--save_suffix", type=str, default="gemini")
     args = parser.parse_args()
 
-
     if args.mode == "prepare":
         logger.info("Prepare Debate Tree for\nMotion: {}\nRoot: {}\nSide: {}".format(args.motion, args.root, args.side))
         motion = args.motion
@@ -729,12 +773,12 @@ if __name__ == "__main__":
         use_reward_model = args.use_reward_model
 
         proposer = partial(HelperClient, model="gemini-2.0-flash", max_tokens=2048, temperature=1)
-        '''use (scorer.func.__name__ == 'reward_model') to differentiate'''
+        """use (scorer.func.__name__ == 'reward_model') to differentiate"""
         if use_reward_model:
             scorer = partial(reward_model, soft=args.soft_logits)
         else:
             scorer = partial(HelperClient, model="gemini-2.0-flash", max_tokens=2048, temperature=0)
-        
+
         # proposer = partial(gpt, model="gpt-3.5-turbo", max_tokens=2048)
         # scorer = partial(gpt, model="gpt-3.5-turbo", max_tokens=2048)
         tree = PrepareTree(root, motion, side, proposer, scorer)
@@ -742,28 +786,33 @@ if __name__ == "__main__":
         logger.info(tree.print_tree(prefix="\n"))
         logger.info(tree.get_tree_info())
 
-        best_path_idx, best_path, best_score = tree.root.get_minimax_score(max_depth=args.level-1, support_weight=0.5, level_decoy=0.8)
+        best_path_idx, best_path, best_score = tree.root.get_minimax_score(
+            max_depth=args.level - 1, support_weight=0.5, level_decoy=0.8
+        )
         best_path_str = "\n=> ".join([node.data for node in best_path])
         logger.info(f"Path IDX: {best_path_idx}")
         logger.info(f"Path: {best_path_str}")
         logger.info(f"Score: {best_score}")
-    
+
     elif args.mode == "update":
-        logger.info("Update Debate Tree for\nLoad From: {}\nNew Scorer: {}\nSoft Mode: {}".format(args.load_from, 
-                                                                                               "gemini-2.0-flash" if not args.use_reward_model else "reward_model",
-                                                                                               args.soft_logits))
+        logger.info(
+            "Update Debate Tree for\nLoad From: {}\nNew Scorer: {}\nSoft Mode: {}".format(
+                args.load_from, "gemini-2.0-flash" if not args.use_reward_model else "reward_model", args.soft_logits
+            )
+        )
         data = json.load(open(args.load_from))
         if args.use_reward_model:
             scorer = partial(reward_model, soft=args.soft_logits)
         else:
             scorer = partial(gemini, model="gemini-2.0-flash", max_tokens=2048, temperature=0)
 
-    
         for group in data:
             for item in group[:1]:
                 tree = PrepareTree.from_json(item["tree_structure"])
                 update_eval_score(tree.root, scorer)
-                best_path_idx, best_path, best_score = tree.root.get_minimax_score(max_depth=2, support_weight=0.5, level_decoy=0.8)
+                best_path_idx, best_path, best_score = tree.root.get_minimax_score(
+                    max_depth=2, support_weight=0.5, level_decoy=0.8
+                )
                 best_path_str = "\n=> ".join([node.data for node in best_path])
                 logger.debug(f"Path IDX: {best_path_idx}")
                 logger.debug(f"Path: {best_path_str}")
@@ -779,7 +828,7 @@ if __name__ == "__main__":
     elif args.mode == "backward":
         logger.info("backward Debate Tree for Minimax Strength")
         data = json.load(open(args.load_from))
-    
+
         for group in data:
             for item in group[:1]:
                 tree = PrepareTree.from_json(item["tree_structure"])

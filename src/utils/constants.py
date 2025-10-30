@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 WORKSPACE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/../.."
 
@@ -12,7 +12,7 @@ ATTACK_RM_PATH = os.path.join(WORKSPACE_DIR, "checkpoints/reward_con")
 
 ####################### API Keys #######################
 
-KEY_FILE = os.path.join(WORKSPACE_DIR, 'src/configs', 'api_key.json')
+KEY_FILE = os.path.join(WORKSPACE_DIR, "src/configs", "api_key.json")
 
 if os.path.exists(KEY_FILE):
     print(f"Loading API keys from {KEY_FILE}")
@@ -36,22 +36,15 @@ deepseek_api_key = os.environ.get("DEEPSEEK_API_KEY", "")  # Get the DeepSeek AP
 ####################### Time Estimation #######################
 
 WORD_BUDGET_FOR_DRAFT = 500
-LENGTH_MODE_FOR_DRAFT = "phonemes" # rough estimatation, phonemes/words/syllables
-TIME_MODE_FOR_STATEMENT = "fastspeech" # precise estimatation, fastspeech/openai
+LENGTH_MODE_FOR_DRAFT = "phonemes"  # rough estimatation, phonemes/words/syllables
+TIME_MODE_FOR_STATEMENT = "fastspeech"  # precise estimatation, fastspeech/openai
 TIME_TOLERANCE = 15  # seconds
 
 OPENING_TIME = REBUTTAL_TIME = 240
 CLOSING_TIME = 120
 DEFAULT_MAX_WORDS = 520
 
-WORDRATIO = {
-    "phonemes": 4.5,
-    "words": 1,
-    "syllables": 1.75,
-    "fastspeech": 0.46,
-    "openai": 0.46,
-    "time": 0.46
-}
+WORDRATIO = {"phonemes": 4.5, "words": 1, "syllables": 1.75, "fastspeech": 0.46, "openai": 0.46, "time": 0.46}
 
 REMAINING_ROUND_NUM = {
     "opening_for": 3,
@@ -59,6 +52,5 @@ REMAINING_ROUND_NUM = {
     "rebuttal_for": 1,
     "rebuttal_against": 0,
     "closing_for": 0,
-    "closing_against": 0    
+    "closing_against": 0,
 }
-

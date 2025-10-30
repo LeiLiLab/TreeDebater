@@ -1,10 +1,12 @@
 import json
+
 import pandas as pd
-from .tool import logger, get_response_with_retry
-from .time_estimator import LengthEstimator
-from .prompts import *
-from .tool import identify_number_in_text, sort_by_action
+
 from debate_tree import PrepareTree
+
+from .prompts import *
+from .time_estimator import LengthEstimator
+from .tool import get_response_with_retry, identify_number_in_text, logger, sort_by_action
 
 ##################### Evidence #####################
 
@@ -14,17 +16,20 @@ def select_query(llm, motion, stance, claim, action, candidate_queries):
     Select the retrieval query for the claim
     return: query, a list of queries, ["query1", "query2", ...]
     """
-    prompt = select_query_prompt.format(claim=claim, motion=motion, stance=stance, action=action, candidate_queries=candidate_queries)
-    logger.debug("[Query-Helper-Prompt] " + prompt.strip().replace('\n',' ||| '))
+    prompt = select_query_prompt.format(
+        claim=claim, motion=motion, stance=stance, action=action, candidate_queries=candidate_queries
+    )
+    logger.debug("[Query-Helper-Prompt] " + prompt.strip().replace("\n", " ||| "))
     query, response = get_response_with_retry(llm, prompt, "query")
-    logger.debug("[Query-Helper-Response] " + response.strip().replace('\n',' ||| '))
+    logger.debug("[Query-Helper-Response] " + response.strip().replace("\n", " ||| "))
     return query
+
 
 def rank_evidence(candidate_evidence, selected_queries=None):
     if selected_queries is not None:
         selected_evidence = [x for x in candidate_evidence if x["query"] in selected_queries]
     else:
-        selected_evidence = candidate_evidence  
+        selected_evidence = candidate_evidence
 
     titles, uniq_evidence = [], []
     for e in selected_evidence:
@@ -38,17 +43,29 @@ def rank_evidence(candidate_evidence, selected_queries=None):
             uniq_evidence.append(e)
             titles.append(e["title"])
 
-    #NOTE: the database can have some evidences
+    # NOTE: the database can have some evidences
     for e in uniq_evidence:
-        if "arxiv" in e.get("source","").lower() or "arxiv" in e.get("publication","").lower():
+        if "arxiv" in e.get("source", "").lower() or "arxiv" in e.get("publication", "").lower():
             e["reliability"] = -1
-    
-    sorted_evidence = [x for _, _, x in sorted(zip([x.get("n_numbers", 0) for x in uniq_evidence], [x.get("reliability", 0) for x in uniq_evidence], uniq_evidence), key=lambda pair: (pair[0], pair[1]), reverse=True)]
+
+    sorted_evidence = [
+        x
+        for _, _, x in sorted(
+            zip(
+                [x.get("n_numbers", 0) for x in uniq_evidence],
+                [x.get("reliability", 0) for x in uniq_evidence],
+                uniq_evidence,
+            ),
+            key=lambda pair: (pair[0], pair[1]),
+            reverse=True,
+        )
+    ]
 
     return sorted_evidence
 
 
 ##################### Opening #####################
+
 
 def build_cot_claims(llm, motion, side, claim_pool):
     # if "perspective" in claim_pool[0][0]:
@@ -66,9 +83,9 @@ def build_cot_claims(llm, motion, side, claim_pool):
         "Use Json format with one key of **selection**. The value is a list of selected claims (string) that can be used in this debate.\n"
     )
 
-    logger.debug("[CoT-Claims-Prompt] " + prompt.strip().replace('\n',' ||| '))
+    logger.debug("[CoT-Claims-Prompt] " + prompt.strip().replace("\n", " ||| "))
     selected_claims, response = get_response_with_retry(llm, prompt, "selection")
-    logger.debug("[CoT-Claims-Response] " + response.strip().replace('\n',' ||| '))
+    logger.debug("[CoT-Claims-Response] " + response.strip().replace("\n", " ||| "))
 
     # selected_claims = [x if x.endswith(".") else x + '.' for x in selected_claims]
     claim_content = [x[0]["claim"] for x in claim_pool]
@@ -81,7 +98,7 @@ def build_cot_claims(llm, motion, side, claim_pool):
         "mode": "choose_main_claims",
         "all_claims": claims,
         "selected_claims": selected_claims,
-        "selected_idx": selected_idx
+        "selected_idx": selected_idx,
     }
 
     return selected_claims, selected_idx, thoughts
@@ -90,15 +107,17 @@ def build_cot_claims(llm, motion, side, claim_pool):
 def build_logic_claims(llm, motion, side, claim_pool, context="", definition="", use_rehearsal_tree=True, top_k=None):
     """
     Choose the main claims from the sorted claims based on the logic chain
-    # """
+    #"""
 
     # Step 1. Sort claim groups by their highest minimax_search_score
-    sorted_idx = sorted(range(len(claim_pool)), key=lambda i: claim_pool[i][0]["minimax_search_score"], reverse=True)    # sort the groups by the highest value
-    
+    sorted_idx = sorted(
+        range(len(claim_pool)), key=lambda i: claim_pool[i][0]["minimax_search_score"], reverse=True
+    )  # sort the groups by the highest value
+
     # Step 2. Keep only top-k if specified
     if top_k is not None:
         sorted_idx = sorted_idx[:top_k]
-    
+
     ranked_claims = [claim_pool[i][0]["claim"] for i in sorted_idx]
 
     # Step 3. Gather original claims & tree info
@@ -116,19 +135,21 @@ def build_logic_claims(llm, motion, side, claim_pool, context="", definition="",
         tree_info = ""
 
     # Step 4. Construct prompt
-    prompt = main_claim_selection.format(motion=motion, side=side, tree=tree_info, claims="\n".join(ori_claims), context=context, definition=definition)
-    logger.debug("[Logic-Claims-Prompt] " + prompt.strip().replace('\n',' ||| '))
+    prompt = main_claim_selection.format(
+        motion=motion, side=side, tree=tree_info, claims="\n".join(ori_claims), context=context, definition=definition
+    )
+    logger.debug("[Logic-Claims-Prompt] " + prompt.strip().replace("\n", " ||| "))
     content, response = get_response_with_retry(llm, prompt, "selection")
-    logger.debug("[Logic-Claims-Response] " + response.strip().replace('\n',' ||| '))
+    logger.debug("[Logic-Claims-Response] " + response.strip().replace("\n", " ||| "))
 
     # Step 5. Parse model outputs
     selected_claims = content["claims"]
     framework = content["framework"]
     explanation = content["explanation"]
 
-    selected_claims = [x if x.endswith(".") else x + '.' for x in selected_claims]
+    selected_claims = [x if x.endswith(".") else x + "." for x in selected_claims]
     selected_idx = [ori_claims.index(x) for x in selected_claims]
-    
+
     # Step 6. Record reasoning info
     thoughts = {
         "stage": "preparation",
@@ -143,6 +164,7 @@ def build_logic_claims(llm, motion, side, claim_pool, context="", definition="",
 
     return selected_claims, selected_idx, thoughts
 
+
 ##################### Debate Flow Tree #####################
 
 
@@ -151,14 +173,16 @@ def get_actions_from_tree(claims, tree, oppo_tree):
 
     if tree.max_level == 0:
         for claim in claims:
-            actions.append({
-                "idx": len(actions),
-                "action": "propose",
-                "target_claim": claim,
-                "target_argument": "",
-                "importance": "high",
-                "targeted_debate_tree": "you"
-            })
+            actions.append(
+                {
+                    "idx": len(actions),
+                    "action": "propose",
+                    "target_claim": claim,
+                    "target_argument": "",
+                    "importance": "high",
+                    "targeted_debate_tree": "you",
+                }
+            )
     else:
         for level in range(tree.max_level):
             nodes = tree.get_nodes_by_level(level + 1)
@@ -167,14 +191,16 @@ def get_actions_from_tree(claims, tree, oppo_tree):
             else:
                 action = "reinforce" if (level + 1) % 2 == 1 else "rebut"
                 for node in nodes:
-                    actions.append({
-                        "idx": len(actions),
-                        "action": action,
-                        "target_claim": node.claim, 
-                        "target_argument": "".join(node.argument),
-                        "targeted_debate_tree": "you",
-                    })
-    
+                    actions.append(
+                        {
+                            "idx": len(actions),
+                            "action": action,
+                            "target_claim": node.claim,
+                            "target_argument": "".join(node.argument),
+                            "targeted_debate_tree": "you",
+                        }
+                    )
+
     if oppo_tree.max_level != 0:
         for level in range(oppo_tree.max_level):
             nodes = oppo_tree.get_nodes_by_level(level + 1)
@@ -183,14 +209,16 @@ def get_actions_from_tree(claims, tree, oppo_tree):
             else:
                 action = "attack" if (level + 1) % 2 == 1 else "reinforce"
                 for node in nodes:
-                    actions.append({
-                        "idx": len(actions),
-                        "action": action,
-                        "target_claim": node.claim, 
-                        "target_argument": "".join(node.argument),
-                        "targeted_debate_tree": "opponent",
-                    })
-    
+                    actions.append(
+                        {
+                            "idx": len(actions),
+                            "action": action,
+                            "target_claim": node.claim,
+                            "target_argument": "".join(node.argument),
+                            "targeted_debate_tree": "opponent",
+                        }
+                    )
+
     logger.debug(f"[Debate-Flow-Tree-Action] {actions}")
 
     df = pd.DataFrame(actions)
@@ -201,10 +229,17 @@ def get_actions_from_tree(claims, tree, oppo_tree):
 
 
 def get_battlefields_from_actions(llm, motion, side, claims, actions, tree, oppo_tree):
-    prompt = debate_flow_tree_action_eval_prompt.format(motion=motion, side=side, claims=claims, actions=json.dumps(actions, indent=2), tree=tree.print_tree(include_status=True), oppo_tree=oppo_tree.print_tree(include_status=True))
-    logger.debug("[Debate-Flow-Tree-Action-Eval-Prompt] " + prompt.strip().replace('\n',' ||| '))
+    prompt = debate_flow_tree_action_eval_prompt.format(
+        motion=motion,
+        side=side,
+        claims=claims,
+        actions=json.dumps(actions, indent=2),
+        tree=tree.print_tree(include_status=True),
+        oppo_tree=oppo_tree.print_tree(include_status=True),
+    )
+    logger.debug("[Debate-Flow-Tree-Action-Eval-Prompt] " + prompt.strip().replace("\n", " ||| "))
     eval_results, response = get_response_with_retry(llm, prompt, "response")
-    logger.debug("[Debate-Flow-Tree-Action-Eval-Response] " + response.strip().replace('\n',' ||| '))
+    logger.debug("[Debate-Flow-Tree-Action-Eval-Response] " + response.strip().replace("\n", " ||| "))
 
     battlefields = []
     for eval_result in eval_results:
@@ -221,54 +256,76 @@ def get_battlefields_from_actions(llm, motion, side, claims, actions, tree, oppo
         }
         battlefields.append(battlefield)
 
-
     return battlefields
 
 
-def get_retrieval_from_rehearsal_tree(action_type, target_claim, side, oppo_side, prepared_tree_list, prepared_oppo_tree_list, look_ahead_num, query_embedding):
+def get_retrieval_from_rehearsal_tree(
+    action_type,
+    target_claim,
+    side,
+    oppo_side,
+    prepared_tree_list,
+    prepared_oppo_tree_list,
+    look_ahead_num,
+    query_embedding,
+):
     additional_info = []
     retrieval_nodes = []
 
     if prepared_tree_list is None:
         return additional_info, retrieval_nodes
 
-    
     for tree in prepared_tree_list:
         if action_type == "propose" or action_type == "reinforce":
             if action_type == "propose":
                 match_node = tree.get_node_by_claim(target_claim, side=side)
                 similarity = 1.0 if match_node is not None else 0.0
             else:
-                match_node, similarity = tree.get_most_similar_node(target_claim, query_embedding=query_embedding, side=side, top_k=1, threshold=0.8)
-            
+                match_node, similarity = tree.get_most_similar_node(
+                    target_claim, query_embedding=query_embedding, side=side, top_k=1, threshold=0.8
+                )
+
             if match_node is not None:
-                logger.debug(f"[Prepared-Tree-Retrieval] {action_type} Hit: [{target_claim}] with [{match_node.claim}], Similarity: {similarity:0.2f}")
+                logger.debug(
+                    f"[Prepared-Tree-Retrieval] {action_type} Hit: [{target_claim}] with [{match_node.claim}], Similarity: {similarity:0.2f}"
+                )
                 score = match_node.get_strength(max_depth=look_ahead_num)
-                match_node.argument = [match_node.argument] if isinstance(match_node.argument, str) else match_node.argument
+                match_node.argument = (
+                    [match_node.argument] if isinstance(match_node.argument, str) else match_node.argument
+                )
                 if len(match_node.argument) > 0:
                     node_info = " ".join(match_node.argument) + f"(Strength: {score:.1f})\n\t"
                 else:
                     node_info = f"(Strength: {score:.1f})\n\t"
                 additional_info.append(node_info)
-                retrieval_nodes.append(["Prepared-Tree-Retrieval", action_type, target_claim, match_node.claim, similarity, node_info])
+                retrieval_nodes.append(
+                    ["Prepared-Tree-Retrieval", action_type, target_claim, match_node.claim, similarity, node_info]
+                )
                 if action_type == "propose":
                     break
         elif action_type == "attack" or action_type == "rebut":
-            match_node, similarity = tree.get_most_similar_node(target_claim, query_embedding=query_embedding, side=oppo_side, top_k=1, threshold=0.8)
+            match_node, similarity = tree.get_most_similar_node(
+                target_claim, query_embedding=query_embedding, side=oppo_side, top_k=1, threshold=0.8
+            )
             if match_node is not None:
-                logger.debug(f"[Prepared-Tree-Retrieval] {action_type} Hit: [{target_claim}] with [{match_node.claim}], Similarity: {similarity:0.2f}")
+                logger.debug(
+                    f"[Prepared-Tree-Retrieval] {action_type} Hit: [{target_claim}] with [{match_node.claim}], Similarity: {similarity:0.2f}"
+                )
                 node_info = ""
                 for c in match_node.children:
                     score = c.get_strength(max_depth=look_ahead_num)
                     node_info += f"{c.claim} (Strength: {score:.1f})\n\t"
                 additional_info.append(node_info)
-                retrieval_nodes.append(["Prepared-Tree-Retrieval", action_type, target_claim, match_node.claim, similarity, node_info])
+                retrieval_nodes.append(
+                    ["Prepared-Tree-Retrieval", action_type, target_claim, match_node.claim, similarity, node_info]
+                )
         else:
             raise ValueError(f"Invalid action: {action_type}")
-    
 
     if additional_info == [] and match_node is None:
-        logger.debug(f"[Prepared-Tree-Retrieval-Summary] {action_type} Miss. No additional info found for [{target_claim}]")
+        logger.debug(
+            f"[Prepared-Tree-Retrieval-Summary] {action_type} Miss. No additional info found for [{target_claim}]"
+        )
     else:
         logger.debug(f"[Prepared-Tree-Retrieval-Summary] {action_type} Hit. Additional info: {additional_info}")
 
@@ -276,40 +333,73 @@ def get_retrieval_from_rehearsal_tree(action_type, target_claim, side, oppo_side
     if prepared_oppo_tree_list is not None:
         for tree in prepared_oppo_tree_list:
             if action_type == "attack" or action_type == "rebut":
-                match_node, similarity = tree.get_most_similar_node(target_claim, query_embedding=query_embedding, side=oppo_side, top_k=1, threshold=0.8)
+                match_node, similarity = tree.get_most_similar_node(
+                    target_claim, query_embedding=query_embedding, side=oppo_side, top_k=1, threshold=0.8
+                )
                 if match_node is not None:
-                    logger.debug(f"[Prepared-Opponent-Tree-Retrieval] {action_type} Hit: [{target_claim}] with [{match_node.claim}], Similarity: {similarity:0.2f}")
+                    logger.debug(
+                        f"[Prepared-Opponent-Tree-Retrieval] {action_type} Hit: [{target_claim}] with [{match_node.claim}], Similarity: {similarity:0.2f}"
+                    )
                     node_info = ""
                     for c in match_node.children:
                         score = c.get_strength(max_depth=look_ahead_num)
                         node_info += f"{c.claim} (Strength: {score:.1f})\n\t"
                     additional_info_from_oppo_tree.append(node_info)
-                    retrieval_nodes.append(["Prepared-Opponent-Tree-Retrieval", action_type, target_claim, match_node.claim, similarity, node_info])
+                    retrieval_nodes.append(
+                        [
+                            "Prepared-Opponent-Tree-Retrieval",
+                            action_type,
+                            target_claim,
+                            match_node.claim,
+                            similarity,
+                            node_info,
+                        ]
+                    )
             elif action_type == "propose" or action_type == "reinforce":
-                match_node, similarity = tree.get_most_similar_node(target_claim, query_embedding=query_embedding, side=side, top_k=1, threshold=0.8)
+                match_node, similarity = tree.get_most_similar_node(
+                    target_claim, query_embedding=query_embedding, side=side, top_k=1, threshold=0.8
+                )
                 if match_node is not None:
-                    logger.debug(f"[Prepared-Opponent-Tree-Retrieval] {action_type} Hit: [{target_claim}] with [{match_node.claim}], Similarity: {similarity:0.2f}")
+                    logger.debug(
+                        f"[Prepared-Opponent-Tree-Retrieval] {action_type} Hit: [{target_claim}] with [{match_node.claim}], Similarity: {similarity:0.2f}"
+                    )
                     score = match_node.get_strength(max_depth=look_ahead_num)
-                    match_node.argument = [match_node.argument] if isinstance(match_node.argument, str) else match_node.argument
+                    match_node.argument = (
+                        [match_node.argument] if isinstance(match_node.argument, str) else match_node.argument
+                    )
                     if len(match_node.argument) > 0:
                         node_info = " ".join(match_node.argument) + f"(Strength: {score:.1f})\n\t"
                     else:
                         node_info = f"(Strength: {score:.1f})\n\t"
                     additional_info_from_oppo_tree.append(node_info)
-                    retrieval_nodes.append(["Prepared-Opponent-Tree-Retrieval", action_type, target_claim, match_node.claim, similarity, node_info])
+                    retrieval_nodes.append(
+                        [
+                            "Prepared-Opponent-Tree-Retrieval",
+                            action_type,
+                            target_claim,
+                            match_node.claim,
+                            similarity,
+                            node_info,
+                        ]
+                    )
             else:
                 raise ValueError(f"Invalid action: {action_type}")
-            
+
     if additional_info_from_oppo_tree == [] and match_node is None:
-        logger.debug(f"[Prepared-Opponent-Tree-Retrieval-Summary] {action_type} Miss. No additional info found for [{target_claim}]")
+        logger.debug(
+            f"[Prepared-Opponent-Tree-Retrieval-Summary] {action_type} Miss. No additional info found for [{target_claim}]"
+        )
     else:
-        logger.debug(f"[Prepared-Opponent-Tree-Retrieval-Summary] {action_type} Hit. Additional info: {additional_info_from_oppo_tree}")
+        logger.debug(
+            f"[Prepared-Opponent-Tree-Retrieval-Summary] {action_type} Hit. Additional info: {additional_info_from_oppo_tree}"
+        )
 
     additional_info = additional_info + additional_info_from_oppo_tree
     return additional_info, retrieval_nodes
 
 
 ##################### Time-Adjuster #####################
+
 
 class TimeAdjuster:
     def __init__(self):
@@ -319,27 +409,30 @@ class TimeAdjuster:
     def revise_helper(self, statement, n_words, budget, threshold=5, ratio=0.46, estimator=None):
         current_cost = estimator.query_time(statement)
         words_count = LengthEstimator(mode="words").query_time(statement)
-        logger.debug("[Efficient-Fit-Length] " + f"use {n_words} words in the prompt, real words: {words_count}, real cost: {current_cost:0.2f}, target interval: [{budget-threshold}, {budget}]")
+        logger.debug(
+            "[Efficient-Fit-Length] "
+            + f"use {n_words} words in the prompt, real words: {words_count}, real cost: {current_cost:0.2f}, target interval: [{budget-threshold}, {budget}]"
+        )
 
-        if budget <= 0 or current_cost >= budget-threshold and current_cost <= budget + 1:
+        if budget <= 0 or current_cost >= budget - threshold and current_cost <= budget + 1:
             return current_cost, n_words, True
 
         # step1. determine the first endpoint
         if self.L is None and self.R is None:
-            if current_cost < budget-threshold:
+            if current_cost < budget - threshold:
                 self.L = n_words
                 return current_cost, n_words + int((budget - current_cost) / ratio), False
             else:
                 self.R = n_words
-                return current_cost, n_words - int((current_cost - (budget-threshold)) / ratio), False
+                return current_cost, n_words - int((current_cost - (budget - threshold)) / ratio), False
 
         # step2. determine the second endpoint
         if self.L is None:
-            if current_cost < budget-threshold:
+            if current_cost < budget - threshold:
                 self.L = n_words
                 return current_cost, (self.L + self.R) // 2, False
             else:
-                return current_cost, n_words - int((current_cost - (budget-threshold)) / ratio), False
+                return current_cost, n_words - int((current_cost - (budget - threshold)) / ratio), False
         if self.R is None:
             if current_cost > budget:
                 self.R = n_words
@@ -348,26 +441,33 @@ class TimeAdjuster:
                 return current_cost, n_words + int((budget - current_cost) / ratio), False
 
         # step3. binary search in [L, R], always terminate and w.h.p. can terminate when R-L > 1
-        if current_cost < budget-threshold:
+        if current_cost < budget - threshold:
             self.L = n_words
         else:
             self.R = n_words
         return current_cost, (self.L + self.R) // 2, False
-    
+
 
 ##################### Anaylsis #####################
+
 
 def extract_statement(llm, motion, statement, claims=None, tree=None, side=None, stage=None):
     if claims is not None:
         prompt = extract_statment_by_claim_prompt.format(motion=motion, statement=statement, claim=json.dumps(claims))
     elif tree is not None:
-        prompt = extract_statment_with_tree_prompt.format(motion=motion, statement=statement, claim=json.dumps(claims), tree=tree[0], oppo_tree=tree[1], side=side, stage=stage)
+        prompt = extract_statment_with_tree_prompt.format(
+            motion=motion,
+            statement=statement,
+            claim=json.dumps(claims),
+            tree=tree[0],
+            oppo_tree=tree[1],
+            side=side,
+            stage=stage,
+        )
     else:
         prompt = extract_statment_prompt.format(motion=motion, statement=statement)
-        
-        
-    logger.debug("[Analyze-Helper-Prompt] " + prompt.strip().replace('\n',' ||| '))
-    claims, response = get_response_with_retry(llm, prompt, "statements")
-    logger.debug("[Analyze-Helper-Response] " + response.strip().replace('\n',' ||| '))
-    return claims
 
+    logger.debug("[Analyze-Helper-Prompt] " + prompt.strip().replace("\n", " ||| "))
+    claims, response = get_response_with_retry(llm, prompt, "statements")
+    logger.debug("[Analyze-Helper-Response] " + response.strip().replace("\n", " ||| "))
+    return claims
