@@ -7,7 +7,10 @@ CACHE_DIR = "../.cache"
 
 
 def init_db(force: bool = False):
-    db_name = f"{CACHE_DIR}/search.db"
+    db_path = f"{CACHE_DIR}/search.db"
+    if not os.path.exists(db_path) or os.path.getsize(db_path) == 0:
+        init_db()
+    conn = sqlite3.connect(db_path)    
 
     if not os.path.exists(CACHE_DIR):
         os.makedirs(CACHE_DIR)

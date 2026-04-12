@@ -148,7 +148,24 @@ def build_logic_claims(llm, motion, side, claim_pool, context="", definition="",
     explanation = content["explanation"]
 
     selected_claims = [x if x.endswith(".") else x + "." for x in selected_claims]
-    selected_idx = [ori_claims.index(x) for x in selected_claims]
+    selected_idx = []
+    for sc in selected_claims:
+        try:
+            selected_idx.append(ori_claims.index(sc))
+        except ValueError:
+            # Fuzzy match: strip punctuation and compare lowercase
+            sc_norm = sc.rstrip(".。").strip().lower()
+            best_j, best_overlap = 0, 0
+            for j, oc in enumerate(ori_claims):
+                oc_norm = oc.rstrip(".。").strip().lower()
+                if sc_norm == oc_norm:
+                    best_j = j
+                    break
+                overlap = len(set(sc_norm.split()) & set(oc_norm.split()))
+                if overlap > best_overlap:
+                    best_j, best_overlap = j, overlap
+            selected_idx.append(best_j)
+            logger.warning(f"[Logic-Claims] Fuzzy matched '{sc}' -> '{ori_claims[best_j]}'")
 
     # Step 6. Record reasoning info
     thoughts = {

@@ -6,7 +6,18 @@ WORKSPACE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/../.."
 ####################### Constants #######################
 
 MAX_TRY_NUM = 3
-EMBEDDING_MODEL = "models/text-embedding-004"
+EMBEDDING_MODEL = "text-embedding-3-small"
+
+
+def get_embeddings(contents):
+    """Drop-in replacement for genai.embed_content using OpenAI embeddings.
+    Args: contents - list of strings
+    Returns: list of embedding vectors
+    """
+    from openai import OpenAI
+    client = OpenAI()
+    resp = client.embeddings.create(model=EMBEDDING_MODEL, input=contents)
+    return [item.embedding for item in resp.data]
 SUPPORT_RM_PATH = os.path.join(WORKSPACE_DIR, "checkpoints/reward_pro")
 ATTACK_RM_PATH = os.path.join(WORKSPACE_DIR, "checkpoints/reward_con")
 

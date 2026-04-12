@@ -20,7 +20,7 @@ from tavily import TavilyClient
 from agents import Audience, AudienceConfig, Debater
 from debate_tree import DebateTree, PrepareTree
 from prepare import ClaimPool
-from utils.constants import EMBEDDING_MODEL, REMAINING_ROUND_NUM, TIME_MODE_FOR_STATEMENT, TIME_TOLERANCE, WORDRATIO
+from utils.constants import REMAINING_ROUND_NUM, TIME_MODE_FOR_STATEMENT, TIME_TOLERANCE, WORDRATIO, get_embeddings
 from utils.helper import (
     TimeAdjuster,
     build_logic_claims,
@@ -370,7 +370,9 @@ class TreeDebater(Debater):
             statement=response, history=history, add_evidence=False, **kwargs
         )
 
-        if not time_control:
+        streaming_tts = kwargs.get("streaming_tts", False)
+        if not time_control or streaming_tts:
+            # streaming TTS has its own adaptive refinement, skip expensive retries here
             response = self._length_adjust(
                 response, feedback_for_revision, new_evidence, allocation_plan, max_time, max_retry=1, **kwargs
             )
@@ -741,7 +743,7 @@ class TreeDebater(Debater):
         retry = 0
         while retry < max_retry:
             try:
-                embedding = genai.embed_content(model=EMBEDDING_MODEL, content=[content])["embedding"][0]
+                embedding = get_embeddings([content])[0]
                 break
             except Exception as e:
                 logger.error(f"[Get-Embedding-From-Cache] Error: {e}. Sleep 30 seconds and retry.")

@@ -14,7 +14,7 @@ import torch
 from sentence_transformers.util import dot_score, semantic_search
 
 from evaluator import evaluate_defense_strength, evaluate_support_strength
-from utils.constants import EMBEDDING_MODEL
+from utils.constants import get_embeddings
 from utils.model import HelperClient, reward_model
 from utils.tool import get_response_with_retry, logger
 
@@ -458,7 +458,7 @@ class Tree:
         retry = 0
         while retry < max_retry:
             try:
-                new_embeddings = genai.embed_content(model=EMBEDDING_MODEL, content=new_contents)["embedding"]
+                new_embeddings = get_embeddings(new_contents)
                 break
             except Exception as e:
                 logger.error(f"[Get-Embedding-From-Cache] Error: {e}. Sleep 30 seconds and retry.")

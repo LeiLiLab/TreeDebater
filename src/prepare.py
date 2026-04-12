@@ -6,6 +6,7 @@ from functools import partial
 
 import google.generativeai as genai
 import numpy as np
+from openai import OpenAI
 from sentence_transformers.util import cos_sim
 from tavily import TavilyClient
 
@@ -76,7 +77,7 @@ class ClaimPool:
         logger.debug("[Claim-Propose-Response] " + json.dumps(response, indent=2).replace("\n", " ||| "))
 
         for item in results:
-            strength = item["strength"]
+            strength = item.get("strength", 5)
             if strength < 6:
                 continue
             new_claim = item["claim"]
@@ -125,7 +126,9 @@ class ClaimPool:
         return self.grouped_pool
 
     def cluster_claims(self, pool):
-        claim_embeddings = genai.embed_content(model=EMBEDDING_MODEL, content=[x["claim"] for x in pool])["embedding"]
+        oai_client = OpenAI()
+        resp = oai_client.embeddings.create(model="text-embedding-3-small", input=[x["claim"] for x in pool])
+        claim_embeddings = [item.embedding for item in resp.data]
         claim_cross_sim = cos_sim(claim_embeddings, claim_embeddings)
 
         # Group claims by similarity
