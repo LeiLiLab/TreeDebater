@@ -26,6 +26,7 @@ class EnvConfig:
     claim_pool_size: int = 50
     reverse: bool = False
     time_control: bool = True
+    streaming_tts: bool = False
 
 
 def extract_overall_score(obj_scores):  # larger is better
@@ -46,6 +47,7 @@ class Env:
         self.claim_pool_size = config.claim_pool_size
         self.reverse = config.reverse
         self.time_control = config.time_control
+        self.streaming_tts = config.streaming_tts
         self.debug = debug
 
         # init players
@@ -94,21 +96,24 @@ class Env:
                 for side in order:
                     player = self.debaters[side]
                     response = player.opening_generation(
-                        history=self.debate_process[1:], max_time=OPENING_TIME, time_control=self.time_control
+                        history=self.debate_process[1:], max_time=OPENING_TIME,
+                        time_control=self.time_control, streaming_tts=self.streaming_tts,
                     )
                     self.debate_process.append({"stage": stage, "side": side, "content": response})
             elif stage == "rebuttal":
                 for side in order:
                     player = self.debaters[side]
                     response = player.rebuttal_generation(
-                        history=self.debate_process[1:], max_time=REBUTTAL_TIME, time_control=self.time_control
+                        history=self.debate_process[1:], max_time=REBUTTAL_TIME,
+                        time_control=self.time_control, streaming_tts=self.streaming_tts,
                     )
                     self.debate_process.append({"stage": stage, "side": side, "content": response})
             elif stage == "closing":
                 for side in order:  # reverse to make compatible with agent4debate
                     player = self.debaters[side]
                     response = player.closing_generation(
-                        history=self.debate_process[1:], max_time=CLOSING_TIME, time_control=self.time_control
+                        history=self.debate_process[1:], max_time=CLOSING_TIME,
+                        time_control=self.time_control, streaming_tts=self.streaming_tts,
                     )
                     self.debate_process.append({"stage": stage, "side": side, "content": response})
             logger.info(f"[{stage}] Done")

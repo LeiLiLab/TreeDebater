@@ -28,6 +28,7 @@ class CompareEnv:
         self.claim_pool_size = config.claim_pool_size
         self.reverse = config.reverse  # if to reverse the order of the debaters
         self.time_control = config.time_control
+        self.streaming_tts = config.streaming_tts
         self.debug = debug
         self.baseline_type = baseline_type
         self.test_type = test_type
@@ -79,10 +80,14 @@ class CompareEnv:
             "closing": self.test_debaters[side].closing_generation,
         }
 
-        base_response = baseline_call[stage](history=history, max_time=max_time, time_control=self.time_control)
+        base_response = baseline_call[stage](
+            history=history, max_time=max_time, time_control=self.time_control, streaming_tts=self.streaming_tts,
+        )
 
         # Generate test response using reference history
-        test_response = test_call[stage](history=history, max_time=max_time, time_control=self.time_control)
+        test_response = test_call[stage](
+            history=history, max_time=max_time, time_control=self.time_control, streaming_tts=self.streaming_tts,
+        )
         return base_response, test_response
 
     def compare_play(self):

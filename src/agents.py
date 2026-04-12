@@ -1,5 +1,6 @@
 import copy
 import json
+import logging
 import math
 import os
 import random
@@ -15,6 +16,7 @@ from openai import OpenAI
 
 from evaluator import eval_surprise, extract_claims, extract_obj_aspect
 from tts import convert_text_to_speech, trim_audio_by_sentences
+from tts_streaming import convert_text_to_speech_streaming
 from utils.constants import CLOSING_TIME, OPENING_TIME, REBUTTAL_TIME, WORDRATIO, deepseek_api_key
 from utils.model import HelperClient, safety_setting
 from utils.prompts import *
@@ -133,6 +135,7 @@ class Agent:
         kwargs.pop("history", None)
         kwargs.pop("max_words", None)
         kwargs.pop("time_control", None)
+        kwargs.pop("streaming_tts", None)
         retry = 0
         while retry < 3:
             try:
@@ -208,11 +211,12 @@ class Debater(Agent):
         response = self.speak(prompt, **kwargs)
         return response
 
-    def post_process(self, statement, max_time=-1, time_control=False, **kwargs):
+    def post_process(self, statement, max_time=-1, time_control=False, streaming_tts=False, **kwargs):
         """
         statement: AI生成的原始辩论陈述文本
         max_time: 最大允许的发言时间（秒），-1表示无限制
         time_control: 是否启用时间控制功能
+        streaming_tts: 是否启用流式TTS（分chunk自适应refinement + 并行TTS）
         """
         statement = statement.strip()
         if statement is None:
@@ -245,31 +249,52 @@ class Debater(Agent):
             return statement
 
         # NOTE the below part is time-consuming, can comment them and add "new_statement = statement" when developing
-        prefix = log_file_path.replace(".log", "")
-        audio_file = f"{prefix}_{self.config.type}_{self.status}_{self.side}.mp3"
+        # Resolve audio output directory from log file path
+        _log_path = log_file_path
+        if not _log_path:
+            # Fallback: extract path from logger's file handler
+            for h in logger.handlers:
+                if isinstance(h, logging.FileHandler):
+                    _log_path = h.baseFilename
+                    break
+        prefix = _log_path.replace(".log", "")
+        audio_dir = prefix + "_outputs"
+        os.makedirs(audio_dir, exist_ok=True)
+        audio_file = os.path.join(audio_dir, f"{self.config.type}_{self.status}_{self.side}.mp3")
+        logger.info(f"[TTS-Start] Starting TTS for {self.config.type} {self.status} {self.side} (streaming={streaming_tts}, budget={max_time}s)")
         logger.debug("[Time-Control] Statement: " + statement.replace("\n", " ||| "))
-        content, reference, duration = convert_text_to_speech(statement, audio_file)
-        logger.debug(f"[Time-Control] Save Audio: {audio_file}")
-        logger.debug(f"[Time-Control] Original Time: {duration:0.2f}")
 
-        if duration <= max_time:
-            logger.debug(f"[Time-Control] Final Time: {duration:0.2f}")
+        if streaming_tts:
+            # ---- Streaming TTS: chunk-based adaptive refinement + parallel TTS ----
+            logger.debug("[Time-Control] Using streaming TTS pipeline")
+            content, reference, duration = convert_text_to_speech_streaming(
+                statement, audio_file, total_budget_s=max_time,
+            )
+            logger.debug(f"[Time-Control] Save Audio: {audio_file}")
+            logger.debug(f"[Time-Control] Streaming TTS Time: {duration:0.2f}")
             new_content = content
         else:
-            save_file = audio_file.replace(".mp3", "_trimmed.mp3")
-            logger.debug(f"[Time-Control] Save Trimmed Audio: {save_file}")
-            # duration, new_content = trim_audio(audio_file, save_file, max_minute=max_time/60)
-            # TODO: 这里可以优化？
-            duration, new_sentences = trim_audio_by_sentences(audio_file, save_file, max_duration=max_time * 1000)
-            last_sentence = new_sentences[-1]
-            idx = content.lower().find(last_sentence[:-1].lower())  # remove the punctuation
-            if idx == -1:
-                print(f"Last sentence not found in content")
-                new_content = " ".join(new_sentences)
-            else:
-                new_content = content[: idx + len(last_sentence)]
+            # ---- Original serial TTS + trim ----
+            content, reference, duration = convert_text_to_speech(statement, audio_file)
+            logger.debug(f"[Time-Control] Save Audio: {audio_file}")
+            logger.debug(f"[Time-Control] Original Time: {duration:0.2f}")
 
-            logger.debug(f"[Time-Control] Final Time: {duration:0.2f}")
+            if duration <= max_time:
+                logger.debug(f"[Time-Control] Final Time: {duration:0.2f}")
+                new_content = content
+            else:
+                save_file = audio_file.replace(".mp3", "_trimmed.mp3")
+                logger.debug(f"[Time-Control] Save Trimmed Audio: {save_file}")
+                duration, new_sentences = trim_audio_by_sentences(audio_file, save_file, max_duration=max_time * 1000)
+                last_sentence = new_sentences[-1]
+                idx = content.lower().find(last_sentence[:-1].lower())  # remove the punctuation
+                if idx == -1:
+                    print(f"Last sentence not found in content")
+                    new_content = " ".join(new_sentences)
+                else:
+                    new_content = content[: idx + len(last_sentence)]
+
+                logger.debug(f"[Time-Control] Final Time: {duration:0.2f}")
 
         if new_content is None or len(new_content) == 0:
             logger.warning(f"[Time-Control] Trimmed Content is None. Use the original content as the transcript.")
@@ -278,6 +303,7 @@ class Debater(Agent):
         new_statement = new_content + "\n\n**Reference**\n" + reference
         # new_statement = statement
         self._add_message("assistant", f"{new_statement}")
+        logger.info(f"[TTS-Done] Finished TTS for {self.config.type} {self.status} {self.side}")
         logger.info("[Response] " + new_statement.strip().replace("\n", " ||| "))
 
         return new_statement

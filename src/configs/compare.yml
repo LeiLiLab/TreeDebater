@@ -5,6 +5,7 @@ env:
   claim_pool_size: 50
   reverse: False
   time_control: True
+  streaming_tts: False
 
 debater:
   - side: for

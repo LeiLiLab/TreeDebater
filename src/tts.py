@@ -12,7 +12,7 @@ from mutagen.mp3 import MP3
 from openai import OpenAI
 from pydub import AudioSegment
 
-from utils.constants import openai_api_key
+from utils.constants import openai_api_key, OPENING_TIME, REBUTTAL_TIME, CLOSING_TIME
 from utils.time_estimator import LengthEstimator
 from utils.tool import remove_citation, remove_subtitles
 
@@ -63,7 +63,14 @@ def convert_text_to_speech(content, output_path, voice="echo"):
     return text_content, reference, duration
 
 
-def convert_debate_to_speech(input_file, output_dir, name):
+BUDGET_BY_STAGE = {
+    "opening": float(OPENING_TIME),
+    "rebuttal": float(REBUTTAL_TIME),
+    "closing": float(CLOSING_TIME),
+}
+
+
+def convert_debate_to_speech(input_file, output_dir, name, streaming=False):
     with open(input_file, "r") as file:
         data = json.load(file)
 
@@ -74,25 +81,32 @@ def convert_debate_to_speech(input_file, output_dir, name):
     shutil.copy(input_file, f"{output_path}/{name}.json")
 
     for stage in ["opening", "rebuttal", "closing"]:
-        # for stage in ["closing"]:
         for side in ["for", "against"]:
-            # for side in ["for"]:
             fname = f"{stage}_{side}"
             speech_file_path = f"{output_path}/{fname}.mp3"
             content = [x for x in data["debate_process"] if x["side"] == side and x["stage"] == stage]
             content = " ".join([x["content"] for x in content])
             print(f"Generating speech to {speech_file_path}")
-            convert_text_to_speech(content, speech_file_path)
+
+            if streaming:
+                from tts_streaming import convert_text_to_speech_streaming
+                total_budget_s = BUDGET_BY_STAGE[stage]
+                convert_text_to_speech_streaming(content, speech_file_path, total_budget_s)
+                duration = MP3(speech_file_path).info.length
+            else:
+                convert_text_to_speech(content, speech_file_path)
+                duration = MP3(speech_file_path).info.length
+
             print(
                 "word count & syllable count & speech length:",
                 LengthEstimator(mode="words").query_time(content),
                 LengthEstimator(mode="syllables").query_time(content),
-                MP3(speech_file_path).info.length,
+                duration,
             )
             print(
                 "word count per sec & syllable count per sec:",
-                LengthEstimator(mode="words").query_time(content) / MP3(speech_file_path).info.length,
-                LengthEstimator(mode="syllables").query_time(content) / MP3(speech_file_path).info.length,
+                LengthEstimator(mode="words").query_time(content) / duration,
+                LengthEstimator(mode="syllables").query_time(content) / duration,
             )
 
 
@@ -244,7 +258,10 @@ def add_basic_punctuation(text):
 
 
 if __name__ == "__main__":
-    input_file = "../log_files/1.json"
-    output_dir = "../results/audio"
-    name = "case1_1"
-    convert_debate_to_speech(input_file, output_dir, name)
+    parser = argparse.ArgumentParser(description="Convert debate to speech")
+    parser.add_argument("-i", type=str, default="../log_files/1.json", help="input file path")
+    parser.add_argument("-o", type=str, default="../results/audio", help="output directory path")
+    parser.add_argument("-name", type=str, default="case1_1", help="output name")
+    parser.add_argument("--streaming", action="store_true", default=False, help="enable streaming TTS pipeline")
+    args = parser.parse_args()
+    convert_debate_to_speech(args.i, args.o, args.name, streaming=args.streaming)
