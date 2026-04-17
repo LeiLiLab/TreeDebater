@@ -14,6 +14,7 @@ from tavily import TavilyClient
 from debate_tree import PrepareTree
 from searcher import MAX_QUERY, get_search_query, get_search_result, get_source_info, update_search_query
 from utils.constants import EMBEDDING_MODEL, google_api_key
+from utils.llm_schemas import ResultsResponse
 from utils.model import HelperClient, reward_model
 from utils.prompts import claim_propose_prompt, propose_definition_prompt
 from utils.timing_log import log_llm_io, log_timing
@@ -75,7 +76,13 @@ class ClaimPool:
         prompt = claim_propose_prompt.format(motion=self.motion, act=self.act, size=self.pool_size)
 
         log_llm_io(logger, phase="prepare", title="Claim-Propose-Prompt", body=prompt, side=self.side)
-        results, response = get_response_with_retry(self.client, prompt, "results", temperature=1.0)
+        results, response = get_response_with_retry(
+            self.client,
+            prompt,
+            "results",
+            response_model=ResultsResponse,
+            temperature=1.0,
+        )
         log_llm_io(logger, phase="prepare", title="Claim-Propose-Response", body=json.dumps(response, indent=2), side=self.side)
 
         for item in results:

@@ -243,7 +243,10 @@ def run_streaming_tts_chunk_copy_bridge(
             if cnt < stable_rounds:
                 continue
 
-            dest = watch_dir / f"{speaker_side}_chunk{idx:03d}.{ext}"
+            # PlaybackMain consumes chunk001+, while streaming TTS emits chunk_000+.
+            # Shift to 1-based indices when copying into watch_dir.
+            playback_idx = idx + 1
+            dest = watch_dir / f"{speaker_side}_chunk{playback_idx:03d}.{ext}"
             try:
                 copy_start = time.time()
                 shutil.copy2(path, dest)
@@ -252,7 +255,7 @@ def run_streaming_tts_chunk_copy_bridge(
                 live_chunk_counter[0] += 1
                 detection_latency = copy_end - chunk_detected_time[idx]
                 logger.debug(
-                    f"[TtsChunkBridge] chunk_copied chunk_idx={idx} "
+                    f"[TtsChunkBridge] chunk_copied chunk_idx={idx} playback_chunk_idx={playback_idx} "
                     f"detection_latency={detection_latency:.3f}s "
                     f"copy_time={copy_end - copy_start:.3f}s t={time.time():.3f}"
                 )

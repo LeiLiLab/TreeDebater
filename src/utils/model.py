@@ -1,13 +1,20 @@
 import time
+from typing import Any, Type
 
 import litellm
 import numpy as np
 import torch
+from pydantic import BaseModel
 from transformers import AutoTokenizer, LlamaForSequenceClassification
 
 from utils.constants import ATTACK_RM_PATH, SUPPORT_RM_PATH, google_api_key
 from utils.timing_log import log_timing
 from utils.tool import logger
+
+try:
+    import instructor
+except Exception:
+    instructor = None
 
 safety_setting = [
     {
@@ -37,7 +44,9 @@ def HelperClient(
     n=1,
     stop=None,
     sys=None,
-) -> list:
+    response_model: Type[BaseModel] | None = None,
+    use_instructor: bool | None = None,
+) -> list[str] | list[BaseModel]:
     if sys is not None:
         messages = [{"role": "system", "content": sys}]
     else:
@@ -70,36 +79,97 @@ def HelperClient(
     responses = []
     for i in range(n):
         t0 = time.perf_counter()
-        # # Check if we need JSON response format and if the model supports it
-        # use_json_format = ("json" in prompt.lower() or (sys is not None and "json" in sys.lower()))
+        wants_json = "json" in prompt.lower() or (sys is not None and "json" in sys.lower())
+        structured_enabled = response_model is not None and (
+            use_instructor is True or (use_instructor is None and _supports_structured_output(model_name))
+        )
+        response = None
+        structured_value = None
+        if structured_enabled:
+            try:
+                structured_value = _completion_structured(
+                    model_name=model_name,
+                    messages=messages,
+                    response_model=response_model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    stop=stop,
+                    kwargs=kwargs,
+                )
+            except Exception as e:
+                logger.warning(f"Structured output fallback for {model_name}: {e}")
 
-        # # Only use response_format for models that support it
-        # if use_json_format and ("gpt-4o" in model_name.lower() or "gpt-4-turbo" in model_name.lower() or "gpt-3.5-turbo" in model_name.lower()):
-        if "json" in prompt.lower() or (sys is not None and "json" in sys.lower()):
-            response = litellm.completion(
-                model=model_name,
-                response_format={"type": "json_object"},
+        if structured_value is None:
+            response = _completion_text(
+                model_name=model_name,
                 messages=messages,
+                wants_json=wants_json or response_model is not None,
                 temperature=temperature,
                 max_tokens=max_tokens,
                 stop=stop,
-                **kwargs,
+                kwargs=kwargs,
             )
-        else:
-            response = litellm.completion(
-                model=model_name, messages=messages, temperature=temperature, max_tokens=max_tokens, stop=stop, **kwargs
-            )
+
         elapsed = time.perf_counter() - t0
         ctx = {"model": model, "n_index": i + 1, "max_tokens": max_tokens}
-        try:
-            cost = getattr(response, "_hidden_params", {}).get("response_cost")
-            if cost is not None:
-                ctx["response_cost"] = cost
-        except Exception:
-            pass
+        if response is not None:
+            try:
+                cost = getattr(response, "_hidden_params", {}).get("response_cost")
+                if cost is not None:
+                    ctx["response_cost"] = cost
+            except Exception:
+                pass
         log_timing(logger, "helper_client_litellm", elapsed, **ctx)
-        responses.append(response.choices[0].message.content)
+        if response_model is not None:
+            responses.append(structured_value if structured_value is not None else response.choices[0].message.content)
+        else:
+            responses.append(response.choices[0].message.content)
     return responses
+
+
+def _supports_structured_output(model_name: str) -> bool:
+    name = model_name.lower()
+    return any(x in name for x in ["gpt", "o1", "claude", "gemini"])
+
+
+def _completion_text(model_name: str, messages, wants_json: bool, temperature: float, max_tokens: int, stop, kwargs):
+    call_kwargs: dict[str, Any] = dict(
+        model=model_name,
+        messages=messages,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        stop=stop,
+        **kwargs,
+    )
+    if wants_json:
+        call_kwargs["response_format"] = {"type": "json_object"}
+    return litellm.completion(**call_kwargs)
+
+
+def _completion_structured(
+    model_name: str,
+    messages,
+    response_model: Type[BaseModel],
+    temperature: float,
+    max_tokens: int,
+    stop,
+    kwargs,
+) -> BaseModel:
+    if instructor is None:
+        raise RuntimeError("instructor is not installed.")
+
+    if hasattr(instructor, "from_litellm"):
+        client = instructor.from_litellm(litellm.completion)
+        return client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+            response_model=response_model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stop=stop,
+            **kwargs,
+        )
+    raise RuntimeError("Installed instructor version does not support from_litellm.")
 
 
 models_loaded = False

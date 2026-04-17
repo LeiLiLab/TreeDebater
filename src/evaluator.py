@@ -11,7 +11,7 @@ from tqdm import tqdm
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from src.utils.timing_log import log_llm_io
-from src.utils.tool import extract_numbers, find_json, logger
+from src.utils.tool import extract_numbers, logger, parse_llm_json
 
 
 def extract_claims(llm, title, side, content, verbose=False):
@@ -52,11 +52,9 @@ def extract_claims(llm, title, side, content, verbose=False):
         print(prompt)
 
     response = llm(prompt=prompt, temperature=0, max_tokens=1500, n=1, sys=system_prompt)
-    claims = find_json(response[0])
-
     try:
-        claims = eval(claims)
-    except:
+        claims = parse_llm_json(response[0])
+    except Exception:
         claims = {}
         print("Error in extracting claims")
 
@@ -117,11 +115,9 @@ def extract_obj_aspect(llm, title, side, content, claim_against=None):
     response = llm(prompt=prompt, temperature=0, max_tokens=800, n=1, sys=system_prompt)
 
     # print("extract_obj_aspect:", response[0])
-    scores = find_json(response[0])
-
     try:
-        scores = eval(scores)
-    except:
+        scores = parse_llm_json(response[0])
+    except Exception:
         scores = {}
         print("Error in extracting scores")
 
@@ -185,11 +181,11 @@ def eval_surprise(llm, title, side, claims, n=3, reduction=False, verbose=False)
     surprises = []
     score_list = []
     for i in range(n):
-        surprise = find_json(response[i])
+        surprise = {}
         try:
-            surprise = eval(surprise)
+            surprise = parse_llm_json(response[i])
             surprise = surprise["result"]
-        except:
+        except Exception:
             print(surprise)
             print("Error in extracting surprise scores")
             surprise = {}

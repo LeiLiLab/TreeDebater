@@ -33,6 +33,7 @@ from utils.helper import (
     get_retrieval_from_rehearsal_tree,
     rank_evidence,
 )
+from utils.llm_schemas import SelectedIdsResponse
 from utils.model import HelperClient
 from utils.prompts import *
 from utils.time_estimator import LengthEstimator
@@ -65,9 +66,8 @@ class TreeDebater(Debater):
             + f"use_rehearsal_tree: {self.use_rehearsal_tree}, use_debate_flow_tree: {self.use_debate_flow_tree}"
         )
 
-        self.helper_client = partial(
-            HelperClient, model=self.config.model, temperature=0, max_tokens=config.max_tokens, n=1
-        )
+        helper_model = getattr(config, "helper_model", self.config.model)
+        self.helper_client = partial(HelperClient, model=helper_model, temperature=0, max_tokens=config.max_tokens, n=1)
         self.simulated_audience = [Audience(AudienceConfig(model=self.config.model, temperature=1)) for _ in range(1)]
 
         # Initialize debate trees only if they are enabled
@@ -518,36 +518,44 @@ class TreeDebater(Debater):
                         **kwargs,
                     )
 
-                with timed_phase(logger, "revision_suggestion", pass_index=2, add_evidence=False, **ctx):
-                    feedback_for_revision, new_evidence, _, _ = self._get_revision_suggestion(
-                        statement=response, history=history, add_evidence=False, call_id=call_id, **kwargs
-                    )
+                # Default to single-pass revision to reduce latency:
+                # pass-1 revision + one length-adjust. Set single_pass_revision=False
+                # (via config or kwargs) to restore the old two-pass behavior.
+                single_pass_revision = kwargs.get(
+                    "single_pass_revision",
+                    getattr(self.config, "single_pass_revision", False),
+                )
+                if not single_pass_revision:
+                    with timed_phase(logger, "revision_suggestion", pass_index=2, add_evidence=False, **ctx):
+                        feedback_for_revision, new_evidence, _, _ = self._get_revision_suggestion(
+                            statement=response, history=history, add_evidence=False, call_id=call_id, **kwargs
+                        )
 
-                streaming_tts = kwargs.get("streaming_tts", getattr(self.config, "streaming_tts", False))
-                if not time_control or streaming_tts:
-                    with timed_phase(logger, "length_adjust", block=2, max_retry=1, **ctx):
-                        response = self._length_adjust(
-                            response,
-                            feedback_for_revision,
-                            new_evidence,
-                            allocation_plan,
-                            max_time,
-                            max_retry=1,
-                            call_id=call_id,
-                            **kwargs,
-                        )
-                else:
-                    with timed_phase(logger, "length_adjust", block=2, max_retry=10, **ctx):
-                        response = self._length_adjust(
-                            response,
-                            feedback_for_revision,
-                            new_evidence,
-                            allocation_plan,
-                            max_time,
-                            max_retry=10,
-                            call_id=call_id,
-                            **kwargs,
-                        )
+                    streaming_tts = kwargs.get("streaming_tts", getattr(self.config, "streaming_tts", False))
+                    if not time_control or streaming_tts:
+                        with timed_phase(logger, "length_adjust", block=2, max_retry=1, **ctx):
+                            response = self._length_adjust(
+                                response,
+                                feedback_for_revision,
+                                new_evidence,
+                                allocation_plan,
+                                max_time,
+                                max_retry=1,
+                                call_id=call_id,
+                                **kwargs,
+                            )
+                    else:
+                        with timed_phase(logger, "length_adjust", block=2, max_retry=10, **ctx):
+                            response = self._length_adjust(
+                                response,
+                                feedback_for_revision,
+                                new_evidence,
+                                allocation_plan,
+                                max_time,
+                                max_retry=10,
+                                call_id=call_id,
+                                **kwargs,
+                            )
 
                 with timed_phase(logger, "post_process", **ctx):
                     out = super().post_process(response, max_time, time_control, **kwargs)
@@ -915,7 +923,12 @@ class TreeDebater(Debater):
                         side=self.side,
                     )
                 with timed_phase(logger, "evidence_selection_llm", stage=self.status, side=self.side):
-                    selected_ids, response = get_response_with_retry(self.helper_client, prompt, "selected_ids")
+                    selected_ids, response = get_response_with_retry(
+                        self.helper_client,
+                        prompt,
+                        "selected_ids",
+                        response_model=SelectedIdsResponse,
+                    )
                 if io_logging_enabled() and call_id is not None:
                     log_io_block(
                         io_logger,

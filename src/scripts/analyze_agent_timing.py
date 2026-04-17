@@ -34,6 +34,13 @@ _TIMING_META = re.compile(
 )
 _KV = re.compile(r"(\w+)=([^\s]+)")
 
+# Phases to exclude from analysis output/report.
+# Edit this list to hide noisy phases without changing runtime logging.
+EXCLUDED_PHASES = {
+    "tts_wall_clock",
+    "length_adjust",
+}
+
 # Phases grouped for the human-readable report (edit as you add new phases)
 MACRO_PHASES = frozenset(
     {
@@ -158,6 +165,15 @@ def load_timing_records(path: Path) -> List[TimingRecord]:
     return records
 
 
+def filter_excluded_phases(
+    records: List[TimingRecord], excluded_phases: set[str]
+) -> Tuple[List[TimingRecord], int]:
+    if not excluded_phases:
+        return records, 0
+    filtered = [r for r in records if r.phase not in excluded_phases]
+    return filtered, len(records) - len(filtered)
+
+
 def load_meta_records(path: Path) -> List[Dict[str, str]]:
     rows: List[Dict[str, str]] = []
     with path.open("r", encoding="utf-8", errors="replace") as f:
@@ -212,6 +228,8 @@ def print_report(
     meta: List[Dict[str, str]],
     io_path: Optional[Path],
     verbose: bool,
+    excluded_phases: Optional[set[str]] = None,
+    filtered_count: int = 0,
 ) -> Dict[str, Any]:
     agg = aggregate_by_phase(records)
     by_cid = group_by_call_id(records)
@@ -223,6 +241,9 @@ def print_report(
     W("AGENT / LLM TIMING ANALYSIS ([timing] lines)")
     W("=" * 80)
     W(f"Total timing records: {len(records)}")
+    if excluded_phases:
+        W(f"Excluded phases: {sorted(excluded_phases)}")
+        W(f"Excluded records: {filtered_count}")
     W("")
 
     # --- Bucket summary ---
@@ -325,6 +346,8 @@ def print_report(
 
     return {
         "total_records": len(records),
+        "excluded_phases": sorted(excluded_phases) if excluded_phases else [],
+        "excluded_records": filtered_count,
         "by_phase": agg,
         "call_id_sessions": {k: [asdict(x) for x in v] for k, v in by_cid.items()},
         "meta_count": len(meta),
@@ -352,10 +375,18 @@ def main() -> None:
             if candidate.is_file():
                 io_log = candidate
 
-    records = load_timing_records(main_log)
+    records_raw = load_timing_records(main_log)
+    records, filtered_count = filter_excluded_phases(records_raw, EXCLUDED_PHASES)
     meta = load_meta_records(main_log)
 
-    report = print_report(records, meta, io_log, args.verbose)
+    report = print_report(
+        records,
+        meta,
+        io_log,
+        args.verbose,
+        excluded_phases=EXCLUDED_PHASES,
+        filtered_count=filtered_count,
+    )
 
     if args.json_out:
         args.json_out.parent.mkdir(parents=True, exist_ok=True)

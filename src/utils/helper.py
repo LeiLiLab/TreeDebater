@@ -4,6 +4,13 @@ import pandas as pd
 
 from debate_tree import PrepareTree
 
+from .llm_schemas import (
+    BattlefieldResponse,
+    QueryResponse,
+    SelectionClaimsOnlyResponse,
+    SelectionFrameworkResponse,
+    StatementsResponse,
+)
 from .prompts import *
 from .time_estimator import LengthEstimator
 from .timing_log import log_llm_io
@@ -21,7 +28,7 @@ def select_query(llm, motion, stance, claim, action, candidate_queries):
         claim=claim, motion=motion, stance=stance, action=action, candidate_queries=candidate_queries
     )
     log_llm_io(logger, phase="helper", title="Query-Helper-Prompt", body=prompt.strip())
-    query, response = get_response_with_retry(llm, prompt, "query")
+    query, response = get_response_with_retry(llm, prompt, "query", response_model=QueryResponse)
     log_llm_io(logger, phase="helper", title="Query-Helper-Response", body=response.strip())
     return query
 
@@ -85,7 +92,12 @@ def build_cot_claims(llm, motion, side, claim_pool):
     )
 
     log_llm_io(logger, phase="helper", title="CoT-Claims-Prompt", body=prompt.strip(), side=side)
-    selected_claims, response = get_response_with_retry(llm, prompt, "selection")
+    selected_claims, response = get_response_with_retry(
+        llm,
+        prompt,
+        "selection",
+        response_model=SelectionClaimsOnlyResponse,
+    )
     log_llm_io(logger, phase="helper", title="CoT-Claims-Response", body=response.strip(), side=side)
 
     # selected_claims = [x if x.endswith(".") else x + '.' for x in selected_claims]
@@ -140,7 +152,12 @@ def build_logic_claims(llm, motion, side, claim_pool, context="", definition="",
         motion=motion, side=side, tree=tree_info, claims="\n".join(ori_claims), context=context, definition=definition
     )
     log_llm_io(logger, phase="helper", title="Logic-Claims-Prompt", body=prompt.strip(), side=side)
-    content, response = get_response_with_retry(llm, prompt, "selection")
+    content, response = get_response_with_retry(
+        llm,
+        prompt,
+        "selection",
+        response_model=SelectionFrameworkResponse,
+    )
     log_llm_io(logger, phase="helper", title="Logic-Claims-Response", body=response.strip(), side=side)
 
     # Step 5. Parse model outputs
@@ -256,7 +273,12 @@ def get_battlefields_from_actions(llm, motion, side, claims, actions, tree, oppo
         oppo_tree=oppo_tree.print_tree(include_status=True),
     )
     log_llm_io(logger, phase="helper", title="Debate-Flow-Tree-Action-Eval-Prompt", body=prompt.strip(), side=side)
-    eval_results, response = get_response_with_retry(llm, prompt, "response")
+    eval_results, response = get_response_with_retry(
+        llm,
+        prompt,
+        "response",
+        response_model=BattlefieldResponse,
+    )
     log_llm_io(logger, phase="helper", title="Debate-Flow-Tree-Action-Eval-Response", body=response.strip(), side=side)
 
     battlefields = []
@@ -493,7 +515,12 @@ def extract_statement(llm, motion, statement, claims=None, tree=None, side=None,
         side=side,
         stage=stage,
     )
-    claims, response = get_response_with_retry(llm, prompt, "statements")
+    claims, response = get_response_with_retry(
+        llm,
+        prompt,
+        "statements",
+        response_model=StatementsResponse,
+    )
     log_llm_io(
         logger,
         phase="helper",

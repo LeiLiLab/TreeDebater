@@ -2,8 +2,10 @@ import logging
 import os
 import re
 import time
-from typing import List
+import json
+from typing import Any, List, TypeVar
 
+from pydantic import BaseModel, ValidationError
 from pulp import LpMaximize, LpProblem, LpVariable
 
 from .constants import MAX_TRY_NUM
@@ -165,13 +167,68 @@ logger = create_log()
 # Alias for imports: ``from utils.tool import io_logger``
 io_logger = debate_io_logger
 
+T = TypeVar("T", bound=BaseModel)
+
+
+def _strip_markdown_json_fence(text: str) -> str:
+    fenced = re.search(r"```(?:json)?\s*(.*?)```", text, re.IGNORECASE | re.DOTALL)
+    if fenced:
+        return fenced.group(1).strip()
+    return text
+
 
 def find_json(x):
-    idx = x.find("{")
-    ridx = x.rfind("}")
-    if idx == -1 or ridx == -1:
+    return extract_json_object(x)
+
+
+def extract_json_object(text: str) -> str:
+    if text is None:
         return ""
-    return x[idx : ridx + 1]
+    if isinstance(text, (dict, list)):
+        return json.dumps(text)
+    if not isinstance(text, str):
+        text = str(text)
+
+    text = _strip_markdown_json_fence(text).strip()
+    idx = text.find("{")
+    ridx = text.rfind("}")
+    if idx != -1 and ridx != -1 and idx <= ridx:
+        return text[idx : ridx + 1]
+    lidx = text.find("[")
+    rridx = text.rfind("]")
+    if lidx != -1 and rridx != -1 and lidx <= rridx:
+        return text[lidx : rridx + 1]
+    return text
+
+
+def parse_llm_json(text: Any, *, response_model: type[T] | None = None, required_key: str | None = None) -> T | Any:
+    if isinstance(text, BaseModel):
+        parsed = text
+    elif isinstance(text, (dict, list)):
+        parsed = text
+    else:
+        payload = extract_json_object(text)
+        parsed = json.loads(payload)
+
+    if response_model is not None:
+        if isinstance(parsed, response_model):
+            validated = parsed
+        else:
+            validated = response_model.model_validate(parsed)
+        if required_key is None:
+            return validated
+        dumped = validated.model_dump()
+        if required_key not in dumped:
+            raise KeyError(f"Missing required key '{required_key}' in validated response.")
+        return dumped[required_key]
+
+    if required_key is None:
+        return parsed
+    if not isinstance(parsed, dict):
+        raise TypeError(f"Expected dict for required_key='{required_key}', got {type(parsed).__name__}")
+    if required_key not in parsed:
+        raise KeyError(f"Missing required key '{required_key}' in parsed response.")
+    return parsed[required_key]
 
 
 def extract_numbers(s):
@@ -296,16 +353,16 @@ def lp_optimize(actions: List[str], rewards: List[float], costs: List[float], bu
     return selected_actions, total_reward, total_cost
 
 
-def get_response_with_retry(llm, prompt, required_key, **kwargs):
+def get_response_with_retry(llm, prompt, required_key, *, response_model: type[T] | None = None, **kwargs):
     from utils.timing_log import log_timing
 
     retry = 0
     response = ""
     content = {}
-    while len(content) == 0 and retry < MAX_TRY_NUM:
+    while retry < MAX_TRY_NUM:
         try:
             t0 = time.perf_counter()
-            response = llm(prompt=prompt, sys=debater_system_prompt, **kwargs)[0]
+            response_obj = llm(prompt=prompt, sys=debater_system_prompt, response_model=response_model, **kwargs)[0]
             llm_s = time.perf_counter() - t0
             log_timing(
                 logger,
@@ -313,13 +370,28 @@ def get_response_with_retry(llm, prompt, required_key, **kwargs):
                 llm_s,
                 required_key=required_key,
                 attempt=retry + 1,
+                response_model=response_model.__name__ if response_model is not None else None,
             )
-            content = find_json(response)
-            response = response.replace("null", "")
-            content = eval(content)
-            content = content[required_key]
-        except Exception as e:
+            if isinstance(response_obj, BaseModel):
+                response = json.dumps(response_obj.model_dump(), ensure_ascii=False)
+                content = parse_llm_json(
+                    response_obj,
+                    response_model=response_model or type(response_obj),
+                    required_key=required_key,
+                )
+            else:
+                response = response_obj if isinstance(response_obj, str) else json.dumps(response_obj, ensure_ascii=False)
+                content = parse_llm_json(response_obj, response_model=response_model, required_key=required_key)
+            if content is not None and content != {}:
+                return content, response
+        except (json.JSONDecodeError, ValidationError, KeyError, TypeError, ValueError) as e:
             logger.warning(f"Error {e} in extracting {required_key} from: {response}")
+            content = {}
+            retry += 1
+            logger.debug(f"Retry {retry} times.")
+            time.sleep(30)
+        except Exception as e:
+            logger.warning(f"Unexpected error {e} in extracting {required_key} from: {response}")
             content = {}
             retry += 1
             logger.debug(f"Retry {retry} times.")

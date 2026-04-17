@@ -15,6 +15,7 @@ from sentence_transformers.util import dot_score, semantic_search
 
 from evaluator import evaluate_defense_strength, evaluate_support_strength
 from utils.constants import get_embeddings
+from utils.llm_schemas import StatementsResponse
 from utils.model import HelperClient, reward_model
 from utils.timing_log import log_llm_io
 from utils.tool import get_response_with_retry, logger
@@ -71,7 +72,13 @@ def propose_new_claims(proposer, motion, side, history, n):
         "}}\n"
     )
     log_llm_io(logger, phase="debate_tree", title="Proposer-Tree-Helper-Prompt", body=prompt.strip(), side=side)
-    content, response = get_response_with_retry(proposer, prompt, "statements", temperature=1)
+    content, response = get_response_with_retry(
+        proposer,
+        prompt,
+        "statements",
+        response_model=StatementsResponse,
+        temperature=1,
+    )
     log_llm_io(logger, phase="debate_tree", title="Proposer-Tree-Helper-Response", body=response.strip(), side=side)
     return content
 

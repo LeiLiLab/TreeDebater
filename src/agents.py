@@ -53,6 +53,8 @@ class DebaterConfig(AgentConfig):
     url: str = "http://127.0.0.1:8081/"
     streaming_tts: bool = False
     streaming_listen: bool = False
+    single_pass_revision: bool = False
+    helper_model: str | None = None
 
 
 @dataclass
