@@ -13,7 +13,7 @@ debater:
     temperature: 1.0
     use_retrieval: True
     add_retrieval_feedback: False
-    streaming_tts: False
+    streaming_tts: True
     pool_file: ../results/deepseek-chat/learning_to_be_a_good_writer_still_matters_in_the_age_of_ai_pool_for.json
 
   - side: against
@@ -22,7 +22,7 @@ debater:
     temperature: 1.0
     use_retrieval: True
     add_retrieval_feedback: False
-    streaming_tts: False
+    streaming_tts: True
     pool_file: ../results/deepseek-chat/learning_to_be_a_good_writer_still_matters_in_the_age_of_ai_pool_against.json
 judge:
   temperature: 0.0

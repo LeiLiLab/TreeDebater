@@ -1,4 +1,5 @@
 openai
+pydub
 backoff
 tqdm
 numpy
@@ -15,4 +16,5 @@ pulp
 g2p_en
 fastapi
 tavily-python
+pydub
 git+https://github.com/UKPLab/sentence-transformers.git

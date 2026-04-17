@@ -4,10 +4,13 @@ import math
 import os
 import random
 import re
+import threading
 import time
 import traceback
 from dataclasses import dataclass
 from functools import partial
+from pathlib import Path
+from typing import Optional
 
 import google.generativeai as genai
 import litellm
@@ -33,7 +36,16 @@ from utils.helper import (
 from utils.model import HelperClient
 from utils.prompts import *
 from utils.time_estimator import LengthEstimator
-from utils.tool import get_response_with_retry, logger, sort_by_action, sort_by_importance
+from utils.timing_log import (
+    clear_speak_io_context,
+    log_io_block,
+    log_llm_io,
+    log_timing,
+    next_call_id,
+    set_speak_io_context,
+    timed_phase,
+)
+from utils.tool import get_response_with_retry, io_logger, io_logging_enabled, logger, sort_by_action, sort_by_importance
 
 
 class TreeDebater(Debater):
@@ -91,6 +103,62 @@ class TreeDebater(Debater):
 
         self.used_evidence = set()
 
+        self._streaming_input_env = None
+        self._streaming_listen_thread = None
+
+    def start_streaming_listen(
+        self,
+        watch_dir: Path,
+        stage: str,
+        *,
+        min_audio_seconds: float = 30.0,
+        min_text_words: int = 50,
+        poll_interval: float = 1.0,
+        audio_format: str = "mp3",
+        max_audio_wait_seconds: Optional[float] = None,
+        max_text_wait_seconds: Optional[float] = None,
+        max_total_audio_seconds: Optional[float] = None,
+        playback_cursor: Optional[list] = None,
+    ) -> None:
+        """Run :class:`StreamingInputEnv` on a thread (chunk audio → ASR → ``_analyze_statement``)."""
+        from streaming.env import StreamingInputConfig, StreamingInputEnv
+
+        self.stop_streaming_listen(join_timeout=5.0)
+
+        watch_dir = Path(watch_dir)
+        cfg = StreamingInputConfig(
+            watch_dir=watch_dir,
+            motion=self.motion,
+            stage=stage,
+            statement_side=self.oppo_side,
+            min_audio_seconds=min_audio_seconds,
+            min_text_words=min_text_words,
+            poll_interval=poll_interval,
+            audio_file_glob=f"*.{audio_format}",
+            max_audio_wait_seconds=max_audio_wait_seconds,
+            max_text_wait_seconds=max_text_wait_seconds,
+            max_total_audio_seconds=max_total_audio_seconds,
+            audio_format=audio_format,
+            playback_cursor=playback_cursor,
+        )
+        self._streaming_input_env = StreamingInputEnv(self, cfg)
+        self._streaming_listen_thread = threading.Thread(
+            target=self._streaming_input_env.run,
+            name="StreamingInputListen",
+            daemon=True,
+        )
+        self._streaming_listen_thread.start()
+
+    def stop_streaming_listen(self, join_timeout: float = 300.0) -> None:
+        t = self._streaming_listen_thread
+        env = self._streaming_input_env
+        self._streaming_listen_thread = None
+        self._streaming_input_env = None
+        if env is not None:
+            env.stop()
+        if t is not None:
+            t.join(timeout=join_timeout)
+
     def _get_evidence(self, claim):
         if self.use_retrieval:
             evidence = [x for x in claim["retrieved_evidence"] if "PDF" not in x["title"]]
@@ -141,9 +209,23 @@ class TreeDebater(Debater):
                     self.oppo_claim_pool = claim_pool
 
             prompt = propose_definition_prompt.format(motion=self.motion, act=self.act)
-            logger.debug("[Definition-Helper-Prompt] " + prompt.strip().replace("\n", " ||| "))
+            log_llm_io(
+                logger,
+                phase="ouragents_prepare",
+                title="Definition-Helper-Prompt",
+                body=prompt.strip(),
+                stage=getattr(self, "status", None),
+                side=getattr(self, "side", None),
+            )
             response = self.helper_client(prompt=prompt)[0]
-            logger.debug("[Definition-Helper-Response] " + response.strip().replace("\n", " ||| "))
+            log_llm_io(
+                logger,
+                phase="ouragents_prepare",
+                title="Definition-Helper-Response",
+                body=response.strip(),
+                stage=getattr(self, "status", None),
+                side=getattr(self, "side", None),
+            )
             if "None" in response:
                 self.definition = None
             else:
@@ -351,37 +433,127 @@ class TreeDebater(Debater):
         return response
 
     def speak(self, prompt, max_time, time_control=False, history=None, **kwargs):
-        self._add_message("user", prompt)
-        logger.debug(f"[Conversation-History] {json.dumps(self.conversation)}")
-        logger.debug("[Prompt] " + prompt.strip().replace("\n", " ||| "))
+        call_id = next_call_id()
+        ctx = dict(call_id=call_id, stage=self.status, side=self.side)
+        set_speak_io_context(call_id, "tree_debater_speak")
+        try:
+            with timed_phase(logger, "tree_debater_speak", **ctx):
+                self._add_message("user", prompt)
+                if io_logging_enabled():
+                    log_io_block(
+                        io_logger,
+                        call_id=call_id,
+                        phase="tree_debater_speak",
+                        title="Conversation-History",
+                        body=json.dumps(self.conversation),
+                        stage=self.status,
+                        side=self.side,
+                    )
+                    log_io_block(
+                        io_logger,
+                        call_id=call_id,
+                        phase="tree_debater_speak",
+                        title="Prompt",
+                        body=prompt,
+                        stage=self.status,
+                        side=self.side,
+                    )
+                else:
+                    log_llm_io(
+                        logger,
+                        phase="tree_debater_speak",
+                        title="Conversation-History",
+                        body=json.dumps(self.conversation),
+                        stage=self.status,
+                        side=self.side,
+                    )
+                    log_llm_io(
+                        logger,
+                        phase="tree_debater_speak",
+                        title="Prompt",
+                        body=prompt.strip(),
+                        stage=self.status,
+                        side=self.side,
+                    )
+                logger.debug(
+                    f"[timing-meta] call_id={call_id} speak_session=tree_debater_speak "
+                    f"n_messages={len(self.conversation)}"
+                )
 
-        # add evidence based on audience feedback
-        response = self._get_response(self.conversation, **kwargs)
-        logger.debug("[Response-Before-Post-Process] " + response.strip().replace("\n", " ||| "))
-        feedback_for_revision, new_evidence, allocation_plan, ori_statement = self._get_revision_suggestion(
-            statement=response, history=history, add_evidence=True, **kwargs
-        )
-        response = self._length_adjust(
-            ori_statement, feedback_for_revision, new_evidence, allocation_plan, max_time, max_retry=1, **kwargs
-        )
+                with timed_phase(logger, "main_get_response", **ctx):
+                    response = self._get_response(self.conversation, **kwargs)
+                if io_logging_enabled():
+                    log_io_block(
+                        io_logger,
+                        call_id=call_id,
+                        phase="tree_debater_speak",
+                        title="Response-Before-Post-Process",
+                        body=str(response).strip(),
+                        stage=self.status,
+                        side=self.side,
+                    )
+                else:
+                    log_llm_io(
+                        logger,
+                        phase="tree_debater_speak",
+                        title="Response-Before-Post-Process",
+                        body=str(response).strip(),
+                        stage=self.status,
+                        side=self.side,
+                    )
 
-        # check audience feedback again
-        feedback_for_revision, new_evidence, _, _ = self._get_revision_suggestion(
-            statement=response, history=history, add_evidence=False, **kwargs
-        )
+                with timed_phase(logger, "revision_suggestion", pass_index=1, add_evidence=True, **ctx):
+                    feedback_for_revision, new_evidence, allocation_plan, ori_statement = self._get_revision_suggestion(
+                        statement=response, history=history, add_evidence=True, call_id=call_id, **kwargs
+                    )
+                with timed_phase(logger, "length_adjust", block=1, max_retry=1, **ctx):
+                    response = self._length_adjust(
+                        ori_statement,
+                        feedback_for_revision,
+                        new_evidence,
+                        allocation_plan,
+                        max_time,
+                        max_retry=1,
+                        call_id=call_id,
+                        **kwargs,
+                    )
 
-        streaming_tts = kwargs.get("streaming_tts", False)
-        if not time_control or streaming_tts:
-            # streaming TTS has its own adaptive refinement, skip expensive retries here
-            response = self._length_adjust(
-                response, feedback_for_revision, new_evidence, allocation_plan, max_time, max_retry=1, **kwargs
-            )
-        else:
-            response = self._length_adjust(
-                response, feedback_for_revision, new_evidence, allocation_plan, max_time, max_retry=10, **kwargs
-            )
+                with timed_phase(logger, "revision_suggestion", pass_index=2, add_evidence=False, **ctx):
+                    feedback_for_revision, new_evidence, _, _ = self._get_revision_suggestion(
+                        statement=response, history=history, add_evidence=False, call_id=call_id, **kwargs
+                    )
 
-        return super().post_process(response, max_time, time_control, **kwargs)
+                streaming_tts = kwargs.get("streaming_tts", getattr(self.config, "streaming_tts", False))
+                if not time_control or streaming_tts:
+                    with timed_phase(logger, "length_adjust", block=2, max_retry=1, **ctx):
+                        response = self._length_adjust(
+                            response,
+                            feedback_for_revision,
+                            new_evidence,
+                            allocation_plan,
+                            max_time,
+                            max_retry=1,
+                            call_id=call_id,
+                            **kwargs,
+                        )
+                else:
+                    with timed_phase(logger, "length_adjust", block=2, max_retry=10, **ctx):
+                        response = self._length_adjust(
+                            response,
+                            feedback_for_revision,
+                            new_evidence,
+                            allocation_plan,
+                            max_time,
+                            max_retry=10,
+                            call_id=call_id,
+                            **kwargs,
+                        )
+
+                with timed_phase(logger, "post_process", **ctx):
+                    out = super().post_process(response, max_time, time_control, **kwargs)
+                return out
+        finally:
+            clear_speak_io_context()
 
     def listen(self, history):
         if len(history) == 0:
@@ -393,7 +565,24 @@ class TreeDebater(Debater):
 
         # Only analyze statement if debate flow tree is enabled
         if self.use_debate_flow_tree:
-            self._analyze_statement(history[-1]["content"], self.oppo_side)
+            skip_full = getattr(self.config, "streaming_listen", False) and history[-1].get(
+                "tree_via_streaming"
+            ) is True
+            if not skip_full:
+                st = history[-1]["stage"]
+                with timed_phase(
+                    logger,
+                    "listen_analyze_statement",
+                    stage=st,
+                    side=self.side,
+                    opponent_side=self.oppo_side,
+                ):
+                    logger.debug(
+                        f"[BatchListener] analyze_start stage={st} side={self.side} "
+                        f"opponent_side={self.oppo_side} t={time.time():.3f}"
+                    )
+                    self._analyze_statement(history[-1]["content"], self.oppo_side)
+                    logger.debug(f"[BatchListener] analyze_end stage={st} side={self.side} t={time.time():.3f}")
 
         # Only prepare opponent tree list if both debate flow tree and rehearsal tree are enabled
         if self.use_rehearsal_tree and self.prepared_oppo_tree_list is None:
@@ -404,7 +593,13 @@ class TreeDebater(Debater):
     def _get_feedback_from_audience(self, statement, history, **kwargs):
         extra_tree_info = ""
         if self.add_retrieval_feedback and self.use_debate_flow_tree:
-            retrieval, retrieval_feedback = self._get_retrieval_debate_tree(include_points=False)
+            with timed_phase(
+                logger,
+                "audience_exemplar_retrieval",
+                stage=self.status,
+                side=self.side,
+            ):
+                retrieval, retrieval_feedback = self._get_retrieval_debate_tree(include_points=False)
             if retrieval is not None:
                 extra_tree_info += "\n\n" + retrieval_feedback
 
@@ -420,18 +615,56 @@ class TreeDebater(Debater):
             retrieval=extra_tree_info,
             history=history_str,
         )
-        logger.debug("[Audience-Feedback-Prompt] " + prompt.strip().replace("\n", " ||| "))
+        call_id = kwargs.get("call_id")
+        if io_logging_enabled() and call_id is not None:
+            log_io_block(
+                io_logger,
+                call_id=call_id,
+                phase="audience_feedback",
+                title="Audience-Feedback-Prompt",
+                body=prompt.strip(),
+                stage=self.status,
+                side=self.side,
+            )
+        else:
+            log_llm_io(
+                logger,
+                phase="audience_feedback",
+                title="Audience-Feedback-Prompt",
+                body=prompt.strip(),
+                stage=self.status,
+                side=self.side,
+            )
         audience_feedback = []
         flat_audience_feedback = ""
-        for i, au in enumerate(self.simulated_audience):
-            feedback = au.feedback(prompt)
-            audience_feedback.append(feedback)
-            key_feedback = (
-                "Critical Issues and Minimal Revision Suggestions"
-                + feedback.split("Critical Issues and Minimal Revision Suggestions")[-1]
+        with timed_phase(logger, "audience_simulated_feedback_llm", stage=self.status, side=self.side, n_audience=len(self.simulated_audience)):
+            for i, au in enumerate(self.simulated_audience):
+                feedback = au.feedback(prompt)
+                audience_feedback.append(feedback)
+                key_feedback = (
+                    "Critical Issues and Minimal Revision Suggestions"
+                    + feedback.split("Critical Issues and Minimal Revision Suggestions")[-1]
+                )
+                flat_audience_feedback += f"\n\n\nAudience {i+1} Feedback:\n" + key_feedback
+        if io_logging_enabled() and call_id is not None:
+            log_io_block(
+                io_logger,
+                call_id=call_id,
+                phase="audience_feedback",
+                title="Audience-Feedback-Response",
+                body=flat_audience_feedback.strip(),
+                stage=self.status,
+                side=self.side,
             )
-            flat_audience_feedback += f"\n\n\nAudience {i+1} Feedback:\n" + key_feedback
-        logger.debug("[Audience-Feedback-Response] " + flat_audience_feedback.strip().replace("\n", " ||| "))
+        else:
+            log_llm_io(
+                logger,
+                phase="audience_feedback",
+                title="Audience-Feedback-Response",
+                body=flat_audience_feedback.strip(),
+                stage=self.status,
+                side=self.side,
+            )
         return flat_audience_feedback, audience_feedback
 
     def _get_retrieval_debate_tree(self, **kwargs):
@@ -442,7 +675,15 @@ class TreeDebater(Debater):
         logger.debug(
             f"[Retrieval-Debate-Tree] Search for {self.side} side: " + current_tree_info.strip().replace("\\n", " ||| ")
         )
+        t_embed = time.perf_counter()
         current_tree_embedding = self._get_embedding_from_cache(current_tree_info)
+        log_timing(
+            logger,
+            "exemplar_retrieval_query_embedding",
+            time.perf_counter() - t_embed,
+            stage=self.status,
+            side=self.side,
+        )
         memory_tree_embedding = self.pro_embeddings if self.side == "for" else self.con_embeddings
         if self.status == "opening":
             memory_tree_embedding = memory_tree_embedding[0]
@@ -451,12 +692,21 @@ class TreeDebater(Debater):
         elif self.status == "closing":
             memory_tree_embedding = memory_tree_embedding[2]
 
+        t_search = time.perf_counter()
         hits = semantic_search(
             torch.tensor([current_tree_embedding]),
             torch.tensor(memory_tree_embedding),
             score_function=dot_score,
             top_k=1,
         )[0]
+        log_timing(
+            logger,
+            "exemplar_retrieval_semantic_search",
+            time.perf_counter() - t_search,
+            stage=self.status,
+            side=self.side,
+            top_k=1,
+        )
         retrieval_idx = [x["corpus_id"] for x in hits]
         retrieval_data = [self.data_list[idx] for idx in retrieval_idx]
         retrieval_motion = [data["motion"] for data in retrieval_data]
@@ -550,8 +800,12 @@ class TreeDebater(Debater):
                 prepared_tree.append(sorted_match_trees[i][0])
                 similarity = sorted_match_trees[i][1]
                 query_claim = sorted_match_trees[i][2]
-                logger.debug(
-                    f"[Get-Prepared-Tree] Opponent's Tree (similarity: {similarity:0.2f}) for claim: {query_claim}\n{tree.print_tree(include_status=True)}"
+
+                log_llm_io(
+                    logger,
+                    phase="get_prepared_tree",
+                    title=f"Opponent's Tree (similarity: {similarity:0.2f}) for claim: {query_claim}",
+                    body=tree.print_tree(include_status=True),
                 )
 
         thoughts = {
@@ -575,16 +829,23 @@ class TreeDebater(Debater):
         look_ahead_num = REMAINING_ROUND_NUM[f"{self.status}_{self.side}"]
         query_embedding = self._get_embedding_from_cache(target_claim)
 
-        additional_info, retrieval_nodes = get_retrieval_from_rehearsal_tree(
-            action_type,
-            target_claim,
-            self.side,
-            self.oppo_side,
-            self.prepared_tree_list,
-            self.prepared_oppo_tree_list,
-            look_ahead_num,
-            query_embedding,
-        )
+        with timed_phase(
+            logger,
+            "rehearsal_retrieve_on_prepared_tree",
+            stage=self.status,
+            side=self.side,
+            action_type=action_type,
+        ):
+            additional_info, retrieval_nodes = get_retrieval_from_rehearsal_tree(
+                action_type,
+                target_claim,
+                self.side,
+                self.oppo_side,
+                self.prepared_tree_list,
+                self.prepared_oppo_tree_list,
+                look_ahead_num,
+                query_embedding,
+            )
 
         thoughts = {
             "stage": self.status,
@@ -599,7 +860,7 @@ class TreeDebater(Debater):
 
         return "\n".join(additional_info)
 
-    def _get_revision_suggestion(self, statement, history, add_evidence=True, **kwargs):
+    def _get_revision_suggestion(self, statement, history, add_evidence=True, call_id=None, **kwargs):
         statement = statement.replace("**Statement:**", "**Statement**").replace("**Statement**:", "**Statement**")
         parts = statement.split("**Statement**")
         if len(parts) > 1:
@@ -612,7 +873,9 @@ class TreeDebater(Debater):
         if self.status == "closing":
             return "", "", allocation_plan, statement
 
-        feedback_from_audience, audience_feedback = self._get_feedback_from_audience(statement, history, **kwargs)
+        feedback_from_audience, audience_feedback = self._get_feedback_from_audience(
+            statement, history, call_id=call_id, **kwargs
+        )
         feedback_for_revision = f"Revision Guidance:\n{feedback_from_audience}"
 
         new_evidence = []
@@ -632,9 +895,46 @@ class TreeDebater(Debater):
                     statement=statement,
                     feedback=feedback_for_revision,
                 )
-                logger.debug("[Evidence-Selection-Prompt] " + prompt.strip().replace("\n", " ||| "))
-                selected_ids, response = get_response_with_retry(self.helper_client, prompt, "selected_ids")
-                logger.debug("[Evidence-Selection-Response] " + response.strip().replace("\n", " ||| "))
+                if io_logging_enabled() and call_id is not None:
+                    log_io_block(
+                        io_logger,
+                        call_id=call_id,
+                        phase="evidence_selection",
+                        title="Evidence-Selection-Prompt",
+                        body=prompt.strip(),
+                        stage=self.status,
+                        side=self.side,
+                    )
+                else:
+                    log_llm_io(
+                        logger,
+                        phase="evidence_selection",
+                        title="Evidence-Selection-Prompt",
+                        body=prompt.strip(),
+                        stage=self.status,
+                        side=self.side,
+                    )
+                with timed_phase(logger, "evidence_selection_llm", stage=self.status, side=self.side):
+                    selected_ids, response = get_response_with_retry(self.helper_client, prompt, "selected_ids")
+                if io_logging_enabled() and call_id is not None:
+                    log_io_block(
+                        io_logger,
+                        call_id=call_id,
+                        phase="evidence_selection",
+                        title="Evidence-Selection-Response",
+                        body=response.strip(),
+                        stage=self.status,
+                        side=self.side,
+                    )
+                else:
+                    log_llm_io(
+                        logger,
+                        phase="evidence_selection",
+                        title="Evidence-Selection-Response",
+                        body=response.strip(),
+                        stage=self.status,
+                        side=self.side,
+                    )
                 new_evidence = [
                     e for e in new_evidence if e["id"] in selected_ids and e["id"] not in self.used_evidence
                 ]
@@ -667,6 +967,7 @@ class TreeDebater(Debater):
     def _length_adjust(
         self, statement, feedback_for_revision, new_evidence, allocation_plan, max_time, max_retry=10, **kwargs
     ):
+        call_id = kwargs.pop("call_id", None)
         budget, threshold = max_time, TIME_TOLERANCE
         time_adjuster = TimeAdjuster()
         estimator = LengthEstimator(mode=TIME_MODE_FOR_STATEMENT)
@@ -677,6 +978,7 @@ class TreeDebater(Debater):
         retry = 0
         response_list = []
         while not flag and retry < max_retry:
+            iter_t0 = time.perf_counter()
             evidence_str = json.dumps([{k: v for k, v in x.items() if k != "raw_content"} for x in new_evidence])
             prompt = post_process_prompt.format(
                 motion=self.motion,
@@ -689,17 +991,89 @@ class TreeDebater(Debater):
                 allocation_plan=allocation_plan,
             )
 
-            logger.debug("[Get-Expert-Audience-Revision-Prompt] " + prompt.strip().replace("\n", " ||| "))
+            if io_logging_enabled() and call_id is not None:
+                log_io_block(
+                    io_logger,
+                    call_id=call_id,
+                    phase="length_adjust",
+                    title=f"Get-Expert-Audience-Revision-Prompt_iter{retry + 1}",
+                    body=prompt.strip(),
+                    stage=self.status,
+                    side=self.side,
+                    iteration=retry + 1,
+                )
+            else:
+                log_llm_io(
+                    logger,
+                    phase="length_adjust",
+                    title=f"Get-Expert-Audience-Revision-Prompt_iter{retry + 1}",
+                    body=prompt.strip(),
+                    stage=self.status,
+                    side=self.side,
+                    iteration=retry + 1,
+                )
             revision = self.helper_client(prompt=prompt)[0]
-            logger.debug("[Get-Expert-Audience-Revision-Response] " + revision.strip().replace("\n", " ||| "))
+            if io_logging_enabled() and call_id is not None:
+                log_io_block(
+                    io_logger,
+                    call_id=call_id,
+                    phase="length_adjust",
+                    title=f"Get-Expert-Audience-Revision-Response_iter{retry + 1}",
+                    body=revision.strip(),
+                    stage=self.status,
+                    side=self.side,
+                    iteration=retry + 1,
+                )
+            else:
+                log_llm_io(
+                    logger,
+                    phase="length_adjust",
+                    title=f"Get-Expert-Audience-Revision-Response_iter{retry + 1}",
+                    body=revision.strip(),
+                    stage=self.status,
+                    side=self.side,
+                    iteration=retry + 1,
+                )
             new_statement = revision.replace("Revised Statement:\n", "")
             new_statement = new_statement.replace("et al.,", "")
             new_statement = new_statement.replace("[X]", "")
             response = re.sub(r" [X-Z][ \%]", "", new_statement)
 
-            logger.debug("[Response-After-Post-Process] " + response.strip().replace("\n", " ||| "))
+            if io_logging_enabled() and call_id is not None:
+                log_io_block(
+                    io_logger,
+                    call_id=call_id,
+                    phase="length_adjust",
+                    title=f"Response-After-Post-Process_iter{retry + 1}",
+                    body=response.strip(),
+                    stage=self.status,
+                    side=self.side,
+                    iteration=retry + 1,
+                )
+            else:
+                log_llm_io(
+                    logger,
+                    phase="length_adjust",
+                    title=f"Response-After-Post-Process_iter{retry + 1}",
+                    body=response.strip(),
+                    stage=self.status,
+                    side=self.side,
+                    iteration=retry + 1,
+                )
             current_cost, n_words, flag = time_adjuster.revise_helper(
                 response, n_words, budget, threshold=threshold, ratio=ratio, estimator=estimator
+            )
+            log_timing(
+                logger,
+                "length_adjust_iteration",
+                time.perf_counter() - iter_t0,
+                stage=self.status,
+                side=self.side,
+                iteration=retry + 1,
+                max_retry=max_retry,
+                call_id=call_id,
+                fit_ok=flag,
+                current_cost=current_cost,
             )
             response_list.append([response, current_cost])
             retry += 1
@@ -743,7 +1117,17 @@ class TreeDebater(Debater):
         retry = 0
         while retry < max_retry:
             try:
+                t0 = time.perf_counter()
                 embedding = get_embeddings([content])[0]
+                log_timing(
+                    logger,
+                    "embedding_api_fetch",
+                    time.perf_counter() - t0,
+                    stage=self.status,
+                    side=self.side,
+                    cache_hit=False,
+                    attempt=retry + 1,
+                )
                 break
             except Exception as e:
                 logger.error(f"[Get-Embedding-From-Cache] Error: {e}. Sleep 30 seconds and retry.")
@@ -768,43 +1152,50 @@ class TreeDebater(Debater):
             tree, oppo_tree = self.debate_tree, self.oppo_debate_tree
         else:
             tree, oppo_tree = self.oppo_debate_tree, self.debate_tree
-        claims = extract_statement(
-            self.helper_client,
-            self.motion,
-            statements,
-            tree=[tree.print_tree(include_status=True), oppo_tree.print_tree(include_status=True, reverse=True)],
-            side=statement_side,
+        with timed_phase(
+            logger,
+            "analyze_statement",
             stage=self.status,
-        )
+            side=self.side,
+            statement_side=statement_side,
+        ):
+            claims = extract_statement(
+                self.helper_client,
+                self.motion,
+                statements,
+                tree=[tree.print_tree(include_status=True), oppo_tree.print_tree(include_status=True, reverse=True)],
+                side=statement_side,
+                stage=self.status,
+            )
 
-        for x in claims:
-            for p in x["purpose"]:
-                target_tree = tree if p["targeted_debate_tree"] == "you" else oppo_tree
-                if p["target"] == "N/A" and target_tree.max_level == 0:
-                    if p["action"] == "propose" or p["action"] == "rebut" or p["action"] == "reinforce":
-                        p["target"] = x["claim"]
+            for x in claims:
+                for p in x["purpose"]:
+                    target_tree = tree if p["targeted_debate_tree"] == "you" else oppo_tree
+                    if p["target"] == "N/A" and target_tree.max_level == 0:
+                        if p["action"] == "propose" or p["action"] == "rebut" or p["action"] == "reinforce":
+                            p["target"] = x["claim"]
 
-        for x in claims:
-            claim = x["claim"]
-            arguments = x["arguments"]
-            if isinstance(x["purpose"], dict):
-                purpose = [x["purpose"]]
-            else:
-                purpose = x["purpose"]
-            for p in purpose:
-                target_tree = tree if p["targeted_debate_tree"] == "you" else oppo_tree
-                action = p["action"]
-                target = p["target"]
-                target_tree.update_node(action, new_claim=claim, new_argument=arguments, target=target)
+            for x in claims:
+                claim = x["claim"]
+                arguments = x["arguments"]
+                if isinstance(x["purpose"], dict):
+                    purpose = [x["purpose"]]
+                else:
+                    purpose = x["purpose"]
+                for p in purpose:
+                    target_tree = tree if p["targeted_debate_tree"] == "you" else oppo_tree
+                    action = p["action"]
+                    target = p["target"]
+                    target_tree.update_node(action, new_claim=claim, new_argument=arguments, target=target)
 
-        thoughts = {
-            "stage": self.status,
-            "side": statement_side,
-            "mode": "analyze_statement",
-            "statement": statements,
-            "claims": claims,
-        }
-        self.debate_thoughts.append(thoughts)
+            thoughts = {
+                "stage": self.status,
+                "side": statement_side,
+                "mode": "analyze_statement",
+                "statement": statements,
+                "claims": claims,
+            }
+            self.debate_thoughts.append(thoughts)
 
         return claims
 

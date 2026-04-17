@@ -10,6 +10,105 @@ from .constants import MAX_TRY_NUM
 from .prompts import debater_system_prompt
 
 log_file_path = ""
+io_log_file_path = ""
+
+debate_io_logger = logging.getLogger("debate_io_logger")
+debate_io_logger.setLevel(logging.DEBUG)
+debate_io_logger.propagate = False
+
+
+def io_logging_enabled() -> bool:
+    """True when prompt/response blocks go to the I/O log file (default on)."""
+    if os.environ.get("DEBATE_LOG_PROMPTS", "1").lower() in ("0", "false", "no", "off"):
+        return False
+    return bool(debate_io_logger.handlers)
+
+
+def _setup_debate_io_logger(main_log_file: str) -> None:
+    """Sibling file ``N_io.log`` next to ``N.log`` for large prompt/response bodies."""
+    global io_log_file_path
+    if not main_log_file or not main_log_file.endswith(".log"):
+        return
+    if os.environ.get("DEBATE_LOG_PROMPTS", "1").lower() in ("0", "false", "no", "off"):
+        return
+    if debate_io_logger.handlers:
+        return
+    io_path = main_log_file.replace(".log", "_io.log")
+    io_log_file_path = io_path
+    fmt = logging.Formatter("%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    h = LazyFileHandler(io_path, mode="a", encoding="utf-8")
+    h.setLevel(logging.DEBUG)
+    h.setFormatter(fmt)
+    debate_io_logger.addHandler(h)
+
+
+class LazyFileHandler(logging.FileHandler):
+    """
+    FileHandler that only creates the log file when the first log record is emitted.
+    This prevents creation of empty log files when programs exit early or crash during init.
+    """
+
+    def __init__(self, filename, mode='a', encoding=None, delay=True):
+        """
+        Initialize with delay=True to defer file creation.
+        File will be created on first emit() call.
+        """
+        # Store filename for later use
+        self._lazy_filename = filename
+        self._lazy_mode = mode
+        self._lazy_encoding = encoding
+
+        # Don't call parent __init__ yet - we'll do it lazily
+        logging.Handler.__init__(self)
+
+        self.baseFilename = os.path.abspath(filename)
+        self.mode = mode
+        self.encoding = encoding
+        self.stream = None
+        self._file_created = False
+
+    def _open(self):
+        """Open the log file (called on first emit)."""
+        # Ensure directory exists
+        log_dir = os.path.dirname(self.baseFilename)
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+
+        return open(self.baseFilename, self.mode, encoding=self.encoding)
+
+    def emit(self, record):
+        """
+        Emit a record. Create file on first call.
+        """
+        if not self._file_created:
+            # Create file now that we have something to log
+            self.stream = self._open()
+            self._file_created = True
+
+        # Now emit normally
+        if self.stream:
+            try:
+                msg = self.format(record)
+                stream = self.stream
+                stream.write(msg + self.terminator)
+                self.flush()
+            except Exception:
+                self.handleError(record)
+
+    def close(self):
+        """Close file handler."""
+        self.acquire()
+        try:
+            if self.stream and self._file_created:
+                try:
+                    self.flush()
+                    if hasattr(self.stream, "close"):
+                        self.stream.close()
+                finally:
+                    self.stream = None
+        finally:
+            self.release()
+        logging.Handler.close(self)
 
 
 def get_output_path(base_dir="../log_files/", suffix="log"):
@@ -17,8 +116,10 @@ def get_output_path(base_dir="../log_files/", suffix="log"):
     if not os.path.exists(base_dir):
         os.makedirs(base_dir)
     log_files = [f for f in os.listdir(base_dir) if f.endswith(".log")]
-    if log_files:
-        max_num = max(int(f.split(".")[0]) for f in log_files)
+    # Only "N.log" (integer N), not e.g. "19_io.log" or "debug.log"
+    numbered_logs = [f for f in log_files if len(f) > 4 and f[:-4].isdigit()]
+    if numbered_logs:
+        max_num = max(int(f[:-4]) for f in numbered_logs)
         new_log_file = f"{max_num + 1}.{suffix}"
     else:
         new_log_file = f"1.{suffix}"
@@ -35,8 +136,9 @@ def create_log(log_file=None):
             log_file = get_output_path()
             print(f"Log file: {log_file}")
 
-        # File handler for logging to a file with DEBUG level
-        file_handler = logging.FileHandler(log_file)
+        # Lazy file handler for logging to a file with DEBUG level
+        # File will only be created when first log record is written
+        file_handler = LazyFileHandler(log_file, mode='a', encoding='utf-8')
         file_handler.setLevel(logging.DEBUG)
         file_formatter = logging.Formatter(
             "%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
@@ -52,10 +154,16 @@ def create_log(log_file=None):
         # Add handlers to the logger
         log.addHandler(file_handler)
         log.addHandler(stream_handler)
+        _setup_debate_io_logger(log_file)
+        if io_log_file_path:
+            log.debug(f"[timing] phase=io_log_ready io_log={io_log_file_path}")
     return log
 
 
 logger = create_log()
+
+# Alias for imports: ``from utils.tool import io_logger``
+io_logger = debate_io_logger
 
 
 def find_json(x):
@@ -189,12 +297,23 @@ def lp_optimize(actions: List[str], rewards: List[float], costs: List[float], bu
 
 
 def get_response_with_retry(llm, prompt, required_key, **kwargs):
+    from utils.timing_log import log_timing
+
     retry = 0
     response = ""
     content = {}
     while len(content) == 0 and retry < MAX_TRY_NUM:
         try:
+            t0 = time.perf_counter()
             response = llm(prompt=prompt, sys=debater_system_prompt, **kwargs)[0]
+            llm_s = time.perf_counter() - t0
+            log_timing(
+                logger,
+                "get_response_with_retry_llm",
+                llm_s,
+                required_key=required_key,
+                attempt=retry + 1,
+            )
             content = find_json(response)
             response = response.replace("null", "")
             content = eval(content)

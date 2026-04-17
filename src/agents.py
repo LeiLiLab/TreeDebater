@@ -20,7 +20,16 @@ from tts_streaming import convert_text_to_speech_streaming
 from utils.constants import CLOSING_TIME, OPENING_TIME, REBUTTAL_TIME, WORDRATIO, deepseek_api_key
 from utils.model import HelperClient, safety_setting
 from utils.prompts import *
-from utils.tool import log_file_path, logger
+from utils.timing_log import (
+    clear_speak_io_context,
+    log_io_block,
+    log_llm_io,
+    log_timing,
+    next_call_id,
+    one_line_preview,
+    set_speak_io_context,
+)
+from utils.tool import io_logger, io_logging_enabled, log_file_path, logger
 
 
 @dataclass
@@ -42,6 +51,8 @@ class DebaterConfig(AgentConfig):
     use_rehearsal_tree: bool = True
     use_debate_flow_tree: bool = True
     url: str = "http://127.0.0.1:8081/"
+    streaming_tts: bool = False
+    streaming_listen: bool = False
 
 
 @dataclass
@@ -114,20 +125,110 @@ class Agent:
 
     def speak(self, prompt, **kwargs):
         self._add_message("user", prompt)
-        logger.debug(f"[Conversation-History] {json.dumps(self.conversation)}")
-        logger.debug("[Prompt] " + prompt.strip().replace("\n", " ||| "))
-        response = self._get_response(self.conversation, **kwargs)
-        if kwargs.get("n", 1) > 1:
-            logger.info(f"[Response] {response}")
+        call_id = next_call_id()
+        set_speak_io_context(call_id, "default_speak")
+        stage = getattr(self, "status", "")
+        side = getattr(self, "side", "")
+        try:
+            if io_logging_enabled():
+                log_io_block(
+                    io_logger,
+                    call_id=call_id,
+                    phase="default_speak",
+                    title="Conversation-History",
+                    body=json.dumps(self.conversation),
+                    stage=stage,
+                    side=side,
+                )
+                log_io_block(
+                    io_logger,
+                    call_id=call_id,
+                    phase="default_speak",
+                    title="Prompt",
+                    body=prompt,
+                    stage=stage,
+                    side=side,
+                )
+            else:
+                log_llm_io(
+                    logger,
+                    phase="default_speak",
+                    title="Conversation-History",
+                    body=json.dumps(self.conversation),
+                    stage=stage,
+                    side=side,
+                )
+                log_llm_io(logger, phase="default_speak", title="Prompt", body=prompt.strip(), stage=stage, side=side)
+            logger.debug(
+                f"[timing-meta] call_id={call_id} speak_session=default_speak n_messages={len(self.conversation)}"
+            )
+            response = self._get_response(self.conversation, **kwargs)
+            if kwargs.get("n", 1) > 1:
+                if io_logging_enabled():
+                    log_llm_io(
+                        logger,
+                        phase="default_speak",
+                        title="Response-multi",
+                        body=str(response),
+                        stage=stage,
+                        side=side,
+                        emit_main_ref=False,
+                    )
+                    logger.info("[Response] " + one_line_preview(str(response)) + " [full text in *_io.log]")
+                else:
+                    logger.info(f"[Response] {response}")
+                return response
+            if io_logging_enabled():
+                log_io_block(
+                    io_logger,
+                    call_id=call_id,
+                    phase="default_speak",
+                    title="Response-Before-Post-Process",
+                    body=str(response).strip(),
+                    stage=stage,
+                    side=side,
+                )
+            else:
+                log_llm_io(
+                    logger,
+                    phase="default_speak",
+                    title="Response-Before-Post-Process",
+                    body=str(response).strip(),
+                    stage=stage,
+                    side=side,
+                )
+            response = self.post_process(response, **kwargs)
+            if io_logging_enabled():
+                log_io_block(
+                    io_logger,
+                    call_id=call_id,
+                    phase="default_speak",
+                    title="Response-After-Post-Process",
+                    body=str(response).strip(),
+                    stage=stage,
+                    side=side,
+                )
+            else:
+                log_llm_io(
+                    logger,
+                    phase="default_speak",
+                    title="Response-After-Post-Process",
+                    body=str(response).strip(),
+                    stage=stage,
+                    side=side,
+                )
             return response
-        logger.debug("[Response-Before-Post-Process] " + response.strip().replace("\n", " ||| "))
-        response = self.post_process(response, **kwargs)
-        logger.debug("[Response-After-Post-Process] " + response.strip().replace("\n", " ||| "))
-        return response
+        finally:
+            clear_speak_io_context()
 
     def post_process(self, statement, **kwargs):
         self._add_message("assistant", f"{statement}")
-        logger.info("[Response] " + statement.strip().replace("\n", " ||| "))
+        st = (statement or "").strip()
+        if io_logging_enabled():
+            log_llm_io(logger, phase="post_process", title="Response", body=st, emit_main_ref=False)
+            logger.info("[Response] " + one_line_preview(st) + " [full text in *_io.log]")
+        else:
+            logger.info("[Response] " + st.replace("\n", " ||| "))
         return statement
 
     def _get_response(self, messages, **kwargs):
@@ -136,11 +237,23 @@ class Agent:
         kwargs.pop("max_words", None)
         kwargs.pop("time_control", None)
         kwargs.pop("streaming_tts", None)
+        kwargs.pop("streaming_listen", None)
         retry = 0
         while retry < 3:
             try:
+                t0 = time.perf_counter()
                 response = self.client(messages=messages, **kwargs)
+                elapsed = time.perf_counter() - t0
                 self.client_cost += response._hidden_params["response_cost"]
+                log_timing(
+                    logger,
+                    "debater_litellm_completion",
+                    elapsed,
+                    stage=getattr(self, "status", None),
+                    side=getattr(self, "side", None),
+                    model=self.config.model,
+                    retry_attempt=retry,
+                )
                 response = [choice.message.content for choice in response.choices]
                 if len(response) == 1:
                     response = response[0]
@@ -197,7 +310,7 @@ class Debater(Agent):
         self.status = "rebuttal"
         self.listen(history)
         opponent = history[-1]["content"]
-        prompt = default_rebuttal_prompt.format(counter_act=self.counter_act, opponent=opponent, act=self.act)
+        prompt = default_rebuttal_prompt.format(counter_act=self.counter_act, opponent=opponent, act=self.act, motion=self.motion)
         prompt = prompt.replace("{n_words}", str(math.ceil(kwargs.get("max_time", REBUTTAL_TIME) / WORDRATIO["time"])))
         response = self.speak(prompt, **kwargs)
         return response
@@ -211,13 +324,20 @@ class Debater(Agent):
         response = self.speak(prompt, **kwargs)
         return response
 
-    def post_process(self, statement, max_time=-1, time_control=False, streaming_tts=False, **kwargs):
+    def post_process(self, statement, max_time=-1, time_control=False, streaming_tts=None, **kwargs):
         """
         statement: AI生成的原始辩论陈述文本
         max_time: 最大允许的发言时间（秒），-1表示无限制
         time_control: 是否启用时间控制功能
-        streaming_tts: 是否启用流式TTS（分chunk自适应refinement + 并行TTS）
+        streaming_tts: 是否启用流式TTS（分chunk自适应refinement + 并行TTS）；默认取 debater 配置
         """
+        if streaming_tts is None:
+            streaming_tts = kwargs.pop("streaming_tts", None)
+        if streaming_tts is None:
+            streaming_tts = getattr(self.config, "streaming_tts", False)
+        else:
+            kwargs.pop("streaming_tts", None)
+        kwargs.pop("streaming_listen", None)
         statement = statement.strip()
         if statement is None:
             self._add_message("assistant", f"")
@@ -245,7 +365,20 @@ class Debater(Agent):
 
         if max_time <= 0 or not time_control:
             self._add_message("assistant", f"{statement}")
-            logger.info("[Response] " + statement.strip().replace("\n", " ||| "))
+            st = statement.strip()
+            if io_logging_enabled():
+                log_llm_io(
+                    logger,
+                    phase="post_process",
+                    title="Response-Final",
+                    body=st,
+                    stage=self.status,
+                    side=self.side,
+                    emit_main_ref=False,
+                )
+                logger.info("[Response] " + one_line_preview(st) + " [full text in *_io.log]")
+            else:
+                logger.info("[Response] " + st.replace("\n", " ||| "))
             return statement
 
         # NOTE the below part is time-consuming, can comment them and add "new_statement = statement" when developing
@@ -262,22 +395,51 @@ class Debater(Agent):
         os.makedirs(audio_dir, exist_ok=True)
         audio_file = os.path.join(audio_dir, f"{self.config.type}_{self.status}_{self.side}.mp3")
         logger.info(f"[TTS-Start] Starting TTS for {self.config.type} {self.status} {self.side} (streaming={streaming_tts}, budget={max_time}s)")
-        logger.debug("[Time-Control] Statement: " + statement.replace("\n", " ||| "))
+        log_llm_io(
+            logger,
+            phase="post_process",
+            title="Time-Control-Statement",
+            body=statement,
+            stage=self.status,
+            side=self.side,
+        )
 
         if streaming_tts:
             # ---- Streaming TTS: chunk-based adaptive refinement + parallel TTS ----
             logger.debug("[Time-Control] Using streaming TTS pipeline")
+            wall_t0 = time.perf_counter()
             content, reference, duration = convert_text_to_speech_streaming(
                 statement, audio_file, total_budget_s=max_time,
             )
+            wall_s = time.perf_counter() - wall_t0
             logger.debug(f"[Time-Control] Save Audio: {audio_file}")
             logger.debug(f"[Time-Control] Streaming TTS Time: {duration:0.2f}")
+            log_timing(
+                logger,
+                "tts_wall_clock",
+                wall_s,
+                stage=self.status,
+                side=self.side,
+                kind="streaming_tts",
+                audio_duration_s=float(duration),
+            )
             new_content = content
         else:
             # ---- Original serial TTS + trim ----
+            wall_t0 = time.perf_counter()
             content, reference, duration = convert_text_to_speech(statement, audio_file)
+            wall_s = time.perf_counter() - wall_t0
             logger.debug(f"[Time-Control] Save Audio: {audio_file}")
             logger.debug(f"[Time-Control] Original Time: {duration:0.2f}")
+            log_timing(
+                logger,
+                "tts_wall_clock",
+                wall_s,
+                stage=self.status,
+                side=self.side,
+                kind="batch_tts_encode",
+                audio_duration_s=float(duration),
+            )
 
             if duration <= max_time:
                 logger.debug(f"[Time-Control] Final Time: {duration:0.2f}")
@@ -285,7 +447,16 @@ class Debater(Agent):
             else:
                 save_file = audio_file.replace(".mp3", "_trimmed.mp3")
                 logger.debug(f"[Time-Control] Save Trimmed Audio: {save_file}")
+                trim_t0 = time.perf_counter()
                 duration, new_sentences = trim_audio_by_sentences(audio_file, save_file, max_duration=max_time * 1000)
+                log_timing(
+                    logger,
+                    "tts_trim_wall_clock",
+                    time.perf_counter() - trim_t0,
+                    stage=self.status,
+                    side=self.side,
+                    audio_duration_s=float(duration),
+                )
                 last_sentence = new_sentences[-1]
                 idx = content.lower().find(last_sentence[:-1].lower())  # remove the punctuation
                 if idx == -1:
@@ -304,7 +475,20 @@ class Debater(Agent):
         # new_statement = statement
         self._add_message("assistant", f"{new_statement}")
         logger.info(f"[TTS-Done] Finished TTS for {self.config.type} {self.status} {self.side}")
-        logger.info("[Response] " + new_statement.strip().replace("\n", " ||| "))
+        ns = new_statement.strip()
+        if io_logging_enabled():
+            log_llm_io(
+                logger,
+                phase="post_process",
+                title="Response-After-TTS",
+                body=ns,
+                stage=self.status,
+                side=self.side,
+                emit_main_ref=False,
+            )
+            logger.info("[Response] " + one_line_preview(ns) + " [full text in *_io.log]")
+        else:
+            logger.info("[Response] " + ns.replace("\n", " ||| "))
 
         return new_statement
 
@@ -390,7 +574,7 @@ class BaselineDebater(Debater):
         }
         self.BASE_URL = f"http://127.0.0.1:{port}/"
         logger.info(f"[BaselineDebater URL] {self.BASE_URL}")
-        logger.debug("[BaselineDebater init] " + str(self.input))
+        log_llm_io(logger, phase="baseline", title="BaselineDebater-init", body=str(self.input))
 
     def _make_request(self, url, data):
         max_retries = 3
@@ -415,10 +599,10 @@ class BaselineDebater(Debater):
         opening_response = self._make_request(self.BASE_URL + "v1/argument", self.input)
         opening = opening_response["Result"]
         self.input["Reference"] = opening_response["Reference"]
-        logger.debug("[Baseline-opening-input] " + str(self.input).replace("\n", " ||| "))
-        logger.debug("[Baseline-opening-before] " + opening.strip().replace("\n", " ||| "))
+        log_llm_io(logger, phase="baseline", title="Baseline-opening-input", body=str(self.input).replace("\n", " ||| "))
+        log_llm_io(logger, phase="baseline", title="Baseline-opening-before", body=opening.strip())
         opening = self.post_process(opening, **kwargs)
-        logger.debug("[Baseline-opening-after] " + opening.strip().replace("\n", " ||| "))
+        log_llm_io(logger, phase="baseline", title="Baseline-opening-after", body=opening.strip())
         return opening
 
     def rebuttal_generation(self, history, **kwargs):
@@ -435,10 +619,10 @@ class BaselineDebater(Debater):
         rebuttal_response = self._make_request(self.BASE_URL + "v1/rebuttal", self.input)
         rebuttal = rebuttal_response["Result"]
         self.input["Reference"] = rebuttal_response["Reference"]
-        logger.debug("[Baseline-rebuttal-input] " + str(self.input).replace("\n", " ||| "))
-        logger.debug("[Baseline-rebuttal-before] " + rebuttal.strip().replace("\n", " ||| "))
+        log_llm_io(logger, phase="baseline", title="Baseline-rebuttal-input", body=str(self.input).replace("\n", " ||| "))
+        log_llm_io(logger, phase="baseline", title="Baseline-rebuttal-before", body=rebuttal.strip())
         rebuttal = self.post_process(rebuttal, **kwargs)
-        logger.debug("[Baseline-rebuttal-after] " + rebuttal.strip().replace("\n", " ||| "))
+        log_llm_io(logger, phase="baseline", title="Baseline-rebuttal-after", body=rebuttal.strip())
         return rebuttal
 
     def closing_generation(self, history, **kwargs):
@@ -456,10 +640,10 @@ class BaselineDebater(Debater):
         summary_response = self._make_request(self.BASE_URL + "v1/summary", self.input)
         summary = summary_response["Result"]
         self.input["Reference"] = summary_response["Reference"]
-        logger.debug("[Baseline-summary-input] " + str(self.input).replace("\n", " ||| "))
-        logger.debug("[Baseline-summary-before] " + summary.strip().replace("\n", " ||| "))
+        log_llm_io(logger, phase="baseline", title="Baseline-summary-input", body=str(self.input).replace("\n", " ||| "))
+        log_llm_io(logger, phase="baseline", title="Baseline-summary-before", body=summary.strip())
         summary = self.post_process(summary, **kwargs)
-        logger.debug("[Baseline-summary-after] " + summary.strip().replace("\n", " ||| "))
+        log_llm_io(logger, phase="baseline", title="Baseline-summary-after", body=summary.strip())
         return summary
 
     def reset_stage(self, stage, side, new_content):

@@ -6,6 +6,7 @@ from debate_tree import PrepareTree
 
 from .prompts import *
 from .time_estimator import LengthEstimator
+from .timing_log import log_llm_io
 from .tool import get_response_with_retry, identify_number_in_text, logger, sort_by_action
 
 ##################### Evidence #####################
@@ -19,9 +20,9 @@ def select_query(llm, motion, stance, claim, action, candidate_queries):
     prompt = select_query_prompt.format(
         claim=claim, motion=motion, stance=stance, action=action, candidate_queries=candidate_queries
     )
-    logger.debug("[Query-Helper-Prompt] " + prompt.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="helper", title="Query-Helper-Prompt", body=prompt.strip())
     query, response = get_response_with_retry(llm, prompt, "query")
-    logger.debug("[Query-Helper-Response] " + response.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="helper", title="Query-Helper-Response", body=response.strip())
     return query
 
 
@@ -83,9 +84,9 @@ def build_cot_claims(llm, motion, side, claim_pool):
         "Use Json format with one key of **selection**. The value is a list of selected claims (string) that can be used in this debate.\n"
     )
 
-    logger.debug("[CoT-Claims-Prompt] " + prompt.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="helper", title="CoT-Claims-Prompt", body=prompt.strip(), side=side)
     selected_claims, response = get_response_with_retry(llm, prompt, "selection")
-    logger.debug("[CoT-Claims-Response] " + response.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="helper", title="CoT-Claims-Response", body=response.strip(), side=side)
 
     # selected_claims = [x if x.endswith(".") else x + '.' for x in selected_claims]
     claim_content = [x[0]["claim"] for x in claim_pool]
@@ -138,9 +139,9 @@ def build_logic_claims(llm, motion, side, claim_pool, context="", definition="",
     prompt = main_claim_selection.format(
         motion=motion, side=side, tree=tree_info, claims="\n".join(ori_claims), context=context, definition=definition
     )
-    logger.debug("[Logic-Claims-Prompt] " + prompt.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="helper", title="Logic-Claims-Prompt", body=prompt.strip(), side=side)
     content, response = get_response_with_retry(llm, prompt, "selection")
-    logger.debug("[Logic-Claims-Response] " + response.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="helper", title="Logic-Claims-Response", body=response.strip(), side=side)
 
     # Step 5. Parse model outputs
     selected_claims = content["claims"]
@@ -236,7 +237,7 @@ def get_actions_from_tree(claims, tree, oppo_tree):
                         }
                     )
 
-    logger.debug(f"[Debate-Flow-Tree-Action] {actions}")
+    log_llm_io(logger, phase="helper", title="Debate-Flow-Tree-Action", body=json.dumps(actions, indent=2))
 
     df = pd.DataFrame(actions)
     df = df.drop_duplicates(subset=["target_claim"])
@@ -254,9 +255,9 @@ def get_battlefields_from_actions(llm, motion, side, claims, actions, tree, oppo
         tree=tree.print_tree(include_status=True),
         oppo_tree=oppo_tree.print_tree(include_status=True),
     )
-    logger.debug("[Debate-Flow-Tree-Action-Eval-Prompt] " + prompt.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="helper", title="Debate-Flow-Tree-Action-Eval-Prompt", body=prompt.strip(), side=side)
     eval_results, response = get_response_with_retry(llm, prompt, "response")
-    logger.debug("[Debate-Flow-Tree-Action-Eval-Response] " + response.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="helper", title="Debate-Flow-Tree-Action-Eval-Response", body=response.strip(), side=side)
 
     battlefields = []
     for eval_result in eval_results:
@@ -484,7 +485,21 @@ def extract_statement(llm, motion, statement, claims=None, tree=None, side=None,
     else:
         prompt = extract_statment_prompt.format(motion=motion, statement=statement)
 
-    logger.debug("[Analyze-Helper-Prompt] " + prompt.strip().replace("\n", " ||| "))
+    log_llm_io(
+        logger,
+        phase="helper",
+        title="Analyze-Helper-Prompt",
+        body=prompt.strip(),
+        side=side,
+        stage=stage,
+    )
     claims, response = get_response_with_retry(llm, prompt, "statements")
-    logger.debug("[Analyze-Helper-Response] " + response.strip().replace("\n", " ||| "))
+    log_llm_io(
+        logger,
+        phase="helper",
+        title="Analyze-Helper-Response",
+        body=response.strip(),
+        side=side,
+        stage=stage,
+    )
     return claims

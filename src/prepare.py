@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import re
+import time
 from functools import partial
 
 import google.generativeai as genai
@@ -15,6 +16,7 @@ from searcher import MAX_QUERY, get_search_query, get_search_result, get_source_
 from utils.constants import EMBEDDING_MODEL, google_api_key
 from utils.model import HelperClient, reward_model
 from utils.prompts import claim_propose_prompt, propose_definition_prompt
+from utils.timing_log import log_llm_io, log_timing
 from utils.tool import get_response_with_retry, logger
 
 genai.configure(api_key=google_api_key)
@@ -62,9 +64,9 @@ class ClaimPool:
 
     def create_claim(self, need_score=True, need_evidence=True, max_search_depth=2, max_search_branch=3):
         prompt = propose_definition_prompt.format(motion=self.motion, act=self.act)
-        logger.debug("[Definition-Helper-Prompt] " + prompt.strip().replace("\n", " ||| "))
+        log_llm_io(logger, phase="prepare", title="Definition-Helper-Prompt", body=prompt.strip(), side=self.side)
         response = self.client(prompt=prompt)[0]
-        logger.debug("[Definition-Helper-Response] " + response.strip().replace("\n", " ||| "))
+        log_llm_io(logger, phase="prepare", title="Definition-Helper-Response", body=response.strip(), side=self.side)
         if "None" in response:
             self.definition = ""
         else:
@@ -72,9 +74,9 @@ class ClaimPool:
 
         prompt = claim_propose_prompt.format(motion=self.motion, act=self.act, size=self.pool_size)
 
-        logger.debug("[Claim-Propose-Prompt] " + prompt.replace("\n", " ||| "))
+        log_llm_io(logger, phase="prepare", title="Claim-Propose-Prompt", body=prompt, side=self.side)
         results, response = get_response_with_retry(self.client, prompt, "results", temperature=1.0)
-        logger.debug("[Claim-Propose-Response] " + json.dumps(response, indent=2).replace("\n", " ||| "))
+        log_llm_io(logger, phase="prepare", title="Claim-Propose-Response", body=json.dumps(response, indent=2), side=self.side)
 
         for item in results:
             strength = item.get("strength", 5)
@@ -293,6 +295,7 @@ if __name__ == "__main__":
                 logger.info(f"Skip motion: {motion}")
             else:
                 logger.info(f"Create motion for {save_file_name}...")
+                t_prep = time.perf_counter()
                 claim_workspace = ClaimPool(
                     motion=motion, side=side, model=model, pool_size=pool_size, use_rm_model=not args.ban_rm_model
                 )
@@ -301,6 +304,14 @@ if __name__ == "__main__":
                     need_evidence=not args.no_evidence,
                     max_search_depth=args.max_search_depth,
                     max_search_branch=args.max_search_branch,
+                )
+                log_timing(
+                    logger,
+                    "prepare_claim_pool_wall",
+                    time.perf_counter() - t_prep,
+                    motion=motion_name,
+                    side=side,
+                    n_claims=len(claim_pool),
                 )
                 logger.info(f"Claim Pool Size: {len(claim_pool)}")
 

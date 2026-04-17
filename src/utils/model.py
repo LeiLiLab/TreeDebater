@@ -1,9 +1,12 @@
+import time
+
 import litellm
 import numpy as np
 import torch
 from transformers import AutoTokenizer, LlamaForSequenceClassification
 
 from utils.constants import ATTACK_RM_PATH, SUPPORT_RM_PATH, google_api_key
+from utils.timing_log import log_timing
 from utils.tool import logger
 
 safety_setting = [
@@ -65,7 +68,8 @@ def HelperClient(
 
     messages.append({"role": "user", "content": prompt})
     responses = []
-    for _ in range(n):
+    for i in range(n):
+        t0 = time.perf_counter()
         # # Check if we need JSON response format and if the model supports it
         # use_json_format = ("json" in prompt.lower() or (sys is not None and "json" in sys.lower()))
 
@@ -85,6 +89,15 @@ def HelperClient(
             response = litellm.completion(
                 model=model_name, messages=messages, temperature=temperature, max_tokens=max_tokens, stop=stop, **kwargs
             )
+        elapsed = time.perf_counter() - t0
+        ctx = {"model": model, "n_index": i + 1, "max_tokens": max_tokens}
+        try:
+            cost = getattr(response, "_hidden_params", {}).get("response_cost")
+            if cost is not None:
+                ctx["response_cost"] = cost
+        except Exception:
+            pass
+        log_timing(logger, "helper_client_litellm", elapsed, **ctx)
         responses.append(response.choices[0].message.content)
     return responses
 

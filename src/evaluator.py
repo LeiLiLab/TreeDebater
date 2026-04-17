@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
+from src.utils.timing_log import log_llm_io
 from src.utils.tool import extract_numbers, find_json, logger
 
 
@@ -231,9 +232,9 @@ def evaluate_support_strength(llm, motion, argument1, argument2, history=None):
         f"Argument 2: {argument2}\n"
         f"""The two arguments are from the same side in a debate, and the support strength refers to how well the first argument adds to the second argument. Each score ranges from 1 to 3, with 1 being the lowest and 3 being the highest. Provide your evaluation as a single number in the format "Score: [score]". You can additionally provide a brief explanation of your evaluation."""
     )
-    logger.debug("[Support-Strength-Prompt] {}".format(prompt.strip().replace("\n", " ||| ")))
+    log_llm_io(logger, phase="evaluator", title="Support-Strength-Prompt", body=prompt.strip())
     response = llm(prompt=prompt, temperature=0)[0]
-    logger.debug("[Support-Strength-Response] {}".format(response.strip().replace("\n", " ||| ")))
+    log_llm_io(logger, phase="evaluator", title="Support-Strength-Response", body=response.strip())
     response = response.replace("*", "")
     pos = response.find("Score: ")
     numbers = extract_numbers(response[pos : pos + 15])
@@ -254,9 +255,9 @@ def evaluate_defense_strength(llm, motion, argument1, argument2, history=None):
         f"Argument 2: {argument2}\n"
         """The two arguments are from the different sides in a debate, and the rebuttal strength refers to how well the first argument undermines the second argument. Each score ranges from 1 to 3, with 1 being the lowest and 3 being the highest. Provide your evaluation as a single number in the format "Score: [score]". You can additionally provide a brief explanation of your evaluation."""
     )
-    logger.debug("[Support-Defense-Prompt] {}".format(prompt.strip().replace("\n", " ||| ")))
+    log_llm_io(logger, phase="evaluator", title="Support-Defense-Prompt", body=prompt.strip())
     response = llm(prompt=prompt, temperature=0)[0]
-    logger.debug("[Support-Defense-Response] {}".format(response.strip().replace("\n", " ||| ")))
+    log_llm_io(logger, phase="evaluator", title="Support-Defense-Response", body=response.strip())
     pos = response.find("Score: ")
     numbers = extract_numbers(response[pos : pos + 15])
     return numbers[0]
