@@ -5,7 +5,7 @@ from transformers import AutoTokenizer, LlamaForSequenceClassification
 
 from utils.constants import ATTACK_RM_PATH, SUPPORT_RM_PATH, google_api_key
 from utils.tool import logger
-
+# litellm._turn_on_debug()
 safety_setting = [
     {
         "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
@@ -79,11 +79,12 @@ def HelperClient(
                 temperature=temperature,
                 max_tokens=max_tokens,
                 stop=stop,
+                num_retries=3,
                 **kwargs,
             )
         else:
             response = litellm.completion(
-                model=model_name, messages=messages, temperature=temperature, max_tokens=max_tokens, stop=stop, **kwargs
+                model=model_name, messages=messages, temperature=temperature, max_tokens=max_tokens, stop=stop, num_retries=3, **kwargs
             )
         responses.append(response.choices[0].message.content)
     return responses
