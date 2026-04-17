@@ -1,4 +1,5 @@
 openai
+pydub
 backoff
 tqdm
 numpy
@@ -7,6 +8,8 @@ google-generativeai
 matplotlib
 seaborn
 litellm
+pydantic>=2
+instructor
 accelerate>=0.26.0
 wandb
 tavily-python
@@ -15,4 +18,5 @@ pulp
 g2p_en
 fastapi
 tavily-python
+pydub
 git+https://github.com/UKPLab/sentence-transformers.git

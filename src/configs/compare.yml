@@ -5,7 +5,6 @@ env:
   claim_pool_size: 50
   reverse: False
   time_control: True
-  streaming_tts: False
 
 debater:
   - side: for
@@ -14,6 +13,9 @@ debater:
     temperature: 1.0
     use_retrieval: True
     add_retrieval_feedback: False
+    single_pass_revision: False
+    helper_model: deepseek-chat
+    streaming_tts: False
     pool_file: ../results10/deepseek-chat/it_is_time_to_welcome_an_a.i._tutor_in_the_classroom_pool_for.json
     
   - side: against
@@ -22,6 +24,9 @@ debater:
     temperature: 1.0
     use_retrieval: True
     add_retrieval_feedback: False
+    single_pass_revision: False
+    helper_model: deepseek-chat
+    streaming_tts: False
     pool_file: ../results10/deepseek-chat/it_is_time_to_welcome_an_a.i._tutor_in_the_classroom_pool_against.json
 judge:
   temperature: 0.0

@@ -152,18 +152,22 @@ python compare_env.py --config test2/case1/compare_deepseek-chat.yml
 ```
 
 ### 🔊 Streaming TTS (Optional)
-By default, the TTS pipeline generates audio serially and trims sentences that exceed the time budget. With `streaming_tts: true` in your config, a **streaming pipeline** is used instead:
+By default, the TTS pipeline generates audio serially and trims sentences that exceed the time budget. With `streaming_tts: true` on a debater’s config entry, a **streaming pipeline** is used instead:
 
 - **Chunk-based processing**: the debate speech is split into paragraph-level chunks, each assigned a proportional share of the total time budget (opening: 240s, rebuttal: 240s, closing: 120s).
 - **Adaptive refinement**: FastSpeech2 estimates each chunk's duration; if off-target, an LLM rewrites the chunk to hit the target word count. Multiple TTS candidates are submitted in parallel and the closest-to-target is picked.
 - **Streaming overlap**: while chunk N plays, chunk N+1 is being refined and TTS-generated, minimizing gaps.
 - **No information loss**: instead of trimming sentences, text is rewritten to fit the budget.
 
-To enable, set `streaming_tts: true` in the `env` section of your config:
+To enable, set `streaming_tts: true` on each **debater** entry in your config (per-agent):
 ```yaml
-env:
-  time_control: true
-  streaming_tts: true
+debater:
+  - side: for
+    type: treedebater
+    streaming_tts: true
+  - side: against
+    type: treedebater
+    streaming_tts: true
 ```
 
 After a streaming run, each speech produces a `*_chunks/` directory containing per-chunk audio, text, and a `chunk_profile.csv` with timing details. To visualize the overlap timeline:

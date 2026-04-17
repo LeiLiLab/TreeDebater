@@ -9,6 +9,7 @@ from tavily import TavilyClient
 from utils.db import get_cached_answer, save_query
 from utils.model import HelperClient
 from utils.prompts import iterative_search_prompt, search_prompt, summarize_result_prompt
+from utils.timing_log import log_llm_io
 from utils.tool import logger
 
 MAX_QUERY = 10
@@ -106,13 +107,13 @@ def get_search_query(llm_client, motion, stance, claim=None, extra_prompt=None):
         prompt += "\n\n**Claim**: {claim}\n\n".format(claim=claim)
     if extra_prompt is not None:
         prompt += "\n\n" + extra_prompt
-    logger.debug("[Search-Helper-Prompt] " + prompt.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="searcher", title="Search-Helper-Prompt", body=prompt.strip())
     response = llm_client(prompt=prompt)[0]
-    logger.debug("[Search-Helper-Response] " + response.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="searcher", title="Search-Helper-Response", body=response.strip())
     queries = find_tavily(response)
     queries = [q.replace('"', "") for q in queries]
 
-    logger.debug("[Search-Helper-Queries] " + " ||| ".join(queries))
+    log_llm_io(logger, phase="searcher", title="Search-Helper-Queries", body=" ||| ".join(queries))
     return queries
 
 
@@ -123,11 +124,11 @@ def update_search_query(llm_client, motion, stance, claim, results):
     prompt = iterative_search_prompt.format(
         motion=motion, stance=stance, claim=claim, results=json.dumps(simple_results, indent=2)
     )
-    logger.debug("[Search-Helper-Update-Prompt] " + prompt.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="searcher", title="Search-Helper-Update-Prompt", body=prompt.strip())
     response = llm_client(prompt=prompt)[0]
-    logger.debug("[Search-Helper-Update-Response] " + response.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="searcher", title="Search-Helper-Update-Response", body=response.strip())
     queries = find_tavily(response)
-    logger.debug("[Search-Helper-Queries] " + " ||| ".join(queries))
+    log_llm_io(logger, phase="searcher", title="Search-Helper-Queries", body=" ||| ".join(queries))
     return queries
 
 
@@ -136,9 +137,9 @@ def summarize_search_result(llm_client, claim, search_results):
         query = r["query"]
         content = {"title": r["title"], "url": r["url"], "content": r["content"]}
         prompt = summarize_result_prompt.format(claim=claim, query=query, results=json.dumps(content, indent=2))
-        logger.debug("[Search-Summarize-Prompt] " + prompt.strip().replace("\n", " ||| "))
+        log_llm_io(logger, phase="searcher", title="Search-Summarize-Prompt", body=prompt.strip())
         response = llm_client(prompt=prompt)[0]
-        logger.debug("[Search-Summarize-Response] " + response.strip().replace("\n", " ||| "))
+        log_llm_io(logger, phase="searcher", title="Search-Summarize-Response", body=response.strip())
         r["argument"] = response
     return search_results
 

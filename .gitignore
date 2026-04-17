@@ -23,5 +23,6 @@ archive*
 src/wandb/
 src/configs/*/case*
 .cache/
+.cursor/
 
-dependencies/
+dependencies
