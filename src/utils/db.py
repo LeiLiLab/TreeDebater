@@ -3,21 +3,21 @@ import sqlite3
 from datetime import datetime
 from typing import Optional
 
-CACHE_DIR = "../.cache"
+# Repo root is .../TreeDebater (parent of src/), not cwd-relative ../.cache
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+CACHE_DIR = os.path.join(_REPO_ROOT, ".cache")
 
 
 def init_db(force: bool = False):
-    db_path = f"{CACHE_DIR}/search.db"
-    if not os.path.exists(db_path) or os.path.getsize(db_path) == 0:
-        init_db()
-    conn = sqlite3.connect(db_path)    
+    db_path = os.path.join(CACHE_DIR, "search.db")
 
     if not os.path.exists(CACHE_DIR):
-        os.makedirs(CACHE_DIR)
+        os.makedirs(CACHE_DIR, exist_ok=True)
 
-    if force and os.path.exists(".cache/search.db"):
-        os.remove(".cache/search.db")
-    conn = sqlite3.connect(db_name)
+    if force and os.path.exists(db_path):
+        os.remove(db_path)
+
+    conn = sqlite3.connect(db_path)
 
     c = conn.cursor()
     c.execute(
@@ -46,7 +46,7 @@ def init_db(force: bool = False):
 
 
 def save_query(query: str, answer: str):
-    conn = sqlite3.connect(f"{CACHE_DIR}/search.db")
+    conn = sqlite3.connect(os.path.join(CACHE_DIR, "search.db"))
     c = conn.cursor()
     current_time = datetime.now().isoformat()
 
@@ -66,7 +66,7 @@ def save_query(query: str, answer: str):
 
 
 def get_cached_answer(query: str) -> Optional[tuple]:
-    conn = sqlite3.connect(f"{CACHE_DIR}/search.db")
+    conn = sqlite3.connect(os.path.join(CACHE_DIR, "search.db"))
     c = conn.cursor()
     c.execute("SELECT answer, created_at, updated_at FROM queries WHERE query = ?", (query,))
     result = c.fetchone()
@@ -75,7 +75,7 @@ def get_cached_answer(query: str) -> Optional[tuple]:
 
 
 def remove_query(query: str) -> bool:
-    conn = sqlite3.connect("cache/search.db")
+    conn = sqlite3.connect(os.path.join(CACHE_DIR, "search.db"))
     c = conn.cursor()
 
     try:

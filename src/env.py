@@ -1,9 +1,7 @@
 import argparse
 import json
-import os
 import time
 from dataclasses import dataclass
-from functools import partial
 from typing import List
 
 import yaml
@@ -11,7 +9,7 @@ import yaml
 from agents import Audience, AudienceConfig, BaselineDebater, Debater, DebaterConfig, HumanDebater, Judge, JudgeConfig
 from ouragents import TreeDebater
 from utils.constants import CLOSING_TIME, OPENING_TIME, REBUTTAL_TIME
-from utils.model import HelperClient
+from utils.timing_log import log_timing
 from utils.tool import logger
 
 
@@ -26,7 +24,6 @@ class EnvConfig:
     claim_pool_size: int = 50
     reverse: bool = False
     time_control: bool = True
-    streaming_tts: bool = False
 
 
 def extract_overall_score(obj_scores):  # larger is better
@@ -47,7 +44,6 @@ class Env:
         self.claim_pool_size = config.claim_pool_size
         self.reverse = config.reverse
         self.time_control = config.time_control
-        self.streaming_tts = config.streaming_tts
         self.debug = debug
 
         # init players
@@ -87,6 +83,7 @@ class Env:
         order = ["for", "against"] if not self.reverse else ["against", "for"]
         for stage in ["preparation", "opening", "rebuttal", "closing"]:
             logger.info(f"[{stage}] Start")
+            t_stage = time.perf_counter()
             if stage == "preparation":
                 for side in order:
                     if self.debaters[side].type in ["treedebater"]:
@@ -96,26 +93,33 @@ class Env:
                 for side in order:
                     player = self.debaters[side]
                     response = player.opening_generation(
-                        history=self.debate_process[1:], max_time=OPENING_TIME,
-                        time_control=self.time_control, streaming_tts=self.streaming_tts,
+                        history=self.debate_process[1:],
+                        max_time=OPENING_TIME,
+                        time_control=self.time_control,
+                        streaming_tts=player.config.streaming_tts,
                     )
                     self.debate_process.append({"stage": stage, "side": side, "content": response})
             elif stage == "rebuttal":
                 for side in order:
                     player = self.debaters[side]
                     response = player.rebuttal_generation(
-                        history=self.debate_process[1:], max_time=REBUTTAL_TIME,
-                        time_control=self.time_control, streaming_tts=self.streaming_tts,
+                        history=self.debate_process[1:],
+                        max_time=REBUTTAL_TIME,
+                        time_control=self.time_control,
+                        streaming_tts=player.config.streaming_tts,
                     )
                     self.debate_process.append({"stage": stage, "side": side, "content": response})
             elif stage == "closing":
-                for side in order:  # reverse to make compatible with agent4debate
+                for side in order:
                     player = self.debaters[side]
                     response = player.closing_generation(
-                        history=self.debate_process[1:], max_time=CLOSING_TIME,
-                        time_control=self.time_control, streaming_tts=self.streaming_tts,
+                        history=self.debate_process[1:],
+                        max_time=CLOSING_TIME,
+                        time_control=self.time_control,
+                        streaming_tts=player.config.streaming_tts,
                     )
                     self.debate_process.append({"stage": stage, "side": side, "content": response})
+            log_timing(logger, "env_stage_wall", time.perf_counter() - t_stage, stage=stage, motion=self.motion[:80])
             logger.info(f"[{stage}] Done")
             if self.debug:
                 response = input("Press N to stop: ")
@@ -124,6 +128,7 @@ class Env:
 
     def eval(self, process=None):
         logger.info("[Evaluation] Start")
+        t0 = time.perf_counter()
         output = {}
         process = self.debate_process if process is None else process
         process = [x for x in process if x["stage"] != "settings"]
@@ -161,17 +166,20 @@ class Env:
                 )
                 output[f"{side}_surprise_explanation"].append(surprise_explanation[0])
 
+        log_timing(logger, "evaluation_wall", time.perf_counter() - t0, motion=self.motion[:80])
         logger.info("[Evaluation] Done")
         return output, side_info
 
     def compare_debate(self, comparison_process, order_reverse=False):
         logger.info("[Comparison Evaluation] Start")
+        t_cmp = time.perf_counter()
         order = ["baseline_response", "test_response"] if not order_reverse else ["test_response", "baseline_response"]
 
         output = {}
         context = []
         for i, phase in enumerate(comparison_process.keys()):
             logger.info(f"[{phase}] Start")
+            t_ph = time.perf_counter()
             output[phase] = {}
             stage, side = phase.split("_")
 
@@ -206,7 +214,9 @@ class Env:
                     "content": comparison_process[phase]["keep_response"].split("**Reference**")[0],
                 }
             )
+            log_timing(logger, "comparison_phase_wall", time.perf_counter() - t_ph, phase=phase, motion=self.motion[:80])
 
+        log_timing(logger, "comparison_evaluation_total_wall", time.perf_counter() - t_cmp, motion=self.motion[:80])
         logger.info("[Comparison Evaluation] Done")
         return output
 

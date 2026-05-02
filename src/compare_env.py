@@ -2,6 +2,7 @@ import argparse
 import copy
 import json
 import os
+import time
 
 import yaml
 
@@ -9,6 +10,7 @@ from agents import AudienceConfig, BaselineDebater, DebaterConfig, JudgeConfig
 from env import Env, EnvConfig, extract_overall_score
 from ouragents import TreeDebater
 from utils.constants import CLOSING_TIME, OPENING_TIME, REBUTTAL_TIME
+from utils.timing_log import log_timing
 from utils.tool import logger
 
 
@@ -28,7 +30,6 @@ class CompareEnv:
         self.claim_pool_size = config.claim_pool_size
         self.reverse = config.reverse  # if to reverse the order of the debaters
         self.time_control = config.time_control
-        self.streaming_tts = config.streaming_tts
         self.debug = debug
         self.baseline_type = baseline_type
         self.test_type = test_type
@@ -81,12 +82,18 @@ class CompareEnv:
         }
 
         base_response = baseline_call[stage](
-            history=history, max_time=max_time, time_control=self.time_control, streaming_tts=self.streaming_tts,
+            history=history,
+            max_time=max_time,
+            time_control=self.time_control,
+            streaming_tts=self.baseline_debaters[side].config.streaming_tts,
         )
 
         # Generate test response using reference history
         test_response = test_call[stage](
-            history=history, max_time=max_time, time_control=self.time_control, streaming_tts=self.streaming_tts,
+            history=history,
+            max_time=max_time,
+            time_control=self.time_control,
+            streaming_tts=self.test_debaters[side].config.streaming_tts,
         )
         return base_response, test_response
 
@@ -105,6 +112,7 @@ class CompareEnv:
         # Run through each stage
         for stage in ["preparation", "opening", "rebuttal", "closing"]:
             logger.info(f"[{stage}] Start Comparison")
+            t_st = time.perf_counter()
 
             if stage == "preparation":
                 # Generate claims for both reference and test debaters
@@ -150,6 +158,7 @@ class CompareEnv:
                         "keep_response": keep_response,
                     }
 
+            log_timing(logger, "compare_env_stage_wall", time.perf_counter() - t_st, stage=stage, motion=self.motion[:80])
             logger.info(f"[{stage}] Comparison Complete")
 
             if self.debug:

@@ -2,14 +2,115 @@ import logging
 import os
 import re
 import time
-from typing import List
+import json
+from typing import Any, List, TypeVar
 
+from pydantic import BaseModel, ValidationError
 from pulp import LpMaximize, LpProblem, LpVariable
 
 from .constants import MAX_TRY_NUM
 from .prompts import debater_system_prompt
 
 log_file_path = ""
+io_log_file_path = ""
+
+debate_io_logger = logging.getLogger("debate_io_logger")
+debate_io_logger.setLevel(logging.DEBUG)
+debate_io_logger.propagate = False
+
+
+def io_logging_enabled() -> bool:
+    """True when prompt/response blocks go to the I/O log file (default on)."""
+    if os.environ.get("DEBATE_LOG_PROMPTS", "1").lower() in ("0", "false", "no", "off"):
+        return False
+    return bool(debate_io_logger.handlers)
+
+
+def _setup_debate_io_logger(main_log_file: str) -> None:
+    """Sibling file ``N_io.log`` next to ``N.log`` for large prompt/response bodies."""
+    global io_log_file_path
+    if not main_log_file or not main_log_file.endswith(".log"):
+        return
+    if os.environ.get("DEBATE_LOG_PROMPTS", "1").lower() in ("0", "false", "no", "off"):
+        return
+    if debate_io_logger.handlers:
+        return
+    io_path = main_log_file.replace(".log", "_io.log")
+    io_log_file_path = io_path
+    fmt = logging.Formatter("%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    h = LazyFileHandler(io_path, mode="a", encoding="utf-8")
+    h.setLevel(logging.DEBUG)
+    h.setFormatter(fmt)
+    debate_io_logger.addHandler(h)
+
+
+class LazyFileHandler(logging.FileHandler):
+    """
+    FileHandler that only creates the log file when the first log record is emitted.
+    This prevents creation of empty log files when programs exit early or crash during init.
+    """
+
+    def __init__(self, filename, mode='a', encoding=None, delay=True):
+        """
+        Initialize with delay=True to defer file creation.
+        File will be created on first emit() call.
+        """
+        # Store filename for later use
+        self._lazy_filename = filename
+        self._lazy_mode = mode
+        self._lazy_encoding = encoding
+
+        # Don't call parent __init__ yet - we'll do it lazily
+        logging.Handler.__init__(self)
+
+        self.baseFilename = os.path.abspath(filename)
+        self.mode = mode
+        self.encoding = encoding
+        self.stream = None
+        self._file_created = False
+
+    def _open(self):
+        """Open the log file (called on first emit)."""
+        # Ensure directory exists
+        log_dir = os.path.dirname(self.baseFilename)
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+
+        return open(self.baseFilename, self.mode, encoding=self.encoding)
+
+    def emit(self, record):
+        """
+        Emit a record. Create file on first call.
+        """
+        if not self._file_created:
+            # Create file now that we have something to log
+            self.stream = self._open()
+            self._file_created = True
+
+        # Now emit normally
+        if self.stream:
+            try:
+                msg = self.format(record)
+                stream = self.stream
+                stream.write(msg + self.terminator)
+                self.flush()
+            except Exception:
+                self.handleError(record)
+
+    def close(self):
+        """Close file handler."""
+        self.acquire()
+        try:
+            if self.stream and self._file_created:
+                try:
+                    self.flush()
+                    if hasattr(self.stream, "close"):
+                        self.stream.close()
+                finally:
+                    self.stream = None
+        finally:
+            self.release()
+        logging.Handler.close(self)
 
 
 def get_output_path(base_dir="../log_files/", suffix="log"):
@@ -17,8 +118,10 @@ def get_output_path(base_dir="../log_files/", suffix="log"):
     if not os.path.exists(base_dir):
         os.makedirs(base_dir)
     log_files = [f for f in os.listdir(base_dir) if f.endswith(".log")]
-    if log_files:
-        max_num = max(int(f.split(".")[0]) for f in log_files)
+    # Only "N.log" (integer N), not e.g. "19_io.log" or "debug.log"
+    numbered_logs = [f for f in log_files if len(f) > 4 and f[:-4].isdigit()]
+    if numbered_logs:
+        max_num = max(int(f[:-4]) for f in numbered_logs)
         new_log_file = f"{max_num + 1}.{suffix}"
     else:
         new_log_file = f"1.{suffix}"
@@ -35,8 +138,9 @@ def create_log(log_file=None):
             log_file = get_output_path()
             print(f"Log file: {log_file}")
 
-        # File handler for logging to a file with DEBUG level
-        file_handler = logging.FileHandler(log_file)
+        # Lazy file handler for logging to a file with DEBUG level
+        # File will only be created when first log record is written
+        file_handler = LazyFileHandler(log_file, mode='a', encoding='utf-8')
         file_handler.setLevel(logging.DEBUG)
         file_formatter = logging.Formatter(
             "%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
@@ -52,18 +156,79 @@ def create_log(log_file=None):
         # Add handlers to the logger
         log.addHandler(file_handler)
         log.addHandler(stream_handler)
+        _setup_debate_io_logger(log_file)
+        if io_log_file_path:
+            log.debug(f"[timing] phase=io_log_ready io_log={io_log_file_path}")
     return log
 
 
 logger = create_log()
 
+# Alias for imports: ``from utils.tool import io_logger``
+io_logger = debate_io_logger
+
+T = TypeVar("T", bound=BaseModel)
+
+
+def _strip_markdown_json_fence(text: str) -> str:
+    fenced = re.search(r"```(?:json)?\s*(.*?)```", text, re.IGNORECASE | re.DOTALL)
+    if fenced:
+        return fenced.group(1).strip()
+    return text
+
 
 def find_json(x):
-    idx = x.find("{")
-    ridx = x.rfind("}")
-    if idx == -1 or ridx == -1:
+    return extract_json_object(x)
+
+
+def extract_json_object(text: str) -> str:
+    if text is None:
         return ""
-    return x[idx : ridx + 1]
+    if isinstance(text, (dict, list)):
+        return json.dumps(text)
+    if not isinstance(text, str):
+        text = str(text)
+
+    text = _strip_markdown_json_fence(text).strip()
+    idx = text.find("{")
+    ridx = text.rfind("}")
+    if idx != -1 and ridx != -1 and idx <= ridx:
+        return text[idx : ridx + 1]
+    lidx = text.find("[")
+    rridx = text.rfind("]")
+    if lidx != -1 and rridx != -1 and lidx <= rridx:
+        return text[lidx : rridx + 1]
+    return text
+
+
+def parse_llm_json(text: Any, *, response_model: type[T] | None = None, required_key: str | None = None) -> T | Any:
+    if isinstance(text, BaseModel):
+        parsed = text
+    elif isinstance(text, (dict, list)):
+        parsed = text
+    else:
+        payload = extract_json_object(text)
+        parsed = json.loads(payload)
+
+    if response_model is not None:
+        if isinstance(parsed, response_model):
+            validated = parsed
+        else:
+            validated = response_model.model_validate(parsed)
+        if required_key is None:
+            return validated
+        dumped = validated.model_dump()
+        if required_key not in dumped:
+            raise KeyError(f"Missing required key '{required_key}' in validated response.")
+        return dumped[required_key]
+
+    if required_key is None:
+        return parsed
+    if not isinstance(parsed, dict):
+        raise TypeError(f"Expected dict for required_key='{required_key}', got {type(parsed).__name__}")
+    if required_key not in parsed:
+        raise KeyError(f"Missing required key '{required_key}' in parsed response.")
+    return parsed[required_key]
 
 
 def extract_numbers(s):
@@ -188,19 +353,45 @@ def lp_optimize(actions: List[str], rewards: List[float], costs: List[float], bu
     return selected_actions, total_reward, total_cost
 
 
-def get_response_with_retry(llm, prompt, required_key, **kwargs):
+def get_response_with_retry(llm, prompt, required_key, *, response_model: type[T] | None = None, **kwargs):
+    from utils.timing_log import log_timing
+
     retry = 0
     response = ""
     content = {}
-    while len(content) == 0 and retry < MAX_TRY_NUM:
+    while retry < MAX_TRY_NUM:
         try:
-            response = llm(prompt=prompt, sys=debater_system_prompt, **kwargs)[0]
-            content = find_json(response)
-            response = response.replace("null", "")
-            content = eval(content)
-            content = content[required_key]
-        except Exception as e:
+            t0 = time.perf_counter()
+            response_obj = llm(prompt=prompt, sys=debater_system_prompt, response_model=response_model, **kwargs)[0]
+            llm_s = time.perf_counter() - t0
+            log_timing(
+                logger,
+                "get_response_with_retry_llm",
+                llm_s,
+                required_key=required_key,
+                attempt=retry + 1,
+                response_model=response_model.__name__ if response_model is not None else None,
+            )
+            if isinstance(response_obj, BaseModel):
+                response = json.dumps(response_obj.model_dump(), ensure_ascii=False)
+                content = parse_llm_json(
+                    response_obj,
+                    response_model=response_model or type(response_obj),
+                    required_key=required_key,
+                )
+            else:
+                response = response_obj if isinstance(response_obj, str) else json.dumps(response_obj, ensure_ascii=False)
+                content = parse_llm_json(response_obj, response_model=response_model, required_key=required_key)
+            if content is not None and content != {}:
+                return content, response
+        except (json.JSONDecodeError, ValidationError, KeyError, TypeError, ValueError) as e:
             logger.warning(f"Error {e} in extracting {required_key} from: {response}")
+            content = {}
+            retry += 1
+            logger.debug(f"Retry {retry} times.")
+            time.sleep(30)
+        except Exception as e:
+            logger.warning(f"Unexpected error {e} in extracting {required_key} from: {response}")
             content = {}
             retry += 1
             logger.debug(f"Retry {retry} times.")

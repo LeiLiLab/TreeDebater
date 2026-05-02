@@ -80,6 +80,8 @@ if __name__ == "__main__":
             "type": "treedebater",
             "temperature": 1.0,
             "use_retrieval": True,
+            "single_pass_revision": False,
+            "helper_model": model1,
             "pool_file": f"../results{args.pool_version}/{model_name1}/{motion_name}_pool_for.json",
         }
         configs["debater"][1] = {
@@ -106,6 +108,8 @@ if __name__ == "__main__":
             "temperature": 1.0,
             "use_retrieval": True,
             "add_retrieval_feedback": True,
+            "single_pass_revision": False,
+            "helper_model": model1,
             "pool_file": f"../results{args.pool_version}/{model_name2}/{motion_name}_pool_against.json",
         }
 

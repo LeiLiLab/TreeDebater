@@ -10,7 +10,8 @@ from tqdm import tqdm
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from src.utils.tool import extract_numbers, find_json, logger
+from src.utils.timing_log import log_llm_io
+from src.utils.tool import extract_numbers, logger, parse_llm_json
 
 
 def extract_claims(llm, title, side, content, verbose=False):
@@ -51,11 +52,9 @@ def extract_claims(llm, title, side, content, verbose=False):
         print(prompt)
 
     response = llm(prompt=prompt, temperature=0, max_tokens=1500, n=1, sys=system_prompt)
-    claims = find_json(response[0])
-
     try:
-        claims = eval(claims)
-    except:
+        claims = parse_llm_json(response[0])
+    except Exception:
         claims = {}
         print("Error in extracting claims")
 
@@ -116,11 +115,9 @@ def extract_obj_aspect(llm, title, side, content, claim_against=None):
     response = llm(prompt=prompt, temperature=0, max_tokens=800, n=1, sys=system_prompt)
 
     # print("extract_obj_aspect:", response[0])
-    scores = find_json(response[0])
-
     try:
-        scores = eval(scores)
-    except:
+        scores = parse_llm_json(response[0])
+    except Exception:
         scores = {}
         print("Error in extracting scores")
 
@@ -184,11 +181,11 @@ def eval_surprise(llm, title, side, claims, n=3, reduction=False, verbose=False)
     surprises = []
     score_list = []
     for i in range(n):
-        surprise = find_json(response[i])
+        surprise = {}
         try:
-            surprise = eval(surprise)
+            surprise = parse_llm_json(response[i])
             surprise = surprise["result"]
-        except:
+        except Exception:
             print(surprise)
             print("Error in extracting surprise scores")
             surprise = {}
@@ -231,9 +228,9 @@ def evaluate_support_strength(llm, motion, argument1, argument2, history=None):
         f"Argument 2: {argument2}\n"
         f"""The two arguments are from the same side in a debate, and the support strength refers to how well the first argument adds to the second argument. Each score ranges from 1 to 3, with 1 being the lowest and 3 being the highest. Provide your evaluation as a single number in the format "Score: [score]". You can additionally provide a brief explanation of your evaluation."""
     )
-    logger.debug("[Support-Strength-Prompt] {}".format(prompt.strip().replace("\n", " ||| ")))
+    log_llm_io(logger, phase="evaluator", title="Support-Strength-Prompt", body=prompt.strip())
     response = llm(prompt=prompt, temperature=0)[0]
-    logger.debug("[Support-Strength-Response] {}".format(response.strip().replace("\n", " ||| ")))
+    log_llm_io(logger, phase="evaluator", title="Support-Strength-Response", body=response.strip())
     response = response.replace("*", "")
     pos = response.find("Score: ")
     numbers = extract_numbers(response[pos : pos + 15])
@@ -254,9 +251,9 @@ def evaluate_defense_strength(llm, motion, argument1, argument2, history=None):
         f"Argument 2: {argument2}\n"
         """The two arguments are from the different sides in a debate, and the rebuttal strength refers to how well the first argument undermines the second argument. Each score ranges from 1 to 3, with 1 being the lowest and 3 being the highest. Provide your evaluation as a single number in the format "Score: [score]". You can additionally provide a brief explanation of your evaluation."""
     )
-    logger.debug("[Support-Defense-Prompt] {}".format(prompt.strip().replace("\n", " ||| ")))
+    log_llm_io(logger, phase="evaluator", title="Support-Defense-Prompt", body=prompt.strip())
     response = llm(prompt=prompt, temperature=0)[0]
-    logger.debug("[Support-Defense-Response] {}".format(response.strip().replace("\n", " ||| ")))
+    log_llm_io(logger, phase="evaluator", title="Support-Defense-Response", body=response.strip())
     pos = response.find("Score: ")
     numbers = extract_numbers(response[pos : pos + 15])
     return numbers[0]

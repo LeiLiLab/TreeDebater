@@ -15,7 +15,9 @@ from sentence_transformers.util import dot_score, semantic_search
 
 from evaluator import evaluate_defense_strength, evaluate_support_strength
 from utils.constants import get_embeddings
+from utils.llm_schemas import StatementsResponse
 from utils.model import HelperClient, reward_model
+from utils.timing_log import log_llm_io
 from utils.tool import get_response_with_retry, logger
 
 
@@ -69,9 +71,15 @@ def propose_new_claims(proposer, motion, side, history, n):
         "    ]\n"
         "}}\n"
     )
-    logger.debug("[Proposer-Tree-Helper-Prompt] " + prompt.strip().replace("\n", " ||| "))
-    content, response = get_response_with_retry(proposer, prompt, "statements", temperature=1)
-    logger.debug("[Proposer-Tree-Helper-Response] " + response.strip().replace("\n", " ||| "))
+    log_llm_io(logger, phase="debate_tree", title="Proposer-Tree-Helper-Prompt", body=prompt.strip(), side=side)
+    content, response = get_response_with_retry(
+        proposer,
+        prompt,
+        "statements",
+        response_model=StatementsResponse,
+        temperature=1,
+    )
+    log_llm_io(logger, phase="debate_tree", title="Proposer-Tree-Helper-Response", body=response.strip(), side=side)
     return content
 
 
@@ -385,32 +393,33 @@ class Tree:
             status_nodes.extend(self.search_status(child, status, side=side))
         return status_nodes
 
-    def print_tree_recursive(self, node, level=0, prefix="", include_status=False, max_print_level=None):
+    def print_tree_recursive(self, node, level=0, lines=None, include_status=False, max_print_level=None):
+        if lines is None:
+            lines = []
         if node is not None:
             if max_print_level is not None and level > max_print_level:
-                return ""
-            score_str = ""
+                return lines
+            score_parts = []
             if node.scores is not None:
                 for k, v in node.scores.items():
                     if k == "defense" and v != 0:
-                        score_str += f"Attack Score: {v:.1f}, "
+                        score_parts.append(f"Attack Score: {v:.1f}")
                     elif k == "support" and v != 0:
-                        score_str += f"Support Score: {v:.1f}, "
-            score_str = score_str.strip(", ")
-            prefix += (
-                " " * level * 4
+                        score_parts.append(f"Support Score: {v:.1f}")
+            score_str = ", ".join(score_parts)
+            lines.append(
+                ' ' * level * 4
                 + f"Level-{level} Data (Visit: {node.visit_count}, Status: {node.status}): {node.data}, Scores: {score_str}\n"
             )
             for child in node.children:
-                prefix += self.print_tree_recursive(
-                    child, level + 1, include_status=False, max_print_level=max_print_level
-                )
-        return prefix
+                self.print_tree_recursive(child, level + 1, lines=lines, include_status=False, max_print_level=max_print_level)
+        return lines
 
     def print_tree(self, prefix="", include_status=False, max_print_level=None):
-        return self.print_tree_recursive(
-            self.root, level=0, prefix=prefix, include_status=include_status, max_print_level=max_print_level
-        )
+        lines = [prefix] if prefix else []
+        self.print_tree_recursive(self.root, level=0, lines=lines, include_status=include_status, max_print_level=max_print_level)
+        return "".join(lines)
+
 
     def get_tree_info(self):
         info = {
@@ -535,7 +544,9 @@ class PrepareTree(Tree):
                 node_list.extend(node.children)
             cur_level += 1
 
-    def print_tree_recursive(self, node, level=0, prefix="", include_status=False, max_print_level=None):
+    def print_tree_recursive(self, node, level=0, lines=None, include_status=False, max_print_level=None):
+        if lines is None:
+            lines = []
         if level == 0:
             position = "Root Claim"
         elif level % 2 == 1:
@@ -545,28 +556,26 @@ class PrepareTree(Tree):
 
         if node is not None:
             if max_print_level is not None and level > max_print_level:
-                return ""
-
-            score_str = ""
+                return lines
+            
+            score_parts = []
             if node.scores is not None:
                 for k, v in node.scores.items():
                     if k == "defense" and v != 0:
-                        score_str += f"Attack Score: {v:0.1f}, "
+                        score_parts.append(f"Attack Score: {v:0.1f}")
                     elif k == "support" and v != 0:
-                        score_str += f"Support Score: {v:0.1f}, "
+                        score_parts.append(f"Support Score: {v:0.1f}")
                     elif k == "minimax_strength" and v != 0:
-                        score_str += f"Strength: {v:0.1f}, "
-                score_str = score_str.strip(", ")
-
+                        score_parts.append(f"Strength: {v:0.1f}")
+                score_str = ", ".join(score_parts)
+                    
             if include_status:
-                prefix += " " * level * 4 + f"Level-{level} {position}: {node.data}, Scores: {score_str}\n"
+                lines.append(' ' * level * 4 + f"Level-{level} {position}: {node.data}, Scores: {score_str}\n")
             else:
-                prefix += " " * level * 4 + f"Level-{level} {position}: {node.data}\n"
+                lines.append(' ' * level * 4 + f"Level-{level} {position}: {node.data}\n")
             for child in node.children:
-                prefix += self.print_tree_recursive(
-                    child, level + 1, include_status=include_status, max_print_level=max_print_level
-                )
-        return prefix
+                self.print_tree_recursive(child, level + 1, lines=lines, include_status=include_status, max_print_level=max_print_level)
+        return lines
 
     def backward(self, level_decoy=0.8, support_weight=0.5):
         self.backward_recursive(self.root, level_decoy, support_weight)
@@ -619,7 +628,9 @@ class DebateTree(Tree):
         self.meta_attack_list = []
         self.meta_rebuttal_list = []
 
-    def print_tree_recursive(self, node, level=0, prefix="", include_status=False, max_print_level=None, reverse=False):
+    def print_tree_recursive(self, node, level=0, lines=None, include_status=False, max_print_level=None, reverse=False):
+        if lines is None:
+            lines = []
         if level == 0:
             position = "Motion"
         elif level == 1:
@@ -631,38 +642,34 @@ class DebateTree(Tree):
 
         if node is not None:
             if max_print_level is not None and level > max_print_level:
-                return ""
+                return lines
             if level == 0:
-                prefix += " " * level * 4 + f"Level-{level} Motion: {self.motion}, Side: {self.side}\n"
+                lines.append(' ' * level * 4 + f"Level-{level} Motion: {self.motion}, Side: {self.side}\n")
             else:
                 if include_status:
-                    prefix += (
-                        " " * level * 4
-                        + f"Level-{level} {position} (Visit: {node.visit_count}, Status: {node.status}): {node.data}\n"
-                    )
+                    lines.append(' ' * level * 4 + f"Level-{level} {position} (Visit: {node.visit_count}, Status: {node.status}): {node.data}\n")
                 else:
-                    prefix += " " * level * 4 + f"Level-{level} {position}: {node.data}\n"
+                    lines.append(' ' * level * 4 + f"Level-{level} {position}: {node.data}\n")
             for child in node.children:
-                prefix += self.print_tree_recursive(
-                    child, level + 1, include_status=include_status, max_print_level=max_print_level, reverse=reverse
-                )
-        return prefix
+                self.print_tree_recursive(child, level + 1, lines=lines, include_status=include_status, max_print_level=max_print_level, reverse=reverse)
+        return lines
 
     def print_tree(self, prefix="", include_status=False, max_print_level=None, meta_info=True, reverse=False):
-        info_str = self.print_tree_recursive(
+        lines = [prefix] if prefix else []
+        self.print_tree_recursive(
             self.root,
             level=0,
-            prefix=prefix,
+            lines=lines,
             include_status=include_status,
             max_print_level=max_print_level,
             reverse=reverse,
         )
         if meta_info:
             if len(self.meta_attack_list) > 0:
-                info_str += f"Meta Attack to this debate tree: {self.meta_attack_list}\n"
+                lines.append(f"Meta Attack to this debate tree: {self.meta_attack_list}\n")
             if len(self.meta_rebuttal_list) > 0:
-                info_str += f"Meta Rebuttal to the attacks on this debate tree: {self.meta_rebuttal_list}"
-        return info_str
+                lines.append(f"Meta Rebuttal to the attacks on this debate tree: {self.meta_rebuttal_list}")
+        return "".join(lines)
 
     def update_node(self, action, new_claim=None, new_argument=None, target=None):
         if len(new_claim) == 0:
@@ -709,6 +716,7 @@ class DebateTree(Tree):
 
         if action == "reinforce":
             match_node.argument.extend(new_argument)
+            match_node.argument = list(set(match_node.argument))
             match_node.update_status(match_node.status)
         elif action == "rebut" or action == "attack":
             new_node = match_node.add_node(new_claim=new_claim, new_argument=new_argument)
