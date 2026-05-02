@@ -3,7 +3,7 @@
 # Default: all _*_chunks/ directories under src/
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PATTERN="${1:-$SCRIPT_DIR/_*_chunks}"
+PATTERN="${@:-$SCRIPT_DIR/_*_chunks}"
 
 found=0
 for dir in $PATTERN; do

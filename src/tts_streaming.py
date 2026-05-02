@@ -36,6 +36,11 @@ MIN_TOLERANCE_S = 1.0           # floor so very short chunks aren't impossible t
 MAX_REFINEMENTS = 10
 MAX_PARALLEL_TTS = 8            # max concurrent background TTS threads per chunk
 MIN_CHUNK_CHARS = 50            # chunks shorter than this are merged into the next one
+MAX_CHUNK_CHARS = 900           # long paragraphs are split into sentence sub-chunks
+EARLY_CUT_RATIO = 1.25          # fs_est/target_s threshold to trigger early-cut
+SPEED_ADJUST_MIN = 0.85         # TTS speed clamp lower bound
+SPEED_ADJUST_MAX = 1.15         # TTS speed clamp upper bound
+TARGET_WORDS_PER_SECOND = 2.6   # initial compression heuristic for short-budget rounds
 
 
 # -------- dataclasses --------
@@ -98,15 +103,31 @@ def _fastspeech_estimate(text: str) -> float:
     return float(length)
 
 
-def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str]) -> str:
+def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], next_chunk_text: str = "") -> str:
     context_block = ""
+    context_word_count = 0
     if prev_texts:
         joined = "\n\n".join(prev_texts)
+        context_word_count = LengthEstimator.count_words(joined)
         context_block = (
             f"Here is the debate speech text that has already been delivered "
             f"(spoken aloud before this paragraph):\n\n"
             f"{joined}\n\n"
             f"---\n\n"
+        )
+
+    context_note = (
+        f" The preceding speech context contains approximately {context_word_count} words."
+        if context_word_count > 0
+        else ""
+    )
+
+    next_block = ""
+    if next_chunk_text:
+        next_block = (
+            f"\n\nThe paragraph you rewrite will be followed immediately by this next paragraph "
+            f"(do NOT rewrite it, just ensure your output flows naturally into it):\n\n"
+            f"{next_chunk_text[:2000]}"
         )
 
     resp = client.chat.completions.create(
@@ -120,6 +141,7 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str]) -
                     "Rewrite ONLY the paragraph provided by the user. "
                     "Preserve the argument, logical flow, and debate rhetoric. "
                     "Do NOT add new arguments or repeat points already made in the preceding text. "
+                    "Ensure the rewritten paragraph connects smoothly with what comes before and after it. "
                     "Output only the rewritten paragraph, no preamble."
                 ),
             },
@@ -127,9 +149,11 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str]) -
                 "role": "user",
                 "content": (
                     f"{context_block}"
-                    f"Rewrite the following debate paragraph to be approximately {n_words} words. "
+                    f"Rewrite the following debate paragraph to be approximately {n_words} words."
+                    f"{context_note} "
                     f"Keep the debating style and the core argument intact.\n\n"
                     f"{text[:8000]}"
+                    f"{next_block}"
                 ),
             },
         ],
@@ -138,13 +162,14 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str]) -
     return (resp.choices[0].message.content or "").strip()
 
 
-def _query_time_profiled(client, content: str, voice: str = "echo") -> Dict[str, Any]:
+def _query_time_profiled(client, content: str, voice: str = "echo", speed: float = 1.0) -> Dict[str, Any]:
     t0 = _now()
     response = client.audio.speech.create(
         model="tts-1",
         voice=voice,
         input=content[:4096],
         response_format="mp3",
+        speed=speed,
     )
     t1 = _now()
 
@@ -163,10 +188,10 @@ def _query_time_profiled(client, content: str, voice: str = "echo") -> Dict[str,
     }
 
 
-def _tts_with_retry(client, content: str, voice: str = "echo", max_attempts: int = 5) -> Dict[str, Any]:
+def _tts_with_retry(client, content: str, voice: str = "echo", speed: float = 1.0, max_attempts: int = 5) -> Dict[str, Any]:
     for attempt in range(max_attempts):
         try:
-            return _query_time_profiled(client, content, voice=voice)
+            return _query_time_profiled(client, content, voice=voice, speed=speed)
         except Exception:
             if attempt == max_attempts - 1:
                 raise
@@ -227,6 +252,8 @@ def _adaptive_refine_parallel(
     tolerance_upper_s: float,
     voice: str = "echo",
     max_ref: int = MAX_REFINEMENTS,
+    next_chunk_text: str = "",
+    fast_initial_compress: bool = False,
 ) -> Dict[str, Any]:
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=MAX_PARALLEL_TTS)
     candidates: List[_TtsCandidate] = []
@@ -243,21 +270,41 @@ def _adaptive_refine_parallel(
         llm_times: List[float] = []
         fs_times: List[float] = []
         t0 = _now()
-
-        _t = _now(); est = _fastspeech_estimate(cur); fs_times.append(_now() - _t)
-        ok = _in_range(est, target_s, tolerance_s, tolerance_upper_s)
+        n_ref = 0
 
         with candidates_lock:
             if not stop_event.is_set():
                 candidates.append(_TtsCandidate(
-                    iteration=0, text=cur, fs_estimated_s=est,
+                    iteration=0, text=cur, fs_estimated_s=0.0,
                     future=executor.submit(_tts_with_retry, client, cur, voice),
                 ))
 
-        while not ok and n_ref < max_ref and not stop_event.is_set():
+        if fast_initial_compress and target_s > 0:
+            target_words = max(12, round(target_s * TARGET_WORDS_PER_SECOND))
+            _t = _now(); compressed = _revise_to_n_words(client, cur, target_words, prev_texts, next_chunk_text); llm_times.append(_now() - _t)
+            n_ref = 1
+            _t = _now(); compressed_est = _fastspeech_estimate(compressed); fs_times.append(_now() - _t)
+            compressed_ok = _in_range(compressed_est, target_s, tolerance_s, tolerance_upper_s)
+            if not stop_event.is_set():
+                with candidates_lock:
+                    candidates.append(_TtsCandidate(
+                        iteration=n_ref, text=compressed, fs_estimated_s=compressed_est,
+                        future=executor.submit(_tts_with_retry, client, compressed, voice),
+                    ))
+            cur = compressed
+            est = compressed_est
+            ok = compressed_ok
+        else:
+            _t = _now(); est = _fastspeech_estimate(cur); fs_times.append(_now() - _t)
+            ok = _in_range(est, target_s, tolerance_s, tolerance_upper_s)
+            with candidates_lock:
+                if candidates:
+                    candidates[0].fs_estimated_s = est
+
+        while not ok and n_ref < max_ref and not stop_event.is_set() and target_s > 0:
             cw = LengthEstimator.count_words(cur)
             tw = max(10, round(cw * target_s / est))
-            _t = _now(); cur = _revise_to_n_words(client, cur, tw, prev_texts); llm_times.append(_now() - _t)
+            _t = _now(); cur = _revise_to_n_words(client, cur, tw, prev_texts, next_chunk_text); llm_times.append(_now() - _t)
             n_ref += 1
             _t = _now(); est = _fastspeech_estimate(cur); fs_times.append(_now() - _t)
             ok = _in_range(est, target_s, tolerance_s, tolerance_upper_s)
@@ -325,6 +372,22 @@ def _adaptive_refine_parallel(
     refine_thread.join(timeout=5)
     executor.shutdown(wait=False)
 
+    # ---- speed adjustment: re-TTS if audio is outside tolerance but speed can fix it ----
+    audio_s = float(tts_out["audio_seconds"])
+    raw_speed = audio_s / target_s if target_s > 0 else 1.0
+    speed_used = 1.0
+    if not _in_range(audio_s, target_s, tolerance_s, tolerance_upper_s):
+        clamped = max(SPEED_ADJUST_MIN, min(SPEED_ADJUST_MAX, raw_speed))
+        if abs(clamped - 1.0) > 0.01:
+            try:
+                speed_tts_out = _tts_with_retry(client, chosen_cand.text, voice=voice, speed=clamped)
+                if abs(speed_tts_out["audio_seconds"] - target_s) < abs(audio_s - target_s):
+                    tts_out = speed_tts_out
+                    audio_s = float(tts_out["audio_seconds"])
+                    speed_used = clamped
+            except Exception:
+                pass
+
     return {
         "refined_text": chosen_cand.text,
         "n_ref_used": refine_stats.get("n_ref", 0),
@@ -339,7 +402,8 @@ def _adaptive_refine_parallel(
         "llm_times_s": refine_stats.get("llm_times", []),
         "fs_times_s": refine_stats.get("fs_times", []),
         "iter_tts_times_s": iter_tts_times,
-        "audio_seconds": float(tts_out["audio_seconds"]),
+        "speed_used": speed_used,
+        "audio_seconds": audio_s,
         "tts_api_s": float(tts_out["tts_api_s"]),
         "mp3_parse_s": float(tts_out["mp3_parse_s"]),
         "mp3_bytes": tts_out["mp3_bytes"],
@@ -347,6 +411,44 @@ def _adaptive_refine_parallel(
 
 
 # -------- chunk utilities --------
+def _split_sentences(text: str) -> List[str]:
+    """Split text into sentences on '.', '!', '?' boundaries."""
+    import re
+    parts = re.split(r'(?<=[.!?])\s+', text.strip())
+    return [p for p in parts if p.strip()]
+
+
+def _early_cut_chunk(
+    text: str,
+    target_s: float,
+    early_cut_ratio: float = EARLY_CUT_RATIO,
+) -> Tuple[str, str]:
+    """
+    Split text into (head, tail) where head's FS estimate ≈ target_s.
+    Returns (head, tail); tail may be empty if the whole text fits.
+    Only called when fs_estimate(text) / target_s > early_cut_ratio.
+    """
+    sentences = _split_sentences(text)
+    if len(sentences) <= 1:
+        return text, ""
+
+    head_sentences: List[str] = []
+    for sent in sentences:
+        candidate = " ".join(head_sentences + [sent])
+        est = _fastspeech_estimate(candidate)
+        if est > target_s and head_sentences:
+            break
+        head_sentences.append(sent)
+
+    if not head_sentences:
+        head_sentences = [sentences[0]]
+
+    head = " ".join(head_sentences)
+    tail_sentences = sentences[len(head_sentences):]
+    tail = " ".join(tail_sentences)
+    return head, tail
+
+
 def _merge_short_chunks(segments: List[str], min_chars: int = MIN_CHUNK_CHARS) -> List[str]:
     result = list(segments)
     i = 0
@@ -356,6 +458,30 @@ def _merge_short_chunks(segments: List[str], min_chars: int = MIN_CHUNK_CHARS) -
             result.pop(i)
         else:
             i += 1
+    return result
+
+
+def _split_long_chunks(segments: List[str], max_chars: int = MAX_CHUNK_CHARS) -> List[str]:
+    result: List[str] = []
+    for segment in segments:
+        if len(segment) <= max_chars:
+            result.append(segment)
+            continue
+
+        current: List[str] = []
+        current_len = 0
+        for sentence in _split_sentences(segment):
+            extra_len = len(sentence) + (1 if current else 0)
+            if current and current_len + extra_len > max_chars:
+                result.append(" ".join(current))
+                current = [sentence]
+                current_len = len(sentence)
+            else:
+                current.append(sentence)
+                current_len += extra_len
+        if current:
+            result.append(" ".join(current))
+
     return result
 
 
@@ -373,6 +499,8 @@ def run_pipeline(
     tolerance_ratio: float = TOLERANCE_RATIO,
     voice: str = "echo",
     out_dir: Optional[Path] = None,
+    enable_early_cut: bool = True,
+    early_cut_ratio: float = EARLY_CUT_RATIO,
 ) -> Tuple[List[ChunkProfile], RoundProfile, bytes, List[str]]:
     """
     Run the streaming TTS pipeline on a list of text segments.
@@ -389,7 +517,7 @@ def run_pipeline(
     audio_total = 0.0
     overrun_total = 0.0
 
-    segments_list = _merge_short_chunks(segments_list)
+    segments_list = list(_merge_short_chunks(_split_long_chunks(segments_list)))
     n_chunks = len(segments_list)
     audio_budget_remaining = total_budget_s
 
@@ -397,19 +525,46 @@ def run_pipeline(
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
 
+    fast_initial_compress = total_budget_s <= 120
+
     final_texts: List[str] = []
     combined_audio = AudioSegment.silent(duration=0)
     all_mp3_bytes: List[bytes] = []
 
     prev_audio_s: Optional[float] = None
 
-    for i, chunk in enumerate(segments_list):
+    # Pre-start future for the last chunk (filled at chunk n_chunks-2)
+    _last_chunk_future: Optional[concurrent.futures.Future] = None
+    _last_chunk_executor: Optional[concurrent.futures.ThreadPoolExecutor] = None
+    _last_chunk_lead_s = 0.0
+
+    i = 0
+    while i < len(segments_list):
+        chunk = segments_list[i]
+        n_chunks = len(segments_list)  # may grow due to early-cut
+
         chunk_t0 = _now()
         chunk_words = LengthEstimator.count_words(chunk)
         chunk_chars = len(chunk)
 
         remaining_chars_total = sum(len(c) for c in segments_list[i:])
         target_s = audio_budget_remaining * (chunk_chars / remaining_chars_total)
+
+        # ---- early-cut: if chunk is too long relative to budget, split it now ----
+        if enable_early_cut and i > 0:
+            fs_pre = _fastspeech_estimate(chunk)
+            if fs_pre / target_s > early_cut_ratio:
+                head, tail = _early_cut_chunk(chunk, target_s, early_cut_ratio)
+                if tail:
+                    segments_list[i] = head
+                    segments_list.insert(i + 1, tail)
+                    chunk = head
+                    n_chunks = len(segments_list)
+                    chunk_chars = len(chunk)
+                    chunk_words = LengthEstimator.count_words(chunk)
+                    remaining_chars_total = sum(len(c) for c in segments_list[i:])
+                    target_s = audio_budget_remaining * (chunk_chars / remaining_chars_total)
+                    print(f"  chunk {i:03d} | early-cut: fs_pre={fs_pre:.1f}s > {early_cut_ratio}x target={target_s:.1f}s → split into head({len(head)}c)+tail({len(tail)}c)")
 
         tol_s = max(MIN_TOLERANCE_S, target_s * tolerance_ratio)
         remaining_chunks = n_chunks - i
@@ -420,6 +575,7 @@ def run_pipeline(
         )
 
         max_ref = 3 if i < n_chunks // 2 else MAX_REFINEMENTS
+        next_chunk_text = segments_list[i + 1] if i + 1 < len(segments_list) else ""
 
         seg = None
         mp3_bytes = b""
@@ -427,59 +583,140 @@ def run_pipeline(
         tts_api_s = 0.0
         mp3_parse_s = 0.0
 
-        # ---- chunk 0: no refinement, sequential TTS ----
+        # ---- chunk 0: optionally race original TTS against a target-sized rewrite ----
         if i == 0:
             time_budget_s = target_s
-            refined = chunk
-            n_ref_used = 0
-            fs_estimated_s = 0.0
-            refine_total_s = 0.0
-            in_range = True
-            timed_out = False
-            n_candidates_submitted = 1
-            n_candidates_done = 1
-            used_candidate_iter = 0
-            iter_llm_times_s = "[]"
-            iter_fs_times_s = "[]"
-            iter_tts_times_s = "[]"
+            if fast_initial_compress:
+                ref_out = _adaptive_refine_parallel(
+                    client, chunk,
+                    target_s=target_s,
+                    time_budget_s=time_budget_s,
+                    prev_texts=[],
+                    tolerance_s=tol_s,
+                    tolerance_upper_s=tol_upper_s,
+                    voice=voice,
+                    max_ref=1,
+                    next_chunk_text=next_chunk_text,
+                    fast_initial_compress=True,
+                )
 
-            for attempt in range(10):
+                refined = ref_out["refined_text"]
+                n_ref_used = ref_out["n_ref_used"]
+                fs_estimated_s = ref_out["fs_estimated_s"]
+                refine_total_s = ref_out["refine_total_s"]
+                in_range = ref_out["target_reached"]
+                timed_out = ref_out["timed_out"]
+                n_candidates_submitted = ref_out["n_candidates_submitted"]
+                n_candidates_done = ref_out["n_candidates_done"]
+                used_candidate_iter = ref_out["used_candidate_iter"]
+                iter_llm_times_s = json.dumps([round(t, 3) for t in ref_out["llm_times_s"]])
+                iter_fs_times_s = json.dumps([round(t, 3) for t in ref_out["fs_times_s"]])
+                iter_tts_times_s = json.dumps(ref_out["iter_tts_times_s"])
+                total_elapsed_s = ref_out["total_elapsed_s"]
+                audio_seconds = ref_out["audio_seconds"]
+                tts_api_s = ref_out["tts_api_s"]
+                mp3_parse_s = ref_out["mp3_parse_s"]
+                mp3_bytes = ref_out["mp3_bytes"]
+                overrun_s = max(0.0, total_elapsed_s - time_budget_s)
+
                 try:
-                    tts_out = _query_time_profiled(client, refined, voice=voice)
-                    audio_seconds = float(tts_out["audio_seconds"])
-                    tts_api_s = float(tts_out["tts_api_s"])
-                    mp3_parse_s = float(tts_out["mp3_parse_s"])
-                    mp3_bytes = tts_out["mp3_bytes"]
                     seg = AudioSegment.from_file(BytesIO(mp3_bytes), format="mp3")
-                    break
-                except (Exception, CouldntDecodeError) as e:
-                    if attempt == 9:
-                        if isinstance(e, CouldntDecodeError):
-                            import warnings
-                            warnings.warn(f"Chunk {i}: pydub decode failed after 10 attempts: {e}")
-                            seg = AudioSegment.silent(duration=int(audio_seconds * 1000))
-                            break
-                        raise RuntimeError(f"TTS/decode failed after 10 attempts: {e}") from e
-                    time.sleep(2.0 * (attempt + 1))
+                except CouldntDecodeError as e:
+                    import warnings
+                    warnings.warn(f"Chunk {i}: pydub decode failed: {e}")
+                    seg = AudioSegment.silent(duration=int(audio_seconds * 1000))
+            else:
+                refined = chunk
+                n_ref_used = 0
+                fs_estimated_s = 0.0
+                refine_total_s = 0.0
+                in_range = True
+                timed_out = False
+                n_candidates_submitted = 1
+                n_candidates_done = 1
+                used_candidate_iter = 0
+                iter_llm_times_s = "[]"
+                iter_fs_times_s = "[]"
+                iter_tts_times_s = "[]"
 
-            iter_tts_times_s = json.dumps([round(tts_api_s, 3)])
-            total_elapsed_s = tts_api_s
-            overrun_s = tts_api_s
+                for attempt in range(10):
+                    try:
+                        tts_out = _query_time_profiled(client, refined, voice=voice)
+                        audio_seconds = float(tts_out["audio_seconds"])
+                        tts_api_s = float(tts_out["tts_api_s"])
+                        mp3_parse_s = float(tts_out["mp3_parse_s"])
+                        mp3_bytes = tts_out["mp3_bytes"]
+                        seg = AudioSegment.from_file(BytesIO(mp3_bytes), format="mp3")
+                        break
+                    except (Exception, CouldntDecodeError) as e:
+                        if attempt == 9:
+                            if isinstance(e, CouldntDecodeError):
+                                import warnings
+                                warnings.warn(f"Chunk {i}: pydub decode failed after 10 attempts: {e}")
+                                seg = AudioSegment.silent(duration=int(audio_seconds * 1000))
+                                break
+                            raise RuntimeError(f"TTS/decode failed after 10 attempts: {e}") from e
+                        time.sleep(2.0 * (attempt + 1))
+
+                iter_tts_times_s = json.dumps([round(tts_api_s, 3)])
+                total_elapsed_s = tts_api_s
+                overrun_s = tts_api_s
 
         # ---- chunks 1+: parallel refinement with background TTS candidates ----
         else:
             time_budget_s = prev_audio_s
 
-            ref_out = _adaptive_refine_parallel(
-                client, chunk,
-                target_s=target_s,
-                time_budget_s=time_budget_s,
-                prev_texts=final_texts,
-                tolerance_s=tol_s,
-                tolerance_upper_s=tol_upper_s,
-                voice=voice,
-                max_ref=max_ref,
-            )
+            is_last = (i == len(segments_list) - 1)
+            if is_last and _last_chunk_future is not None:
+                try:
+                    pre_out = _last_chunk_future.result(timeout=max(0.0, time_budget_s))
+                except concurrent.futures.TimeoutError:
+                    pre_out = _last_chunk_future.result()
+                except Exception:
+                    pre_out = None
+                if pre_out is not None:
+                    pre_out = dict(pre_out)
+                    pre_out["total_elapsed_s"] = max(
+                        0.0,
+                        float(pre_out["total_elapsed_s"]) - _last_chunk_lead_s,
+                    )
+                    ref_out = pre_out
+                    print(
+                        f"  [pre-start] adopted pre-start result: "
+                        f"effective_wait={pre_out['total_elapsed_s']:.1f}s, "
+                        f"lead={_last_chunk_lead_s:.1f}s, target={target_s:.1f}s"
+                    )
+                else:
+                    ref_out = _adaptive_refine_parallel(
+                        client, chunk,
+                        target_s=target_s,
+                        time_budget_s=time_budget_s,
+                        prev_texts=final_texts,
+                        tolerance_s=tol_s,
+                        tolerance_upper_s=tol_upper_s,
+                        voice=voice,
+                        max_ref=max_ref,
+                        next_chunk_text=next_chunk_text,
+                        fast_initial_compress=fast_initial_compress,
+                    )
+                if _last_chunk_executor is not None:
+                    _last_chunk_executor.shutdown(wait=False)
+                    _last_chunk_executor = None
+                _last_chunk_future = None
+                _last_chunk_lead_s = 0.0
+            else:
+                ref_out = _adaptive_refine_parallel(
+                    client, chunk,
+                    target_s=target_s,
+                    time_budget_s=time_budget_s,
+                    prev_texts=final_texts,
+                    tolerance_s=tol_s,
+                    tolerance_upper_s=tol_upper_s,
+                    voice=voice,
+                    max_ref=max_ref,
+                    next_chunk_text=next_chunk_text,
+                    fast_initial_compress=fast_initial_compress,
+                )
 
             refined = ref_out["refined_text"]
             n_ref_used = ref_out["n_ref_used"]
@@ -513,6 +750,36 @@ def run_pipeline(
         prev_audio_s = audio_seconds
         final_texts.append(refined)
         all_mp3_bytes.append(mp3_bytes)
+
+        # ---- pre-start last chunk refinement two chunks early ----
+        if (
+            i == len(segments_list) - 3
+            and len(segments_list) >= 3
+            and _last_chunk_future is None
+        ):
+            last_idx = len(segments_list) - 1
+            last_text = segments_list[last_idx]
+            last_chars = len(last_text)
+            remaining_chars_est = sum(len(c) for c in segments_list[i + 1:])
+            last_target_s_est = audio_budget_remaining * (last_chars / max(remaining_chars_est, 1))
+            last_tol_s_est = max(MIN_TOLERANCE_S, last_target_s_est * tolerance_ratio)
+            last_tol_upper_s_est = max(MIN_TOLERANCE_S, last_target_s_est * TOLERANCE_RATIO_UPPER)
+            _last_chunk_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+            _last_chunk_future = _last_chunk_executor.submit(
+                _adaptive_refine_parallel,
+                client, last_text,
+                last_target_s_est,
+                total_budget_s,
+                list(final_texts),
+                last_tol_s_est,
+                last_tol_upper_s_est,
+                voice,
+                MAX_REFINEMENTS,
+                "",
+                fast_initial_compress,
+            )
+            _last_chunk_lead_s = prev_audio_s or 0.0
+            print(f"  [pre-start] chunk {last_idx} kicked off at chunk {i}, est_target={last_target_s_est:.1f}s")
 
         if out_dir is not None:
             (out_dir / f"chunk_{i:03d}.txt").write_text(refined, encoding="utf-8")
@@ -576,6 +843,8 @@ def run_pipeline(
             f"overrun={overrun_s:.2f}s | remaining={audio_budget_remaining:.1f}s"
         )
 
+        i += 1
+
     if out_dir is not None:
         sep = "\n\n" + ("=" * 80) + "\n\n"
         (out_dir / "chunks_final.txt").write_text(sep.join(final_texts), encoding="utf-8")
@@ -588,7 +857,7 @@ def run_pipeline(
 
     round_t1 = _now()
     round_profile = RoundProfile(
-        n_chunks=n_chunks,
+        n_chunks=len(segments_list),
         total_budget_s=total_budget_s,
         tolerance_ratio=tolerance_ratio,
         round_total_s=round_t1 - round_t0,
@@ -615,6 +884,8 @@ def convert_text_to_speech_streaming(
     output_path: str,
     total_budget_s: float,
     voice: str = "echo",
+    enable_early_cut: bool = True,
+    early_cut_ratio: float = EARLY_CUT_RATIO,
 ) -> Tuple[str, str, float]:
     """
     Streaming TTS: split content into chunks, adaptively refine each chunk's
@@ -647,6 +918,8 @@ def convert_text_to_speech_streaming(
         total_budget_s=total_budget_s,
         voice=voice,
         out_dir=output_path.parent / f"{output_path.stem}_chunks",
+        enable_early_cut=enable_early_cut,
+        early_cut_ratio=early_cut_ratio,
     )
 
     # Save combined audio
