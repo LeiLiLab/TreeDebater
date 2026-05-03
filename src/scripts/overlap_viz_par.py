@@ -65,19 +65,25 @@ def compute_timeline(rows):
     events.append({
         "chunk":          0,
         "prep_start":     t,
+        "prep_end":       play0_start,
         "main_segments":  [],                             # no fs/llm
         "tts_candidates": _build_tts_candidates(rows[0], t),
         "play_start":     play0_start,
         "play_end":       play0_end,
         "gap":            0.0,
+        "is_prestart":    False,
     })
 
     for i in range(1, len(rows)):
-        prep_start    = events[i - 1]["play_start"]
-        prep_duration = rows[i]["total_elapsed_s"]        # true wall-clock (parallel)
+        prep_start_default = events[i - 1]["play_start"]
+        prep_duration      = rows[i]["total_elapsed_s"]   # streaming-adjusted (lead already subtracted for pre-started)
+
+        lead_s = float(rows[i].get("prep_start_lead_s", 0.0) or 0.0)
+        is_prestart = lead_s > 0.01
+        prep_start = prep_start_default - lead_s
 
         prev_play_end = events[i - 1]["play_end"]
-        ready_at      = prep_start + prep_duration
+        ready_at      = prep_start_default + prep_duration   # wall-clock when prep is done
         gap           = max(0.0, ready_at - prev_play_end)
         play_start    = max(prev_play_end, ready_at)
         play_end      = play_start + rows[i]["audio_seconds"]
@@ -85,11 +91,13 @@ def compute_timeline(rows):
         events.append({
             "chunk":          i,
             "prep_start":     prep_start,
+            "prep_end":       ready_at,
             "main_segments":  _build_main_segments(rows[i], prep_start),
             "tts_candidates": _build_tts_candidates(rows[i], prep_start),
             "play_start":     play_start,
             "play_end":       play_end,
             "gap":            gap,
+            "is_prestart":    is_prestart,
         })
 
     return events
@@ -148,10 +156,11 @@ COLORS = {
     "tts_nd": "#BBBBBB",   # grey       – TTS still running at selection
 }
 
-BAR_H   = 0.32   # playback / main-thread bar height
-TTS_H   = 0.18   # height of each TTS candidate sub-row
-TTS_GAP = 0.06   # vertical gap between candidate sub-rows
-Y_MAIN  = 0.0    # centre of main-thread lane
+BAR_H     = 0.32   # playback / main-thread bar height
+TTS_H     = 0.18   # height of each TTS candidate sub-row
+TTS_GAP   = 0.06   # vertical gap between candidate sub-rows
+Y_MAIN    = 0.0    # centre of main-thread lane
+Y_PRESTART = -0.6  # centre of pre-start lane (only shown when a pre-started chunk exists)
 
 
 def _tts_y(k):
@@ -169,8 +178,10 @@ def plot_timeline(rows, events, out_path, title="Parallel Chunk Overlap Timeline
     n = len(rows)
     max_cands = max((len(ev["tts_candidates"]) for ev in events), default=1)
     Y_PLAY    = _y_play(max_cands)
+    has_prestart = any(ev.get("is_prestart") for ev in events)
+    bottom_y = Y_PRESTART if has_prestart else Y_MAIN
 
-    fig_h = max(5.0, Y_PLAY + 1.2)
+    fig_h = max(5.0, Y_PLAY - bottom_y + 1.2)
     fig, ax = plt.subplots(figsize=(max(14, n * 2.5), fig_h))
 
     for ev in events:
@@ -195,7 +206,7 @@ def plot_timeline(rows, events, out_path, title="Parallel Chunk Overlap Timeline
                     ha="center", va="center", fontsize=7, color="white")
 
         # ── TTS candidates (parallel band) ────────────────────────────────────
-        prep_end = ev["prep_start"] + rows[i]["total_elapsed_s"]
+        prep_end = ev["prep_end"]
         for cand in cands:
             y = _tts_y(cand["k"])
             if cand["duration"] > 0:
@@ -221,13 +232,16 @@ def plot_timeline(rows, events, out_path, title="Parallel Chunk Overlap Timeline
                         fontsize=5.5, color="#888888", va="bottom")
 
         # ── main thread (fs / llm) ─────────────────────────────────────────────
+        # pre-started chunks ran on a background executor: paint on a separate
+        # lane so they don't collide with the main thread's bars for chunks i-3..i-1.
+        y_main = Y_PRESTART if ev.get("is_prestart") else Y_MAIN
         for seg_start, seg_end, kind in ev["main_segments"]:
             seg_dur = seg_end - seg_start
             if seg_dur < 0.05:
                 continue
-            ax.barh(Y_MAIN, seg_dur, left=seg_start, height=BAR_H,
+            ax.barh(y_main, seg_dur, left=seg_start, height=BAR_H,
                     color=COLORS[kind], alpha=0.88, edgecolor="white", linewidth=0.5)
-            ax.text(seg_start + seg_dur / 2, Y_MAIN,
+            ax.text(seg_start + seg_dur / 2, y_main,
                     f"{kind}\n{seg_dur:.1f}s",
                     ha="center", va="center", fontsize=6.5, color="white")
 
@@ -245,12 +259,16 @@ def plot_timeline(rows, events, out_path, title="Parallel Chunk Overlap Timeline
 
     # y-axis ticks
     tts_mid = _tts_y((max_cands - 1) / 2)
-    ax.set_yticks([Y_MAIN, tts_mid, Y_PLAY])
-    ax.set_yticklabels(["Main thread\n(fs + llm)", "TTS candidates\n(parallel)", "Playback"],
-                       fontsize=9)
+    yticks = [Y_MAIN, tts_mid, Y_PLAY]
+    ylabels = ["Main thread\n(fs + llm)", "TTS candidates\n(parallel)", "Playback"]
+    if has_prestart:
+        yticks = [Y_PRESTART] + yticks
+        ylabels = ["Pre-start lane\n(last chunk)"] + ylabels
+    ax.set_yticks(yticks)
+    ax.set_yticklabels(ylabels, fontsize=9)
     ax.set_xlabel("Wall-clock time (s)", fontsize=10)
     ax.set_title(title, fontsize=12, fontweight="bold", pad=10)
-    ax.set_ylim(Y_MAIN - 0.5, Y_PLAY + 0.7)
+    ax.set_ylim(bottom_y - 0.5, Y_PLAY + 0.7)
     ax.grid(axis="x", alpha=0.25)
 
     legend_patches = [
