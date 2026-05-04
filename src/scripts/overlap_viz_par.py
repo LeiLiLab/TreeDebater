@@ -62,16 +62,32 @@ def compute_timeline(rows):
     play0_start = t + rows[0]["total_elapsed_s"]   # = tts_api_s for chunk 0
     play0_end   = play0_start + rows[0]["audio_seconds"]
 
+    # chunk 0 has a single TTS candidate (no workers); legacy path.
+    legacy_tts_times = rows[0].get("iter_tts_times_s", []) or []
+    legacy_cands = []
+    for k, tts_dur in enumerate(legacy_tts_times):
+        legacy_cands.append({
+            "k":          k,
+            "submit_t":   t,
+            "duration":   float(tts_dur),
+            "is_chosen":  True,
+            "worker":     "normal",
+            "intra_iter": k,
+        })
+
     events.append({
-        "chunk":          0,
-        "prep_start":     t,
-        "prep_end":       play0_start,
-        "main_segments":  [],                             # no fs/llm
-        "tts_candidates": _build_tts_candidates(rows[0], t),
-        "play_start":     play0_start,
-        "play_end":       play0_end,
-        "gap":            0.0,
-        "is_prestart":    False,
+        "chunk":              0,
+        "prep_start_normal":  t,
+        "prep_start_prestart": None,
+        "prep_end":           play0_start,
+        "normal_segments":    [],
+        "prestart_segments":  [],
+        "tts_candidates":     legacy_cands,
+        "play_start":         play0_start,
+        "play_end":           play0_end,
+        "gap":                0.0,
+        "is_prestart":        False,
+        "prestart_kind":      "",
     })
 
     for i in range(1, len(rows)):
@@ -80,7 +96,9 @@ def compute_timeline(rows):
 
         lead_s = float(rows[i].get("prep_start_lead_s", 0.0) or 0.0)
         is_prestart = lead_s > 0.01
-        prep_start = prep_start_default - lead_s
+        prestart_kind = rows[i].get("prestart_kind", "") or ""
+        prep_start_normal = prep_start_default
+        prep_start_prestart = (prep_start_default - lead_s) if is_prestart else None
 
         prev_play_end = events[i - 1]["play_end"]
         ready_at      = prep_start_default + prep_duration   # wall-clock when prep is done
@@ -88,25 +106,41 @@ def compute_timeline(rows):
         play_start    = max(prev_play_end, ready_at)
         play_end      = play_start + rows[i]["audio_seconds"]
 
+        prestart_segments = _build_worker_segments(rows[i], "prestart", prep_start_prestart) if is_prestart else []
+        normal_segments   = _build_worker_segments(rows[i], "normal", prep_start_normal)
+        tts_candidates    = _build_dual_candidates(rows[i], prep_start_prestart, prep_start_normal)
+
         events.append({
-            "chunk":          i,
-            "prep_start":     prep_start,
-            "prep_end":       ready_at,
-            "main_segments":  _build_main_segments(rows[i], prep_start),
-            "tts_candidates": _build_tts_candidates(rows[i], prep_start),
-            "play_start":     play_start,
-            "play_end":       play_end,
-            "gap":            gap,
-            "is_prestart":    is_prestart,
+            "chunk":               i,
+            "prep_start_normal":   prep_start_normal,
+            "prep_start_prestart": prep_start_prestart,
+            "prep_end":            ready_at,
+            "normal_segments":     normal_segments,
+            "prestart_segments":   prestart_segments,
+            "tts_candidates":      tts_candidates,
+            "play_start":          play_start,
+            "play_end":            play_end,
+            "gap":                 gap,
+            "is_prestart":         is_prestart,
+            "prestart_kind":       prestart_kind if is_prestart else "",
         })
 
     return events
 
 
-def _build_main_segments(row, prep_start):
-    """fs / llm alternating segments on the main thread."""
-    fs_times  = row.get("iter_fs_times_s",  []) or []
-    llm_times = row.get("iter_llm_times_s", []) or []
+def _build_worker_segments(row, worker, prep_start):
+    """fs / llm alternating segments for one worker, starting at prep_start."""
+    if prep_start is None:
+        return []
+    fs_times  = row.get(f"{worker}_fs_times_s",  []) or []
+    llm_times = row.get(f"{worker}_llm_times_s", []) or []
+    # Backward compat: if per-worker fields are absent (old CSV), fall back to combined.
+    if not fs_times and not llm_times:
+        if worker != "normal":
+            return []
+        fs_times  = row.get("iter_fs_times_s",  []) or []
+        llm_times = row.get("iter_llm_times_s", []) or []
+
     segments = []
     t = prep_start
     n_iters = max(len(fs_times), len(llm_times))
@@ -120,28 +154,67 @@ def _build_main_segments(row, prep_start):
     return segments
 
 
-def _build_tts_candidates(row, prep_start):
+def _build_dual_candidates(row, prep_start_prestart, prep_start_normal):
     """
-    Return list of dicts {k, submit_t, duration, is_chosen}.
+    Build TTS candidate list combining prestart + normal workers.
+    Each candidate is {k, submit_t, duration, is_chosen, worker, intra_iter}.
+    k is assigned by sorting candidates by submit_t (so vertical stacking
+    matches chronological submission order).
 
-    Candidate k is submitted after  sum(fs[0..k]) + sum(llm[0..k-1])
-    duration == -1.0 means the future had not completed at selection time.
+    Within a single worker: candidate at intra_iter j is submitted after
+    sum(fs[0..j]) + sum(llm[0..j-1]) of that worker's timeline.
     """
-    fs_times  = row.get("iter_fs_times_s",  []) or []
-    llm_times = row.get("iter_llm_times_s", []) or []
-    tts_times = row.get("iter_tts_times_s", []) or []
-    used_iter = int(row.get("used_candidate_iter", 0))
+    chosen_label = (row.get("chosen_worker_label", "") or "").strip()
+    chosen_intra = int(row.get("chosen_intra_iter", 0) or 0)
+    used_iter_legacy = int(row.get("used_candidate_iter", 0) or 0)
 
-    result = []
-    for k, tts_dur in enumerate(tts_times):
-        submit_t = prep_start + sum(fs_times[: k + 1]) + sum(llm_times[:k])
-        result.append({
-            "k":         k,
-            "submit_t":  submit_t,
-            "duration":  float(tts_dur),
-            "is_chosen": k == used_iter,
-        })
-    return result
+    cands = []
+
+    def _add_worker(worker, start_t):
+        if start_t is None:
+            return
+        fs_times  = row.get(f"{worker}_fs_times_s",  []) or []
+        llm_times = row.get(f"{worker}_llm_times_s", []) or []
+        tts_times = row.get(f"{worker}_tts_times_s", []) or []
+        for j, tts_dur in enumerate(tts_times):
+            submit_t = start_t + sum(fs_times[: j + 1]) + sum(llm_times[:j])
+            is_chosen = (chosen_label == worker and j == chosen_intra)
+            cands.append({
+                "submit_t":   submit_t,
+                "duration":   float(tts_dur),
+                "is_chosen":  is_chosen,
+                "worker":     worker,
+                "intra_iter": j,
+            })
+
+    has_per_worker = bool(
+        row.get("normal_tts_times_s")
+        or row.get("prestart_tts_times_s")
+    )
+
+    if has_per_worker:
+        _add_worker("prestart", prep_start_prestart)
+        _add_worker("normal", prep_start_normal)
+    else:
+        # Backward compat: old CSV with combined iter_*_times_s
+        fs_times  = row.get("iter_fs_times_s",  []) or []
+        llm_times = row.get("iter_llm_times_s", []) or []
+        tts_times = row.get("iter_tts_times_s", []) or []
+        start_t = prep_start_prestart if prep_start_prestart is not None else prep_start_normal
+        for j, tts_dur in enumerate(tts_times):
+            submit_t = start_t + sum(fs_times[: j + 1]) + sum(llm_times[:j])
+            cands.append({
+                "submit_t":   submit_t,
+                "duration":   float(tts_dur),
+                "is_chosen":  j == used_iter_legacy,
+                "worker":     "normal",
+                "intra_iter": j,
+            })
+
+    cands.sort(key=lambda c: c["submit_t"])
+    for k, c in enumerate(cands):
+        c["k"] = k
+    return cands
 
 
 # ── plotting ──────────────────────────────────────────────────────────────────
@@ -192,8 +265,9 @@ def plot_timeline(rows, events, out_path, title="Parallel Chunk Overlap Timeline
         dur = ev["play_end"] - ev["play_start"]
         ax.barh(Y_PLAY, dur, left=ev["play_start"], height=BAR_H,
                 color=COLORS["play"], alpha=0.88, edgecolor="white", linewidth=0.6)
+        kind_suffix = f"  [{ev['prestart_kind']}-prestart]" if ev.get("prestart_kind") else ""
         ax.text(ev["play_start"] + dur / 2, Y_PLAY,
-                f"▶{i}  {dur:.1f}s",
+                f"▶{i}  {dur:.1f}s{kind_suffix}",
                 ha="center", va="center", fontsize=8, fontweight="bold", color="white")
 
         # ── gap / silence ──────────────────────────────────────────────────────
@@ -231,17 +305,25 @@ def plot_timeline(rows, events, out_path, title="Parallel Chunk Overlap Timeline
                         f"T{cand['k']} (still running)",
                         fontsize=5.5, color="#888888", va="bottom")
 
-        # ── main thread (fs / llm) ─────────────────────────────────────────────
-        # pre-started chunks ran on a background executor: paint on a separate
-        # lane so they don't collide with the main thread's bars for chunks i-3..i-1.
-        y_main = Y_PRESTART if ev.get("is_prestart") else Y_MAIN
-        for seg_start, seg_end, kind in ev["main_segments"]:
+        # ── main thread (normal worker fs/llm) ────────────────────────────────
+        for seg_start, seg_end, kind in ev.get("normal_segments", []):
             seg_dur = seg_end - seg_start
             if seg_dur < 0.05:
                 continue
-            ax.barh(y_main, seg_dur, left=seg_start, height=BAR_H,
+            ax.barh(Y_MAIN, seg_dur, left=seg_start, height=BAR_H,
                     color=COLORS[kind], alpha=0.88, edgecolor="white", linewidth=0.5)
-            ax.text(seg_start + seg_dur / 2, y_main,
+            ax.text(seg_start + seg_dur / 2, Y_MAIN,
+                    f"{kind}\n{seg_dur:.1f}s",
+                    ha="center", va="center", fontsize=6.5, color="white")
+
+        # ── pre-start lane (prestart worker fs/llm; runs in parallel with normal) ──
+        for seg_start, seg_end, kind in ev.get("prestart_segments", []):
+            seg_dur = seg_end - seg_start
+            if seg_dur < 0.05:
+                continue
+            ax.barh(Y_PRESTART, seg_dur, left=seg_start, height=BAR_H,
+                    color=COLORS[kind], alpha=0.88, edgecolor="white", linewidth=0.5)
+            ax.text(seg_start + seg_dur / 2, Y_PRESTART,
                     f"{kind}\n{seg_dur:.1f}s",
                     ha="center", va="center", fontsize=6.5, color="white")
 
@@ -263,7 +345,7 @@ def plot_timeline(rows, events, out_path, title="Parallel Chunk Overlap Timeline
     ylabels = ["Main thread\n(fs + llm)", "TTS candidates\n(parallel)", "Playback"]
     if has_prestart:
         yticks = [Y_PRESTART] + yticks
-        ylabels = ["Pre-start lane\n(last chunk)"] + ylabels
+        ylabels = ["Pre-start lane\n(parallel worker)"] + ylabels
     ax.set_yticks(yticks)
     ax.set_yticklabels(ylabels, fontsize=9)
     ax.set_xlabel("Wall-clock time (s)", fontsize=10)
