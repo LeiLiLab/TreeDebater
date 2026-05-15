@@ -66,7 +66,7 @@ class TreeDebater(Debater):
             + f"use_rehearsal_tree: {self.use_rehearsal_tree}, use_debate_flow_tree: {self.use_debate_flow_tree}"
         )
 
-        helper_model = getattr(config, "helper_model", self.config.model)
+        helper_model = getattr(config, "helper_model", None) or self.config.model
         self.helper_client = partial(HelperClient, model=helper_model, temperature=0, max_tokens=config.max_tokens, n=1)
         self.simulated_audience = [Audience(AudienceConfig(model=self.config.model, temperature=1)) for _ in range(1)]
 

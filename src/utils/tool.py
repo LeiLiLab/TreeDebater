@@ -391,7 +391,8 @@ def get_response_with_retry(llm, prompt, required_key, *, response_model: type[T
             logger.debug(f"Retry {retry} times.")
             time.sleep(30)
         except Exception as e:
-            logger.warning(f"Unexpected error {e} in extracting {required_key} from: {response}")
+            import traceback
+            logger.warning(f"Unexpected error {e} in extracting {required_key} from: {response}\n{traceback.format_exc()}")
             content = {}
             retry += 1
             logger.debug(f"Retry {retry} times.")

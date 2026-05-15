@@ -85,7 +85,7 @@ class CompareEnv:
             history=history,
             max_time=max_time,
             time_control=self.time_control,
-            streaming_tts=self.baseline_debaters[side].config.streaming_tts,
+            streaming_tts=self.config.streaming_tts,
         )
 
         # Generate test response using reference history
@@ -93,7 +93,7 @@ class CompareEnv:
             history=history,
             max_time=max_time,
             time_control=self.time_control,
-            streaming_tts=self.test_debaters[side].config.streaming_tts,
+            streaming_tts=self.config.streaming_tts,
         )
         return base_response, test_response
 

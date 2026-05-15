@@ -24,6 +24,7 @@ class EnvConfig:
     claim_pool_size: int = 50
     reverse: bool = False
     time_control: bool = True
+    streaming_tts: bool = False
 
 
 def extract_overall_score(obj_scores):  # larger is better

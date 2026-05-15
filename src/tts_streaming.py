@@ -35,7 +35,12 @@ TOLERANCE_RATIO_UPPER = 0.05    # last chunk upper tolerance (tighter)
 MIN_TOLERANCE_S = 1.0           # floor so very short chunks aren't impossible to hit
 MAX_REFINEMENTS = 10
 MAX_PARALLEL_TTS = 8            # max concurrent background TTS threads per chunk
-MIN_CHUNK_CHARS = 50            # chunks shorter than this are merged into the next one
+MIN_CHUNK_WORDS = 30            # chunks shorter than this (word count) are merged into the next one; the last chunk uses the same threshold
+EARLY_CUT_RATIO = 1.25          # fs_est/target_s threshold to trigger early-cut
+RATIO_PRESTART_THRESHOLD = 2.0  # if chunk[i+2].chars / chunk[i+1].chars >= this, pre-start chunk i+2 one chunk earlier
+ABS_PRESTART_CHARS = 1000       # also pre-start when chunk[i+2] is absolutely large (>= this many chars), regardless of ratio
+SPEED_ADJUST_MIN = 0.85         # TTS speed clamp lower bound
+SPEED_ADJUST_MAX = 1.15         # TTS speed clamp upper bound
 
 
 # -------- dataclasses --------
@@ -62,9 +67,21 @@ class ChunkProfile:
     chunk_total_s: float
     tolerance_s: float
     tol_upper_s: float
-    iter_llm_times_s: str       # JSON list
-    iter_fs_times_s: str        # JSON list
-    iter_tts_times_s: str       # JSON list
+    iter_llm_times_s: str       # JSON list — combined across both workers (legacy)
+    iter_fs_times_s: str        # JSON list — combined across both workers (legacy)
+    iter_tts_times_s: str       # JSON list — combined across both workers (legacy)
+    prep_start_lead_s: float = 0.0   # >0 only when a pre-started result was adopted (last-chunk or ratio-prestart); how much earlier than events[i-1].play_start the prep actually began
+    prestart_kind: str = ""          # "" if standard refine; "ratio" if adopted from ratio-prestart; "last" if adopted from last-chunk pre-start
+    # Per-worker timings. Each worker has its own ordered fs/llm/tts streams that
+    # the visualizer uses to draw two parallel lanes. Empty when that worker did not run.
+    prestart_llm_times_s: str = "[]"
+    prestart_fs_times_s: str = "[]"
+    prestart_tts_times_s: str = "[]"
+    normal_llm_times_s: str = "[]"
+    normal_fs_times_s: str = "[]"
+    normal_tts_times_s: str = "[]"
+    chosen_worker_label: str = ""    # "" / "prestart" / "normal" (chunk 0 has no worker)
+    chosen_intra_iter: int = 0       # iteration within the chosen worker (0 = raw text)
 
 
 @dataclass
@@ -98,15 +115,31 @@ def _fastspeech_estimate(text: str) -> float:
     return float(length)
 
 
-def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str]) -> str:
+def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], next_chunk_text: str = "") -> str:
     context_block = ""
+    context_word_count = 0
     if prev_texts:
         joined = "\n\n".join(prev_texts)
+        context_word_count = LengthEstimator.count_words(joined)
         context_block = (
             f"Here is the debate speech text that has already been delivered "
             f"(spoken aloud before this paragraph):\n\n"
             f"{joined}\n\n"
             f"---\n\n"
+        )
+
+    context_note = (
+        f" The preceding speech context contains approximately {context_word_count} words."
+        if context_word_count > 0
+        else ""
+    )
+
+    next_block = ""
+    if next_chunk_text:
+        next_block = (
+            f"\n\nThe paragraph you rewrite will be followed immediately by this next paragraph "
+            f"(do NOT rewrite it, just ensure your output flows naturally into it):\n\n"
+            f"{next_chunk_text[:2000]}"
         )
 
     resp = client.chat.completions.create(
@@ -120,6 +153,7 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str]) -
                     "Rewrite ONLY the paragraph provided by the user. "
                     "Preserve the argument, logical flow, and debate rhetoric. "
                     "Do NOT add new arguments or repeat points already made in the preceding text. "
+                    "Ensure the rewritten paragraph connects smoothly with what comes before and after it. "
                     "Output only the rewritten paragraph, no preamble."
                 ),
             },
@@ -127,9 +161,11 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str]) -
                 "role": "user",
                 "content": (
                     f"{context_block}"
-                    f"Rewrite the following debate paragraph to be approximately {n_words} words. "
+                    f"Rewrite the following debate paragraph to be approximately {n_words} words."
+                    f"{context_note} "
                     f"Keep the debating style and the core argument intact.\n\n"
                     f"{text[:8000]}"
+                    f"{next_block}"
                 ),
             },
         ],
@@ -138,13 +174,14 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str]) -
     return (resp.choices[0].message.content or "").strip()
 
 
-def _query_time_profiled(client, content: str, voice: str = "echo") -> Dict[str, Any]:
+def _query_time_profiled(client, content: str, voice: str = "echo", speed: float = 1.0) -> Dict[str, Any]:
     t0 = _now()
     response = client.audio.speech.create(
         model="tts-1",
         voice=voice,
         input=content[:4096],
         response_format="mp3",
+        speed=speed,
     )
     t1 = _now()
 
@@ -163,10 +200,10 @@ def _query_time_profiled(client, content: str, voice: str = "echo") -> Dict[str,
     }
 
 
-def _tts_with_retry(client, content: str, voice: str = "echo", max_attempts: int = 5) -> Dict[str, Any]:
+def _tts_with_retry(client, content: str, voice: str = "echo", speed: float = 1.0, max_attempts: int = 5) -> Dict[str, Any]:
     for attempt in range(max_attempts):
         try:
-            return _query_time_profiled(client, content, voice=voice)
+            return _query_time_profiled(client, content, voice=voice, speed=speed)
         except Exception:
             if attempt == max_attempts - 1:
                 raise
@@ -177,10 +214,12 @@ def _tts_with_retry(client, content: str, voice: str = "echo", max_attempts: int
 # -------- TTS candidate tracking --------
 @dataclass
 class _TtsCandidate:
-    iteration: int          # 0 = original chunk text; k = after k-th rewrite
+    iteration: int          # global index in shared candidate pool
     text: str
     fs_estimated_s: float
     future: Any             # concurrent.futures.Future -> Dict from _query_time_profiled
+    worker_label: str = ""  # "prestart" / "normal" — which worker produced this
+    intra_iter: int = 0     # iteration index within the producing worker (0 = raw, k = k-th refine)
 
 
 def _pick_best_completed(
@@ -216,146 +255,257 @@ def _pick_best_completed(
     return min(done, key=lambda x: abs(x[1]["audio_seconds"] - target_s))
 
 
-# -------- parallel refinement + TTS (chunks 1+) --------
-def _adaptive_refine_parallel(
-    client,
-    text: str,
-    target_s: float,
-    time_budget_s: float,
-    prev_texts: List[str],
-    tolerance_s: float,
-    tolerance_upper_s: float,
-    voice: str = "echo",
-    max_ref: int = MAX_REFINEMENTS,
-) -> Dict[str, Any]:
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=MAX_PARALLEL_TTS)
-    candidates: List[_TtsCandidate] = []
-    candidates_lock = threading.Lock()
-    stop_event = threading.Event()
-    done_event = threading.Event()
+# -------- shared refine context + worker (used by both prestart and normal refine) --------
+class _ChunkRefineContext:
+    """
+    Holds the shared state for refining ONE chunk. Multiple workers (a prestart
+    worker, a normal-refine worker) can run concurrently against the same context,
+    contributing candidates to a shared pool until either:
+      - any candidate's fs_estimate hits target -> first worker to confirm sets done_event
+      - main loop's deadline (= prev_audio_s) elapses -> external code stops everything
+    """
+    def __init__(
+        self,
+        client,
+        original_text: str,
+        target_s: float,
+        tol_s: float,
+        tol_upper_s: float,
+        prev_texts: List[str],
+        next_chunk_text: str,
+        voice: str,
+        max_ref: int,
+        kickoff_iter: int,
+        kickoff_kind: str,         # "" | "ratio" | "last"
+    ):
+        self.client = client
+        self.original_text = original_text
 
-    t_wall_start = _now()
-    refine_stats: Dict[str, Any] = {}
+        self._target_s = target_s
+        self._tol_s = tol_s
+        self._tol_upper_s = tol_upper_s
+        self._target_lock = threading.Lock()
 
-    def _refine():
-        cur = text
-        n_ref = 0
-        llm_times: List[float] = []
-        fs_times: List[float] = []
-        t0 = _now()
+        self.candidates: List[_TtsCandidate] = []
+        self.candidates_lock = threading.Lock()
 
-        _t = _now(); est = _fastspeech_estimate(cur); fs_times.append(_now() - _t)
-        ok = _in_range(est, target_s, tolerance_s, tolerance_upper_s)
+        self.stop_event = threading.Event()
+        self.done_event = threading.Event()
+        self._adopt_lock = threading.Lock()
 
-        with candidates_lock:
-            if not stop_event.is_set():
-                candidates.append(_TtsCandidate(
-                    iteration=0, text=cur, fs_estimated_s=est,
-                    future=executor.submit(_tts_with_retry, client, cur, voice),
-                ))
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=MAX_PARALLEL_TTS)
 
-        while not ok and n_ref < max_ref and not stop_event.is_set():
-            cw = LengthEstimator.count_words(cur)
-            tw = max(10, round(cw * target_s / est))
-            _t = _now(); cur = _revise_to_n_words(client, cur, tw, prev_texts); llm_times.append(_now() - _t)
-            n_ref += 1
-            _t = _now(); est = _fastspeech_estimate(cur); fs_times.append(_now() - _t)
-            ok = _in_range(est, target_s, tolerance_s, tolerance_upper_s)
+        self.prev_texts = list(prev_texts)
+        self.next_chunk_text = next_chunk_text
+        self.voice = voice
+        self.max_ref = max_ref
 
-            if stop_event.is_set():
-                break
-            with candidates_lock:
-                candidates.append(_TtsCandidate(
-                    iteration=n_ref, text=cur, fs_estimated_s=est,
-                    future=executor.submit(_tts_with_retry, client, cur, voice),
-                ))
+        self.kickoff_iter = kickoff_iter
+        self.kickoff_kind = kickoff_kind
 
-        refine_stats.update({
-            "n_ref": n_ref, "ok": ok,
-            "llm_times": llm_times, "fs_times": fs_times,
-            "refine_total_s": _now() - t0,
-        })
+        # per-worker stats: label -> {"n_ref", "llm_times", "fs_times"}
+        self._stats: Dict[str, Dict[str, Any]] = {}
+        self._stats_lock = threading.Lock()
 
-        if ok and not stop_event.is_set():
-            with candidates_lock:
-                last = candidates[-1]
-            tts_out = last.future.result()
-            refine_stats["chosen_cand"] = last
-            refine_stats["tts_out"] = tts_out
-            done_event.set()
+        self.chosen_cand: Optional[_TtsCandidate] = None
+        self.chosen_tts_out: Optional[Dict[str, Any]] = None
 
-        stop_event.set()
+        self.t_start_wall = _now()
+        self.workers: List[threading.Thread] = []
 
-    refine_thread = threading.Thread(target=_refine, daemon=True)
-    refine_thread.start()
+    def get_target(self) -> Tuple[float, float, float]:
+        with self._target_lock:
+            return self._target_s, self._tol_s, self._tol_upper_s
 
-    done_event.wait(timeout=time_budget_s)
-    stop_event.set()
+    def update_target(self, target_s: float, tol_s: float, tol_upper_s: float) -> None:
+        with self._target_lock:
+            self._target_s = target_s
+            self._tol_s = tol_s
+            self._tol_upper_s = tol_upper_s
 
-    total_elapsed_s = _now() - t_wall_start
-    timed_out = not done_event.is_set()
+    def _stats_for(self, label: str) -> Dict[str, Any]:
+        with self._stats_lock:
+            if label not in self._stats:
+                self._stats[label] = {"n_ref": 0, "llm_times": [], "fs_times": []}
+            return self._stats[label]
 
-    if done_event.is_set() and "chosen_cand" in refine_stats:
-        chosen_cand = refine_stats["chosen_cand"]
-        tts_out = refine_stats["tts_out"]
-        used_iter = chosen_cand.iteration
-    else:
-        while True:
-            with candidates_lock:
-                snap = list(candidates)
-            if snap:
-                break
-            time.sleep(0.05)
-        chosen_cand, tts_out = _pick_best_completed(snap, target_s)
-        used_iter = chosen_cand.iteration
+    def add_fs_time(self, label: str, t: float) -> None:
+        with self._stats_lock:
+            self._stats.setdefault(label, {"n_ref": 0, "llm_times": [], "fs_times": []})
+            self._stats[label]["fs_times"].append(t)
 
-    with candidates_lock:
-        snap = list(candidates)
+    def add_llm_time(self, label: str, t: float) -> None:
+        with self._stats_lock:
+            self._stats.setdefault(label, {"n_ref": 0, "llm_times": [], "fs_times": []})
+            self._stats[label]["llm_times"].append(t)
+            self._stats[label]["n_ref"] += 1
 
-    iter_tts_times: List[float] = []
-    for c in snap:
-        if c.future.done():
+    def aggregate_stats(self) -> Tuple[int, List[float], List[float]]:
+        with self._stats_lock:
+            n_ref_total = sum(s["n_ref"] for s in self._stats.values())
+            llm_times: List[float] = []
+            fs_times: List[float] = []
+            for s in self._stats.values():
+                llm_times.extend(s["llm_times"])
+                fs_times.extend(s["fs_times"])
+            return n_ref_total, llm_times, fs_times
+
+    def add_candidate(self, text: str, est: float, label: str, intra_iter: int) -> _TtsCandidate:
+        with self.candidates_lock:
+            iteration = len(self.candidates)
+            cand = _TtsCandidate(
+                iteration=iteration,
+                text=text,
+                fs_estimated_s=est,
+                future=self.executor.submit(_tts_with_retry, self.client, text, self.voice),
+                worker_label=label,
+                intra_iter=intra_iter,
+            )
+            self.candidates.append(cand)
+        return cand
+
+    def try_adopt(self, cand: _TtsCandidate, tts_out: Dict[str, Any]) -> bool:
+        with self._adopt_lock:
+            if self.done_event.is_set():
+                return False
+            self.chosen_cand = cand
+            self.chosen_tts_out = tts_out
+            self.done_event.set()
+            self.stop_event.set()
+            return True
+
+
+def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
+    """
+    Independent worker that drives one branch of refinement against ctx.
+    Reads target/tolerance from ctx (which may be updated externally) at the
+    start of each iteration. Pushes candidates into the shared pool.
+    Sets ctx.done_event via try_adopt() when its candidate hits target.
+    """
+    cur = ctx.original_text
+
+    if ctx.stop_event.is_set():
+        return
+
+    # ---- step 0: fs estimate raw text + submit raw TTS candidate ----
+    t = _now()
+    try:
+        est = _fastspeech_estimate(cur)
+    except Exception:
+        return
+    ctx.add_fs_time(label, _now() - t)
+
+    if ctx.stop_event.is_set():
+        return
+
+    target_s, tol_s, tol_upper_s = ctx.get_target()
+    cand = ctx.add_candidate(cur, est, label, intra_iter=0)
+
+    if _in_range(est, target_s, tol_s, tol_upper_s):
+        try:
+            tts_out = cand.future.result()
+            if ctx.try_adopt(cand, tts_out):
+                return
+        except Exception:
+            pass
+
+    # ---- LLM refinement loop ----
+    n_ref_local = 0
+    while not ctx.stop_event.is_set() and n_ref_local < ctx.max_ref:
+        target_s, tol_s, tol_upper_s = ctx.get_target()
+        if target_s <= 0:
+            break
+
+        cw = LengthEstimator.count_words(cur)
+        tw = max(10, round(cw * target_s / max(est, 1.0)))
+
+        t = _now()
+        try:
+            cur = _revise_to_n_words(ctx.client, cur, tw, ctx.prev_texts, ctx.next_chunk_text)
+        except Exception:
+            break
+        ctx.add_llm_time(label, _now() - t)
+        n_ref_local += 1
+
+        if ctx.stop_event.is_set():
+            break
+
+        t = _now()
+        try:
+            est = _fastspeech_estimate(cur)
+        except Exception:
+            break
+        ctx.add_fs_time(label, _now() - t)
+
+        if ctx.stop_event.is_set():
+            break
+
+        cand = ctx.add_candidate(cur, est, label, intra_iter=n_ref_local)
+
+        target_s, tol_s, tol_upper_s = ctx.get_target()
+        if _in_range(est, target_s, tol_s, tol_upper_s):
             try:
-                iter_tts_times.append(round(c.future.result()["tts_api_s"], 3))
+                tts_out = cand.future.result()
+                if ctx.try_adopt(cand, tts_out):
+                    return
             except Exception:
-                iter_tts_times.append(-1.0)
-        else:
-            iter_tts_times.append(-1.0)
-
-    refine_thread.join(timeout=5)
-    executor.shutdown(wait=False)
-
-    return {
-        "refined_text": chosen_cand.text,
-        "n_ref_used": refine_stats.get("n_ref", 0),
-        "fs_estimated_s": chosen_cand.fs_estimated_s,
-        "refine_total_s": refine_stats.get("refine_total_s", total_elapsed_s),
-        "total_elapsed_s": total_elapsed_s,
-        "target_reached": refine_stats.get("ok", False),
-        "timed_out": timed_out,
-        "n_candidates_submitted": len(snap),
-        "n_candidates_done": sum(1 for t in iter_tts_times if t >= 0),
-        "used_candidate_iter": used_iter,
-        "llm_times_s": refine_stats.get("llm_times", []),
-        "fs_times_s": refine_stats.get("fs_times", []),
-        "iter_tts_times_s": iter_tts_times,
-        "audio_seconds": float(tts_out["audio_seconds"]),
-        "tts_api_s": float(tts_out["tts_api_s"]),
-        "mp3_parse_s": float(tts_out["mp3_parse_s"]),
-        "mp3_bytes": tts_out["mp3_bytes"],
-    }
+                pass
 
 
 # -------- chunk utilities --------
-def _merge_short_chunks(segments: List[str], min_chars: int = MIN_CHUNK_CHARS) -> List[str]:
+def _split_sentences(text: str) -> List[str]:
+    """Split text into sentences on '.', '!', '?' boundaries."""
+    import re
+    parts = re.split(r'(?<=[.!?])\s+', text.strip())
+    return [p for p in parts if p.strip()]
+
+
+def _early_cut_chunk(
+    text: str,
+    target_s: float,
+    early_cut_ratio: float = EARLY_CUT_RATIO,
+) -> Tuple[str, str]:
+    """
+    Split text into (head, tail) where head's FS estimate ≈ target_s.
+    Returns (head, tail); tail may be empty if the whole text fits.
+    Only called when fs_estimate(text) / target_s > early_cut_ratio.
+    """
+    sentences = _split_sentences(text)
+    if len(sentences) <= 1:
+        return text, ""
+
+    head_sentences: List[str] = []
+    for sent in sentences:
+        candidate = " ".join(head_sentences + [sent])
+        est = _fastspeech_estimate(candidate)
+        if est > target_s and head_sentences:
+            break
+        head_sentences.append(sent)
+
+    if not head_sentences:
+        head_sentences = [sentences[0]]
+
+    head = " ".join(head_sentences)
+    tail_sentences = sentences[len(head_sentences):]
+    tail = " ".join(tail_sentences)
+    return head, tail
+
+
+def _merge_short_chunks(
+    segments: List[str],
+    min_words: int = MIN_CHUNK_WORDS,
+) -> List[str]:
     result = list(segments)
     i = 0
     while i < len(result):
-        if len(result[i]) < min_chars and i + 1 < len(result):
+        if LengthEstimator.count_words(result[i]) < min_words and i + 1 < len(result):
             result[i + 1] = result[i] + " " + result[i + 1]
             result.pop(i)
         else:
             i += 1
+    if len(result) >= 2 and LengthEstimator.count_words(result[-1]) < min_words:
+        result[-2] = result[-2] + " " + result[-1]
+        result.pop()
     return result
 
 
@@ -373,6 +523,8 @@ def run_pipeline(
     tolerance_ratio: float = TOLERANCE_RATIO,
     voice: str = "echo",
     out_dir: Optional[Path] = None,
+    enable_early_cut: bool = False,
+    early_cut_ratio: float = EARLY_CUT_RATIO,
 ) -> Tuple[List[ChunkProfile], RoundProfile, bytes, List[str]]:
     """
     Run the streaming TTS pipeline on a list of text segments.
@@ -389,9 +541,10 @@ def run_pipeline(
     audio_total = 0.0
     overrun_total = 0.0
 
-    segments_list = _merge_short_chunks(segments_list)
+    segments_list = list(_merge_short_chunks(segments_list))
     n_chunks = len(segments_list)
     audio_budget_remaining = total_budget_s
+    total_chars_initial = sum(len(c) for c in segments_list)
 
     if out_dir is not None:
         out_dir = Path(out_dir)
@@ -403,13 +556,128 @@ def run_pipeline(
 
     prev_audio_s: Optional[float] = None
 
-    for i, chunk in enumerate(segments_list):
+    # Pre-start contexts indexed by target chunk idx. A context is created when
+    # we kick off a prestart worker for that chunk (ratio or last-chunk variant).
+    # When the main loop reaches that chunk, it pops the context and adds a
+    # normal refine worker that shares the same candidate pool.
+    _chunk_contexts: Dict[int, _ChunkRefineContext] = {}
+
+    def _kickoff_ratio_prestart(iter_i: int) -> None:
+        """At the start of iter iter_i, maybe kick off prestart for c[i+2].
+
+        Triggers if EITHER:
+          - chunk[i+2].chars / chunk[i+1].chars >= RATIO_PRESTART_THRESHOLD, OR
+          - chunk[i+2].chars >= ABS_PRESTART_CHARS (absolutely long chunk)
+        """
+        target_idx = iter_i + 2
+        if target_idx >= len(segments_list) - 1:   # would be the last chunk → handled by last-chunk kickoff
+            return
+        if target_idx in _chunk_contexts:
+            return
+        next_chars = len(segments_list[iter_i + 1])
+        target_chars = len(segments_list[target_idx])
+        ratio = (target_chars / next_chars) if next_chars > 0 else 0.0
+        ratio_trigger = ratio >= RATIO_PRESTART_THRESHOLD
+        abs_trigger = target_chars >= ABS_PRESTART_CHARS
+        if not (ratio_trigger or abs_trigger):
+            return
+        target_text = segments_list[target_idx]
+        tgt_s_est = total_budget_s * target_chars / max(total_chars_initial, 1)
+        tol_est = max(MIN_TOLERANCE_S, tgt_s_est * tolerance_ratio)
+        tol_upper_est = max(MIN_TOLERANCE_S, tgt_s_est * TOLERANCE_RATIO_UPPER)
+        ctx = _ChunkRefineContext(
+            client=client,
+            original_text=target_text,
+            target_s=tgt_s_est,
+            tol_s=tol_est,
+            tol_upper_s=tol_upper_est,
+            prev_texts=list(final_texts),
+            next_chunk_text="",
+            voice=voice,
+            max_ref=MAX_REFINEMENTS,
+            kickoff_iter=iter_i,
+            kickoff_kind="ratio",
+        )
+        _chunk_contexts[target_idx] = ctx
+        th = threading.Thread(target=_refine_worker, args=(ctx, "prestart"), daemon=True)
+        ctx.workers.append(th)
+        th.start()
+        triggers = []
+        if ratio_trigger:
+            triggers.append(f"ratio={ratio:.2f}x")
+        if abs_trigger:
+            triggers.append(f"abs={target_chars}c>={ABS_PRESTART_CHARS}")
+        print(
+            f"  [ratio-prestart] chunk {target_idx} kicked off at start of iter {iter_i}, "
+            f"trigger=[{', '.join(triggers)}], target_est={tgt_s_est:.1f}s"
+        )
+
+    def _kickoff_last_chunk_prestart(iter_i: int) -> None:
+        """At the start of iter iter_i, if iter_i == n-3, kick off prestart for the last chunk."""
+        n_now = len(segments_list)
+        if n_now < 3:
+            return
+        if iter_i != n_now - 3:
+            return
+        last_idx = n_now - 1
+        if last_idx in _chunk_contexts:
+            return
+        last_text = segments_list[last_idx]
+        last_chars = len(last_text)
+        # Use *initial* allocation for consistency with ratio-prestart; main loop
+        # will push the up-to-date target later via update_target().
+        tgt_s_est = total_budget_s * last_chars / max(total_chars_initial, 1)
+        tol_est = max(MIN_TOLERANCE_S, tgt_s_est * tolerance_ratio)
+        tol_upper_est = max(MIN_TOLERANCE_S, tgt_s_est * TOLERANCE_RATIO_UPPER)
+        ctx = _ChunkRefineContext(
+            client=client,
+            original_text=last_text,
+            target_s=tgt_s_est,
+            tol_s=tol_est,
+            tol_upper_s=tol_upper_est,
+            prev_texts=list(final_texts),
+            next_chunk_text="",
+            voice=voice,
+            max_ref=MAX_REFINEMENTS,
+            kickoff_iter=iter_i,
+            kickoff_kind="last",
+        )
+        _chunk_contexts[last_idx] = ctx
+        th = threading.Thread(target=_refine_worker, args=(ctx, "prestart"), daemon=True)
+        ctx.workers.append(th)
+        th.start()
+        print(
+            f"  [last-prestart] chunk {last_idx} kicked off at start of iter {iter_i}, "
+            f"target_est={tgt_s_est:.1f}s"
+        )
+
+    i = 0
+    while i < len(segments_list):
+        chunk = segments_list[i]
+        n_chunks = len(segments_list)  # may grow due to early-cut
+
         chunk_t0 = _now()
         chunk_words = LengthEstimator.count_words(chunk)
         chunk_chars = len(chunk)
 
         remaining_chars_total = sum(len(c) for c in segments_list[i:])
         target_s = audio_budget_remaining * (chunk_chars / remaining_chars_total)
+
+        # ---- early-cut: if chunk is too long relative to budget, split it now ----
+        if enable_early_cut and i > 0:
+            fs_pre = _fastspeech_estimate(chunk)
+            if fs_pre / target_s > early_cut_ratio:
+                head, tail = _early_cut_chunk(chunk, target_s, early_cut_ratio)
+                if tail:
+                    segments_list[i] = head
+                    segments_list.insert(i + 1, tail)
+                    chunk = head
+                    n_chunks = len(segments_list)
+                    chunk_chars = len(chunk)
+                    chunk_words = LengthEstimator.count_words(chunk)
+                    remaining_chars_total = sum(len(c) for c in segments_list[i:])
+                    target_s = audio_budget_remaining * (chunk_chars / remaining_chars_total)
+                    print(f"  chunk {i:03d} | early-cut: fs_pre={fs_pre:.1f}s > {early_cut_ratio}x target={target_s:.1f}s → split into head({len(head)}c)+tail({len(tail)}c)")
 
         tol_s = max(MIN_TOLERANCE_S, target_s * tolerance_ratio)
         remaining_chunks = n_chunks - i
@@ -420,12 +688,31 @@ def run_pipeline(
         )
 
         max_ref = 3 if i < n_chunks // 2 else MAX_REFINEMENTS
+        next_chunk_text = segments_list[i + 1] if i + 1 < len(segments_list) else ""
 
         seg = None
         mp3_bytes = b""
         audio_seconds = 0.0
         tts_api_s = 0.0
         mp3_parse_s = 0.0
+        chunk_lead_s = 0.0
+        chunk_prestart_kind = ""
+        # Per-worker times (default empty; chunks 1+ branch overrides)
+        prestart_fs_list: List[float] = []
+        prestart_llm_list: List[float] = []
+        prestart_tts_list: List[float] = []
+        normal_fs_list: List[float] = []
+        normal_llm_list: List[float] = []
+        normal_tts_list: List[float] = []
+        chosen_worker_label = ""
+        chosen_intra_iter = 0
+
+        # ---- (NEW) at start of every iteration: maybe kick off prestarts ----
+        # For iter i, ratio check looks at c[i+2]/c[i+1]; last-chunk fires when i == n-3.
+        # Both kickoffs run BEFORE we process the current chunk, so chunk 0's TTS
+        # runs in parallel with the prestart for chunk 2 (if ratio triggered).
+        _kickoff_ratio_prestart(i)
+        _kickoff_last_chunk_prestart(i)
 
         # ---- chunk 0: no refinement, sequential TTS ----
         if i == 0:
@@ -466,40 +753,158 @@ def run_pipeline(
             total_elapsed_s = tts_api_s
             overrun_s = tts_api_s
 
-        # ---- chunks 1+: parallel refinement with background TTS candidates ----
+        # ---- chunks 1+: shared candidate pool with prestart + normal workers ----
         else:
             time_budget_s = prev_audio_s
 
-            ref_out = _adaptive_refine_parallel(
-                client, chunk,
-                target_s=target_s,
-                time_budget_s=time_budget_s,
-                prev_texts=final_texts,
-                tolerance_s=tol_s,
-                tolerance_upper_s=tol_upper_s,
-                voice=voice,
-                max_ref=max_ref,
-            )
+            # Pop existing prestart context (if any), or build a fresh context
+            ctx = _chunk_contexts.pop(i, None)
+            if ctx is not None:
+                # Prestart was running; push the up-to-date target so its next
+                # iteration uses real budget instead of the initial estimate.
+                ctx.update_target(target_s, tol_s, tol_upper_s)
+                # update prev_texts for normal worker via its own field
+                ctx.prev_texts = list(final_texts)
+                ctx.next_chunk_text = next_chunk_text
+                chunk_prestart_kind = ctx.kickoff_kind
+            else:
+                ctx = _ChunkRefineContext(
+                    client=client,
+                    original_text=chunk,
+                    target_s=target_s,
+                    tol_s=tol_s,
+                    tol_upper_s=tol_upper_s,
+                    prev_texts=list(final_texts),
+                    next_chunk_text=next_chunk_text,
+                    voice=voice,
+                    max_ref=max_ref,
+                    kickoff_iter=i,
+                    kickoff_kind="",
+                )
+                chunk_prestart_kind = ""
 
-            refined = ref_out["refined_text"]
-            n_ref_used = ref_out["n_ref_used"]
-            fs_estimated_s = ref_out["fs_estimated_s"]
-            refine_total_s = ref_out["refine_total_s"]
-            in_range = ref_out["target_reached"]
-            timed_out = ref_out["timed_out"]
-            n_candidates_submitted = ref_out["n_candidates_submitted"]
-            n_candidates_done = ref_out["n_candidates_done"]
-            used_candidate_iter = ref_out["used_candidate_iter"]
-            iter_llm_times_s = json.dumps([round(t, 3) for t in ref_out["llm_times_s"]])
-            iter_fs_times_s = json.dumps([round(t, 3) for t in ref_out["fs_times_s"]])
-            iter_tts_times_s = json.dumps(ref_out["iter_tts_times_s"])
-            total_elapsed_s = ref_out["total_elapsed_s"]
-            audio_seconds = ref_out["audio_seconds"]
-            tts_api_s = ref_out["tts_api_s"]
-            mp3_parse_s = ref_out["mp3_parse_s"]
-            mp3_bytes = ref_out["mp3_bytes"]
+            # Always start a normal worker for this chunk (in addition to any
+            # prestart worker that may already be running on the same context).
+            normal_th = threading.Thread(target=_refine_worker, args=(ctx, "normal"), daemon=True)
+            ctx.workers.append(normal_th)
+            normal_th.start()
 
-            overrun_s = max(0.0, ref_out["total_elapsed_s"] - time_budget_s)
+            # Wait for ANY worker to find an ok candidate, OR until deadline.
+            ctx.done_event.wait(timeout=max(0.0, time_budget_s))
+            ctx.stop_event.set()
+
+            total_elapsed_s = _now() - ctx.t_start_wall
+
+            # Pick the chosen candidate
+            if ctx.chosen_cand is not None and ctx.chosen_tts_out is not None:
+                chosen_cand = ctx.chosen_cand
+                tts_out = ctx.chosen_tts_out
+                in_range = True
+                timed_out = False
+            else:
+                # Deadline hit before any worker confirmed ok → take best from pool
+                with ctx.candidates_lock:
+                    snap = list(ctx.candidates)
+                if not snap:
+                    raise RuntimeError(f"Chunk {i}: no candidates produced")
+                target_now, _, _ = ctx.get_target()
+                chosen_cand, tts_out = _pick_best_completed(snap, target_now)
+                in_range = False
+                timed_out = True
+
+            # Speed adjustment if still out of range
+            target_now, tol_now, tol_upper_now = ctx.get_target()
+            audio_s = float(tts_out["audio_seconds"])
+            if not _in_range(audio_s, target_now, tol_now, tol_upper_now):
+                raw_speed = audio_s / target_now if target_now > 0 else 1.0
+                clamped = max(SPEED_ADJUST_MIN, min(SPEED_ADJUST_MAX, raw_speed))
+                if abs(clamped - 1.0) > 0.01:
+                    try:
+                        speed_tts_out = _tts_with_retry(client, chosen_cand.text, voice=voice, speed=clamped)
+                        if abs(speed_tts_out["audio_seconds"] - target_now) < abs(audio_s - target_now):
+                            tts_out = speed_tts_out
+                            audio_s = float(tts_out["audio_seconds"])
+                    except Exception:
+                        pass
+
+            # Aggregate stats from all workers on this context
+            n_ref_total, all_llm_times, all_fs_times = ctx.aggregate_stats()
+            with ctx.candidates_lock:
+                snap = list(ctx.candidates)
+            iter_tts_times: List[float] = []
+            for c in snap:
+                if c.future.done():
+                    try:
+                        iter_tts_times.append(round(c.future.result()["tts_api_s"], 3))
+                    except Exception:
+                        iter_tts_times.append(-1.0)
+                else:
+                    iter_tts_times.append(-1.0)
+
+            # Per-worker fs/llm/tts streams (in candidate-submit order within each worker)
+            def _worker_tts_in_order(label: str) -> List[float]:
+                out: List[float] = []
+                for c in snap:
+                    if c.worker_label != label:
+                        continue
+                    if c.future.done():
+                        try:
+                            out.append(round(c.future.result()["tts_api_s"], 3))
+                        except Exception:
+                            out.append(-1.0)
+                    else:
+                        out.append(-1.0)
+                return out
+
+            prestart_stats = ctx._stats.get("prestart", {"fs_times": [], "llm_times": []})
+            normal_stats = ctx._stats.get("normal", {"fs_times": [], "llm_times": []})
+            prestart_fs_list = list(prestart_stats.get("fs_times", []))
+            prestart_llm_list = list(prestart_stats.get("llm_times", []))
+            prestart_tts_list = _worker_tts_in_order("prestart")
+            normal_fs_list = list(normal_stats.get("fs_times", []))
+            normal_llm_list = list(normal_stats.get("llm_times", []))
+            normal_tts_list = _worker_tts_in_order("normal")
+
+            # Compute lead_s for prestarted chunks (how much earlier than the
+            # would-be normal prep_start the worker actually started).
+            if chunk_prestart_kind:
+                if ctx.kickoff_iter == 0:
+                    chunk_lead_s = chunk_profiles[0].tts_api_s + chunk_profiles[0].audio_seconds
+                else:
+                    # kickoff at start of iter k (k = i-2) → lead = audio_{k-1} + audio_k = audio_{i-3} + audio_{i-2}
+                    chunk_lead_s = (
+                        chunk_profiles[i - 3].audio_seconds + chunk_profiles[i - 2].audio_seconds
+                    )
+                # subtract lead from elapsed for reporting parity with the old design
+                total_elapsed_s = max(0.0, total_elapsed_s - chunk_lead_s)
+                print(
+                    f"  [{chunk_prestart_kind}-prestart] adopted for chunk {i}: "
+                    f"lead={chunk_lead_s:.1f}s, effective_elapsed={total_elapsed_s:.1f}s"
+                )
+
+            refined = chosen_cand.text
+            n_ref_used = n_ref_total
+            fs_estimated_s = chosen_cand.fs_estimated_s
+            refine_total_s = total_elapsed_s
+            n_candidates_submitted = len(snap)
+            n_candidates_done = sum(1 for t in iter_tts_times if t >= 0)
+            used_candidate_iter = chosen_cand.iteration
+            iter_llm_times_s = json.dumps([round(t, 3) for t in all_llm_times])
+            iter_fs_times_s = json.dumps([round(t, 3) for t in all_fs_times])
+            iter_tts_times_s = json.dumps(iter_tts_times)
+            chosen_worker_label = chosen_cand.worker_label
+            chosen_intra_iter = chosen_cand.intra_iter
+            audio_seconds = audio_s
+            tts_api_s = float(tts_out["tts_api_s"])
+            mp3_parse_s = float(tts_out["mp3_parse_s"])
+            mp3_bytes = tts_out["mp3_bytes"]
+
+            overrun_s = max(0.0, total_elapsed_s - time_budget_s)
+
+            # Best-effort cleanup (workers will exit at next stop_event check)
+            for w in ctx.workers:
+                w.join(timeout=2)
+            ctx.executor.shutdown(wait=False)
 
             try:
                 seg = AudioSegment.from_file(BytesIO(mp3_bytes), format="mp3")
@@ -553,6 +958,16 @@ def run_pipeline(
             iter_llm_times_s=iter_llm_times_s,
             iter_fs_times_s=iter_fs_times_s,
             iter_tts_times_s=iter_tts_times_s,
+            prep_start_lead_s=chunk_lead_s,
+            prestart_kind=chunk_prestart_kind,
+            prestart_llm_times_s=json.dumps([round(t, 3) for t in prestart_llm_list]),
+            prestart_fs_times_s=json.dumps([round(t, 3) for t in prestart_fs_list]),
+            prestart_tts_times_s=json.dumps(prestart_tts_list),
+            normal_llm_times_s=json.dumps([round(t, 3) for t in normal_llm_list]),
+            normal_fs_times_s=json.dumps([round(t, 3) for t in normal_fs_list]),
+            normal_tts_times_s=json.dumps(normal_tts_list),
+            chosen_worker_label=chosen_worker_label,
+            chosen_intra_iter=chosen_intra_iter,
         )
         chunk_profiles.append(cp)
 
@@ -576,6 +991,8 @@ def run_pipeline(
             f"overrun={overrun_s:.2f}s | remaining={audio_budget_remaining:.1f}s"
         )
 
+        i += 1
+
     if out_dir is not None:
         sep = "\n\n" + ("=" * 80) + "\n\n"
         (out_dir / "chunks_final.txt").write_text(sep.join(final_texts), encoding="utf-8")
@@ -588,7 +1005,7 @@ def run_pipeline(
 
     round_t1 = _now()
     round_profile = RoundProfile(
-        n_chunks=n_chunks,
+        n_chunks=len(segments_list),
         total_budget_s=total_budget_s,
         tolerance_ratio=tolerance_ratio,
         round_total_s=round_t1 - round_t0,
@@ -615,6 +1032,8 @@ def convert_text_to_speech_streaming(
     output_path: str,
     total_budget_s: float,
     voice: str = "echo",
+    enable_early_cut: bool = False,
+    early_cut_ratio: float = EARLY_CUT_RATIO,
 ) -> Tuple[str, str, float]:
     """
     Streaming TTS: split content into chunks, adaptively refine each chunk's
@@ -647,6 +1066,8 @@ def convert_text_to_speech_streaming(
         total_budget_s=total_budget_s,
         voice=voice,
         out_dir=output_path.parent / f"{output_path.stem}_chunks",
+        enable_early_cut=enable_early_cut,
+        early_cut_ratio=early_cut_ratio,
     )
 
     # Save combined audio

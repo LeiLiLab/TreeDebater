@@ -10,11 +10,13 @@ from transformers import AutoTokenizer, LlamaForSequenceClassification
 from utils.constants import ATTACK_RM_PATH, SUPPORT_RM_PATH, google_api_key
 from utils.timing_log import log_timing
 from utils.tool import logger
+# litellm._turn_on_debug()
 
 try:
     import instructor
 except Exception:
     instructor = None
+
 
 safety_setting = [
     {
@@ -143,7 +145,7 @@ def _completion_text(model_name: str, messages, wants_json: bool, temperature: f
     )
     if wants_json:
         call_kwargs["response_format"] = {"type": "json_object"}
-    return litellm.completion(**call_kwargs)
+    return litellm.completion(num_retries=3, **call_kwargs)
 
 
 def _completion_structured(
