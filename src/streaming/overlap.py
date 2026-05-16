@@ -178,7 +178,7 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
                 # Advance cursor - listener can now access this audio
                 playback_cursor[0] += sleep_time
                 elapsed_in_chunk += sleep_time
-                logger.debug(f"[PlaybackMain] cursor={playback_cursor[0]:.1f}s (chunk {next_idx}, elapsed={elapsed_in_chunk:.1f}s/{chunk_duration:.1f}s)")
+                # logger.debug(f"[PlaybackMain] cursor={playback_cursor[0]:.1f}s (chunk {next_idx}, elapsed={elapsed_in_chunk:.1f}s/{chunk_duration:.1f}s)")
 
             # End playback of this chunk
             logger.debug(
@@ -202,6 +202,10 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
         logger.debug(f"[Turn] turn_start stage={stage_key} side={side} t={time.time():.3f}")
 
         if listener_deb.type != "treedebater":
+            logger.debug(
+                f"[Turn] mode_config stage={stage_key} side={side} streaming_tts=False "
+                f"streaming_listen=False mode=sequential_baseline t={time.time():.3f}"
+            )
             response = generate_fn()
             self._env.debate_process.append({"stage": stage_key, "side": side, "content": response})
             logger.debug(f"[Turn] turn_end stage={stage_key} side={side} t={time.time():.3f}")

@@ -1,0 +1,41 @@
+# Example: overlapping streaming listen + streaming TTS (see streaming/overlap.py; run: python -m streaming.overlap).
+# Both sides must be treedebater for per-turn StreamingInputEnv; set streaming_listen on listeners.
+
+env:
+  motion: Learning to be a good writer still matters in the age of ai
+  judge_num: 1
+  audience_num: 3
+  claim_pool_size: 50
+  reverse: False
+  time_control: True
+
+debater:
+  - side: for
+    model: deepseek-chat
+    type: treedebater
+    temperature: 1.0
+    use_retrieval: True
+    add_retrieval_feedback: False
+    single_pass_revision: False
+    helper_model: deepseek-chat
+    streaming_tts: False
+    streaming_listen: False
+    pool_file: ../results/deepseek-chat/learning_to_be_a_good_writer_still_matters_in_the_age_of_ai_pool_for.json
+
+  - side: against
+    model: deepseek-chat
+    type: treedebater
+    temperature: 1.0
+    use_retrieval: True
+    add_retrieval_feedback: False
+    single_pass_revision: False
+    helper_model: deepseek-chat
+    streaming_tts: False
+    streaming_listen: False
+    pool_file: ../results/deepseek-chat/learning_to_be_a_good_writer_still_matters_in_the_age_of_ai_pool_against.json
+
+judge:
+  temperature: 0.0
+
+audience:
+  temperature: 1

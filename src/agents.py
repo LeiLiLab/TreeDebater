@@ -246,7 +246,10 @@ class Agent:
                 t0 = time.perf_counter()
                 response = self.client(messages=messages, **kwargs)
                 elapsed = time.perf_counter() - t0
-                self.client_cost += response._hidden_params["response_cost"]
+                hidden = getattr(response, "_hidden_params", None) or {}
+                cost = hidden.get("response_cost")
+                if cost is not None:
+                    self.client_cost += cost
                 log_timing(
                     logger,
                     "debater_litellm_completion",
@@ -562,7 +565,12 @@ class HumanDebater(Debater):
 
 
 class BaselineDebater(Debater):
-    def __init__(self, config, motion, port=8081) -> None:
+    @staticmethod
+    def _normalize_base_url(url: str) -> str:
+        url = (url or "http://127.0.0.1:8081/").strip()
+        return url if url.endswith("/") else url + "/"
+
+    def __init__(self, config, motion, port=None) -> None:
         super().__init__(config, motion)
         language = "en"
         topic = motion
@@ -574,15 +582,29 @@ class BaselineDebater(Debater):
             "Position": "positive" if self.side == "for" else "negative",
             "Model": model,
         }
-        self.BASE_URL = f"http://127.0.0.1:{port}/"
+        if port is not None:
+            self.BASE_URL = f"http://127.0.0.1:{port}/"
+        else:
+            self.BASE_URL = self._normalize_base_url(getattr(config, "url", None))
         logger.info(f"[BaselineDebater URL] {self.BASE_URL}")
         log_llm_io(logger, phase="baseline", title="BaselineDebater-init", body=str(self.input))
 
     def _make_request(self, url, data):
+        endpoint = url.rstrip("/").rsplit("/", 1)[-1]
         max_retries = 3
         for attempt in range(max_retries):
             try:
+                t0 = time.perf_counter()
                 response = requests.post(url, json=data).json()
+                log_timing(
+                    logger,
+                    "baseline_api_http",
+                    time.perf_counter() - t0,
+                    endpoint=endpoint,
+                    side=self.side,
+                    stage=getattr(self, "status", ""),
+                    attempt=attempt,
+                )
                 return response
             except Exception as e:
                 if attempt < max_retries - 1:

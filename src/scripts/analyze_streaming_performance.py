@@ -2,10 +2,11 @@
 """
 Analyze streaming debate performance from log files.
 
+Supports symmetric and mixed overlap modes (streaming/batch TTS × streaming/batch listen).
 Extracts timing metrics from DEBUG logs to calculate:
-- Speaker bubbles (waiting for TTS chunks)
-- Listener bubbles (post-playback processing)
-- ASR real-time factors
+- Speaker bubbles (waiting for TTS chunks or batch planning)
+- Listen sessions (StreamingInputEnv stream + BatchListener batch)
+- ASR real-time factors (stream listen only)
 - End-to-end chunk latency
 - File I/O overhead
 - Tree update costs
@@ -21,8 +22,73 @@ import json
 import re
 from collections import defaultdict
 from dataclasses import dataclass, asdict
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+STAGE_ORDER = ["opening", "rebuttal", "closing"]
+SIDE_ORDER = ["for", "against"]
+
+
+def opponent_side(side: str) -> str:
+    """Return the other debate side."""
+    if side == "for":
+        return "against"
+    if side == "against":
+        return "for"
+    raise ValueError(f"Unknown side: {side!r}")
+
+
+def stage_speech_order(reverse: bool = False) -> List[str]:
+    """Speaking order within each stage (for then against, or reversed)."""
+    return list(reversed(SIDE_ORDER)) if reverse else list(SIDE_ORDER)
+
+
+def next_stage(stage: str) -> Optional[str]:
+    try:
+        i = STAGE_ORDER.index(stage)
+    except ValueError:
+        return None
+    if i + 1 < len(STAGE_ORDER):
+        return STAGE_ORDER[i + 1]
+    return None
+
+
+def listen_metrics_turn_key(
+    stage: str, statement_side: str, reverse: bool = False
+) -> Tuple[str, str]:
+    """
+    Turn key for StreamingInputEnv (listen) metrics on the debater who is listening.
+
+    Attribution follows when the listener will use that speech:
+      - Second speaker in stage listens to first in same stage
+        (e.g. opening against listens to opening for).
+      - First speaker in next stage listens to second speaker in previous stage
+        (e.g. rebuttal for listens to opening against; closing for listens to rebuttal against).
+    """
+    sides = stage_speech_order(reverse)
+    first, second = sides[0], sides[1]
+
+    if statement_side == first:
+        return (stage, second)
+
+    if statement_side == second:
+        nxt = next_stage(stage)
+        if nxt is not None:
+            return (nxt, first)
+        return (stage, second)
+
+    return (stage, opponent_side(statement_side))
+
+_LOG_WALL_TS_RE = re.compile(r"^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})")
+_TIMING_LINE_RE = re.compile(r"\[timing\]\s+phase=(\S+)\s+duration_s=([\d.]+)(.*)$")
+_TIMING_KV_RE = re.compile(r"(\w+)=([^\s]+)")
+_TTS_START_RE = re.compile(r"\[TTS-Start\]\s+Starting TTS for \S+ (\w+) (for|against)")
+_CONFIG_STREAMING_RE = re.compile(
+    r"streaming_tts['\"]?\s*:\s*(True|False).*?streaming_listen['\"]?\s*:\s*(True|False)",
+    re.DOTALL,
+)
+_CONFIG_REVERSE_RE = re.compile(r"reverse['\"]?\s*:\s*(True|False)")
 
 
 @dataclass
@@ -105,6 +171,31 @@ class BubbleMetrics:
 
 
 @dataclass
+class ListenSessionMetrics:
+    """One listen session (streaming ASR or batch analyze_statement)."""
+    statement_side: str
+    listener_side: str
+    listen_mode: str = "stream"  # "stream" (StreamingInputEnv) or "batch" (BatchListener)
+    statement_stage: Optional[str] = None
+    thread_start: Optional[float] = None
+    thread_end: Optional[float] = None
+    asr_operations: List[ASRMetrics] = None
+    tree_updates: List[TreeUpdateMetrics] = None
+
+    def __post_init__(self):
+        if self.asr_operations is None:
+            self.asr_operations = []
+        if self.tree_updates is None:
+            self.tree_updates = []
+
+    @property
+    def duration(self) -> Optional[float]:
+        if self.thread_start is not None and self.thread_end is not None:
+            return self.thread_end - self.thread_start
+        return None
+
+
+@dataclass
 class TurnMetrics:
     """Complete metrics for one debate turn."""
     stage: str
@@ -147,9 +238,16 @@ class TurnMetrics:
     # Bubbles
     speaker_bubbles: List[BubbleMetrics] = None
 
+    # Streaming listen sessions (re-attributed to this debater's turn, not the speaker's)
+    listen_sessions: List[ListenSessionMetrics] = None
+
     # File I/O
     file_writes: List[Tuple[float, float]] = None  # (start, end)
     file_reads: List[Tuple[float, float]] = None   # (start, end)
+
+    # Batch sequential (tts=batch, listen=batch): metrics mapped onto streaming report fields
+    batch_sequential: bool = False
+    batch_audio_duration: Optional[float] = None
 
     def __post_init__(self):
         if self.chunks is None:
@@ -164,6 +262,8 @@ class TurnMetrics:
             self.file_writes = []
         if self.file_reads is None:
             self.file_reads = []
+        if self.listen_sessions is None:
+            self.listen_sessions = []
 
     @property
     def total_duration(self) -> Optional[float]:
@@ -185,9 +285,48 @@ class TurnMetrics:
 
     @property
     def listener_duration(self) -> Optional[float]:
+        if self.listen_sessions:
+            durations = [s.duration for s in self.listen_sessions if s.duration is not None]
+            if durations:
+                return sum(durations)
         if self.listener_thread_start and self.listener_thread_end:
             return self.listener_thread_end - self.listener_thread_start
         return None
+
+    def _listen_to_opponent_sessions(self) -> List[ListenSessionMetrics]:
+        opp = opponent_side(self.side)
+        return [s for s in self.listen_sessions if s.statement_side == opp]
+
+    @property
+    def listen_to_opponent_duration(self) -> Optional[float]:
+        """Time spent processing opponent speech (stream + batch listen sessions)."""
+        durations = [s.duration for s in self._listen_to_opponent_sessions() if s.duration is not None]
+        return sum(durations) if durations else None
+
+    @property
+    def listen_to_opponent_stream_duration(self) -> Optional[float]:
+        durations = [
+            s.duration for s in self._listen_to_opponent_sessions()
+            if s.listen_mode == "stream" and s.duration is not None
+        ]
+        return sum(durations) if durations else None
+
+    @property
+    def listen_to_opponent_batch_duration(self) -> Optional[float]:
+        durations = [
+            s.duration for s in self._listen_to_opponent_sessions()
+            if s.listen_mode == "batch" and s.duration is not None
+        ]
+        return sum(durations) if durations else None
+
+    @property
+    def listen_during_speech_duration(self) -> Optional[float]:
+        """Opponent listen session while this debater is speaking."""
+        durations = [
+            s.duration for s in self.listen_sessions
+            if s.statement_side == self.side and s.duration is not None
+        ]
+        return sum(durations) if durations else None
 
     @property
     def generation_time(self) -> Optional[float]:
@@ -214,9 +353,15 @@ class TurnMetrics:
 
     @property
     def listener_bubble(self) -> Optional[float]:
-        """Time from playback end to listener thread end."""
-        if self.playback_end and self.listener_thread_end:
-            return self.listener_thread_end - self.playback_end
+        """Time from playback end until opponent stream-listen session ends (while we speak)."""
+        for session in self.listen_sessions:
+            if (
+                session.listen_mode == "stream"
+                and session.statement_side == self.side
+                and session.thread_end is not None
+                and self.playback_end is not None
+            ):
+                return session.thread_end - self.playback_end
         return None
 
     @property
@@ -235,6 +380,8 @@ class TurnMetrics:
     @property
     def audio_duration(self) -> Optional[float]:
         """Best-effort total audio duration for the turn."""
+        if self.batch_audio_duration is not None:
+            return self.batch_audio_duration
         chunk_durations = [
             chunk.duration for chunk in self.chunks.values() if chunk.duration is not None
         ]
@@ -301,6 +448,297 @@ class TurnMetrics:
         return None
 
 
+def parse_mode_flags(mode: Optional[str]) -> Tuple[Optional[bool], Optional[bool]]:
+    """Parse mode_config string into (speaker_tts_streaming, opponent_listen_streaming)."""
+    if not mode:
+        return None, None
+    tts_m = re.search(r"tts=(stream|batch)", mode)
+    listen_m = re.search(r"listen=(stream|batch)", mode)
+    tts = True if tts_m and tts_m.group(1) == "stream" else False if tts_m else None
+    listen = True if listen_m and listen_m.group(1) == "stream" else False if listen_m else None
+    return tts, listen
+
+
+def pipeline_label(turn: TurnMetrics) -> str:
+    """Human-readable pipeline for this speak turn (speaker TTS + opponent listen)."""
+    tts, listen = turn.streaming_tts, turn.streaming_listen
+    if tts is None or listen is None:
+        pt, pl = parse_mode_flags(turn.mode)
+        if tts is None:
+            tts = pt
+        if listen is None:
+            listen = pl
+    tts_s = "stream" if tts is True else "batch" if tts is False else "?"
+    listen_s = "stream" if listen is True else "batch" if listen is False else "?"
+    return f"speaker_tts={tts_s}, opponent_listen={listen_s}"
+
+
+def is_batch_sequential_turn(
+    turn: TurnMetrics,
+    default_streaming_tts: Optional[bool] = None,
+    default_streaming_listen: Optional[bool] = None,
+) -> bool:
+    """
+    Pure batch/sequential debate (no overlap chunk playback in log).
+
+    Mixed modes (batch TTS + post-hoc chunks, stream listen, etc.) keep playback_start
+    and use the standard overlap report path.
+    """
+    if turn.playback_start is not None:
+        return False
+    if turn.mode and str(turn.mode).startswith("sequential"):
+        return True
+    tts = turn.streaming_tts if turn.streaming_tts is not None else default_streaming_tts
+    listen = turn.streaming_listen if turn.streaming_listen is not None else default_streaming_listen
+    if tts is False and listen is False:
+        return True
+    if (
+        tts is None
+        and listen is None
+        and turn.speaker_thread_start is None
+    ):
+        return True
+    return False
+
+
+def parse_config_from_log(log_path: Path) -> Tuple[Optional[bool], Optional[bool], bool]:
+    default_tts: Optional[bool] = None
+    default_listen: Optional[bool] = None
+    reverse = False
+    try:
+        with log_path.open("r", encoding="utf-8", errors="replace") as f:
+            for line in f:
+                if "Config:" not in line:
+                    continue
+                m = _CONFIG_STREAMING_RE.search(line)
+                if m:
+                    default_tts = m.group(1) == "True"
+                    default_listen = m.group(2) == "True"
+                mr = _CONFIG_REVERSE_RE.search(line)
+                if mr:
+                    reverse = mr.group(1) == "True"
+                break
+    except OSError:
+        pass
+    return default_tts, default_listen, reverse
+
+
+def load_debater_streaming_config(log_path: Path) -> Dict[str, Dict[str, bool]]:
+    """Per-debater streaming_tts / streaming_listen from the logged YAML config."""
+    out: Dict[str, Dict[str, bool]] = {}
+    try:
+        with log_path.open("r", encoding="utf-8", errors="replace") as f:
+            for line in f:
+                if "Config:" not in line:
+                    continue
+                for side in SIDE_ORDER:
+                    block_m = re.search(
+                        rf"['\"]side['\"]\s*:\s*['\"]{side}['\"](.*?)(?=['\"]side['\"]\s*:|'judge'|\Z)",
+                        line,
+                        re.DOTALL,
+                    )
+                    if not block_m:
+                        continue
+                    block = block_m.group(1)
+                    tts_m = re.search(r"['\"]streaming_tts['\"]\s*:\s*(True|False)", block)
+                    listen_m = re.search(r"['\"]streaming_listen['\"]\s*:\s*(True|False)", block)
+                    if tts_m or listen_m:
+                        out[side] = {
+                            "streaming_tts": tts_m.group(1) == "True" if tts_m else False,
+                            "streaming_listen": listen_m.group(1) == "True" if listen_m else False,
+                        }
+                break
+    except OSError:
+        pass
+    return out
+
+
+def debate_turn_order(
+    turns: Dict[Tuple[str, str], TurnMetrics], reverse: bool = False
+) -> List[Tuple[str, str]]:
+    sides = list(reversed(SIDE_ORDER)) if reverse else SIDE_ORDER
+    order: List[Tuple[str, str]] = []
+    for stage in STAGE_ORDER:
+        for side in sides:
+            key = (stage, side)
+            if key in turns:
+                order.append(key)
+    return order
+
+
+def _parse_timing_kv(tail: str) -> Dict[str, str]:
+    return {m.group(1): m.group(2) for m in _TIMING_KV_RE.finditer(tail)}
+
+
+def load_timing_sums(log_path: Path) -> Dict[Tuple[str, str], Dict[str, float]]:
+    sums: Dict[Tuple[str, str], Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    with log_path.open("r", encoding="utf-8", errors="replace") as f:
+        for line in f:
+            if "[timing]" not in line:
+                continue
+            idx = line.find("[timing]")
+            m = _TIMING_LINE_RE.search(line[idx:])
+            if not m:
+                continue
+            fields = _parse_timing_kv(m.group(3) or "")
+            stage, side = fields.get("stage"), fields.get("side")
+            if stage and side:
+                sums[(stage, side)][m.group(1)] += float(m.group(2))
+    return {k: dict(v) for k, v in sums.items()}
+
+
+def load_final_audio_durations(log_path: Path) -> Dict[Tuple[str, str], float]:
+    out: Dict[Tuple[str, str], float] = {}
+    with log_path.open("r", encoding="utf-8", errors="replace") as f:
+        for line in f:
+            if "phase=tts_trim_wall_clock" not in line:
+                continue
+            idx = line.find("[timing]")
+            if idx < 0:
+                continue
+            m = _TIMING_LINE_RE.search(line[idx:])
+            if not m:
+                continue
+            fields = _parse_timing_kv(m.group(3) or "")
+            stage, side = fields.get("stage"), fields.get("side")
+            audio = fields.get("audio_duration_s")
+            if stage and side and audio:
+                out[(stage, side)] = float(audio)
+    return out
+
+
+def load_tts_start_times(log_path: Path) -> Dict[Tuple[str, str], float]:
+    out: Dict[Tuple[str, str], float] = {}
+    with log_path.open("r", encoding="utf-8", errors="replace") as f:
+        for line in f:
+            if "[TTS-Start]" not in line:
+                continue
+            m = _TTS_START_RE.search(line)
+            if not m:
+                continue
+            ts_m = _LOG_WALL_TS_RE.match(line)
+            if not ts_m:
+                continue
+            try:
+                ts = datetime.strptime(ts_m.group(1), "%Y-%m-%d %H:%M:%S").timestamp()
+            except ValueError:
+                continue
+            out[(m.group(1), m.group(2))] = ts
+    return out
+
+
+def _response_gen_time(
+    turn: TurnMetrics,
+    key: Tuple[str, str],
+    timing: Dict[str, float],
+    tts_starts: Dict[Tuple[str, str], float],
+) -> float:
+    """LLM / baseline API wall time before TTS (response generation)."""
+    if turn.generation_time is not None and turn.generation_time > 0:
+        return turn.generation_time
+    api_s = timing.get("baseline_api_http", 0.0)
+    if api_s > 0:
+        return api_s
+    if turn.turn_start is not None and key in tts_starts:
+        return max(0.0, tts_starts[key] - turn.turn_start)
+    active = (turn.turn_end - turn.turn_start) if turn.turn_start and turn.turn_end else 0.0
+    tts_work = timing.get("tts_wall_clock", 0.0) + timing.get("tts_trim_wall_clock", 0.0)
+    return max(0.0, active - tts_work)
+
+
+def apply_batch_sequential_metrics(
+    turns: Dict[Tuple[str, str], TurnMetrics],
+    log_path: Path,
+    default_streaming_tts: Optional[bool],
+    default_streaming_listen: Optional[bool],
+    reverse: bool,
+) -> int:
+    """
+    Map batch/sequential turns onto the standard streaming report fields.
+
+    While the opponent speaks, this side sleeps; at turn start it generates one chunk
+    (LLM then batch TTS). Metric mapping:
+      - speaker bubble  = response generation time
+      - listener bubble = 0 (generation starts immediately after opponent finishes)
+      - time to first chunk = LLM + TTS work
+      - time between chunks = 0
+    """
+    timing_sums = load_timing_sums(log_path)
+    final_audio = load_final_audio_durations(log_path)
+    tts_starts = load_tts_start_times(log_path)
+    order = debate_turn_order(turns, reverse=reverse)
+    n = 0
+
+    for i, key in enumerate(order):
+        turn = turns[key]
+        if not is_batch_sequential_turn(turn, default_streaming_tts, default_streaming_listen):
+            continue
+
+        turn.batch_sequential = True
+        n += 1
+        ph = timing_sums.get(key, {})
+        audio = final_audio.get(key)
+        if audio is None:
+            audio = turn.audio_duration
+        turn.batch_audio_duration = audio
+
+        wait_opponent = 0.0
+        if i > 0:
+            prev_key = order[i - 1]
+            prev = turns[prev_key]
+            wait_opponent = (
+                final_audio.get(prev_key)
+                or prev.batch_audio_duration
+                or prev.audio_duration
+                or 0.0
+            )
+
+        # Planning time = turn wall clock from log (turn_end - turn_start): LLM + batch TTS work.
+        planning_time = turn.total_duration or 0.0
+        audio_s = audio or 0.0
+        total_duration = audio_s + planning_time
+        gen_s = _response_gen_time(turn, key, ph, tts_starts)
+        tts_encode_s = ph.get("tts_wall_clock", 0.0)
+        tts_trim_s = ph.get("tts_trim_wall_clock", 0.0)
+        tts_work_s = tts_encode_s + tts_trim_s
+        time_to_first = gen_s + tts_work_s
+        if time_to_first <= 0 and planning_time > 0:
+            time_to_first = planning_time
+
+        playback = audio if audio is not None else planning_time
+        speaker_bubble = gen_s
+        listener_bubble = 0.0
+        true_overlap = (playback - speaker_bubble) if playback is not None else None
+        overlap_eff = None
+        if true_overlap is not None and playback and playback > 0:
+            overlap_eff = true_overlap / playback
+
+        turn.speaker_bubbles = []
+        turn.chunks = {1: ChunkMetrics(chunk_idx=1, duration=audio)} if audio else {}
+        turn.batch_report: Dict[str, Any] = {
+            "total_duration": total_duration,
+            "playback_duration": playback,
+            "speaker_duration": planning_time,
+            "listener_duration": total_duration,
+            "planning_time": planning_time,
+            "generation_time": gen_s,
+            "audio_duration": audio,
+            "speaker_bubble_total": speaker_bubble,
+            "time_to_first_chunk": time_to_first,
+            "time_between_chunks": 0.0,
+            "listener_bubble": listener_bubble,
+            "listener_bubble_pct": 0.0,
+            "speaker_bubble_pct": (speaker_bubble / playback * 100) if playback else None,
+            "true_overlap": true_overlap,
+            "overlap_efficiency": overlap_eff,
+            "bottleneck": "SPEAKER" if speaker_bubble > 0 else None,
+            "chunk_count": 1,
+            "wait_opponent_s": wait_opponent,
+        }
+
+    return n
+
+
 def parse_log_line(line: str) -> Optional[Event]:
     """Parse a single log line into an Event."""
     # Match: [Component] event_type key1=value1 key2=value2 t=timestamp
@@ -326,26 +764,44 @@ def parse_log_line(line: str) -> Optional[Event]:
 
 
 def extract_turn_key(event: Event) -> Optional[Tuple[str, str]]:
-    """Extract (stage, side) from event data."""
+    """Extract (stage, side) from event data for speaker/playback events."""
     stage = event.data.get('stage')
-    # Some components (e.g., StreamingInputEnv) emit `statement_side`
-    # instead of `side`, so support both field names.
-    side = event.data.get('side') or event.data.get('statement_side')
+    side = event.data.get('side')
     if stage and side:
         return (stage, side)
     return None
 
 
-def parse_log_file(log_path: Path) -> Dict[Tuple[str, str], TurnMetrics]:
+def _active_listen_session(
+    turns: Dict[Tuple[str, str], TurnMetrics],
+    active: Optional[Tuple[Tuple[str, str], str, str]],
+) -> Optional[ListenSessionMetrics]:
+    if active is None:
+        return None
+    turn_key, statement_side, listen_mode = active
+    turn = turns.get(turn_key)
+    if turn is None or not turn.listen_sessions:
+        return None
+    for session in reversed(turn.listen_sessions):
+        if (
+            session.statement_side == statement_side
+            and session.listen_mode == listen_mode
+            and session.thread_end is None
+        ):
+            return session
+    return None
+
+
+def parse_log_file(log_path: Path, reverse: bool = False) -> Dict[Tuple[str, str], TurnMetrics]:
     """Parse log file and extract all metrics per turn."""
     turns: Dict[Tuple[str, str], TurnMetrics] = {}
 
     # Temporary state for tracking multi-event operations
     wait_chunk_starts: Dict[Tuple[str, str, int], float] = {}  # (stage, side, chunk_idx) -> time
-    asr_starts: Dict[Tuple[str, str, float, float], float] = {}  # (stage, side, start, end) -> time
-    tree_starts: Dict[Tuple[str, str, int], float] = {}  # (stage, side, word_count) -> time
+    asr_starts: Dict[Tuple[str, str, str, float, float], float] = {}  # (stage, owner, stmt, a0, a1) -> time
+    tree_starts: Dict[Tuple[str, str, str, int], float] = {}  # (stage, owner, stmt, words) -> time
     file_write_starts: Dict[Tuple[str, str], float] = {}
-    active_streaming_turn: Optional[Tuple[str, str]] = None
+    active_listen: Optional[Tuple[Tuple[str, str], str, str]] = None  # (turn_key, statement_side, listen_mode)
 
     with open(log_path, 'r') as f:
         for line in f:
@@ -353,22 +809,128 @@ def parse_log_file(log_path: Path) -> Dict[Tuple[str, str], TurnMetrics]:
             if not event:
                 continue
 
-            turn_key = extract_turn_key(event)
-            if event.component == 'StreamingInputEnv' and event.event_type == 'thread_start' and turn_key is not None:
-                active_streaming_turn = turn_key
-            # StreamingInputEnv lines often omit stage/side after thread_start.
-            # Reuse the active listener context so ASR/tree events are still attributed.
-            if turn_key is None and event.component == 'StreamingInputEnv':
+            if event.component == 'StreamingInputEnv':
+                statement_side = event.data.get('statement_side') or event.data.get('side')
+                stage = event.data.get('stage')
+                if not stage or not statement_side:
+                    if active_listen is not None and event.event_type in (
+                        'asr_start', 'asr_end', 'tree_update_start', 'tree_update_end',
+                    ):
+                        turn_key, stmt, _listen_mode = active_listen
+                        stage, side = turn_key
+                        statement_side = stmt
+                    else:
+                        continue
+                else:
+                    # Logged on the speaker's turn; reattribute_listen_sessions copies to the listener's speak turn.
+                    turn_key = (stage, statement_side)
+                    side = statement_side
+
+                if turn_key not in turns:
+                    turns[turn_key] = TurnMetrics(stage=stage, side=side)
+                turn = turns[turn_key]
+
                 if event.event_type == 'thread_start':
-                    st = event.data.get('stage')
-                    sd = event.data.get('statement_side') or event.data.get('side')
-                    if st and sd:
-                        active_streaming_turn = (st, sd)
-                        turn_key = active_streaming_turn
-                elif active_streaming_turn is not None:
-                    turn_key = active_streaming_turn
-                    if event.event_type == 'thread_end':
-                        active_streaming_turn = None
+                    turn.listen_sessions.append(
+                        ListenSessionMetrics(
+                            statement_side=statement_side,
+                            listener_side=opponent_side(statement_side),
+                            listen_mode="stream",
+                            statement_stage=stage,
+                            thread_start=event.timestamp,
+                        )
+                    )
+                    active_listen = (turn_key, statement_side, "stream")
+                elif event.event_type == 'thread_end':
+                    session = _active_listen_session(turns, active_listen)
+                    if session is not None:
+                        session.thread_end = event.timestamp
+                    active_listen = None
+                elif event.event_type == 'asr_start':
+                    audio_range = _parse_audio_range(event.data.get('audio_range', ''))
+                    if audio_range is None:
+                        continue
+                    audio_start, audio_end = audio_range
+                    asr_starts[(stage, side, statement_side, audio_start, audio_end)] = event.timestamp
+                elif event.event_type == 'asr_end':
+                    audio_range = _parse_audio_range(event.data.get('audio_range', ''))
+                    if audio_range is None:
+                        continue
+                    audio_start, audio_end = audio_range
+                    asr_key = (stage, side, statement_side, audio_start, audio_end)
+                    if asr_key in asr_starts:
+                        op = ASRMetrics(
+                            audio_start=audio_start,
+                            audio_end=audio_end,
+                            asr_start_time=asr_starts[asr_key],
+                            asr_end_time=event.timestamp,
+                            text_len=int(event.data.get('text_len', 0)),
+                        )
+                        session = _active_listen_session(turns, active_listen)
+                        if session is not None:
+                            session.asr_operations.append(op)
+                        turn.asr_operations.append(op)
+                elif event.event_type == 'tree_update_start':
+                    words = int(event.data.get('words', 0))
+                    tree_starts[(stage, side, statement_side, words)] = event.timestamp
+                elif event.event_type == 'tree_update_end':
+                    words = int(event.data.get('words', 0))
+                    tree_key = (stage, side, statement_side, words)
+                    if tree_key in tree_starts:
+                        upd = TreeUpdateMetrics(
+                            start_time=tree_starts[tree_key],
+                            end_time=event.timestamp,
+                            word_count=words,
+                        )
+                        session = _active_listen_session(turns, active_listen)
+                        if session is not None:
+                            session.tree_updates.append(upd)
+                        turn.tree_updates.append(upd)
+                continue
+
+            if event.component == 'BatchListener':
+                listener_side = event.data.get('side')
+                stmt_side = event.data.get('opponent_side')
+                stmt_stage = event.data.get('stage')
+                if event.event_type == 'analyze_start':
+                    if not listener_side or not stmt_side or not stmt_stage:
+                        continue
+                    turn_key = listen_metrics_turn_key(stmt_stage, stmt_side, reverse)
+                    if turn_key not in turns:
+                        turns[turn_key] = TurnMetrics(stage=turn_key[0], side=turn_key[1])
+                    turn = turns[turn_key]
+                    turn.listen_sessions.append(
+                        ListenSessionMetrics(
+                            statement_side=stmt_side,
+                            listener_side=listener_side,
+                            listen_mode="batch",
+                            statement_stage=stmt_stage,
+                            thread_start=event.timestamp,
+                        )
+                    )
+                    turn.batch_analyze_start = event.timestamp
+                    active_listen = (turn_key, stmt_side, "batch")
+                elif event.event_type == 'analyze_end':
+                    if not listener_side or not stmt_stage:
+                        continue
+                    end_key = (stmt_stage, listener_side)
+                    if end_key not in turns:
+                        turns[end_key] = TurnMetrics(stage=stmt_stage, side=listener_side)
+                    turn = turns[end_key]
+                    session = _active_listen_session(turns, active_listen)
+                    if session is None:
+                        for s in reversed(turn.listen_sessions):
+                            if s.listen_mode == "batch" and s.thread_end is None:
+                                session = s
+                                break
+                    if session is not None:
+                        session.thread_end = event.timestamp
+                    turn.batch_analyze_end = event.timestamp
+                    if active_listen and active_listen[0] == end_key:
+                        active_listen = None
+                continue
+
+            turn_key = extract_turn_key(event)
             if not turn_key:
                 continue
 
@@ -402,50 +964,6 @@ def parse_log_file(log_path: Path) -> Dict[Tuple[str, str], TurnMetrics]:
                     turn.posthoc_chunk_start = event.timestamp
                 elif event.event_type == 'posthoc_chunk_end':
                     turn.posthoc_chunk_end = event.timestamp
-
-            elif event.component == 'BatchListener':
-                if event.event_type == 'analyze_start':
-                    turn.batch_analyze_start = event.timestamp
-                elif event.event_type == 'analyze_end':
-                    turn.batch_analyze_end = event.timestamp
-
-            elif event.component == 'StreamingInputEnv':
-                if event.event_type == 'thread_start':
-                    turn.listener_thread_start = event.timestamp
-                elif event.event_type == 'thread_end':
-                    turn.listener_thread_end = event.timestamp
-                elif event.event_type == 'asr_start':
-                    audio_range = _parse_audio_range(event.data.get('audio_range', ''))
-                    if audio_range is None:
-                        continue
-                    audio_start, audio_end = audio_range
-                    asr_starts[(stage, side, audio_start, audio_end)] = event.timestamp
-                elif event.event_type == 'asr_end':
-                    audio_range = _parse_audio_range(event.data.get('audio_range', ''))
-                    if audio_range is None:
-                        continue
-                    audio_start, audio_end = audio_range
-                    asr_key = (stage, side, audio_start, audio_end)
-                    if asr_key in asr_starts:
-                        turn.asr_operations.append(ASRMetrics(
-                            audio_start=audio_start,
-                            audio_end=audio_end,
-                            asr_start_time=asr_starts[asr_key],
-                            asr_end_time=event.timestamp,
-                            text_len=int(event.data.get('text_len', 0))
-                        ))
-                elif event.event_type == 'tree_update_start':
-                    words = int(event.data.get('words', 0))
-                    tree_starts[(stage, side, words)] = event.timestamp
-                elif event.event_type == 'tree_update_end':
-                    words = int(event.data.get('words', 0))
-                    tree_key = (stage, side, words)
-                    if tree_key in tree_starts:
-                        turn.tree_updates.append(TreeUpdateMetrics(
-                            start_time=tree_starts[tree_key],
-                            end_time=event.timestamp,
-                            word_count=words
-                        ))
 
             elif event.component == 'PlaybackMain':
                 if event.event_type == 'playback_start':
@@ -499,7 +1017,49 @@ def parse_log_file(log_path: Path) -> Dict[Tuple[str, str], TurnMetrics]:
                     detection_latency = float(event.data.get('detection_latency', '0').rstrip('s'))
                     turn.chunks[chunk_idx].detection_latency = detection_latency
 
+    reattribute_listen_sessions(turns, reverse)
+
+    for turn in turns.values():
+        if not turn.listen_sessions:
+            continue
+        starts = [s.thread_start for s in turn.listen_sessions if s.thread_start is not None]
+        ends = [s.thread_end for s in turn.listen_sessions if s.thread_end is not None]
+        if starts:
+            turn.listener_thread_start = min(starts)
+        if ends:
+            turn.listener_thread_end = max(ends)
+
     return turns
+
+
+def reattribute_listen_sessions(
+    turns: Dict[Tuple[str, str], TurnMetrics], reverse: bool = False
+) -> None:
+    """
+    Copy listen sessions to the debater's speak turn when they consume that speech.
+
+    Sessions stay on the speaker's turn for listener_bubble (opponent still listening
+    after our playback). A copy on the listener's next speak turn drives listen_to_opponent
+    (e.g. rebuttal for ← opening against, closing for ← rebuttal against).
+    """
+    for turn_key, turn in list(turns.items()):
+        stage, speaker = turn_key
+        for session in turn.listen_sessions:
+            if session.listen_mode != "stream":
+                continue
+            stmt = session.statement_side
+            if stmt != speaker:
+                continue
+            listener = session.listener_side
+            consumer_key = listen_metrics_turn_key(stage, stmt, reverse)
+            if consumer_key == turn_key:
+                continue
+            if consumer_key[1] != listener:
+                continue
+            if consumer_key not in turns:
+                turns[consumer_key] = TurnMetrics(stage=consumer_key[0], side=consumer_key[1])
+            if session not in turns[consumer_key].listen_sessions:
+                turns[consumer_key].listen_sessions.append(session)
 
 
 def _to_float(value: str, default: float = 0.0) -> float:
@@ -564,23 +1124,53 @@ def generate_summary(
         stage, side = turn_key
         turn_id = f"{stage}_{side}"
 
+        if turn.batch_sequential and hasattr(turn, "batch_report"):
+            br = turn.batch_report
+            turn_summary = {
+                "stage": stage,
+                "side": side,
+                "mode": turn.mode or "tts=batch_listen=batch",
+                "streaming_tts": turn.streaming_tts,
+                "streaming_listen": turn.streaming_listen,
+                "batch_sequential": True,
+                "asr_operations": 0,
+                "tree_updates": 0,
+                "total_tree_update_time": 0.0,
+                "avg_tree_update_time": None,
+                "total_file_write_time": turn.total_file_write_time,
+                "total_file_read_time": turn.total_file_read_time,
+                "posthoc_chunk_time": turn.posthoc_chunk_time,
+                "batch_analyze_time": turn.batch_analyze_time,
+                "speaker_bubbles": [],
+            }
+            turn_summary.update(br)
+            summary["turns"][turn_id] = turn_summary
+            continue
+
         turn_summary = {
             'stage': stage,
             'side': side,
             'mode': turn.mode,
             'streaming_tts': turn.streaming_tts,
             'streaming_listen': turn.streaming_listen,
+            'batch_sequential': False,
             'total_duration': turn.total_duration,
             'playback_duration': turn.playback_duration,
             'speaker_duration': turn.speaker_duration,
             'listener_duration': turn.listener_duration,
+            'listen_to_opponent_duration': turn.listen_to_opponent_duration,
+            'listen_to_opponent_stream_duration': turn.listen_to_opponent_stream_duration,
+            'listen_to_opponent_batch_duration': turn.listen_to_opponent_batch_duration,
+            'pipeline_label': pipeline_label(turn),
             'generation_time': turn.generation_time,
             'speaker_bubble_total': turn.total_speaker_bubble,
             'time_to_first_chunk': turn.time_to_first_chunk,
             'time_between_chunks': turn.time_between_chunks,
             'speaker_bubble_pct': (turn.total_speaker_bubble / turn.playback_duration * 100) if turn.playback_duration else None,
             'listener_bubble': turn.listener_bubble,
-            'listener_bubble_pct': (turn.listener_bubble / turn.listener_duration * 100) if turn.listener_duration and turn.listener_bubble else None,
+            'listener_bubble_pct': (
+                turn.listener_bubble / turn.listen_during_speech_duration * 100
+            ) if turn.listen_during_speech_duration and turn.listener_bubble else None,
             'true_overlap': turn.true_overlap,
             'overlap_efficiency': turn.overlap_efficiency,
             'bottleneck': turn.bottleneck,
@@ -617,6 +1207,19 @@ def generate_summary(
             {'duration': b.duration, 'context': b.context}
             for b in turn.speaker_bubbles
         ]
+        if turn.listen_sessions:
+            turn_summary['listen_sessions'] = [
+                {
+                    'statement_side': s.statement_side,
+                    'listener_side': s.listener_side,
+                    'listen_mode': s.listen_mode,
+                    'statement_stage': s.statement_stage,
+                    'duration': s.duration,
+                    'asr_operations': len(s.asr_operations),
+                    'tree_updates': len(s.tree_updates),
+                }
+                for s in turn.listen_sessions
+            ]
 
         # Streaming TTS chunk-profile stats (if available)
         profile_rows = tts_profiles.get(turn_key, [])
@@ -647,9 +1250,8 @@ def generate_summary(
             turn_summary["chunk_tts_api_s_avg"] = sum(tts_api_times) / len(tts_api_times)
             turn_summary["chunk_refine_s_avg"] = sum(refine_times) / len(refine_times)
 
-        # Speaker bubble definition for reporting:
-        # first chunk generation time + time between chunks.
-        if turn_summary.get("first_chunk_gen_time_s") is not None:
+        # Speaker bubble from chunk_profile only for live streaming TTS (not batch/post-hoc).
+        if turn_summary.get("first_chunk_gen_time_s") is not None and turn.streaming_tts is True:
             derived_speaker_bubble = turn_summary["first_chunk_gen_time_s"] + turn.time_between_chunks
             turn_summary["speaker_bubble_total"] = derived_speaker_bubble
             turn_summary["speaker_bubble_pct"] = (
@@ -686,17 +1288,25 @@ def print_summary(summary: Dict, verbose: bool = False):
     print("  Total duration:      turn_end - turn_start")
     print("  Playback duration:   playback_end - playback_start")
     print("  Audio duration:      sum(chunk durations), fallback=max(ASR audio_end)")
-    print("  Speaker duration:    speaker_thread_end - speaker_thread_start")
-    print("  Listener duration:   listener_thread_end - listener_thread_start")
+    # print("  Speaker duration:    speaker_thread_end - speaker_thread_start")
+    # print("  Listener duration:   sum(streaming listen sessions on this debater's turn)")
+    print("  Listen to opponent:  stream + batch listen sessions (on this debater's speak turn)")
     print("  Generation time:     generation_end - generation_start")
+    print("  --- Mixed modes ---")
+    print("  mode_config per speak turn: speaker TTS + opponent listen (stream|batch)")
+    print("  Batch listen: BatchListener analyze_* at start of listener's speak turn")
+    print("  Stream listen: StreamingInputEnv during opponent speech (reattributed to listener turn)")
+    print("  --- Turn attribution (listen sessions) ---")
+    print("  Second in stage:       listen to first in same stage (e.g. opening against ← opening for)")
+    print("  First in next stage:   listen to second in prev stage (e.g. rebuttal for ← opening against)")
     print("  --- Bubble Analysis ---")
     print("  Speaker bubble:      first chunk gen time + Time Between Chunks")
     print("  Listener bubble:     listener_thread_end - playback_end")
     print("  --- Efficiency Metrics ---")
-    print("  Time to First Chunk: wait time for chunk_1")
+    print("  Time to First Chunk: wait time for chunk_1 (LLM work + first TTS chunk + refine time)")
     print("  Time Between Chunks: sum(waits for chunk_2+)")
-    print("  True overlap:        playback_duration - speaker_bubble")
-    print("  Overlap efficiency:  true_overlap / (playback_duration + listener_bubble)")
+    # print("  True overlap:        playback_duration - speaker_bubble")
+    # print("  Overlap efficiency:  true_overlap / (playback_duration + listener_bubble)")
     print("  Bottleneck:          max(speaker bubble, listener bubble)")
     print("  --- Pipeline Stats ---")
     print("    Speaking side:")
@@ -713,6 +1323,15 @@ def print_summary(summary: Dict, verbose: bool = False):
     print("  --- Batch Mode Metrics ---")
     print("  Post-hoc chunk time: posthoc_chunk_end - posthoc_chunk_start")
     print("  Batch analyze time:  batch_analyze_end - batch_analyze_start")
+    if any(t.get("batch_sequential") for t in summary["turns"].values()):
+        print("  --- Batch sequential (streaming_tts=False, streaming_listen=False) ---")
+        print("  Opponent speaks while this side sleeps; then one chunk (LLM → batch TTS).")
+        print("  Total duration:      audio_duration + planning_time (planning = turn wall clock from log)")
+        print("  Speaker bubble:      response generation time (not chunk waits)")
+        print("  Listener bubble:     0 (generation starts right after opponent finishes)")
+        print("  Time to First Chunk: LLM work + TTS work (single chunk)")
+        print("  Time Between Chunks: 0")
+        print("  Pipeline stats:      omitted (no streaming pipeline)")
     print()
 
     print(f"Total turns analyzed: {summary['total_turns']}\n")
@@ -727,15 +1346,34 @@ def print_summary(summary: Dict, verbose: bool = False):
         print(f"\n--- Mode Configuration ---")
         mode_desc = turn.get('mode', 'unknown')
         print(f"  Mode:                {mode_desc}")
-        print(f"  Streaming TTS:       {turn.get('streaming_tts', 'N/A')}")
-        print(f"  Streaming Listen:    {turn.get('streaming_listen', 'N/A')}")
+        if turn.get('pipeline_label'):
+            print(f"  Pipeline:            {turn['pipeline_label']}")
+        print(f"  Streaming TTS:       {turn.get('streaming_tts', 'N/A')} (this side, while speaking)")
+        print(f"  Opponent listen:     {turn.get('streaming_listen', 'N/A')} (while this side speaks)")
 
         print(f"\n--- Timing Overview ---")
         print(f"  Total duration:      {turn['total_duration']:.2f}s" if turn['total_duration'] else "  Total duration:      N/A")
         print(f"  Audio duration:      {turn['audio_duration']:.2f}s (ideal={ideal_audio_duration}s, gap={turn['audio_duration'] - ideal_audio_duration:.2f}s)" if turn.get('audio_duration') is not None else "  Audio duration:      N/A")
         print(f"  Playback duration:   {turn['playback_duration']:.2f}s" if turn['playback_duration'] else "  Playback duration:   N/A")
-        print(f"  Speaker duration:    {turn['speaker_duration']:.2f}s" if turn['speaker_duration'] else "  Speaker duration:    N/A")
-        print(f"  Listener duration:   {turn['listener_duration']:.2f}s" if turn['listener_duration'] else "  Listener duration:   N/A")
+        # print(f"  Speaker duration:    {turn['speaker_duration']:.2f}s" if turn.get('speaker_duration') else "  Speaker duration:    N/A")
+        # if turn.get('listener_duration'):
+        #     print(f"  Listener duration:   {turn['listener_duration']:.2f}s")
+        # elif turn.get('listen_sessions'):
+        #     print("  Listener duration:   N/A")
+        # else:
+        #     print("  Listener duration:   — (speak-only turn)")
+        if turn.get('listen_to_opponent_duration') is not None:
+            stream_s = turn.get('listen_to_opponent_stream_duration')
+            batch_s = turn.get('listen_to_opponent_batch_duration')
+            parts = []
+            if stream_s:
+                parts.append(f"stream {stream_s:.2f}s")
+            if batch_s:
+                parts.append(f"batch {batch_s:.2f}s")
+            detail = f" ({', '.join(parts)})" if parts else ""
+            print(
+                f"  Listen to opponent:  {turn['listen_to_opponent_duration']:.2f}s{detail}"
+            )
         print(f"  Generation time:     {turn['generation_time']:.2f}s" if turn['generation_time'] else "  Generation time:     N/A")
 
         print(f"\n--- Bubble Analysis ---")
@@ -748,7 +1386,9 @@ def print_summary(summary: Dict, verbose: bool = False):
                 print(f"  Speaker bubble:      {sb_total:.2f}s ({sb_pct:.1f}% of playback)")
             else:
                 print(f"  Speaker bubble:      {sb_total:.2f}s (playback duration N/A, no %)")
-        if turn['listener_bubble'] is not None:
+        if turn.get("batch_sequential"):
+            print(f"  Listener bubble:     {turn.get('listener_bubble', 0.0):.2f}s")
+        elif turn['listener_bubble'] is not None:
             lb_pct = turn.get('listener_bubble_pct')
             if lb_pct is not None:
                 print(f"  Listener bubble:     {turn['listener_bubble']:.2f}s ({lb_pct:.1f}% of listener time)")
@@ -758,12 +1398,28 @@ def print_summary(summary: Dict, verbose: bool = False):
         print(f"\n--- Efficiency Metrics ---")
         print(f"  Time to First Chunk: {first_wait:.2f}s" if first_wait is not None else "  Time to First Chunk: N/A")
         print(f"  Time Between Chunks: {inter_wait:.2f}s")
-        if turn['true_overlap'] is not None:
-            print(f"  True overlap:        {turn['true_overlap']:.2f}s")
-        if turn['overlap_efficiency'] is not None:
-            print(f"  Overlap efficiency:  {turn['overlap_efficiency']*100:.1f}%")
+        # if turn.get('true_overlap') is not None:
+        #     print(f"  True overlap:        {turn['true_overlap']:.2f}s")
+        # if turn.get('overlap_efficiency') is not None:
+        #     print(f"  Overlap efficiency:  {turn['overlap_efficiency']*100:.1f}%")
         if turn['bottleneck']:
             print(f"  Bottleneck:          {turn['bottleneck']}")
+
+        if turn.get("batch_sequential"):
+            if turn.get("planning_time") is not None:
+                print(
+                    f"\n  (batch) planning time (log turn wall): {turn['planning_time']:.2f}s; "
+                    f"total = audio {turn.get('audio_duration', 0):.2f}s + planning"
+                )
+            if turn.get("wait_opponent_s"):
+                print(
+                    f"  (batch) opponent speech while sleeping: {turn['wait_opponent_s']:.2f}s "
+                    f"(not included in total duration)"
+                )
+            print(f"\n--- I/O Overhead ---")
+            print(f"  File write time:     {turn['total_file_write_time']:.3f}s")
+            print(f"  File read time:      {turn['total_file_read_time']:.3f}s")
+            continue
 
         print(f"\n--- Pipeline Stats (Speaking Side) ---")
         tts_profile_chunks = turn.get('tts_profile_chunks')
@@ -795,17 +1451,31 @@ def print_summary(summary: Dict, verbose: bool = False):
                 f"  TTS timeouts:        {turn['tts_timed_out_chunks']} chunk(s)"
             )
 
-        print(f"\n--- Pipeline Stats (Listening Side) ---")
-        print(f"  ASR operations:      {turn['asr_operations']}")
-        if turn['avg_asr_rtf'] is not None:
-            status = "✓ REAL-TIME" if turn.get('asr_real_time') else "✗ LAGGING"
-            print(f"  Avg ASR RTF:         {turn['avg_asr_rtf']:.3f} {status}")
-        print(f"  Tree updates:        {turn['tree_updates']}")
-        print(
-            f"  Avg update time:    {turn['avg_tree_update_time']:.2f}s"
-            if turn.get('avg_tree_update_time') is not None
-            else "  Avg update time:    N/A"
-        )
+        if turn.get('listen_sessions'):
+            print(f"\n--- Listen Sessions ---")
+            for i, sess in enumerate(turn['listen_sessions'], 1):
+                dur = sess.get('duration')
+                dur_s = f"{dur:.2f}s" if dur is not None else "N/A"
+                stmt_stage = sess.get('statement_stage') or turn['stage']
+                print(
+                    f"  Session {i}: [{sess.get('listen_mode', 'stream')}] "
+                    f"{stmt_stage} {sess['statement_side']} "
+                    f"(listener={sess['listener_side']}) {dur_s}, "
+                    f"ASR={sess['asr_operations']}, tree={sess['tree_updates']}"
+                )
+
+        if turn.get('listen_sessions') or turn.get('asr_operations'):
+            print(f"\n--- Pipeline Stats (Listening Side) ---")
+            print(f"  ASR operations:      {turn['asr_operations']}")
+            if turn['avg_asr_rtf'] is not None:
+                status = "✓ REAL-TIME" if turn.get('asr_real_time') else "✗ LAGGING"
+                print(f"  Avg ASR RTF:         {turn['avg_asr_rtf']:.3f} {status}")
+            print(f"  Tree updates:        {turn['tree_updates']}")
+            print(
+                f"  Avg update time:    {turn['avg_tree_update_time']:.2f}s"
+                if turn.get('avg_tree_update_time') is not None
+                else "  Avg update time:    N/A"
+            )
 
         print(f"\n--- I/O Overhead ---")
         print(f"  File write time:     {turn['total_file_write_time']:.3f}s")
@@ -816,7 +1486,7 @@ def print_summary(summary: Dict, verbose: bool = False):
             print(f"\n--- Batch TTS Processing ---")
             print(f"  Post-hoc chunk time: {turn['posthoc_chunk_time']:.3f}s (split + stream)")
 
-        if turn.get('batch_analyze_time') is not None:
+        if turn.get('batch_analyze_time') is not None and not turn.get('listen_to_opponent_batch_duration'):
             print(f"\n--- Batch Listener Processing ---")
             print(f"  Batch analyze time:  {turn['batch_analyze_time']:.3f}s (statement analysis)")
 
@@ -846,7 +1516,25 @@ def main():
         return 1
 
     print(f"Parsing log file: {log_path}")
-    turns = parse_log_file(log_path)
+    cfg_tts, cfg_listen, reverse = parse_config_from_log(log_path)
+    debater_cfg = load_debater_streaming_config(log_path)
+    turns = parse_log_file(log_path, reverse=reverse)
+    for turn in turns.values():
+        side_cfg = debater_cfg.get(turn.side, {})
+        if turn.streaming_tts is None:
+            if turn.side in debater_cfg:
+                turn.streaming_tts = side_cfg.get("streaming_tts")
+            elif cfg_tts is not None:
+                turn.streaming_tts = cfg_tts
+        if turn.mode:
+            pt, pl = parse_mode_flags(turn.mode)
+            if turn.streaming_tts is None and pt is not None:
+                turn.streaming_tts = pt
+            if turn.streaming_listen is None and pl is not None:
+                turn.streaming_listen = pl
+        if turn.mode is None and turn.streaming_tts is False and turn.streaming_listen is False:
+            turn.mode = "tts=batch_listen=batch"
+    apply_batch_sequential_metrics(turns, log_path, cfg_tts, cfg_listen, reverse)
     outputs_dir = Path(args.outputs_dir) if args.outputs_dir else Path(str(log_path).replace('.log', '_outputs'))
     tts_profiles = load_tts_chunk_profiles(outputs_dir)
 

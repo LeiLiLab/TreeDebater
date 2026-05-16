@@ -181,6 +181,20 @@ def find_json(x):
     return extract_json_object(x)
 
 
+def _first_json_substring(text: str) -> str | None:
+    """First complete JSON object or array in ``text`` (ignores trailing 'Extra data')."""
+    decoder = json.JSONDecoder()
+    for i, ch in enumerate(text):
+        if ch not in "{[":
+            continue
+        try:
+            _, end = decoder.raw_decode(text, i)
+            return text[i:end]
+        except json.JSONDecodeError:
+            continue
+    return None
+
+
 def extract_json_object(text: str) -> str:
     if text is None:
         return ""
@@ -190,15 +204,22 @@ def extract_json_object(text: str) -> str:
         text = str(text)
 
     text = _strip_markdown_json_fence(text).strip()
-    idx = text.find("{")
-    ridx = text.rfind("}")
-    if idx != -1 and ridx != -1 and idx <= ridx:
-        return text[idx : ridx + 1]
-    lidx = text.find("[")
-    rridx = text.rfind("]")
-    if lidx != -1 and rridx != -1 and lidx <= rridx:
-        return text[lidx : rridx + 1]
+    snippet = _first_json_substring(text)
+    if snippet is not None:
+        return snippet
+    # No `{`/`[` parse succeeded; return trimmed text and let json.loads report the error.
     return text
+
+
+def _maybe_wrap_root_list_for_model(parsed: Any, response_model: type[BaseModel]) -> Any:
+    """LLMs often return a bare JSON array when the schema is a single list field (e.g. BattlefieldResponse)."""
+    if not isinstance(parsed, list):
+        return parsed
+    fields = getattr(response_model, "model_fields", None)
+    if not fields or len(fields) != 1:
+        return parsed
+    key = next(iter(fields.keys()))
+    return {key: parsed}
 
 
 def parse_llm_json(text: Any, *, response_model: type[T] | None = None, required_key: str | None = None) -> T | Any:
@@ -214,7 +235,8 @@ def parse_llm_json(text: Any, *, response_model: type[T] | None = None, required
         if isinstance(parsed, response_model):
             validated = parsed
         else:
-            validated = response_model.model_validate(parsed)
+            to_validate = _maybe_wrap_root_list_for_model(parsed, response_model)
+            validated = response_model.model_validate(to_validate)
         if required_key is None:
             return validated
         dumped = validated.model_dump()

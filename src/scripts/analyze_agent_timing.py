@@ -8,6 +8,8 @@ Usage:
     python src/scripts/analyze_agent_timing.py log_files/14.log
     python src/scripts/analyze_agent_timing.py log_files/14.log --io-log log_files/14_io.log
     python src/scripts/analyze_agent_timing.py log_files/14.log --json-out report.json
+    python src/scripts/analyze_agent_timing.py log_files/38.log --include-tts
+    python src/scripts/analyze_agent_timing.py log_files/38.log --include-phases baseline_api_http
 """
 
 from __future__ import annotations
@@ -31,6 +33,9 @@ _TIMING_HEAD = re.compile(
 )
 _TIMING_META = re.compile(
     r"^\[timing-meta\]\s+(.*)$"
+)
+_TURN_RE = re.compile(
+    r"\[Turn\]\s+turn_(start|end)\s+stage=(\S+)\s+side=(\S+)\s+t=([\d.]+)"
 )
 _KV = re.compile(r"(\w+)=([^\s]+)")
 
@@ -97,6 +102,7 @@ ATOM_OTHER = frozenset(
         "tts_trim_wall_clock",
     }
 )
+BASELINE_API = frozenset({"baseline_api_http"})
 
 
 @dataclass
@@ -105,6 +111,20 @@ class TimingRecord:
     duration_s: float
     fields: Dict[str, str] = field(default_factory=dict)
     raw: str = ""
+
+
+@dataclass
+class TurnWall:
+    stage: str
+    side: str
+    start_t: Optional[float] = None
+    end_t: Optional[float] = None
+
+    @property
+    def duration_s(self) -> Optional[float]:
+        if self.start_t is not None and self.end_t is not None:
+            return self.end_t - self.start_t
+        return None
 
 
 def _parse_kv_tail(tail: str) -> Dict[str, str]:
@@ -163,6 +183,66 @@ def load_timing_records(path: Path) -> List[TimingRecord]:
             if rec:
                 records.append(rec)
     return records
+
+
+def load_turn_walls(path: Path) -> Dict[Tuple[str, str], TurnWall]:
+    turns: Dict[Tuple[str, str], TurnWall] = {}
+    with path.open("r", encoding="utf-8", errors="replace") as f:
+        for line in f:
+            s = _strip_log_prefix(line)
+            m = _TURN_RE.search(s)
+            if not m:
+                continue
+            event, stage, side, ts_s = m.group(1), m.group(2), m.group(3), float(m.group(4))
+            key = (stage, side)
+            if key not in turns:
+                turns[key] = TurnWall(stage=stage, side=side)
+            if event == "start":
+                turns[key].start_t = ts_s
+            else:
+                turns[key].end_t = ts_s
+    return turns
+
+
+def sum_by_phase_stage_side(
+    records: List[TimingRecord], phase: str
+) -> Dict[Tuple[str, str], float]:
+    out: DefaultDict[Tuple[str, str], float] = defaultdict(float)
+    for r in records:
+        if r.phase != phase:
+            continue
+        key = (r.fields.get("stage", "?"), r.fields.get("side", "?"))
+        out[key] += r.duration_s
+    return dict(out)
+
+
+def sum_response_cost(records: List[TimingRecord]) -> Tuple[float, int]:
+    total, n = 0.0, 0
+    for r in records:
+        cost_s = r.fields.get("response_cost")
+        if cost_s is None:
+            continue
+        try:
+            total += float(cost_s)
+            n += 1
+        except ValueError:
+            continue
+    return total, n
+
+
+def build_excluded_phases(
+    base: set[str], include_phases: Optional[List[str]], include_tts: bool
+) -> set[str]:
+    excluded = set(base)
+    if include_tts:
+        excluded.discard("tts_wall_clock")
+    if include_phases:
+        for ph in include_phases:
+            for part in ph.split(","):
+                part = part.strip()
+                if part:
+                    excluded.discard(part)
+    return excluded
 
 
 def filter_excluded_phases(
@@ -225,9 +305,11 @@ def group_by_call_id(records: List[TimingRecord]) -> Dict[str, List[TimingRecord
 
 def print_report(
     records: List[TimingRecord],
+    records_all: List[TimingRecord],
     meta: List[Dict[str, str]],
     io_path: Optional[Path],
     verbose: bool,
+    turns: Dict[Tuple[str, str], TurnWall],
     excluded_phases: Optional[set[str]] = None,
     filtered_count: int = 0,
 ) -> Dict[str, Any]:
@@ -258,6 +340,7 @@ def print_report(
     W("--- Interest summary (by category) ---")
     for name, pset in [
         ("Macro (env / eval / compare / prep)", MACRO_PHASES),
+        ("Baseline API (agent4debate HTTP)", BASELINE_API),
         ("Speak pipeline (TreeDebater turn)", SPEAK_PIPELINE),
         ("Listen + debate-flow tree", LISTENER_TREE),
         ("Audience + revision LLM blocks", AUDIENCE_REVISION),
@@ -268,6 +351,53 @@ def print_report(
         n, t = bucket_sum(pset)
         W(f"  {name}: events={n}  total_time_s={t:.2f}")
     W("")
+
+    cost_total, cost_n = sum_response_cost(records_all)
+    if cost_n:
+        W("--- LLM response cost (response_cost= on [timing] lines) ---")
+        W(f"  total_usd={cost_total:.4f}  events_with_cost={cost_n}")
+        W("")
+
+    # --- Turn wall clock + per-turn breakdown ---
+    if turns:
+        api_by = sum_by_phase_stage_side(records_all, "baseline_api_http")
+        tts_by = sum_by_phase_stage_side(records_all, "tts_wall_clock")
+        trim_by = sum_by_phase_stage_side(records_all, "tts_trim_wall_clock")
+        W("--- Debate turn wall clock ([Turn] lines) ---")
+        W(f"{'stage':<10} {'side':<8} {'turn_s':>10} {'api_s':>10} {'tts_s':>10} {'trim_s':>10} {'other_s':>10}")
+        turn_total = 0.0
+        api_total = tts_total = trim_total = 0.0
+        stage_order = ["opening", "rebuttal", "closing"]
+        side_order = ["for", "against"]
+
+        def _sort_key(item: Tuple[Tuple[str, str], TurnWall]) -> Tuple[int, int]:
+            (stage, side), _ = item
+            si = stage_order.index(stage) if stage in stage_order else 99
+            si2 = side_order.index(side) if side in side_order else 99
+            return si, si2
+
+        for (stage, side), tw in sorted(turns.items(), key=_sort_key):
+            dur = tw.duration_s
+            if dur is None:
+                continue
+            api_s = api_by.get((stage, side), 0.0)
+            tts_s = tts_by.get((stage, side), 0.0)
+            trim_s = trim_by.get((stage, side), 0.0)
+            other_s = max(0.0, dur - api_s - tts_s - trim_s)
+            turn_total += dur
+            api_total += api_s
+            tts_total += tts_s
+            trim_total += trim_s
+            W(
+                f"{stage:<10} {side:<8} {dur:10.2f} {api_s:10.2f} {tts_s:10.2f} {trim_s:10.2f} {other_s:10.2f}"
+            )
+        W(
+            f"{'TOTAL':<10} {'':<8} {turn_total:10.2f} {api_total:10.2f} {tts_total:10.2f} {trim_total:10.2f} "
+            f"{max(0.0, turn_total - api_total - tts_total - trim_total):10.2f}"
+        )
+        if not api_by and turn_total > 0:
+            W("  (baseline_api_http not logged — re-run debate after instrumentation, or use turn_s as upper bound)")
+        W("")
 
     # --- Per-phase table ---
     W("--- Per-phase statistics ---")
@@ -344,6 +474,27 @@ def print_report(
     text = "\n".join(lines)
     print(text)
 
+    turn_report: Dict[str, Any] = {}
+    if turns:
+        api_all = sum_by_phase_stage_side(records_all, "baseline_api_http")
+        tts_all = sum_by_phase_stage_side(records_all, "tts_wall_clock")
+        trim_all = sum_by_phase_stage_side(records_all, "tts_trim_wall_clock")
+        rows = []
+        for (stage, side), tw in sorted(turns.items()):
+            if tw.duration_s is None:
+                continue
+            rows.append(
+                {
+                    "stage": stage,
+                    "side": side,
+                    "turn_wall_s": round(tw.duration_s, 4),
+                    "baseline_api_s": round(api_all.get((stage, side), 0.0), 4),
+                    "tts_wall_s": round(tts_all.get((stage, side), 0.0), 4),
+                    "tts_trim_s": round(trim_all.get((stage, side), 0.0), 4),
+                }
+            )
+        turn_report = {"turns": rows, "turn_wall_total_s": round(sum(r["turn_wall_s"] for r in rows), 4)}
+
     return {
         "total_records": len(records),
         "excluded_phases": sorted(excluded_phases) if excluded_phases else [],
@@ -352,6 +503,9 @@ def print_report(
         "call_id_sessions": {k: [asdict(x) for x in v] for k, v in by_cid.items()},
         "meta_count": len(meta),
         "io": io_report,
+        "response_cost_usd": round(cost_total, 6) if cost_n else None,
+        "response_cost_events": cost_n,
+        "turns": turn_report,
     }
 
 
@@ -361,6 +515,18 @@ def main() -> None:
     ap.add_argument("--io-log", type=Path, default=None, help="I/O log path (default: <N>_io.log next to main log)")
     ap.add_argument("--json-out", type=Path, default=None, help="Write structured JSON summary")
     ap.add_argument("--verbose", "-v", action="store_true", help="Extra detail (meta + I/O histogram)")
+    ap.add_argument(
+        "--include-phases",
+        action="append",
+        default=[],
+        metavar="PHASE",
+        help="Include these phases in stats (comma-separated ok). Repeatable.",
+    )
+    ap.add_argument(
+        "--include-tts",
+        action="store_true",
+        help="Include tts_wall_clock in per-phase stats (excluded by default).",
+    )
     args = ap.parse_args()
 
     main_log = args.log_file
@@ -376,15 +542,19 @@ def main() -> None:
                 io_log = candidate
 
     records_raw = load_timing_records(main_log)
-    records, filtered_count = filter_excluded_phases(records_raw, EXCLUDED_PHASES)
+    excluded = build_excluded_phases(EXCLUDED_PHASES, args.include_phases, args.include_tts)
+    records, filtered_count = filter_excluded_phases(records_raw, excluded)
     meta = load_meta_records(main_log)
+    turns = load_turn_walls(main_log)
 
     report = print_report(
         records,
+        records_raw,
         meta,
         io_log,
         args.verbose,
-        excluded_phases=EXCLUDED_PHASES,
+        turns,
+        excluded_phases=excluded,
         filtered_count=filtered_count,
     )
 

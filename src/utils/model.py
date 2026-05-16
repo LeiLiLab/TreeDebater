@@ -131,7 +131,7 @@ def HelperClient(
 
 def _supports_structured_output(model_name: str) -> bool:
     name = model_name.lower()
-    return any(x in name for x in ["gpt", "o1", "claude", "gemini"])
+    return any(x in name for x in ["gpt", "o1", "claude", "gemini", "deepseek"])
 
 
 def _completion_text(model_name: str, messages, wants_json: bool, temperature: float, max_tokens: int, stop, kwargs):

@@ -12,27 +12,22 @@ env:
 debater:
   - side: for
     model: deepseek-chat
-    type: treedebater
+    type: baseline
+    url: http://127.0.0.1:8082/
     temperature: 1.0
-    use_retrieval: True
-    add_retrieval_feedback: False
-    single_pass_revision: False
     helper_model: deepseek-chat
-    streaming_tts: True
-    streaming_listen: True
-    pool_file: ../results/deepseek-chat/learning_to_be_a_good_writer_still_matters_in_the_age_of_ai_pool_for.json
+    streaming_tts: False
+    streaming_listen: False
 
   - side: against
     model: deepseek-chat
-    type: treedebater
+    type: baseline
+    url: http://127.0.0.1:8082/
     temperature: 1.0
     use_retrieval: True
-    add_retrieval_feedback: False
-    single_pass_revision: False
     helper_model: deepseek-chat
-    streaming_tts: True
-    streaming_listen: True
-    pool_file: ../results/deepseek-chat/learning_to_be_a_good_writer_still_matters_in_the_age_of_ai_pool_against.json
+    streaming_tts: False
+    streaming_listen: False
 
 judge:
   temperature: 0.0
