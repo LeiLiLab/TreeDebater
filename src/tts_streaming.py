@@ -13,6 +13,7 @@ Key features vs the serial pipeline in tts.py:
 import concurrent.futures
 import csv
 import json
+import os
 import threading
 import time
 from dataclasses import dataclass, asdict
@@ -27,7 +28,7 @@ from pydub.exceptions import CouldntDecodeError
 
 from utils.tool import remove_citation, remove_subtitles
 from utils.time_estimator import LengthEstimator
-from utils.fs_wrapper import FastSpeechWrapper
+from utils.fs_wrapper import get_shared_wrapper
 
 # -------- config --------
 TOLERANCE_RATIO = 0.10          # tolerance = target_s * this ratio (both sides)
@@ -41,6 +42,27 @@ RATIO_PRESTART_THRESHOLD = 2.0  # if chunk[i+2].chars / chunk[i+1].chars >= this
 ABS_PRESTART_CHARS = 1000       # also pre-start when chunk[i+2] is absolutely large (>= this many chars), regardless of ratio
 SPEED_ADJUST_MIN = 0.85         # TTS speed clamp lower bound
 SPEED_ADJUST_MAX = 1.15         # TTS speed clamp upper bound
+REFINE_DEADLINE_MARGIN_S = 2.0  # stop refining this much before the previous chunk finishes playing (decode/write/bridge/poll latency)
+SPEED_ADJUST_MIN_SLACK_S = 4.0  # only re-synthesize with adjusted speed when at least this much playback slack remains
+MAX_CHUNK_CHARS = 900           # paragraphs longer than this are split at sentence boundaries into ~equal pieces
+TARGET_CHUNK_S = 40.0           # desired audio length per chunk when the text has too few paragraphs to stream
+MIN_STREAM_CHUNKS = 3           # texts with fewer paragraphs than this are re-chunked by sentence packing
+MAX_STREAM_CHUNKS = 8
+SEAM_HEAD_MS = 60               # leading silence kept at the start of every chunk
+SEAM_TAIL_MS = 250              # trailing silence normalized to exactly this at the end of every chunk
+SEAM_FADE_MS = 10               # tiny fade in/out so the cut never clicks
+# Online calibration of FastSpeech duration estimates against the real TTS voice.
+# FastSpeech (LJSpeech) and tts-1 "echo" differ in speaking rate by a text-dependent
+# few percent; the static "*1.11-7" fit leaves ~5.5% mean abs error (p90 11.6%),
+# which is the main reason a refined chunk still lands outside its +-10% tolerance.
+# Each chunk gives one (estimate, actual) observation; an EMA of the ratio is
+# applied to subsequent estimates.
+# OFF by default: an offline replay on 206 chunks (runs 130-138) showed the
+# residual is text-dependent noise with ~0 lag-1 autocorrelation, so chasing it
+# with an EMA slightly *increases* error. Kept as an ablation (TTS_STREAM_CALIB=1).
+CALIBRATION_ENABLED = os.environ.get("TTS_STREAM_CALIB", "0") == "1"
+CALIB_EMA_ALPHA = 0.5
+CALIB_MIN, CALIB_MAX = 0.80, 1.25
 
 
 # -------- dataclasses --------
@@ -107,8 +129,37 @@ def _in_range(est: float, target_s: float, tol_s: float, tol_upper_s: float) -> 
     return (est - target_s) <= tol_upper_s and (target_s - est) <= tol_s
 
 
+class _DurationCalibrator:
+    """Process-wide EMA of actual_tts_seconds / fastspeech_estimate_seconds."""
+
+    def __init__(self) -> None:
+        self.ratio = 1.0
+        self.n = 0
+        self._lock = threading.Lock()
+
+    def observe(self, est_s: float, actual_s: float) -> None:
+        if not CALIBRATION_ENABLED or est_s <= 0 or actual_s <= 0:
+            return
+        r = actual_s / est_s
+        with self._lock:
+            self.ratio = r if self.n == 0 else (1 - CALIB_EMA_ALPHA) * self.ratio + CALIB_EMA_ALPHA * r
+            self.ratio = max(CALIB_MIN, min(CALIB_MAX, self.ratio))
+            self.n += 1
+
+    def apply(self, est_s: float) -> float:
+        if not CALIBRATION_ENABLED:
+            return est_s
+        with self._lock:
+            return est_s * self.ratio
+
+
+_CALIB = _DurationCalibrator()
+
+
 def _fastspeech_estimate(text: str) -> float:
-    wrapper = FastSpeechWrapper(batch_size=2)
+    # Shared, lazily-loaded model: constructing a wrapper per call reloads the
+    # checkpoint (+ vocoder) from disk every time (~5 s and GBs of GPU memory).
+    wrapper = get_shared_wrapper(batch_size=2)
     lengths = wrapper.query_time(text)
     length = lengths[0] if isinstance(lengths, list) else float(lengths)
     length = length * 1.11 - 7 if length > 100 else length
@@ -170,6 +221,10 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], n
             },
         ],
         max_completion_tokens=4096,
+        # A length-constrained rewrite needs no chain-of-thought: with the default
+        # effort gpt-5-mini spends ~700-1600 reasoning tokens (~10 s) per call;
+        # "minimal" gives the same word-count accuracy in ~2 s.
+        reasoning_effort="minimal",
     )
     return (resp.choices[0].message.content or "").strip()
 
@@ -216,10 +271,11 @@ def _tts_with_retry(client, content: str, voice: str = "echo", speed: float = 1.
 class _TtsCandidate:
     iteration: int          # global index in shared candidate pool
     text: str
-    fs_estimated_s: float
+    fs_estimated_s: float   # calibrated estimate used for the in-range decision
     future: Any             # concurrent.futures.Future -> Dict from _query_time_profiled
     worker_label: str = ""  # "prestart" / "normal" — which worker produced this
     intra_iter: int = 0     # iteration index within the producing worker (0 = raw, k = k-th refine)
+    fs_raw_s: float = 0.0   # uncalibrated FastSpeech estimate (for calibration updates)
 
 
 def _pick_best_completed(
@@ -350,7 +406,7 @@ class _ChunkRefineContext:
                 fs_times.extend(s["fs_times"])
             return n_ref_total, llm_times, fs_times
 
-    def add_candidate(self, text: str, est: float, label: str, intra_iter: int) -> _TtsCandidate:
+    def add_candidate(self, text: str, est: float, label: str, intra_iter: int, est_raw: float = 0.0) -> _TtsCandidate:
         with self.candidates_lock:
             iteration = len(self.candidates)
             cand = _TtsCandidate(
@@ -360,6 +416,7 @@ class _ChunkRefineContext:
                 future=self.executor.submit(_tts_with_retry, self.client, text, self.voice),
                 worker_label=label,
                 intra_iter=intra_iter,
+                fs_raw_s=est_raw,
             )
             self.candidates.append(cand)
         return cand
@@ -390,16 +447,17 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
     # ---- step 0: fs estimate raw text + submit raw TTS candidate ----
     t = _now()
     try:
-        est = _fastspeech_estimate(cur)
+        est_raw = _fastspeech_estimate(cur)
     except Exception:
         return
+    est = _CALIB.apply(est_raw)
     ctx.add_fs_time(label, _now() - t)
 
     if ctx.stop_event.is_set():
         return
 
     target_s, tol_s, tol_upper_s = ctx.get_target()
-    cand = ctx.add_candidate(cur, est, label, intra_iter=0)
+    cand = ctx.add_candidate(cur, est, label, intra_iter=0, est_raw=est_raw)
 
     if _in_range(est, target_s, tol_s, tol_upper_s):
         try:
@@ -432,15 +490,16 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
 
         t = _now()
         try:
-            est = _fastspeech_estimate(cur)
+            est_raw = _fastspeech_estimate(cur)
         except Exception:
             break
+        est = _CALIB.apply(est_raw)
         ctx.add_fs_time(label, _now() - t)
 
         if ctx.stop_event.is_set():
             break
 
-        cand = ctx.add_candidate(cur, est, label, intra_iter=n_ref_local)
+        cand = ctx.add_candidate(cur, est, label, intra_iter=n_ref_local, est_raw=est_raw)
 
         target_s, tol_s, tol_upper_s = ctx.get_target()
         if _in_range(est, target_s, tol_s, tol_upper_s):
@@ -453,6 +512,28 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
 
 
 # -------- chunk utilities --------
+def _normalize_seam_silence(seg: AudioSegment) -> Tuple[AudioSegment, bool]:
+    """Trim/pad head and tail silence so every chunk boundary sounds the same.
+
+    tts-1 output carries 0-150 ms of leading and 100-1200 ms of trailing silence;
+    concatenated chunk-by-chunk that yields pauses of 0.2-1.3 s at the seams.
+    Returns (segment, changed).
+    """
+    from pydub.silence import detect_leading_silence
+
+    if len(seg) < 1000:
+        return seg, False
+    lead = detect_leading_silence(seg, silence_threshold=-40, chunk_size=5)
+    trail = detect_leading_silence(seg.reverse(), silence_threshold=-40, chunk_size=5)
+    if len(seg) - lead - trail < 500:   # no speech detected (e.g. silent fallback) -> leave it
+        return seg, False
+    start = max(0, lead - SEAM_HEAD_MS)
+    end = len(seg) - trail
+    core = seg[start:end]
+    out = core.fade_in(SEAM_FADE_MS).fade_out(SEAM_FADE_MS) + AudioSegment.silent(duration=SEAM_TAIL_MS, frame_rate=seg.frame_rate)
+    return out, True
+
+
 def _split_sentences(text: str) -> List[str]:
     """Split text into sentences on '.', '!', '?' boundaries."""
     import re
@@ -513,6 +594,68 @@ def split_by_paragraphs(text: str) -> List[str]:
     """Split text on double newlines into non-empty paragraphs."""
     parts = [p.strip() for p in text.split("\n\n") if p.strip()]
     return parts if parts else [text.strip()] if text.strip() else []
+
+
+def _pack_sentences(text: str, target_chars: int) -> List[str]:
+    """Greedily pack whole sentences into pieces of roughly ``target_chars`` characters.
+
+    Never cuts inside a sentence; a single sentence longer than the target becomes
+    its own piece. Pieces are balanced so the last one is not a tiny remainder.
+    """
+    sentences = _split_sentences(text)
+    if not sentences:
+        return []
+    total = sum(len(x) + 1 for x in sentences)
+    n_pieces = max(1, round(total / max(target_chars, 1)))
+    per_piece = total / n_pieces
+    pieces: List[str] = []
+    cur: List[str] = []
+    cur_len = 0
+    for sent in sentences:
+        if cur and cur_len + len(sent) + 1 > per_piece * 1.15 and len(pieces) < n_pieces - 1:
+            pieces.append(" ".join(cur))
+            cur, cur_len = [], 0
+        cur.append(sent)
+        cur_len += len(sent) + 1
+    if cur:
+        pieces.append(" ".join(cur))
+    return pieces
+
+
+def split_into_chunks(text: str, total_budget_s: float) -> List[str]:
+    """Split a speech into streamable chunks.
+
+    Paragraphs are the preferred unit (they are natural rhetorical units and the
+    refinement prompt talks about "paragraphs"). Two failure modes of pure
+    paragraph splitting are handled here:
+      1. The model emitted (almost) no paragraph breaks -> a single huge chunk,
+         which disables streaming and refinement entirely. In that case the text
+         is re-chunked by packing sentences to ~TARGET_CHUNK_S of audio each.
+      2. One paragraph is much longer than the rest (> MAX_CHUNK_CHARS) -> it is
+         split at sentence boundaries into a few balanced pieces.
+    """
+    paras = split_by_paragraphs(text)
+    if not paras:
+        return []
+    total_chars = sum(len(p) for p in paras)
+
+    if len(paras) < MIN_STREAM_CHUNKS:
+        n_target = int(round(total_budget_s / TARGET_CHUNK_S)) if total_budget_s > 0 else MIN_STREAM_CHUNKS
+        n_target = max(MIN_STREAM_CHUNKS, min(MAX_STREAM_CHUNKS, n_target))
+        target_chars = max(200, total_chars // n_target)
+        out: List[str] = []
+        for p in paras:
+            out.extend(_pack_sentences(p, target_chars))
+        return out or paras
+
+    out = []
+    for p in paras:
+        if len(p) > MAX_CHUNK_CHARS:
+            n_pieces = -(-len(p) // MAX_CHUNK_CHARS)  # ceil
+            out.extend(_pack_sentences(p, max(200, len(p) // n_pieces)))
+        else:
+            out.append(p)
+    return out
 
 
 # -------- pipeline --------
@@ -719,7 +862,10 @@ def run_pipeline(
             time_budget_s = target_s
             refined = chunk
             n_ref_used = 0
-            fs_estimated_s = 0.0
+            try:
+                fs_estimated_s = _fastspeech_estimate(chunk)   # ~10 ms; seeds the calibrator below
+            except Exception:
+                fs_estimated_s = 0.0
             refine_total_s = 0.0
             in_range = True
             timed_out = False
@@ -752,6 +898,9 @@ def run_pipeline(
             iter_tts_times_s = json.dumps([round(tts_api_s, 3)])
             total_elapsed_s = tts_api_s
             overrun_s = tts_api_s
+            # chunk 0 is never refined, but record whether it actually hit its target
+            in_range = _in_range(audio_seconds, target_s, tol_s, tol_upper_s)
+            _CALIB.observe(fs_estimated_s, audio_seconds)
 
         # ---- chunks 1+: shared candidate pool with prestart + normal workers ----
         else:
@@ -790,7 +939,12 @@ def run_pipeline(
             normal_th.start()
 
             # Wait for ANY worker to find an ok candidate, OR until deadline.
-            ctx.done_event.wait(timeout=max(0.0, time_budget_s))
+            # The deadline is the previous chunk's playback length minus a margin
+            # for everything that still has to happen after selection (decode,
+            # file write, bridge copy, playback-side stability poll); without the
+            # margin every timed-out chunk arrives a few seconds late and the
+            # listener hears a gap.
+            ctx.done_event.wait(timeout=max(0.0, time_budget_s - REFINE_DEADLINE_MARGIN_S))
             ctx.stop_event.set()
 
             total_elapsed_s = _now() - ctx.t_start_wall
@@ -812,16 +966,24 @@ def run_pipeline(
                 in_range = False
                 timed_out = True
 
-            # Speed adjustment if still out of range
+            # Speed adjustment if still out of range -- but only when there is
+            # enough playback slack left for another TTS round trip; otherwise
+            # the extra call itself causes an audible gap.
             target_now, tol_now, tol_upper_now = ctx.get_target()
             audio_s = float(tts_out["audio_seconds"])
-            if not _in_range(audio_s, target_now, tol_now, tol_upper_now):
+            _CALIB.observe(chosen_cand.fs_raw_s, audio_s)
+            slack_s = time_budget_s - (_now() - chunk_t0)
+            if not _in_range(audio_s, target_now, tol_now, tol_upper_now) and slack_s >= SPEED_ADJUST_MIN_SLACK_S:
                 raw_speed = audio_s / target_now if target_now > 0 else 1.0
                 clamped = max(SPEED_ADJUST_MIN, min(SPEED_ADJUST_MAX, raw_speed))
                 if abs(clamped - 1.0) > 0.01:
                     try:
                         speed_tts_out = _tts_with_retry(client, chosen_cand.text, voice=voice, speed=clamped)
                         if abs(speed_tts_out["audio_seconds"] - target_now) < abs(audio_s - target_now):
+                            print(
+                                f"  [speed-adjust] chunk {i}: speed={clamped:.2f} "
+                                f"audio {audio_s:.1f}s -> {speed_tts_out['audio_seconds']:.1f}s (target {target_now:.1f}s)"
+                            )
                             tts_out = speed_tts_out
                             audio_s = float(tts_out["audio_seconds"])
                     except Exception:
@@ -901,9 +1063,9 @@ def run_pipeline(
 
             overrun_s = max(0.0, total_elapsed_s - time_budget_s)
 
-            # Best-effort cleanup (workers will exit at next stop_event check)
-            for w in ctx.workers:
-                w.join(timeout=2)
+            # Best-effort cleanup: workers are daemon threads that exit at their
+            # next stop_event check. Do NOT join them here -- a worker blocked in
+            # an LLM/TTS call would stall the main pipeline by the join timeout.
             ctx.executor.shutdown(wait=False)
 
             try:
@@ -913,6 +1075,14 @@ def run_pipeline(
                 warnings.warn(f"Chunk {i}: pydub decode failed: {e}")
                 seg = AudioSegment.silent(duration=int(audio_seconds * 1000))
 
+        # ---- seam normalization: uniform head/tail silence on every chunk ----
+        seg, seam_changed = _normalize_seam_silence(seg)
+        if seam_changed:
+            buf = BytesIO()
+            seg.export(buf, format="mp3")
+            mp3_bytes = buf.getvalue()
+            audio_seconds = len(seg) / 1000.0
+
         # ---- budget tracking ----
         audio_budget_remaining -= audio_seconds + overrun_s
         prev_audio_s = audio_seconds
@@ -921,7 +1091,10 @@ def run_pipeline(
 
         if out_dir is not None:
             (out_dir / f"chunk_{i:03d}.txt").write_text(refined, encoding="utf-8")
-            (out_dir / f"chunk_{i:03d}.mp3").write_bytes(mp3_bytes)
+            # write atomically so the copy bridge never sees a partial file
+            tmp_mp3 = out_dir / f"chunk_{i:03d}.mp3.tmp"
+            tmp_mp3.write_bytes(mp3_bytes)
+            tmp_mp3.replace(out_dir / f"chunk_{i:03d}.mp3")
 
         combined_audio += seg
 
@@ -988,7 +1161,7 @@ def run_pipeline(
             f"fs_est={fs_estimated_s:.1f}s | actual={audio_seconds:.1f}s | "
             f"in_range={in_range} | timed_out={timed_out} | "
             f"cands={n_candidates_submitted}(done={n_candidates_done},used={used_candidate_iter}) | "
-            f"overrun={overrun_s:.2f}s | remaining={audio_budget_remaining:.1f}s"
+            f"overrun={overrun_s:.2f}s | remaining={audio_budget_remaining:.1f}s | calib={_CALIB.ratio:.3f}"
         )
 
         i += 1
@@ -1055,7 +1228,7 @@ def convert_text_to_speech_streaming(
     audio_content, _ = remove_citation(content)
     audio_content = remove_subtitles(audio_content)
 
-    segments = split_by_paragraphs(audio_content)
+    segments = split_into_chunks(audio_content, total_budget_s)
 
     client = OpenAI()
     output_path = Path(output_path)
