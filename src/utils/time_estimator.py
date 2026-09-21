@@ -10,7 +10,7 @@ from mutagen.mp3 import MP3
 from openai import OpenAI
 
 from .constants import openai_api_key
-from .fs_wrapper import FastSpeechWrapper
+from .fs_wrapper import get_shared_wrapper
 from .tool import remove_citation, remove_subtitles
 
 
@@ -18,14 +18,14 @@ class LengthEstimator:
     def __init__(self, mode):
         self.mode = mode
         if self.mode == "fastspeech":
-            self.client = FastSpeechWrapper(batch_size=8)
+            self.client = get_shared_wrapper(batch_size=8)
         elif self.mode == "openai":
             self.client = OpenAI(api_key=openai_api_key)
 
     def query_time(self, content: List[str], mode=None) -> List[float]:
         if mode is not None and mode != self.mode:
             if self.mode == "fastspeech":
-                self.client = FastSpeechWrapper(batch_size=2)
+                self.client = get_shared_wrapper(batch_size=8)
             elif self.mode == "openai":
                 self.client = OpenAI(api_key=openai_api_key)
 

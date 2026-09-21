@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 
 import numpy as np
 import torch
@@ -8,11 +9,66 @@ import yaml
 fastspeech_path = os.path.join(os.path.dirname(__file__), "..", "..", "dependencies")
 sys.path.append(fastspeech_path)
 
-from fastspeech2.synthesize import preprocess_english
+import re
+from string import punctuation
+
+import fastspeech2.transformer.Models as _fs_models
+from fastspeech2.synthesize import preprocess_english, read_lexicon
+from fastspeech2.text import text_to_sequence
 from fastspeech2.utils.model import get_model_2, get_vocoder
-from fastspeech2.utils.tools import synth_samples, synth_samples_for_length, to_device
+from fastspeech2.utils.tools import get_mask_from_lengths, synth_samples, synth_samples_for_length, to_device
+from g2p_en import G2p
 
 root = f"{fastspeech_path}/fastspeech2/"
+
+
+def _fast_sinusoid_encoding_table(n_position, d_hid, padding_idx=None):
+    """Vectorized drop-in for fastspeech2.transformer.Models.get_sinusoid_encoding_table.
+
+    The upstream version evaluates n_position * d_hid Python calls (>1M for a
+    long chunk) every forward pass whose length exceeds max_seq_len; that alone
+    cost ~1 s per duration query.
+    """
+    pos = np.arange(n_position, dtype=np.float64)[:, None]
+    hid = np.arange(d_hid, dtype=np.float64)[None, :]
+    table = pos / np.power(10000, 2 * (hid // 2) / d_hid)
+    table[:, 0::2] = np.sin(table[:, 0::2])
+    table[:, 1::2] = np.cos(table[:, 1::2])
+    if padding_idx is not None:
+        table[padding_idx] = 0.0
+    return torch.FloatTensor(table)
+
+
+_fs_models.get_sinusoid_encoding_table = _fast_sinusoid_encoding_table
+
+_LEXICON_CACHE = {}
+_G2P = None
+_PREP_LOCK = threading.Lock()
+
+
+def _preprocess_english_cached(text, preprocess_config):
+    """Same phoneme sequence as fastspeech2.synthesize.preprocess_english, but the
+    206k-line lexicon and the G2p model are loaded once instead of per call."""
+    global _G2P
+    lex_path = preprocess_config["path"]["lexicon_path"]
+    with _PREP_LOCK:
+        if lex_path not in _LEXICON_CACHE:
+            _LEXICON_CACHE[lex_path] = read_lexicon(lex_path)
+        if _G2P is None:
+            _G2P = G2p()
+        lexicon = _LEXICON_CACHE[lex_path]
+        g2p = _G2P
+        text = text.rstrip(punctuation)
+        phones = []
+        for w in re.split(r"([,;.\-\?\!\s+])", text):
+            if w.lower() in lexicon:
+                phones += lexicon[w.lower()]
+            else:
+                phones += list(filter(lambda p: p != " ", g2p(w)))
+    phones = "{" + "}{".join(phones) + "}"
+    phones = re.sub(r"\{[^\w\s]?\}", "{sp}", phones)
+    phones = phones.replace("}{", " ")
+    return np.array(text_to_sequence(phones, preprocess_config["preprocessing"]["text"]["text_cleaners"]))
 
 
 def pad_1D(inputs, PAD=0):
@@ -27,7 +83,7 @@ def pad_1D(inputs, PAD=0):
 
 
 class FastSpeechWrapper:
-    def __init__(self, batch_size=8):
+    def __init__(self, batch_size=8, load_vocoder=False):
         preprocess_config = yaml.load(open(f"{root}/config/LJSpeech/preprocess.yaml", "r"), Loader=yaml.FullLoader)
         model_config = yaml.load(open(f"{root}/config/LJSpeech/model.yaml", "r"), Loader=yaml.FullLoader)
         train_config = yaml.load(open(f"{root}/config/LJSpeech/train.yaml", "r"), Loader=yaml.FullLoader)
@@ -39,8 +95,12 @@ class FastSpeechWrapper:
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = get_model_2(restore_step, self.configs, self.device, train=False)
-        self.vocoder = get_vocoder(model_config, self.device)
+        # The vocoder is only needed to synthesize waveforms. For duration
+        # estimation the mel length already determines the audio length exactly
+        # (len(wav) == mel_len * hop_length), so skip loading it by default.
+        self.vocoder = get_vocoder(model_config, self.device) if load_vocoder else None
         self.batch_size = batch_size
+        self._lock = threading.Lock()
 
     def process_text(self, texts):
         batchs = []
@@ -48,7 +108,7 @@ class FastSpeechWrapper:
             ids = f"Part-{i}"
             raw_text = text
             speakers = 0
-            post_text = np.array(preprocess_english(text, self.configs[0]))
+            post_text = _preprocess_english_cached(text, self.configs[0])
             text_len = len(post_text)
             batchs.append((ids, raw_text, speakers, post_text, text_len))
         return batchs
@@ -76,21 +136,59 @@ class FastSpeechWrapper:
             data = (ids, raw_texts, speakers, texts, text_lens, max(text_lens))
 
             data = to_device(data, self.device)
-            with torch.no_grad():
-                # Forward
-                output = self.model(
-                    *(data[2:]), p_control=pitch_control, e_control=energy_control, d_control=duration_control
-                )
-                length = synth_samples_for_length(
-                    data,
-                    output,
-                    self.vocoder,
-                    model_config,
-                    preprocess_config,
-                    train_config["path"]["result_path"],
-                )
+            with self._lock, torch.no_grad():
+                if self.vocoder is None:
+                    # Duration-only path: encoder + variance adaptor give mel_len;
+                    # the decoder/postnet/vocoder do not change it. Same value
+                    # synth_samples_for_length() returns (wav len == mel_len * hop).
+                    hop = preprocess_config["preprocessing"]["stft"]["hop_length"]
+                    sr = preprocess_config["preprocessing"]["audio"]["sampling_rate"]
+                    mel_lens = self._predict_mel_lens(
+                        *(data[2:]), p_control=pitch_control, e_control=energy_control, d_control=duration_control
+                    )
+                    length = [float(m) * hop / sr for m in mel_lens]
+                else:
+                    output = self.model(
+                        *(data[2:]), p_control=pitch_control, e_control=energy_control, d_control=duration_control
+                    )
+                    length = synth_samples_for_length(
+                        data,
+                        output,
+                        self.vocoder,
+                        model_config,
+                        preprocess_config,
+                        train_config["path"]["result_path"],
+                    )
                 lengths.extend(length)
         return lengths
+
+    def _predict_mel_lens(self, speakers, texts, src_lens, max_src_len, p_control=1.0, e_control=1.0, d_control=1.0):
+        """First half of FastSpeech2.forward (encoder + variance adaptor), returning predicted mel lengths."""
+        m = self.model
+        src_masks = get_mask_from_lengths(src_lens, max_src_len)
+        output = m.encoder(texts, src_masks)
+        if m.speaker_emb is not None:
+            output = output + m.speaker_emb(speakers).unsqueeze(1).expand(-1, max_src_len, -1)
+        (_, _, _, _, _, mel_lens, _) = m.variance_adaptor(
+            output, src_masks, None, None, None, None, None, p_control, e_control, d_control
+        )
+        return mel_lens.detach().cpu().numpy()
+
+
+_SHARED_WRAPPER = None
+_SHARED_WRAPPER_LOCK = threading.Lock()
+
+
+def get_shared_wrapper(batch_size=8):
+    """Process-wide FastSpeechWrapper. Loading the checkpoint takes seconds and
+    ~GBs of GPU memory, so callers that only need duration estimates must share
+    one instance instead of constructing a new wrapper per query."""
+    global _SHARED_WRAPPER
+    if _SHARED_WRAPPER is None:
+        with _SHARED_WRAPPER_LOCK:
+            if _SHARED_WRAPPER is None:
+                _SHARED_WRAPPER = FastSpeechWrapper(batch_size=batch_size)
+    return _SHARED_WRAPPER
 
 
 if __name__ == "__main__":
