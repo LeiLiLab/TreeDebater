@@ -464,3 +464,80 @@ def test_adaptive_pipeline_delivers_first_audio_before_rewriting_and_fits_remain
     assert abs(sum(p.audio_seconds for p in profiles) - budget) <= (6. if recorded_closing else .12)
     assert all(p.target_reached == tts._in_range(p.audio_seconds, p.target_s, p.tolerance_s, p.tol_upper_s)
                for p in profiles)
+
+
+def test_cursor_cache_reuses_decode_and_invalidates_atomic_replacement(modules, monkeypatch, tmp_path):
+    import os
+    path = tmp_path / 'continuous_audio.mp3'
+    path.write_bytes(b'old')
+    env = listener(modules, tmp_path)
+    decoder = Mock(side_effect=[AudioSegment.silent(2000), AudioSegment.silent(4000)])
+    monkeypatch.setattr(modules.env.AudioSegment, 'from_file', decoder)
+    assert len(env._read_audio_up_to_cursor(path, 1)) == 1000
+    assert len(env._read_audio_up_to_cursor(path, 2)) == 2000
+    assert decoder.call_count == 1
+    stat = path.stat()
+    replacement = tmp_path / 'replacement.mp3'
+    replacement.write_bytes(b'new')
+    os.utime(replacement, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+    replacement.replace(path)
+    assert len(env._read_audio_up_to_cursor(path, 4)) == 4000
+    assert decoder.call_count == 2
+
+
+def test_normalized_audio_duration_matches_budget_profile_and_callback(modules, monkeypatch, tmp_path):
+    from pydub.generators import Sine
+    from streaming.config import OutputConfig
+    tts = modules.tts
+    audio = AudioSegment.silent(100) + Sine(440).to_audio_segment(duration=2000) + AudioSegment.silent(700)
+    monkeypatch.setattr(tts.LengthEstimator, 'count_words', lambda text: len(text.split()))
+    monkeypatch.setattr(tts, '_query_time_profiled', lambda *a, **kw: {
+        'audio_seconds': 2.8, 'tts_api_s': 0., 'mp3_parse_s': 0., 'mp3_bytes': b'original'})
+    monkeypatch.setattr(tts.AudioSegment, 'from_file', lambda *a, **kw: audio)
+    def export(segment, target, **kw):
+        data = str(len(segment)).encode()
+        if hasattr(target, 'write'):
+            target.write(data)
+        else:
+            Path(target).write_bytes(data)
+    monkeypatch.setattr(tts.AudioSegment, 'export', export)
+    deliveries = []
+    profiles, round_profile, _, _ = tts.run_pipeline(
+        Mock(), ['A spoken argument.'], 2.8,
+        config=OutputConfig(budget_mode='audio_duration', min_chunk_words=1,
+                            min_tolerance_seconds=.01, tolerance_ratio=.01),
+        out_dir=tmp_path,
+        on_chunk=lambda i, path, text, duration: deliveries.append((path.read_bytes(), duration)),
+    )
+    duration = profiles[0].audio_seconds
+    assert duration == pytest.approx(2.31, abs=.01)
+    assert deliveries == [(str(round(duration * 1000)).encode(), duration)]
+    assert round_profile.audio_seconds_total == duration
+    assert round_profile.budget_remaining_s == pytest.approx(2.8 - duration)
+    assert not profiles[0].target_reached
+
+
+def test_sentence_packing_preserves_complete_sentences(modules):
+    text = ' '.join(f'Sentence {i} has enough words to explain the point clearly.' for i in range(40))
+    chunks = modules.tts.split_into_chunks(text, 120)
+    assert len(chunks) >= 3
+    assert ' '.join(chunks) == text
+    assert all(chunk.endswith('.') for chunk in chunks)
+
+
+def test_asr_retry_reuses_audio_and_explicit_timeout(modules, monkeypatch):
+    client = Mock()
+    payloads = []
+    def transcribe(**kwargs):
+        payloads.append(kwargs['file'].read())
+        if len(payloads) == 1:
+            raise TimeoutError('transient timeout')
+        return types.SimpleNamespace(text=' recovered text ')
+    client.audio.transcriptions.create.side_effect = transcribe
+    factory = Mock(return_value=client)
+    monkeypatch.setattr(modules.env, 'OpenAI', factory)
+    monkeypatch.setattr(modules.env.time, 'sleep', lambda _: None)
+    monkeypatch.setattr(modules.env.AudioSegment, 'export', lambda self, target, **kw: target.write(b'audio'))
+    assert modules.env.transcribe_audio_segment(AudioSegment.silent(1000)) == 'recovered text'
+    assert payloads == [b'audio', b'audio']
+    factory.assert_called_once_with(timeout=30., max_retries=0)

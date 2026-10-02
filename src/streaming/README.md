@@ -136,6 +136,16 @@ streaming:
     abs_prestart_chars: 1000
     speed_adjust_min: 0.85
     speed_adjust_max: 1.15
+    refine_deadline_margin_seconds: 2
+    speed_adjust_min_slack_seconds: 4
+    max_chunk_chars: 900
+    target_chunk_seconds: 40
+    min_stream_chunks: 3
+    max_stream_chunks: 8
+    normalize_seams: true
+    seam_head_ms: 60
+    seam_tail_ms: 250
+    seam_fade_ms: 10
   posthoc:
     split_mode: fixed
     chunk_seconds: 10
@@ -312,3 +322,12 @@ measurement. TTS candidate selection and playback budgets still use measured
 audio duration. Historical `fs` timing fields in profiling output now measure
 this CPU estimation step. Explicit `LengthEstimator("fastspeech")` remains an
 optional legacy mode and lazily loads its model only when selected.
+
+Non-adaptive delivery packs sentences when paragraph breaks are sparse or a paragraph
+is long. Adaptive delivery retains its short first chunk and measured speaking rate.
+Refinement reserves up to `refine_deadline_margin_seconds` for delivery, capped at
+half the preceding chunk's duration. Speed resynthesis requires at least
+`speed_adjust_min_slack_seconds` of playback time remaining. Seam normalization runs
+before duration accounting and chunk callbacks; disable it with `normalize_seams: false`.
+CPU duration estimation remains the default. Explicit FastSpeech mode uses the shared
+wrapper without loading model weights in CPU-only runs.

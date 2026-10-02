@@ -50,15 +50,34 @@ from utils.tool import logger
 from .config import add_streaming_arguments, resolve_config
 
 
+ASR_TIMEOUT_S = 30.0   # a 15 s segment normally transcribes in ~1-3 s
+ASR_MAX_ATTEMPTS = 3
+
+
 def transcribe_audio_segment(segment: AudioSegment, audio_format: str = "mp3") -> str:
-    """Transcribe a pydub ``AudioSegment`` using OpenAI Whisper (``whisper-1``)."""
-    buf = BytesIO()
-    segment.export(buf, format=audio_format)
-    buf.seek(0)
-    buf.name = f"audio.{audio_format}"
-    client = OpenAI()
-    transcript = client.audio.transcriptions.create(model="whisper-1", file=buf, language="en")
-    return (transcript.text or "").strip()
+    """Transcribe a pydub ``AudioSegment`` using OpenAI Whisper (``whisper-1``).
+
+    The request carries an explicit timeout and is retried: without one, a hung
+    HTTP call blocks the listener thread for the rest of the turn (observed once
+    in run 138: the listener froze at 135 s of a 236 s speech and the main
+    thread then waited the full listener-join timeout).
+    """
+    raw = BytesIO()
+    segment.export(raw, format=audio_format)
+    data = raw.getvalue()
+    client = OpenAI(timeout=ASR_TIMEOUT_S, max_retries=0)
+    last_err: Optional[Exception] = None
+    for attempt in range(ASR_MAX_ATTEMPTS):
+        buf = BytesIO(data)
+        buf.name = f"audio.{audio_format}"
+        try:
+            transcript = client.audio.transcriptions.create(model="whisper-1", file=buf, language="en")
+            return (transcript.text or "").strip()
+        except Exception as e:  # timeout / transient API error
+            last_err = e
+            logger.warning(f"[StreamingInputEnv] ASR attempt {attempt + 1}/{ASR_MAX_ATTEMPTS} failed: {e}")
+            time.sleep(1.0 * (attempt + 1))
+    raise RuntimeError(f"ASR failed after {ASR_MAX_ATTEMPTS} attempts: {last_err}")
 
 
 def _log_id_from_filename(filename: str) -> str:
@@ -420,10 +439,22 @@ class StreamingInputEnv:
             text_first_seen.pop(log_id, None)
 
     def _read_audio_up_to_cursor(self, continuous_file: Path, cursor_seconds: float) -> Optional[AudioSegment]:
-        """Read continuous audio file up to the cursor position."""
+        """Read continuous audio file up to the cursor position.
+
+        The decoded file is cached by (path, inode, mtime, size): the playback thread only
+        rewrites it once per chunk, but this is polled every second and decoding
+        a 4-minute MP3 costs ~0.5 s of CPU each time.
+        """
         try:
             read_start = time.time()
-            full_audio = AudioSegment.from_file(BytesIO(continuous_file.read_bytes()))
+            st = continuous_file.stat()
+            key = (continuous_file.resolve(), st.st_ino, st.st_mtime_ns, st.st_size)
+            cached = getattr(self, "_continuous_cache", None)
+            if cached is not None and cached[0] == key:
+                full_audio = cached[1]
+            else:
+                full_audio = AudioSegment.from_file(BytesIO(continuous_file.read_bytes()))
+                self._continuous_cache = (key, full_audio)
             cursor_ms = int(cursor_seconds * 1000)
             if cursor_ms <= 0:
                 return None

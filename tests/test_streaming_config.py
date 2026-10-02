@@ -43,7 +43,11 @@ def test_legacy_cli_defaults(overlap, audio, words):
     ('output', {'speed_adjust_min': 2, 'speed_adjust_max': 1}),
     ('output', {'adaptive_delivery': 'true'}),
     ('output', {'first_chunk_seconds': 0}), ('output', {'later_chunk_seconds': -1}),
-    ('output', {'refinement_model': ''}), ('output', {'typo': 1}),
+    ('output', {'refinement_model': ''}),
+    ('output', {'refine_deadline_margin_seconds': -1}),
+    ('output', {'speed_adjust_min_slack_seconds': -1}),
+    ('output', {'seam_tail_ms': -1}), ('output', {'normalize_seams': 'true'}),
+    ('output', {'min_stream_chunks': 5, 'max_stream_chunks': 3}), ('output', {'typo': 1}),
     ('posthoc', {'split_mode': 'unknown'}), ('playback', {'increment_seconds': 0}),
 ])
 def test_invalid_yaml_rejected(section, values):

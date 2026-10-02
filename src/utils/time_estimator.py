@@ -13,8 +13,8 @@ class LengthEstimator:
     def __init__(self, mode):
         self.mode = mode
         if self.mode == "fastspeech":
-            from .fs_wrapper import FastSpeechWrapper
-            self.client = FastSpeechWrapper(batch_size=8)
+            from .fs_wrapper import get_shared_wrapper
+            self.client = get_shared_wrapper(batch_size=8)
         elif self.mode == "openai":
             from openai import OpenAI
             from .constants import openai_api_key

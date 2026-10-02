@@ -8,7 +8,8 @@ class Validated:
     def __post_init__(self):
         nonnegative = {'max_audio_wait_seconds', 'max_text_wait_seconds', 'max_total_audio_seconds',
                        'max_refinements', 'early_max_refinements', 'tolerance_ratio',
-                       'last_chunk_upper_tolerance_ratio'}
+                       'last_chunk_upper_tolerance_ratio', 'refine_deadline_margin_seconds',
+                       'speed_adjust_min_slack_seconds', 'seam_head_ms', 'seam_tail_ms', 'seam_fade_ms'}
         for f in fields(self):
             value = getattr(self, f.name)
             if f.type is bool:
@@ -77,6 +78,16 @@ class OutputConfig(Validated):
     abs_prestart_chars: int = 1000
     speed_adjust_min: float = 0.85
     speed_adjust_max: float = 1.15
+    refine_deadline_margin_seconds: float = 2.0
+    speed_adjust_min_slack_seconds: float = 4.0
+    max_chunk_chars: int = 900
+    target_chunk_seconds: float = 40.0
+    min_stream_chunks: int = 3
+    max_stream_chunks: int = 8
+    normalize_seams: bool = True
+    seam_head_ms: int = 60
+    seam_tail_ms: int = 250
+    seam_fade_ms: int = 10
 
     def __post_init__(self):
         super().__post_init__()
@@ -84,6 +95,8 @@ class OutputConfig(Validated):
             raise ValueError("budget_mode must be experiment_elapsed or audio_duration")
         if self.speed_adjust_min > self.speed_adjust_max:
             raise ValueError('speed_adjust_min must not exceed speed_adjust_max')
+        if self.min_stream_chunks > self.max_stream_chunks:
+            raise ValueError('min_stream_chunks must not exceed max_stream_chunks')
 
 
 @dataclass

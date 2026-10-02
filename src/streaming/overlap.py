@@ -156,7 +156,7 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
 
             try:
                 write_start = time.time()
-                temporary_file = continuous_file.with_suffix(".mp3.tmp")
+                temporary_file = continuous_file.with_name(continuous_file.name + ".tmp")
                 continuous_audio.export(str(temporary_file), format=ext)
                 temporary_file.replace(continuous_file)
                 write_end = time.time()
@@ -174,11 +174,18 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
                 f"duration={chunk_duration:.2f}s t={playback_start:.3f}"
             )
 
-            # Simulate speaking in fixed increments
+            # Simulate speaking in fixed increments. The decode + continuous-file
+            # export above took real time (~1 s, growing with speech length); a
+            # real player would have started this chunk the moment its file was
+            # ready, so charge that bookkeeping time against the first sleep(s)
+            # instead of inserting a silent gap between every pair of chunks.
             elapsed_in_chunk = 0.0
+            bookkeeping_s = max(0.0, playback_start - wait_end)
             while elapsed_in_chunk < chunk_duration:
                 sleep_time = min(self._min_playback_increment, chunk_duration - elapsed_in_chunk)
-                time.sleep(sleep_time)
+                actual_sleep = max(0.0, sleep_time - bookkeeping_s)
+                bookkeeping_s = max(0.0, bookkeeping_s - sleep_time)
+                time.sleep(actual_sleep)
 
                 # Advance cursor - listener can now access this audio
                 playback_cursor[0] += sleep_time

@@ -137,6 +137,8 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], n
         client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"], base_url="https://api.deepseek.com")
         model = model.split("/", 1)[-1]
         request_options["extra_body"] = {"thinking": {"type": "disabled"}}
+    elif model == "gpt-5-mini":
+        request_options["reasoning_effort"] = "minimal"
     resp = client.chat.completions.create(
         **request_options,
         model=model,
@@ -479,6 +481,28 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
 
 
 # -------- chunk utilities --------
+def _normalize_seam_silence(seg: AudioSegment, config: OutputConfig) -> Tuple[AudioSegment, bool]:
+    """Trim/pad head and tail silence so every chunk boundary sounds the same.
+
+    tts-1 output carries 0-150 ms of leading and 100-1200 ms of trailing silence;
+    concatenated chunk-by-chunk that yields pauses of 0.2-1.3 s at the seams.
+    Returns (segment, changed).
+    """
+    from pydub.silence import detect_leading_silence
+
+    if len(seg) < 1000:
+        return seg, False
+    lead = detect_leading_silence(seg, silence_threshold=-40, chunk_size=5)
+    trail = detect_leading_silence(seg.reverse(), silence_threshold=-40, chunk_size=5)
+    if len(seg) - lead - trail < 500:   # no speech detected (e.g. silent fallback) -> leave it
+        return seg, False
+    start = max(0, lead - config.seam_head_ms)
+    end = len(seg) - trail
+    core = seg[start:end]
+    out = core.fade_in(config.seam_fade_ms).fade_out(config.seam_fade_ms) + AudioSegment.silent(duration=config.seam_tail_ms, frame_rate=seg.frame_rate)
+    return out, True
+
+
 def _split_sentences(text: str) -> List[str]:
     """Split text into sentences on '.', '!', '?' boundaries."""
     import re
@@ -568,6 +592,69 @@ def split_for_adaptive_delivery(segments: List[str], first_seconds: float, later
     if current:
         chunks.append(' '.join(current))
     return chunks
+
+
+def _pack_sentences(text: str, target_chars: int) -> List[str]:
+    """Greedily pack whole sentences into pieces of roughly ``target_chars`` characters.
+
+    Never cuts inside a sentence; a single sentence longer than the target becomes
+    its own piece. Pieces are balanced so the last one is not a tiny remainder.
+    """
+    sentences = _split_sentences(text)
+    if not sentences:
+        return []
+    total = sum(len(x) + 1 for x in sentences)
+    n_pieces = max(1, round(total / max(target_chars, 1)))
+    per_piece = total / n_pieces
+    pieces: List[str] = []
+    cur: List[str] = []
+    cur_len = 0
+    for sent in sentences:
+        if cur and cur_len + len(sent) + 1 > per_piece * 1.15 and len(pieces) < n_pieces - 1:
+            pieces.append(" ".join(cur))
+            cur, cur_len = [], 0
+        cur.append(sent)
+        cur_len += len(sent) + 1
+    if cur:
+        pieces.append(" ".join(cur))
+    return pieces
+
+
+def split_into_chunks(text: str, total_budget_s: float, config: Optional[OutputConfig] = None) -> List[str]:
+    """Split a speech into streamable chunks.
+
+    Paragraphs are the preferred unit (they are natural rhetorical units and the
+    refinement prompt talks about "paragraphs"). Two failure modes of pure
+    paragraph splitting are handled here:
+      1. The model emitted (almost) no paragraph breaks -> a single huge chunk,
+         which disables streaming and refinement entirely. In that case the text
+         is re-chunked by packing sentences to ~cfg.target_chunk_seconds of audio each.
+      2. One paragraph is much longer than the rest (> cfg.max_chunk_chars) -> it is
+         split at sentence boundaries into a few balanced pieces.
+    """
+    cfg = from_mapping(OutputConfig, config)
+    paras = split_by_paragraphs(text)
+    if not paras:
+        return []
+    total_chars = sum(len(p) for p in paras)
+
+    if len(paras) < cfg.min_stream_chunks:
+        n_target = int(round(total_budget_s / cfg.target_chunk_seconds)) if total_budget_s > 0 else cfg.min_stream_chunks
+        n_target = max(cfg.min_stream_chunks, min(cfg.max_stream_chunks, n_target))
+        target_chars = max(200, total_chars // n_target)
+        out: List[str] = []
+        for p in paras:
+            out.extend(_pack_sentences(p, target_chars))
+        return out or paras
+
+    out = []
+    for p in paras:
+        if len(p) > cfg.max_chunk_chars:
+            n_pieces = -(-len(p) // cfg.max_chunk_chars)  # ceil
+            out.extend(_pack_sentences(p, max(200, len(p) // n_pieces)))
+        else:
+            out.append(p)
+    return out
 
 
 # -------- pipeline --------
@@ -872,7 +959,9 @@ def run_pipeline(
             normal_th.start()
 
             # Wait for ANY worker to find an ok candidate, OR until deadline.
-            ctx.done_event.wait(timeout=max(0.0, time_budget_s))
+            # Reserve delivery time without consuming the entire window for short chunks.
+            margin_s = min(cfg.refine_deadline_margin_seconds, time_budget_s / 2)
+            ctx.done_event.wait(timeout=max(0.0, time_budget_s - margin_s))
             ctx.stop_event.set()
 
             total_elapsed_s = _now() - ctx.t_start_wall
@@ -897,7 +986,9 @@ def run_pipeline(
             # Speed adjustment if still out of range
             target_now, tol_now, tol_upper_now = ctx.get_target()
             audio_s = float(tts_out["audio_seconds"])
-            if not _in_range(audio_s, target_now, tol_now, tol_upper_now):
+            slack_s = time_budget_s - (_now() - chunk_t0)
+            if (not _in_range(audio_s, target_now, tol_now, tol_upper_now)
+                    and slack_s >= cfg.speed_adjust_min_slack_seconds):
                 raw_speed = audio_s / target_now if target_now > 0 else 1.0
                 clamped = max(cfg.speed_adjust_min, min(cfg.speed_adjust_max, raw_speed))
                 if abs(clamped - 1.0) > 0.01:
@@ -995,8 +1086,15 @@ def run_pipeline(
                 warnings.warn(f"Chunk {i}: pydub decode failed: {e}")
                 seg = AudioSegment.silent(duration=int(audio_seconds * 1000))
 
-        if cfg.adaptive_delivery:
-            in_range = _in_range(audio_seconds, target_s, tol_s, tol_upper_s)
+        # Normalize before budget accounting and delivery; all consumers use this duration.
+        if cfg.normalize_seams:
+            seg, seam_changed = _normalize_seam_silence(seg, cfg)
+            if seam_changed:
+                buf = BytesIO()
+                seg.export(buf, format="mp3")
+                mp3_bytes = buf.getvalue()
+        audio_seconds = len(seg) / 1000.0
+        in_range = _in_range(audio_seconds, target_s, tol_s, tol_upper_s)
 
         # ---- budget tracking ----
         audio_budget_remaining -= audio_seconds
@@ -1151,7 +1249,9 @@ def convert_text_to_speech_streaming(
     audio_content, _ = remove_citation(content)
     audio_content = remove_subtitles(audio_content)
 
-    segments = split_by_paragraphs(audio_content)
+    cfg = from_mapping(OutputConfig, config)
+    segments = (split_by_paragraphs(audio_content) if cfg.adaptive_delivery
+                else split_into_chunks(audio_content, total_budget_s, cfg))
 
     client = OpenAI()
     output_path = Path(output_path)
