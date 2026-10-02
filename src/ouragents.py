@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import json
 import math
 import os
@@ -149,15 +150,19 @@ class TreeDebater(Debater):
         )
         self._streaming_listen_thread.start()
 
-    def stop_streaming_listen(self, join_timeout: float = 300.0) -> None:
+    def stop_streaming_listen(self, join_timeout: float = 300.0) -> bool:
+        """Drain the listener and report whether the entire stream reached the tree."""
         t = self._streaming_listen_thread
         env = self._streaming_input_env
-        self._streaming_listen_thread = None
-        self._streaming_input_env = None
         if env is not None:
             env.stop()
         if t is not None:
             t.join(timeout=join_timeout)
+            if t.is_alive():
+                raise TimeoutError("Streaming listener did not finish draining")
+        self._streaming_listen_thread = None
+        self._streaming_input_env = None
+        return env is not None and env.succeeded
 
     def _get_evidence(self, claim):
         if self.use_retrieval:
@@ -197,11 +202,17 @@ class TreeDebater(Debater):
                     motion=motion, side=side, model=self.config.model, pool_size=pool_size, **kwargs
                 )
                 claim_pool = claim_workspace.create_claim(need_score=True, need_evidence=(side == self.side))
-                # print(pool)
-                logger.info(f"Claim Pool Size: {len(self.claim_pool)}")
-                save_file_name = f"{self.motion}_pool_{side}.json".replace(" ", "_").lower()
+                logger.info(f"Claim Pool Size: {len(claim_pool)}")
+                # Motions are user input, not filesystem paths. Preserve simple
+                # historical names, but bound and disambiguate other filenames.
+                motion_name = self.motion.replace(" ", "_").lower()
+                if not re.fullmatch(r"[a-z0-9_.-]{1,180}", motion_name):
+                    slug = re.sub(r"[^a-z0-9_-]+", "_", motion_name).strip("_")[:80] or "motion"
+                    digest = hashlib.sha256(self.motion.encode()).hexdigest()[:12]
+                    motion_name = f"{slug}_{digest}"
+                save_file_name = f"{motion_name}_pool_{side}.json"
                 with open(save_file_name, "w") as file:
-                    json.dump(self.claim_pool, file, indent=2)
+                    json.dump(claim_pool, file, indent=2)
 
                 if side == self.side:
                     self.claim_pool = claim_pool
@@ -272,7 +283,7 @@ class TreeDebater(Debater):
         self.evidence_pool = high_quality_evidence_pool[:10]
         self.high_quality_evidence_pool = high_quality_evidence_pool
 
-    def _add_additional_info(self, prompt, history, **kwargs):
+    def _add_additional_info(self, prompt, history, planned_actions=None, **kwargs):
         tips = ""
 
         # add debate flow tree related tips if debate flow tree is enabled, if no rehearsal tree, it will be empty
@@ -308,18 +319,26 @@ class TreeDebater(Debater):
 
                 action_str = ""
                 for action in actions:
+                    if planned_actions is not None:
+                        planned_actions.append({
+                            "action": action["action"],
+                            "target_claim": action["target_claim"],
+                            "targeted_debate_tree": action.get("targeted_debate_tree", "you"),
+                        })
                     action_type = action["action"]
                     target_claim = action["target_claim"]
                     target_argument = (
                         action["target_argument"] if action_type != "propose" else action["prepared_materials"]
                     )
                     action_str += (
-                        "\n\t" + f'*{action_type}* the claim: "{target_claim}" and the argument: "{target_argument}"'
+                        "\n\t" + f'*{action_type}* (owner: {action.get("claim_owner", "unknown")}; direction: {action.get("desired_direction", "unknown")}) the claim: "{target_claim}" and the raw material (may contain opposing arguments): "{target_argument}"'
                     )
                 battlefield_str += (
                     f"**Battlefield Importance**: {battlefield['battlefield_importance']}\n"
                     f"**Battlefield**: {battlefield['battlefield']}\n"
                     f"**Battlefield Rationale**: {battlefield['battlefield_argument']}\n"
+                    f"**Support for our side**: {json.dumps(battlefield.get('supporting_arguments', []))}\n"
+                    f"**Counterarguments to answer, not endorse**: {json.dumps(battlefield.get('counterarguments', []))}\n"
                     f"**Actions**:{action_str}\n"
                 )
                 battlefield_str += "\n"
@@ -372,11 +391,12 @@ class TreeDebater(Debater):
         else:
             prompt = prompt.replace("{definition}", "")
 
-        prompt = self._add_additional_info(prompt, history, **kwargs)
+        speech_plan = []
+        prompt = self._add_additional_info(prompt, history, planned_actions=speech_plan, **kwargs)
 
         response = self.speak(prompt, max_time=max_time, time_control=time_control, history=history, **kwargs)
         if self.use_debate_flow_tree:
-            self._analyze_statement(response, self.side)
+            self._analyze_statement(response, self.side, planned_actions=speech_plan)
         return response
 
     def rebuttal_generation(self, history, max_time, time_control=False, **kwargs):
@@ -399,11 +419,12 @@ class TreeDebater(Debater):
 
         prompt = prompt.replace("{n_words}", str(max_words))
 
-        prompt = self._add_additional_info(prompt, history, **kwargs)
+        speech_plan = []
+        prompt = self._add_additional_info(prompt, history, planned_actions=speech_plan, **kwargs)
 
         response = self.speak(prompt, max_time=max_time, time_control=time_control, history=history, **kwargs)
         if self.use_debate_flow_tree:
-            self._analyze_statement(response, self.side)
+            self._analyze_statement(response, self.side, planned_actions=speech_plan)
         return response
 
     def closing_generation(self, history, max_time, time_control=False, **kwargs):
@@ -424,12 +445,13 @@ class TreeDebater(Debater):
 
         prompt = prompt.replace("{n_words}", str(max_words))
 
-        prompt = self._add_additional_info(prompt, history, **kwargs)
+        speech_plan = []
+        prompt = self._add_additional_info(prompt, history, planned_actions=speech_plan, **kwargs)
 
         response = self.speak(prompt, max_time=max_time, time_control=time_control, history=history, **kwargs)
         response = response.split("**Reference**")[0].strip()
         if self.use_debate_flow_tree:
-            self._analyze_statement(response, self.side)
+            self._analyze_statement(response, self.side, planned_actions=speech_plan)
         return response
 
     def speak(self, prompt, max_time, time_control=False, history=None, **kwargs):
@@ -1150,7 +1172,7 @@ class TreeDebater(Debater):
         self.embedding_cache[content] = embedding
         return embedding
 
-    def _analyze_statement(self, statements, statement_side):
+    def _analyze_statement(self, statements, statement_side, planned_actions=None):
         """
         Analyze the statements:
         1. Extract the claims from the statements
@@ -1179,12 +1201,19 @@ class TreeDebater(Debater):
                 tree=[tree.print_tree(include_status=True), oppo_tree.print_tree(include_status=True, reverse=True)],
                 side=statement_side,
                 stage=self.status,
+                planned_actions=planned_actions if statement_side == self.side else None,
             )
 
             for x in claims:
+                if isinstance(x.get("purpose"), dict):
+                    x["purpose"] = [x["purpose"]]
+                elif x.get("purpose") is None:
+                    x["purpose"] = []
                 for p in x["purpose"]:
                     target_tree = tree if p["targeted_debate_tree"] == "you" else oppo_tree
-                    if p["target"] == "N/A" and target_tree.max_level == 0:
+                    if p["action"] == "propose":
+                        p["target"] = x["claim"]
+                    elif p["target"] == "N/A" and target_tree.max_level == 0:
                         if p["action"] == "propose" or p["action"] == "rebut" or p["action"] == "reinforce":
                             p["target"] = x["claim"]
 
@@ -1207,6 +1236,7 @@ class TreeDebater(Debater):
                 "mode": "analyze_statement",
                 "statement": statements,
                 "claims": claims,
+                "planned_actions": planned_actions if statement_side == self.side else None,
             }
             self.debate_thoughts.append(thoughts)
 

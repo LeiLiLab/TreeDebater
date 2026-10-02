@@ -1,0 +1,39 @@
+motion: Learning to be a good writer still matters in the age of AI
+mode: human_ai
+human_side: for
+first_side: for
+engine: treedebater
+ai_model: gpt-4o-mini
+helper_model: null
+claim_pool_size: 4
+budgets:
+  opening: 60.0
+  rebuttal: 60.0
+  closing: 30.0
+streaming:
+  input:
+    min_audio_seconds: 3.0
+    min_text_words: 60
+    max_text_wait_seconds: 15.0
+  output:
+    budget_mode: audio_duration
+    model: tts-1
+    voice: echo
+    refinement_model: gpt-5-mini
+    max_refinements: 10
+    early_max_refinements: 3
+    max_parallel_tts: 8
+    min_chunk_words: 30
+    tolerance_ratio: 0.1
+    last_chunk_upper_tolerance_ratio: 0.05
+    min_tolerance_seconds: 1.0
+    enable_early_cut: false
+    early_cut_ratio: 1.25
+    ratio_prestart_threshold: 2.0
+    abs_prestart_chars: 1000
+    speed_adjust_min: 0.85
+    speed_adjust_max: 1.15
+transport_grace_seconds: 3.0
+model_timeout_seconds: 300.0
+max_rerecords: 1
+evaluation: true

@@ -687,6 +687,15 @@ class DebateTree(Tree):
             return
 
         if action == "propose":
+            claim_key = " ".join(new_claim.split()).casefold().rstrip(".!?")
+            for existing in self.root.children:
+                if " ".join(existing.claim.split()).casefold().rstrip(".!?") == claim_key:
+                    arguments = [new_argument] if isinstance(new_argument, str) else (new_argument or [])
+                    for argument in arguments:
+                        if argument not in existing.argument:
+                            existing.argument.append(argument)
+                    # Preserve attacks, rebuttals, and status on the existing node.
+                    return
             new_node = self.root.add_node(new_claim=new_claim, new_argument=new_argument, side=self.root.side)
             new_node.update_status("proposed")
             return

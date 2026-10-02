@@ -5,7 +5,7 @@ Splits debate text into chunks, adaptively refines each chunk's length to hit it
 
 Key features vs the serial pipeline in tts.py:
   - Chunk-based processing: text is split by paragraphs, each chunk gets a proportional share of the total time budget.
-  - Adaptive refinement: FastSpeech estimates duration; if off-target, an LLM rewrites the chunk to a target word count.  Multiple TTS candidates are submitted in parallel and the closest-to-target is picked.
+  - Adaptive refinement: A CPU word-rate heuristic estimates duration; if off-target, an LLM rewrites the chunk to a target word count.  Multiple TTS candidates are submitted in parallel and the closest-to-target is picked.
   - Streaming overlap: while chunk N's audio plays, chunk N+1 is being refined and TTS-generated (time_budget for chunk N+1 = audio duration of chunk N).
   - No information loss: instead of trimming sentences at the end, text is rewritten to fit the budget.
 """
@@ -13,6 +13,7 @@ Key features vs the serial pipeline in tts.py:
 import concurrent.futures
 import csv
 import json
+import os
 import threading
 import time
 from dataclasses import dataclass, asdict
@@ -27,20 +28,13 @@ from pydub.exceptions import CouldntDecodeError
 
 from utils.tool import remove_citation, remove_subtitles
 from utils.time_estimator import LengthEstimator
-from utils.fs_wrapper import FastSpeechWrapper
+from utils.speech_duration import estimate_speech_seconds
+from streaming.config import OutputConfig, from_mapping
 
-# -------- config --------
-TOLERANCE_RATIO = 0.10          # tolerance = target_s * this ratio (both sides)
-TOLERANCE_RATIO_UPPER = 0.05    # last chunk upper tolerance (tighter)
-MIN_TOLERANCE_S = 1.0           # floor so very short chunks aren't impossible to hit
-MAX_REFINEMENTS = 10
-MAX_PARALLEL_TTS = 8            # max concurrent background TTS threads per chunk
-MIN_CHUNK_WORDS = 30            # chunks shorter than this (word count) are merged into the next one; the last chunk uses the same threshold
-EARLY_CUT_RATIO = 1.25          # fs_est/target_s threshold to trigger early-cut
-RATIO_PRESTART_THRESHOLD = 2.0  # if chunk[i+2].chars / chunk[i+1].chars >= this, pre-start chunk i+2 one chunk earlier
-ABS_PRESTART_CHARS = 1000       # also pre-start when chunk[i+2] is absolutely large (>= this many chars), regardless of ratio
-SPEED_ADJUST_MIN = 0.85         # TTS speed clamp lower bound
-SPEED_ADJUST_MAX = 1.15         # TTS speed clamp upper bound
+# Compatibility aliases; canonical defaults live in streaming.config.OutputConfig.
+TOLERANCE_RATIO = OutputConfig.tolerance_ratio
+EARLY_CUT_RATIO = OutputConfig.early_cut_ratio
+MIN_CHUNK_WORDS = OutputConfig.min_chunk_words
 
 
 # -------- dataclasses --------
@@ -107,15 +101,11 @@ def _in_range(est: float, target_s: float, tol_s: float, tol_upper_s: float) -> 
     return (est - target_s) <= tol_upper_s and (target_s - est) <= tol_s
 
 
-def _fastspeech_estimate(text: str) -> float:
-    wrapper = FastSpeechWrapper(batch_size=2)
-    lengths = wrapper.query_time(text)
-    length = lengths[0] if isinstance(lengths, list) else float(lengths)
-    length = length * 1.11 - 7 if length > 100 else length
-    return float(length)
+def _estimate_duration(text: str) -> float:
+    return estimate_speech_seconds(remove_subtitles(remove_citation(text)[0]))
 
 
-def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], next_chunk_text: str = "") -> str:
+def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], next_chunk_text: str = "", model: str = OutputConfig.refinement_model, motion: str = "", side: str = "") -> str:
     context_block = ""
     context_word_count = 0
     if prev_texts:
@@ -142,16 +132,28 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], n
             f"{next_chunk_text[:2000]}"
         )
 
+    request_options = {}
+    if "deepseek" in model.lower():
+        client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"], base_url="https://api.deepseek.com")
+        model = model.split("/", 1)[-1]
+        request_options["extra_body"] = {"thinking": {"type": "disabled"}}
     resp = client.chat.completions.create(
-        model="gpt-5-mini",
+        **request_options,
+        model=model,
         messages=[
             {
                 "role": "system",
                 "content": (
+                    f"Debate motion: {motion or 'not supplied'}. Assigned side: {side or 'preserve the original position'}. "
+                    "FOR supports the motion; AGAINST opposes it. This is context only: preserve the paragraph's existing position and meaning, without evaluating or correcting stance contradictions. "
                     "You are helping refine a paragraph from a competitive debate speech. "
                     "The speech is delivered orally; every word will be read aloud by a text-to-speech system. "
                     "Rewrite ONLY the paragraph provided by the user. "
                     "Preserve the argument, logical flow, and debate rhetoric. "
+                    "This is a length edit, not a new debate argument: preserve the speaker's position, "
+                    "claim ownership, negation, qualifications, and the distinction between quoting and endorsing a claim. "
+                    "Do not turn a concession into agreement with the opposing side or strengthen it into the conclusion. "
+                    "Never swap 'we argue' and 'my opponent argues'. Meaning takes priority over the target word count. "
                     "Do NOT add new arguments or repeat points already made in the preceding text. "
                     "Ensure the rewritten paragraph connects smoothly with what comes before and after it. "
                     "Output only the rewritten paragraph, no preamble."
@@ -174,10 +176,10 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], n
     return (resp.choices[0].message.content or "").strip()
 
 
-def _query_time_profiled(client, content: str, voice: str = "echo", speed: float = 1.0) -> Dict[str, Any]:
+def _query_time_profiled(client, content: str, voice: str = "echo", speed: float = 1.0, model: str = OutputConfig.model) -> Dict[str, Any]:
     t0 = _now()
     response = client.audio.speech.create(
-        model="tts-1",
+        model=model,
         voice=voice,
         input=content[:4096],
         response_format="mp3",
@@ -200,10 +202,10 @@ def _query_time_profiled(client, content: str, voice: str = "echo", speed: float
     }
 
 
-def _tts_with_retry(client, content: str, voice: str = "echo", speed: float = 1.0, max_attempts: int = 5) -> Dict[str, Any]:
+def _tts_with_retry(client, content: str, voice: str = "echo", speed: float = 1.0, max_attempts: int = 5, model: str = OutputConfig.model) -> Dict[str, Any]:
     for attempt in range(max_attempts):
         try:
-            return _query_time_profiled(client, content, voice=voice, speed=speed)
+            return _query_time_profiled(client, content, voice=voice, speed=speed, model=model)
         except Exception:
             if attempt == max_attempts - 1:
                 raise
@@ -277,9 +279,16 @@ class _ChunkRefineContext:
         max_ref: int,
         kickoff_iter: int,
         kickoff_kind: str,         # "" | "ratio" | "last"
+        config: Optional[OutputConfig] = None,
+        motion: str = "",
+        side: str = "",
     ):
+        self.config = from_mapping(OutputConfig, config)
         self.client = client
+        self.motion = motion
+        self.side = side
         self.original_text = original_text
+        self.seconds_per_word = None
 
         self._target_s = target_s
         self._tol_s = tol_s
@@ -293,7 +302,7 @@ class _ChunkRefineContext:
         self.done_event = threading.Event()
         self._adopt_lock = threading.Lock()
 
-        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=MAX_PARALLEL_TTS)
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.config.max_parallel_tts)
 
         self.prev_texts = list(prev_texts)
         self.next_chunk_text = next_chunk_text
@@ -318,10 +327,17 @@ class _ChunkRefineContext:
             return self._target_s, self._tol_s, self._tol_upper_s
 
     def update_target(self, target_s: float, tol_s: float, tol_upper_s: float) -> None:
-        with self._target_lock:
-            self._target_s = target_s
-            self._tol_s = tol_s
-            self._tol_upper_s = tol_upper_s
+        with self._adopt_lock:
+            with self._target_lock:
+                self._target_s = target_s
+                self._tol_s = tol_s
+                self._tol_upper_s = tol_upper_s
+            if (self.config.adaptive_delivery and self.chosen_tts_out is not None
+                    and not _in_range(self.chosen_tts_out['audio_seconds'], target_s, tol_s, tol_upper_s)):
+                self.chosen_cand = None
+                self.chosen_tts_out = None
+                self.done_event.clear()
+                self.stop_event.clear()
 
     def _stats_for(self, label: str) -> Dict[str, Any]:
         with self._stats_lock:
@@ -357,7 +373,7 @@ class _ChunkRefineContext:
                 iteration=iteration,
                 text=text,
                 fs_estimated_s=est,
-                future=self.executor.submit(_tts_with_retry, self.client, text, self.voice),
+                future=self.executor.submit(_tts_with_retry, self.client, text, self.voice, model=self.config.model),
                 worker_label=label,
                 intra_iter=intra_iter,
             )
@@ -366,7 +382,9 @@ class _ChunkRefineContext:
 
     def try_adopt(self, cand: _TtsCandidate, tts_out: Dict[str, Any]) -> bool:
         with self._adopt_lock:
-            if self.done_event.is_set():
+            if self.done_event.is_set() or (self.config.adaptive_delivery and self.stop_event.is_set()):
+                return False
+            if self.config.adaptive_delivery and not _in_range(tts_out['audio_seconds'], *self.get_target()):
                 return False
             self.chosen_cand = cand
             self.chosen_tts_out = tts_out
@@ -390,7 +408,8 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
     # ---- step 0: fs estimate raw text + submit raw TTS candidate ----
     t = _now()
     try:
-        est = _fastspeech_estimate(cur)
+        est = (LengthEstimator.count_words(cur) * ctx.seconds_per_word
+               if ctx.seconds_per_word else _estimate_duration(cur))
     except Exception:
         return
     ctx.add_fs_time(label, _now() - t)
@@ -401,11 +420,13 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
     target_s, tol_s, tol_upper_s = ctx.get_target()
     cand = ctx.add_candidate(cur, est, label, intra_iter=0)
 
-    if _in_range(est, target_s, tol_s, tol_upper_s):
+    if ctx.config.adaptive_delivery or _in_range(est, target_s, tol_s, tol_upper_s):
         try:
             tts_out = cand.future.result()
             if ctx.try_adopt(cand, tts_out):
                 return
+            if ctx.config.adaptive_delivery:
+                est = float(tts_out['audio_seconds'])
         except Exception:
             pass
 
@@ -417,11 +438,13 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
             break
 
         cw = LengthEstimator.count_words(cur)
-        tw = max(10, round(cw * target_s / max(est, 1.0)))
+        rate = est / max(cw, 1)
+        tw = max(1 if ctx.config.adaptive_delivery else 10,
+                 round(cw * target_s / max(est, .001 if ctx.config.adaptive_delivery else 1.0)))
 
         t = _now()
         try:
-            cur = _revise_to_n_words(ctx.client, cur, tw, ctx.prev_texts, ctx.next_chunk_text)
+            cur = _revise_to_n_words(ctx.client, cur, tw, ctx.prev_texts, ctx.next_chunk_text, model=ctx.config.refinement_model, motion=ctx.motion, side=ctx.side)
         except Exception:
             break
         ctx.add_llm_time(label, _now() - t)
@@ -432,7 +455,8 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
 
         t = _now()
         try:
-            est = _fastspeech_estimate(cur)
+            est = (LengthEstimator.count_words(cur) * rate
+                   if ctx.config.adaptive_delivery else _estimate_duration(cur))
         except Exception:
             break
         ctx.add_fs_time(label, _now() - t)
@@ -443,11 +467,13 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
         cand = ctx.add_candidate(cur, est, label, intra_iter=n_ref_local)
 
         target_s, tol_s, tol_upper_s = ctx.get_target()
-        if _in_range(est, target_s, tol_s, tol_upper_s):
+        if ctx.config.adaptive_delivery or _in_range(est, target_s, tol_s, tol_upper_s):
             try:
                 tts_out = cand.future.result()
                 if ctx.try_adopt(cand, tts_out):
                     return
+                if ctx.config.adaptive_delivery:
+                    est = float(tts_out['audio_seconds'])
             except Exception:
                 pass
 
@@ -477,7 +503,7 @@ def _early_cut_chunk(
     head_sentences: List[str] = []
     for sent in sentences:
         candidate = " ".join(head_sentences + [sent])
-        est = _fastspeech_estimate(candidate)
+        est = _estimate_duration(candidate)
         if est > target_s and head_sentences:
             break
         head_sentences.append(sent)
@@ -515,16 +541,49 @@ def split_by_paragraphs(text: str) -> List[str]:
     return parts if parts else [text.strip()] if text.strip() else []
 
 
+def split_for_adaptive_delivery(segments: List[str], first_seconds: float, later_seconds: float) -> List[str]:
+    """Keep sentences intact when possible; bound long sentences by word count.
+
+    This is local splitting only: no model call delays the first audio request.
+    The initial 0.46 s/word estimate is replaced by measured audio for refinement.
+    """
+    chunks, current = [], []
+    first_limit = max(1, round(first_seconds / 0.46))
+    later_limit = max(1, round(later_seconds / 0.46))
+    for segment in segments:
+        for sentence in _split_sentences(segment):
+            words = sentence.split()
+            limit = later_limit if chunks else first_limit
+            if current and len(current) + len(words) > limit:
+                chunks.append(' '.join(current))
+                current = []
+            while words:
+                limit = later_limit if chunks else first_limit
+                take = min(len(words), limit - len(current))
+                current.extend(words[:take])
+                words = words[take:]
+                if len(current) == limit:
+                    chunks.append(' '.join(current))
+                    current = []
+    if current:
+        chunks.append(' '.join(current))
+    return chunks
+
+
 # -------- pipeline --------
 def run_pipeline(
     client,
     segments_list: List[str],
     total_budget_s: float,
-    tolerance_ratio: float = TOLERANCE_RATIO,
-    voice: str = "echo",
+    tolerance_ratio: Optional[float] = None,
+    voice: Optional[str] = None,
     out_dir: Optional[Path] = None,
-    enable_early_cut: bool = False,
-    early_cut_ratio: float = EARLY_CUT_RATIO,
+    enable_early_cut: Optional[bool] = None,
+    early_cut_ratio: Optional[float] = None,
+    config: Optional[OutputConfig] = None,
+    on_chunk=None,
+    motion: str = "",
+    side: str = "",
 ) -> Tuple[List[ChunkProfile], RoundProfile, bytes, List[str]]:
     """
     Run the streaming TTS pipeline on a list of text segments.
@@ -532,6 +591,11 @@ def run_pipeline(
     Returns:
         (chunk_profiles, round_profile, combined_mp3_bytes, final_texts)
     """
+    cfg = from_mapping(OutputConfig, config)
+    tolerance_ratio = cfg.tolerance_ratio if tolerance_ratio is None else tolerance_ratio
+    voice = cfg.voice if voice is None else voice
+    enable_early_cut = cfg.enable_early_cut if enable_early_cut is None else enable_early_cut
+    early_cut_ratio = cfg.early_cut_ratio if early_cut_ratio is None else early_cut_ratio
     round_t0 = _now()
     chunk_profiles: List[ChunkProfile] = []
 
@@ -541,7 +605,10 @@ def run_pipeline(
     audio_total = 0.0
     overrun_total = 0.0
 
-    segments_list = list(_merge_short_chunks(segments_list))
+    if cfg.adaptive_delivery:
+        segments_list = split_for_adaptive_delivery(segments_list, cfg.first_chunk_seconds, cfg.later_chunk_seconds)
+    else:
+        segments_list = list(_merge_short_chunks(segments_list, min_words=cfg.min_chunk_words))
     n_chunks = len(segments_list)
     audio_budget_remaining = total_budget_s
     total_chars_initial = sum(len(c) for c in segments_list)
@@ -562,12 +629,16 @@ def run_pipeline(
     # normal refine worker that shares the same candidate pool.
     _chunk_contexts: Dict[int, _ChunkRefineContext] = {}
 
+    def _measured_rate():
+        words = sum(LengthEstimator.count_words(text) for text in final_texts)
+        return audio_total / words if words and cfg.adaptive_delivery else None
+
     def _kickoff_ratio_prestart(iter_i: int) -> None:
         """At the start of iter iter_i, maybe kick off prestart for c[i+2].
 
         Triggers if EITHER:
-          - chunk[i+2].chars / chunk[i+1].chars >= RATIO_PRESTART_THRESHOLD, OR
-          - chunk[i+2].chars >= ABS_PRESTART_CHARS (absolutely long chunk)
+          - chunk[i+2].chars / chunk[i+1].chars >= cfg.ratio_prestart_threshold, OR
+          - chunk[i+2].chars >= cfg.abs_prestart_chars (absolutely long chunk)
         """
         target_idx = iter_i + 2
         if target_idx >= len(segments_list) - 1:   # would be the last chunk → handled by last-chunk kickoff
@@ -577,15 +648,17 @@ def run_pipeline(
         next_chars = len(segments_list[iter_i + 1])
         target_chars = len(segments_list[target_idx])
         ratio = (target_chars / next_chars) if next_chars > 0 else 0.0
-        ratio_trigger = ratio >= RATIO_PRESTART_THRESHOLD
-        abs_trigger = target_chars >= ABS_PRESTART_CHARS
+        ratio_trigger = ratio >= cfg.ratio_prestart_threshold
+        abs_trigger = target_chars >= cfg.abs_prestart_chars
         if not (ratio_trigger or abs_trigger):
             return
         target_text = segments_list[target_idx]
         tgt_s_est = total_budget_s * target_chars / max(total_chars_initial, 1)
-        tol_est = max(MIN_TOLERANCE_S, tgt_s_est * tolerance_ratio)
-        tol_upper_est = max(MIN_TOLERANCE_S, tgt_s_est * TOLERANCE_RATIO_UPPER)
+        tol_est = max(cfg.min_tolerance_seconds, tgt_s_est * tolerance_ratio)
+        tol_upper_est = max(cfg.min_tolerance_seconds, tgt_s_est * cfg.last_chunk_upper_tolerance_ratio)
         ctx = _ChunkRefineContext(
+            motion=motion, side=side,
+            config=cfg,
             client=client,
             original_text=target_text,
             target_s=tgt_s_est,
@@ -594,10 +667,11 @@ def run_pipeline(
             prev_texts=list(final_texts),
             next_chunk_text="",
             voice=voice,
-            max_ref=MAX_REFINEMENTS,
+            max_ref=cfg.max_refinements,
             kickoff_iter=iter_i,
             kickoff_kind="ratio",
         )
+        ctx.seconds_per_word = _measured_rate()
         _chunk_contexts[target_idx] = ctx
         th = threading.Thread(target=_refine_worker, args=(ctx, "prestart"), daemon=True)
         ctx.workers.append(th)
@@ -606,7 +680,7 @@ def run_pipeline(
         if ratio_trigger:
             triggers.append(f"ratio={ratio:.2f}x")
         if abs_trigger:
-            triggers.append(f"abs={target_chars}c>={ABS_PRESTART_CHARS}")
+            triggers.append(f"abs={target_chars}c>={cfg.abs_prestart_chars}")
         print(
             f"  [ratio-prestart] chunk {target_idx} kicked off at start of iter {iter_i}, "
             f"trigger=[{', '.join(triggers)}], target_est={tgt_s_est:.1f}s"
@@ -627,9 +701,11 @@ def run_pipeline(
         # Use *initial* allocation for consistency with ratio-prestart; main loop
         # will push the up-to-date target later via update_target().
         tgt_s_est = total_budget_s * last_chars / max(total_chars_initial, 1)
-        tol_est = max(MIN_TOLERANCE_S, tgt_s_est * tolerance_ratio)
-        tol_upper_est = max(MIN_TOLERANCE_S, tgt_s_est * TOLERANCE_RATIO_UPPER)
+        tol_est = max(cfg.min_tolerance_seconds, tgt_s_est * tolerance_ratio)
+        tol_upper_est = max(cfg.min_tolerance_seconds, tgt_s_est * cfg.last_chunk_upper_tolerance_ratio)
         ctx = _ChunkRefineContext(
+            motion=motion, side=side,
+            config=cfg,
             client=client,
             original_text=last_text,
             target_s=tgt_s_est,
@@ -638,10 +714,11 @@ def run_pipeline(
             prev_texts=list(final_texts),
             next_chunk_text="",
             voice=voice,
-            max_ref=MAX_REFINEMENTS,
+            max_ref=cfg.max_refinements,
             kickoff_iter=iter_i,
             kickoff_kind="last",
         )
+        ctx.seconds_per_word = _measured_rate()
         _chunk_contexts[last_idx] = ctx
         th = threading.Thread(target=_refine_worker, args=(ctx, "prestart"), daemon=True)
         ctx.workers.append(th)
@@ -665,7 +742,7 @@ def run_pipeline(
 
         # ---- early-cut: if chunk is too long relative to budget, split it now ----
         if enable_early_cut and i > 0:
-            fs_pre = _fastspeech_estimate(chunk)
+            fs_pre = _estimate_duration(chunk)
             if fs_pre / target_s > early_cut_ratio:
                 head, tail = _early_cut_chunk(chunk, target_s, early_cut_ratio)
                 if tail:
@@ -679,15 +756,15 @@ def run_pipeline(
                     target_s = audio_budget_remaining * (chunk_chars / remaining_chars_total)
                     print(f"  chunk {i:03d} | early-cut: fs_pre={fs_pre:.1f}s > {early_cut_ratio}x target={target_s:.1f}s → split into head({len(head)}c)+tail({len(tail)}c)")
 
-        tol_s = max(MIN_TOLERANCE_S, target_s * tolerance_ratio)
+        tol_s = max(cfg.min_tolerance_seconds, target_s * tolerance_ratio)
         remaining_chunks = n_chunks - i
         tol_upper_s = (
-            max(MIN_TOLERANCE_S, target_s * TOLERANCE_RATIO_UPPER)
+            max(cfg.min_tolerance_seconds, target_s * cfg.last_chunk_upper_tolerance_ratio)
             if remaining_chunks == 1
             else tol_s
         )
 
-        max_ref = 3 if i < n_chunks // 2 else MAX_REFINEMENTS
+        max_ref = cfg.early_max_refinements if i < n_chunks // 2 else cfg.max_refinements
         next_chunk_text = segments_list[i + 1] if i + 1 < len(segments_list) else ""
 
         seg = None
@@ -711,8 +788,9 @@ def run_pipeline(
         # For iter i, ratio check looks at c[i+2]/c[i+1]; last-chunk fires when i == n-3.
         # Both kickoffs run BEFORE we process the current chunk, so chunk 0's TTS
         # runs in parallel with the prestart for chunk 2 (if ratio triggered).
-        _kickoff_ratio_prestart(i)
-        _kickoff_last_chunk_prestart(i)
+        if not (cfg.adaptive_delivery and i == 0):
+            _kickoff_ratio_prestart(i)
+            _kickoff_last_chunk_prestart(i)
 
         # ---- chunk 0: no refinement, sequential TTS ----
         if i == 0:
@@ -732,7 +810,7 @@ def run_pipeline(
 
             for attempt in range(10):
                 try:
-                    tts_out = _query_time_profiled(client, refined, voice=voice)
+                    tts_out = _query_time_profiled(client, refined, voice=voice, model=cfg.model)
                     audio_seconds = float(tts_out["audio_seconds"])
                     tts_api_s = float(tts_out["tts_api_s"])
                     mp3_parse_s = float(tts_out["mp3_parse_s"])
@@ -769,6 +847,8 @@ def run_pipeline(
                 chunk_prestart_kind = ctx.kickoff_kind
             else:
                 ctx = _ChunkRefineContext(
+                    motion=motion, side=side,
+                    config=cfg,
                     client=client,
                     original_text=chunk,
                     target_s=target_s,
@@ -782,6 +862,8 @@ def run_pipeline(
                     kickoff_kind="",
                 )
                 chunk_prestart_kind = ""
+
+            ctx.seconds_per_word = _measured_rate()
 
             # Always start a normal worker for this chunk (in addition to any
             # prestart worker that may already be running on the same context).
@@ -817,10 +899,10 @@ def run_pipeline(
             audio_s = float(tts_out["audio_seconds"])
             if not _in_range(audio_s, target_now, tol_now, tol_upper_now):
                 raw_speed = audio_s / target_now if target_now > 0 else 1.0
-                clamped = max(SPEED_ADJUST_MIN, min(SPEED_ADJUST_MAX, raw_speed))
+                clamped = max(cfg.speed_adjust_min, min(cfg.speed_adjust_max, raw_speed))
                 if abs(clamped - 1.0) > 0.01:
                     try:
-                        speed_tts_out = _tts_with_retry(client, chosen_cand.text, voice=voice, speed=clamped)
+                        speed_tts_out = _tts_with_retry(client, chosen_cand.text, voice=voice, speed=clamped, model=cfg.model)
                         if abs(speed_tts_out["audio_seconds"] - target_now) < abs(audio_s - target_now):
                             tts_out = speed_tts_out
                             audio_s = float(tts_out["audio_seconds"])
@@ -913,15 +995,25 @@ def run_pipeline(
                 warnings.warn(f"Chunk {i}: pydub decode failed: {e}")
                 seg = AudioSegment.silent(duration=int(audio_seconds * 1000))
 
+        if cfg.adaptive_delivery:
+            in_range = _in_range(audio_seconds, target_s, tol_s, tol_upper_s)
+
         # ---- budget tracking ----
-        audio_budget_remaining -= audio_seconds + overrun_s
+        audio_budget_remaining -= audio_seconds
+        if cfg.budget_mode == "experiment_elapsed":
+            audio_budget_remaining -= overrun_s
         prev_audio_s = audio_seconds
         final_texts.append(refined)
         all_mp3_bytes.append(mp3_bytes)
 
         if out_dir is not None:
             (out_dir / f"chunk_{i:03d}.txt").write_text(refined, encoding="utf-8")
-            (out_dir / f"chunk_{i:03d}.mp3").write_bytes(mp3_bytes)
+            chunk_path = out_dir / f"chunk_{i:03d}.mp3"
+            temporary_path = chunk_path.with_suffix(".mp3.tmp")
+            temporary_path.write_bytes(mp3_bytes)
+            temporary_path.replace(chunk_path)
+            if on_chunk is not None:
+                on_chunk(i, chunk_path, refined, len(seg) / 1000.0)
 
         combined_audio += seg
 
@@ -1031,9 +1123,13 @@ def convert_text_to_speech_streaming(
     content: str,
     output_path: str,
     total_budget_s: float,
-    voice: str = "echo",
-    enable_early_cut: bool = False,
-    early_cut_ratio: float = EARLY_CUT_RATIO,
+    voice: Optional[str] = None,
+    enable_early_cut: Optional[bool] = None,
+    early_cut_ratio: Optional[float] = None,
+    config: Optional[OutputConfig] = None,
+    on_chunk=None,
+    motion: str = "",
+    side: str = "",
 ) -> Tuple[str, str, float]:
     """
     Streaming TTS: split content into chunks, adaptively refine each chunk's
@@ -1068,6 +1164,9 @@ def convert_text_to_speech_streaming(
         out_dir=output_path.parent / f"{output_path.stem}_chunks",
         enable_early_cut=enable_early_cut,
         early_cut_ratio=early_cut_ratio,
+        config=config,
+        on_chunk=on_chunk,
+        motion=motion, side=side,
     )
 
     # Save combined audio
@@ -1077,7 +1176,8 @@ def convert_text_to_speech_streaming(
     duration = MP3(BytesIO(combined_mp3_bytes)).info.length
 
     # Build text_content and reference matching the original API
-    text_content, reference = remove_citation(content, keep_main=True)
+    _, reference = remove_citation(content, keep_main=True)
+    text_content = "\n\n".join(final_texts)
 
     print(
         f"  => audio_total={round_profile.audio_seconds_total:.2f}s | "

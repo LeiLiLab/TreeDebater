@@ -46,8 +46,8 @@ import yaml
 from openai import OpenAI
 from pydub import AudioSegment
 
-from utils.constants import CLOSING_TIME, OPENING_TIME, REBUTTAL_TIME
 from utils.tool import logger
+from .config import add_streaming_arguments, resolve_config
 
 
 def transcribe_audio_segment(segment: AudioSegment, audio_format: str = "mp3") -> str:
@@ -109,6 +109,9 @@ class StreamingInputEnv:
         self.config = config
         self._tree_lock = threading.Lock()
         self._stop = threading.Event()
+        self.succeeded = False
+        self._failed = False
+        self._tree_updates = 0
 
         if not debater.use_debate_flow_tree:
             logger.warning(
@@ -117,6 +120,7 @@ class StreamingInputEnv:
             )
 
     def stop(self) -> None:
+        """Signal end of input; run() drains available audio and text before exiting."""
         self._stop.set()
 
     def _flush_text(self, chunks: List[str]) -> None:
@@ -129,6 +133,7 @@ class StreamingInputEnv:
         tree_start = time.time()
         with self._tree_lock:
             self.debater._analyze_statement(merged, self.config.statement_side)
+            self._tree_updates += 1
         tree_end = time.time()
         logger.debug(f"[StreamingInputEnv] tree_update_end words={wc} update_time={tree_end - tree_start:.3f}s t={tree_end:.3f}")
         logger.info(
@@ -169,12 +174,17 @@ class StreamingInputEnv:
             f"cursor_mode={use_cursor}"
         )
 
+        drained = False
         try:
-            while not self._stop.is_set():
-                if use_cursor and continuous_file and continuous_file.is_file():
+            while True:
+                draining = self._stop.is_set()
+                if use_cursor:
                     # Cursor mode: read from continuous audio up to cursor position
                     try:
-                        available_audio = self._read_audio_up_to_cursor(continuous_file, cfg.playback_cursor[0])
+                        available_audio = (
+                            self._read_audio_up_to_cursor(continuous_file, cfg.playback_cursor[0])
+                            if continuous_file.is_file() else None
+                        )
                         if available_audio is not None and len(available_audio) > 0:
                             self._process_cursor_audio(
                                 available_audio,
@@ -183,14 +193,22 @@ class StreamingInputEnv:
                                 cap_audio_ms,
                                 text_buf,
                                 text_first_seen,
+                                drain=draining,
                             )
+                        if draining:
+                            expected_ms = int(cfg.playback_cursor[0] * 1000)
+                            if emitted_ms.get("continuous", 0) < expected_ms:
+                                self._failed = True
                     except Exception as e:
+                        self._failed = True
                         logger.warning(f"[StreamingInputEnv] Cursor audio processing failed: {e}")
                 else:
                     # Chunk mode: original behavior
                     try:
                         paths = sorted(watch_dir.glob(cfg.audio_file_glob), key=lambda p: p.stat().st_mtime)
                     except Exception:
+                        if draining:
+                            raise
                         time.sleep(cfg.poll_interval)
                         continue
 
@@ -199,13 +217,16 @@ class StreamingInputEnv:
                         if path_str in seen:
                             continue
                         try:
-                            seg = AudioSegment.from_file(path_str)
+                            seg = AudioSegment.from_file(BytesIO(Path(path_str).read_bytes()))
                         except Exception as e:
+                            if draining:
+                                self._failed = True
                             logger.warning(f"[StreamingInputEnv] Skip unreadable audio {path_str}: {e}")
                             continue
                         seen.add(path_str)
                         log_id = _log_id_from_filename(path.name)
                         if log_id in completed:
+                            self._failed = True
                             continue
                         audio_buf.setdefault(log_id, []).append((path_str, seg))
                         if log_id not in audio_first_seen:
@@ -222,17 +243,34 @@ class StreamingInputEnv:
                             cap_audio_ms,
                             text_buf,
                             text_first_seen,
+                            drain=draining,
                         )
+                    if draining and any(audio_buf.values()):
+                        self._failed = True
 
                 self._idle_text_flush(text_buf, text_first_seen)
-                time.sleep(cfg.poll_interval)
+                if draining:
+                    drained = True
+                    break
+                self._stop.wait(cfg.poll_interval)
+        except Exception:
+            self._failed = True
+            logger.exception("[StreamingInputEnv] Listener failed")
         except KeyboardInterrupt:
             logger.info("[StreamingInputEnv] KeyboardInterrupt; stopping.")
         finally:
-            for log_id in list(text_buf.keys()):
-                if text_buf.get(log_id):
-                    self._flush_text(text_buf[log_id])
-                    text_buf[log_id] = []
+            try:
+                for log_id in list(text_buf.keys()):
+                    if text_buf.get(log_id):
+                        self._flush_text(text_buf[log_id])
+                        text_buf[log_id] = []
+            except Exception:
+                self._failed = True
+                logger.exception("[StreamingInputEnv] Final tree update failed")
+            self.succeeded = (
+                drained and not self._failed and self._tree_updates > 0
+                and self.debater.use_debate_flow_tree
+            )
             logger.debug(f"[StreamingInputEnv] thread_end stage={cfg.stage} statement_side={cfg.statement_side} t={time.time():.3f}")
 
     def _idle_text_flush(self, text_buf: Dict[str, List[str]], text_first_seen: Dict[str, float]) -> None:
@@ -264,11 +302,13 @@ class StreamingInputEnv:
         cap_audio_ms: Optional[int],
         text_buf: Dict[str, List[str]],
         text_first_seen: Dict[str, float],
+        *,
+        drain: bool = False,
     ) -> None:
         cfg = self.config
         acc_ms = 0
         to_emit: List[Tuple[str, Any]] = []
-        while audio_buf.get(log_id) and acc_ms < min_audio_ms:
+        while audio_buf.get(log_id) and (drain or acc_ms < min_audio_ms):
             path_str, seg = audio_buf[log_id].pop(0)
             to_emit.append((path_str, seg))
             acc_ms += len(seg)
@@ -281,7 +321,7 @@ class StreamingInputEnv:
         wait_time_exceeded = False
         total_so_far_ms = emitted_ms.get(log_id, 0)
 
-        if to_emit and acc_ms >= min_audio_ms:
+        if to_emit and (drain or acc_ms >= min_audio_ms):
             should_emit = True
         elif to_emit and cfg.max_audio_wait_seconds and cfg.max_audio_wait_seconds > 0:
             if elapsed is not None and elapsed >= cfg.max_audio_wait_seconds:
@@ -291,6 +331,9 @@ class StreamingInputEnv:
                     f"[StreamingInputEnv] Max audio wait exceeded for log_id={log_id!r}; "
                     f"emitting partial audio {acc_ms / 1000.0:.2f}s."
                 )
+
+        if drain and cap_audio_ms is not None and total_so_far_ms + acc_ms > cap_audio_ms:
+            self._failed = True
 
         if should_emit and cap_audio_ms is not None:
             if total_so_far_ms >= cap_audio_ms:
@@ -314,13 +357,14 @@ class StreamingInputEnv:
         for _, s in to_emit[1:]:
             combined += s
 
-        force_flush = wait_time_exceeded or (
+        force_flush = drain or wait_time_exceeded or (
             cap_audio_ms is not None and (total_so_far_ms + acc_ms) >= cap_audio_ms
         )
 
         try:
             text = transcribe_audio_segment(combined, audio_format=cfg.audio_format)
         except Exception as e:
+            self._failed = True
             logger.warning(f"[StreamingInputEnv] Transcription failed for log_id={log_id!r}: {e}")
             for item in reversed(to_emit):
                 audio_buf.setdefault(log_id, []).insert(0, item)
@@ -352,6 +396,7 @@ class StreamingInputEnv:
     ) -> None:
         cfg = self.config
         if not text.strip():
+            self._failed = True
             return
         text_buf.setdefault(log_id, []).append(text)
         if log_id not in text_first_seen:
@@ -378,7 +423,7 @@ class StreamingInputEnv:
         """Read continuous audio file up to the cursor position."""
         try:
             read_start = time.time()
-            full_audio = AudioSegment.from_file(str(continuous_file))
+            full_audio = AudioSegment.from_file(BytesIO(continuous_file.read_bytes()))
             cursor_ms = int(cursor_seconds * 1000)
             if cursor_ms <= 0:
                 return None
@@ -399,6 +444,8 @@ class StreamingInputEnv:
         cap_audio_ms: Optional[int],
         text_buf: Dict[str, List[str]],
         text_first_seen: Dict[str, float],
+        *,
+        drain: bool = False,
     ) -> None:
         """Process audio from cursor-based continuous file."""
         cfg = self.config
@@ -420,13 +467,13 @@ class StreamingInputEnv:
         new_audio_ms = len(new_audio)
 
         # Check if we have enough audio to process
-        if new_audio_ms < min_audio_ms:
+        if new_audio_ms < min_audio_ms and not drain:
             logger.debug(f"[StreamingInputEnv] wait_audio_accumulation available={new_audio_ms/1000.0:.2f}s "
                         f"need={min_audio_ms/1000.0:.2f}s t={time.time():.3f}")
             return
 
         # Decide how much to process (in chunks of min_audio_ms)
-        to_process_ms = (new_audio_ms // min_audio_ms) * min_audio_ms
+        to_process_ms = new_audio_ms if drain else (new_audio_ms // min_audio_ms) * min_audio_ms
         if to_process_ms == 0:
             return
 
@@ -455,9 +502,10 @@ class StreamingInputEnv:
                 f"words={len(text.split())} total_processed={emitted_ms[log_id] / 1000.0:.2f}s"
             )
 
-            force_flush = cap_audio_ms is not None and emitted_ms[log_id] >= cap_audio_ms
+            force_flush = drain or (cap_audio_ms is not None and emitted_ms[log_id] >= cap_audio_ms)
             self._append_transcript_text(log_id, text, force_flush, text_buf, text_first_seen)
         except Exception as e:
+            self._failed = True
             logger.warning(f"[StreamingInputEnv] Cursor transcription failed: {e}")
 
 
@@ -610,7 +658,7 @@ class StreamingDebateEnv:
             try:
                 mp3_path = tts_outputs_dir_from_log() / f"{player.config.type}_{player.status}_{player.side}.mp3"
                 if mp3_path.is_file() and mp3_path.stat().st_size > 2048:
-                    audio = AudioSegment.from_file(str(mp3_path))
+                    audio = AudioSegment.from_file(BytesIO(mp3_path.read_bytes()), format="mp3")
                     if self._split_mode == "fixed":
                         chunks = split_audio(audio, mode="fixed", time_seconds=self._chunk_seconds)
                     else:
@@ -654,36 +702,36 @@ class StreamingDebateEnv:
                     def _gen_opening(side=side):
                         return self._env.debaters[side].opening_generation(
                             history=self._env.debate_process[1:],
-                            max_time=OPENING_TIME,
+                            max_time=self._env.config.speech_budgets.opening,
                             time_control=self._env.time_control,
                             streaming_tts=getattr(self._env.debaters[side].config, "streaming_tts", False),
                         )
 
-                    self._play_speech_turn("opening", side, OPENING_TIME, _gen_opening)
+                    self._play_speech_turn("opening", side, self._env.config.speech_budgets.opening, _gen_opening)
             elif stage == "rebuttal":
                 for side in order:
 
                     def _gen_rebuttal(side=side):
                         return self._env.debaters[side].rebuttal_generation(
                             history=self._env.debate_process[1:],
-                            max_time=REBUTTAL_TIME,
+                            max_time=self._env.config.speech_budgets.rebuttal,
                             time_control=self._env.time_control,
                             streaming_tts=getattr(self._env.debaters[side].config, "streaming_tts", False),
                         )
 
-                    self._play_speech_turn("rebuttal", side, REBUTTAL_TIME, _gen_rebuttal)
+                    self._play_speech_turn("rebuttal", side, self._env.config.speech_budgets.rebuttal, _gen_rebuttal)
             elif stage == "closing":
                 for side in order:
 
                     def _gen_closing(side=side):
                         return self._env.debaters[side].closing_generation(
                             history=self._env.debate_process[1:],
-                            max_time=CLOSING_TIME,
+                            max_time=self._env.config.speech_budgets.closing,
                             time_control=self._env.time_control,
                             streaming_tts=getattr(self._env.debaters[side].config, "streaming_tts", False),
                         )
 
-                    self._play_speech_turn("closing", side, CLOSING_TIME, _gen_closing)
+                    self._play_speech_turn("closing", side, self._env.config.speech_budgets.closing, _gen_closing)
             logger.info(f"[{stage}] Done")
             if self._env.debug:
                 if input("Press N to stop: ").lower() == "n":
@@ -737,19 +785,8 @@ def parse_args() -> argparse.Namespace:
         default="opening",
         help="Watch-only: stage label for extract_statement.",
     )
-    p.add_argument("--min-audio-seconds", type=float, default=30.0)
-    p.add_argument("--min-text-words", type=int, default=50)
-    p.add_argument("--poll-interval", type=float, default=1.0)
-    p.add_argument("--audio-glob", type=str, default="*.mp3")
-    p.add_argument("--audio-format", type=str, default="mp3")
-    p.add_argument("--split-mode", type=str, choices=["fixed", "silence"], default="fixed")
-    p.add_argument("--chunk-seconds", type=float, default=10.0)
-    p.add_argument("--silence-window-seconds", type=float, default=0.7)
-    p.add_argument("--max-audio-wait-seconds", type=float, default=0.0)
-    p.add_argument("--max-text-wait-seconds", type=float, default=0.0)
-    p.add_argument("--max-total-audio-seconds", type=float, default=0.0)
-    p.add_argument("--listener-join-timeout", type=float, default=300.0, help="Debate mode: max seconds to join listener after each turn.")
-    p.add_argument("--min-playback-increment", type=float, default=3.0, help="Minimum playback increment in seconds (env-level cursor update frequency).")
+    add_streaming_arguments(p)
+    p.add_argument("--audio-glob", type=str, default=None)
     return p.parse_args()
 
 
@@ -759,17 +796,21 @@ def main() -> None:
     if not config_path.is_file():
         raise FileNotFoundError(config_path)
 
+    with open(config_path, "r", encoding="utf-8") as f:
+        full_config = yaml.safe_load(f)
+    resolve_config(full_config, args, overlap=False)
+    logger.info(f"Resolved config: {full_config}")
+
     if args.debate:
         from agents import AudienceConfig, DebaterConfig, JudgeConfig
         from env import EnvConfig
 
-        with open(config_path, "r", encoding="utf-8") as f:
-            full_config = yaml.load(f, Loader=yaml.FullLoader)
         logger.info(f"Config: {full_config}")
         env_config = EnvConfig(
             debater_config=[DebaterConfig(**c) for c in full_config["debater"]],
             judge_config=JudgeConfig(**full_config["judge"]),
             audience_config=AudienceConfig(**full_config["audience"]),
+            streaming=full_config["streaming"],
             **full_config["env"],
         )
         watch_root = Path(args.watch_dir).resolve() if args.watch_dir else None
@@ -863,7 +904,7 @@ def main() -> None:
         min_audio_seconds=args.min_audio_seconds,
         min_text_words=args.min_text_words,
         poll_interval=args.poll_interval,
-        audio_file_glob=args.audio_glob,
+        audio_file_glob=args.audio_glob or f"*.{args.audio_format}",
         max_audio_wait_seconds=args.max_audio_wait_seconds if args.max_audio_wait_seconds > 0 else None,
         max_text_wait_seconds=args.max_text_wait_seconds if args.max_text_wait_seconds > 0 else None,
         max_total_audio_seconds=args.max_total_audio_seconds if args.max_total_audio_seconds > 0 else None,

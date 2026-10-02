@@ -18,7 +18,7 @@ from evaluator import eval_surprise, extract_claims, extract_obj_aspect
 from tts import convert_text_to_speech, trim_audio_by_sentences
 from tts_streaming import convert_text_to_speech_streaming
 from utils.constants import CLOSING_TIME, OPENING_TIME, REBUTTAL_TIME, WORDRATIO, deepseek_api_key
-from utils.model import HelperClient, safety_setting
+from utils.model import HelperClient, normalize_deepseek_litellm_model, safety_setting
 from utils.prompts import *
 from utils.timing_log import (
     clear_speak_io_context,
@@ -102,8 +102,10 @@ class Agent:
         elif "deepseek" in self.config.model.lower():
             self.client = partial(
                 litellm.completion,
-                model="deepseek/" + self.config.model,
+                model=normalize_deepseek_litellm_model(self.config.model),
                 api_key=deepseek_api_key,
+                **({"extra_body": {"thinking": {"type": "disabled"}}}
+                   if "flash" in normalize_deepseek_litellm_model(self.config.model) else {}),
                 temperature=self.config.temperature,
                 max_tokens=self.config.max_tokens,
             )
@@ -396,7 +398,7 @@ class Debater(Agent):
                     _log_path = h.baseFilename
                     break
         prefix = _log_path.replace(".log", "")
-        audio_dir = prefix + "_outputs"
+        audio_dir = getattr(self, "audio_output_dir", None) or prefix + "_outputs"
         os.makedirs(audio_dir, exist_ok=True)
         audio_file = os.path.join(audio_dir, f"{self.config.type}_{self.status}_{self.side}.mp3")
         logger.info(f"[TTS-Start] Starting TTS for {self.config.type} {self.status} {self.side} (streaming={streaming_tts}, budget={max_time}s)")
@@ -415,6 +417,9 @@ class Debater(Agent):
             wall_t0 = time.perf_counter()
             content, reference, duration = convert_text_to_speech_streaming(
                 statement, audio_file, total_budget_s=max_time,
+                motion=self.motion, side=self.side,
+                config=getattr(self, "streaming_output_config", None),
+                on_chunk=getattr(self, "tts_chunk_callback", None),
             )
             wall_s = time.perf_counter() - wall_t0
             logger.debug(f"[Time-Control] Save Audio: {audio_file}")

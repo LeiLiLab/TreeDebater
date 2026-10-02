@@ -1,16 +1,16 @@
 import argparse
 import json
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 import yaml
 
 from agents import Audience, AudienceConfig, BaselineDebater, Debater, DebaterConfig, HumanDebater, Judge, JudgeConfig
 from ouragents import TreeDebater
-from utils.constants import CLOSING_TIME, OPENING_TIME, REBUTTAL_TIME
 from utils.timing_log import log_timing
 from utils.tool import logger
+from streaming.config import StreamingConfig, SpeechBudgets, from_mapping, resolve_config
 
 
 @dataclass
@@ -25,6 +25,13 @@ class EnvConfig:
     reverse: bool = False
     time_control: bool = True
     streaming_tts: bool = False
+    streaming: StreamingConfig = field(default_factory=StreamingConfig)
+    speech_budgets: SpeechBudgets = field(default_factory=SpeechBudgets)
+
+    def __post_init__(self):
+        self.streaming = from_mapping(StreamingConfig, self.streaming)
+        self.speech_budgets = from_mapping(SpeechBudgets, self.speech_budgets)
+
 
 
 def extract_overall_score(obj_scores):  # larger is better
@@ -61,6 +68,9 @@ class Env:
             else:
                 raise ValueError(f"Type {conf.type} is not supported.")
 
+        for player in self.debaters.values():
+            player.streaming_output_config = config.streaming.output
+
         # init judge
         if config.judge_num > 1:
             print("Multiple judges are not supported yet.")
@@ -95,7 +105,7 @@ class Env:
                     player = self.debaters[side]
                     response = player.opening_generation(
                         history=self.debate_process[1:],
-                        max_time=OPENING_TIME,
+                        max_time=self.config.speech_budgets.opening,
                         time_control=self.time_control,
                         streaming_tts=player.config.streaming_tts,
                     )
@@ -105,7 +115,7 @@ class Env:
                     player = self.debaters[side]
                     response = player.rebuttal_generation(
                         history=self.debate_process[1:],
-                        max_time=REBUTTAL_TIME,
+                        max_time=self.config.speech_budgets.rebuttal,
                         time_control=self.time_control,
                         streaming_tts=player.config.streaming_tts,
                     )
@@ -115,7 +125,7 @@ class Env:
                     player = self.debaters[side]
                     response = player.closing_generation(
                         history=self.debate_process[1:],
-                        max_time=CLOSING_TIME,
+                        max_time=self.config.speech_budgets.closing,
                         time_control=self.time_control,
                         streaming_tts=player.config.streaming_tts,
                     )
@@ -260,10 +270,12 @@ if __name__ == "__main__":
     # logger.info(f"Use rehearsal tree: {use_rehearsal_tree}")
     # logger.info(f"Use debate flow tree: {use_debate_flow_tree}")
 
+    resolve_config(config, overlap=False)
     env_config = EnvConfig(
         debater_config=[DebaterConfig(**config) for config in config["debater"]],
         judge_config=JudgeConfig(**config["judge"]),
         audience_config=AudienceConfig(**config["audience"]),
+        streaming=config["streaming"],
         **config["env"],
     )
     env = Env(env_config, args.debug)

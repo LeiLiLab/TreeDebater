@@ -182,14 +182,16 @@ def run_streaming_tts_chunk_copy_bridge(
     poll_interval: float = 0.4,
     stable_rounds: int = 2,
     min_bytes: int = 512,
+    drained_event: Optional[threading.Event] = None,
 ) -> None:
     """
     Poll ``chunks_dir`` for ``chunk_NNN.<ext>`` from streaming TTS; when byte-size is
     stable, copy to ``watch_dir`` as ``{speaker_side}_chunkNNN.<ext>`` (same contract as
     :func:`streaming.chunk_audio.stream_chunks_to_directory` filenames for that log id).
 
-    Increments ``live_chunk_counter[0]`` for each successful copy (used to skip post-hoc
-    split when overlap debate already fed chunks).
+    ``stop_event`` signals that the producer has finished writing. Perform one final
+    pass before returning; set ``drained_event`` only when every contiguous chunk was
+    copied. Increments ``live_chunk_counter[0]`` for each successful copy.
     """
     chunks_dir = Path(chunks_dir).resolve()
     watch_dir = Path(watch_dir).resolve()
@@ -210,12 +212,17 @@ def run_streaming_tts_chunk_copy_bridge(
         except ValueError:
             return None
 
-    while not stop_event.is_set():
+    while True:
+        draining = stop_event.is_set()
         if not chunks_dir.is_dir():
+            if draining:
+                return
             time.sleep(poll_interval)
             continue
 
-        for path in sorted(chunks_dir.glob(f"chunk_*.{ext}"), key=lambda p: p.stat().st_mtime):
+        paths = sorted(chunks_dir.glob(f"chunk_*.{ext}"))
+        expected_indices = {idx for p in paths if (idx := _chunk_index(p)) is not None}
+        for path in paths:
             idx = _chunk_index(path)
             if idx is None or idx in copied_indices:
                 continue
@@ -234,13 +241,13 @@ def run_streaming_tts_chunk_copy_bridge(
                 )
 
             prev = size_stable.get(key)
-            if prev is None or prev[0] != sz:
+            if not draining and (prev is None or prev[0] != sz):
                 size_stable[key] = (sz, 1)
                 continue
-            _, cnt = size_stable[key]
+            _, cnt = size_stable.get(key, (sz, 0))
             cnt += 1
             size_stable[key] = (sz, cnt)
-            if cnt < stable_rounds:
+            if not draining and cnt < stable_rounds:
                 continue
 
             # PlaybackMain consumes chunk001+, while streaming TTS emits chunk_000+.
@@ -249,7 +256,9 @@ def run_streaming_tts_chunk_copy_bridge(
             dest = watch_dir / f"{speaker_side}_chunk{playback_idx:03d}.{ext}"
             try:
                 copy_start = time.time()
-                shutil.copy2(path, dest)
+                temporary_dest = dest.with_suffix(dest.suffix + ".tmp")
+                shutil.copy2(path, temporary_dest)
+                temporary_dest.replace(dest)
                 copy_end = time.time()
                 copied_indices.add(idx)
                 live_chunk_counter[0] += 1
@@ -263,4 +272,13 @@ def run_streaming_tts_chunk_copy_bridge(
             except OSError as e:
                 logger.warning(f"[TtsChunkBridge] copy failed {path} → {dest}: {e}")
 
-        time.sleep(poll_interval)
+        if draining:
+            if (
+                expected_indices
+                and expected_indices == set(range(max(expected_indices) + 1))
+                and copied_indices == expected_indices
+                and drained_event is not None
+            ):
+                drained_event.set()
+            return
+        stop_event.wait(poll_interval)

@@ -217,8 +217,18 @@ docs-coverage: test-run docs-gen
 
 docs: changelog docs-gen docs-mypy docs-coverage
 
+# Local microphone app. Run these targets from the TreeDebater repository root.
+.PHONY: app-frontend-install app-frontend app-backend
+app-frontend-install:
+	bash debate-app/scripts/frontend-npm.sh ci
+
+app-frontend:
+	bash debate-app/scripts/frontend-npm.sh run dev -- --host 127.0.0.1 --port 3000
+
+# Activate the debate Python environment before starting the backend.
+app-backend:
+	./debate-app/scripts/start-backend.sh
+
 ########################################################################################
 # End
 ########################################################################################
-
-

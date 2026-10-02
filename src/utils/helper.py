@@ -214,6 +214,10 @@ def get_actions_from_tree(claims, tree, oppo_tree):
                     "action": "propose",
                     "target_claim": claim,
                     "target_argument": "",
+                    "claim_owner": "us",
+                    "desired_direction": "support",
+                    "unclassified_arguments": [],
+                    "counterarguments": [],
                     "importance": "high",
                     "targeted_debate_tree": "you",
                 }
@@ -231,7 +235,14 @@ def get_actions_from_tree(claims, tree, oppo_tree):
                             "idx": len(actions),
                             "action": action,
                             "target_claim": node.claim,
-                            "target_argument": "".join(node.argument),
+                            "target_argument": " ".join(node.argument),
+                            "claim_owner": "us" if action == "reinforce" else "opponent",
+                            "desired_direction": "support" if action == "reinforce" else "challenge",
+                            "unclassified_arguments": list(node.argument),
+                            "counterarguments": [
+                                {"claim": child.claim, "arguments": list(child.argument)}
+                                for child in node.children
+                            ],
                             "targeted_debate_tree": "you",
                         }
                     )
@@ -249,7 +260,14 @@ def get_actions_from_tree(claims, tree, oppo_tree):
                             "idx": len(actions),
                             "action": action,
                             "target_claim": node.claim,
-                            "target_argument": "".join(node.argument),
+                            "target_argument": " ".join(node.argument),
+                            "claim_owner": "us" if action == "reinforce" else "opponent",
+                            "desired_direction": "support" if action == "reinforce" else "challenge",
+                            "unclassified_arguments": list(node.argument),
+                            "counterarguments": [
+                                {"claim": child.claim, "arguments": list(child.argument)}
+                                for child in node.children
+                            ],
                             "targeted_debate_tree": "opponent",
                         }
                     )
@@ -267,10 +285,11 @@ def get_battlefields_from_actions(llm, motion, side, claims, actions, tree, oppo
     prompt = debate_flow_tree_action_eval_prompt.format(
         motion=motion,
         side=side,
+        act="SUPPORT" if side == "for" else "OPPOSE",
         claims=claims,
         actions=json.dumps(actions, indent=2),
         tree=tree.print_tree(include_status=True),
-        oppo_tree=oppo_tree.print_tree(include_status=True),
+        oppo_tree=oppo_tree.print_tree(include_status=True, reverse=True),
     )
     log_llm_io(logger, phase="helper", title="Debate-Flow-Tree-Action-Eval-Prompt", body=prompt.strip(), side=side)
     eval_results, response = get_response_with_retry(
@@ -292,6 +311,8 @@ def get_battlefields_from_actions(llm, motion, side, claims, actions, tree, oppo
             "battlefield": eval_result["battlefield"],
             "battlefield_importance": eval_result["importance"],
             "battlefield_argument": eval_result["unified_argument"],
+            "supporting_arguments": eval_result.get("supporting_arguments", []),
+            "counterarguments": eval_result.get("counterarguments", []),
             "actions": actions_in_battlefield,
         }
         battlefields.append(battlefield)
@@ -491,7 +512,7 @@ class TimeAdjuster:
 ##################### Anaylsis #####################
 
 
-def extract_statement(llm, motion, statement, claims=None, tree=None, side=None, stage=None):
+def extract_statement(llm, motion, statement, claims=None, tree=None, side=None, stage=None, planned_actions=None):
     if claims is not None:
         prompt = extract_statment_by_claim_prompt.format(motion=motion, statement=statement, claim=json.dumps(claims))
     elif tree is not None:
@@ -506,6 +527,21 @@ def extract_statement(llm, motion, statement, claims=None, tree=None, side=None,
         )
     else:
         prompt = extract_statment_prompt.format(motion=motion, statement=statement)
+
+    if tree is not None and planned_actions:
+        prompt += (
+            "\n## Speaker's plan before generation and revision\n"
+            + json.dumps([dict(action, id=i) for i, action in enumerate(planned_actions)])
+            + "\nThe plan describes intentions, NOT evidence of what was said. Compare it with the final Statement. "
+            "For each extracted claim, return planned_action_ids containing only IDs whose substantive claim "
+            "is actually expressed by that item's verbatim content excerpt. Paraphrases are allowed; mere "
+            "topic overlap or mentioning an opponent's claim is not a match. Use [] for unmatched claims. "
+            "Exclude omitted planned claims entirely; do not invent quotations or add details from the plan. "
+            "When a spoken claim implements a planned propose action, preserve its role on the speaker's own "
+            "tree: propose a new main claim, or reinforce its existing main-claim node. Keep any applicable "
+            "attack/rebut links as additional purposes rather than replacing the proposal role. "
+            "Extract only what the final speech says, even when it is narrower than the planned claim.\n"
+        )
 
     log_llm_io(
         logger,
@@ -529,4 +565,42 @@ def extract_statement(llm, motion, statement, claims=None, tree=None, side=None,
         side=side,
         stage=stage,
     )
+    if tree is not None:
+        # Structured JSON alone does not establish that an extraction is grounded
+        # in the audio transcript. Reject invented/missing source quotations.
+        source = " ".join(statement.split())
+        motion_key = " ".join(motion.split()).casefold().rstrip(".!?")
+        grounded = []
+        for item in claims:
+            excerpt = " ".join((item.get("content") or "").split())
+            claim_key = " ".join(item["claim"].split()).casefold().rstrip(".!?")
+            if not excerpt or excerpt not in source or claim_key == motion_key:
+                logger.warning("Skipping ungrounded or motion-only extraction: %s", item["claim"])
+                continue
+            # The extractor supplies semantic matches; only verified source spans
+            # with valid plan IDs can recover a lost proposal role. Never insert
+            # the planned wording itself: it may contain details omitted in speech.
+            if planned_actions:
+                matched_ids = [
+                    i for i in item.get("planned_action_ids", [])
+                    if type(i) is int and 0 <= i < len(planned_actions)
+                ]
+                item["planned_action_ids"] = matched_ids
+                purposes = item.get("purpose") or []
+                if isinstance(purposes, dict):
+                    purposes = [purposes]
+                spoken_proposal = any(
+                    planned_actions[i]["action"] == "propose"
+                    and planned_actions[i].get("targeted_debate_tree", "you") == "you"
+                    for i in matched_ids
+                )
+                has_own_claim = any(
+                    p["targeted_debate_tree"] == "you" and p["action"] in ("propose", "reinforce")
+                    for p in purposes
+                )
+                if spoken_proposal and not has_own_claim:
+                    purposes.append({"action": "propose", "targeted_debate_tree": "you", "target": item["claim"]})
+                item["purpose"] = purposes
+            grounded.append(item)
+        claims = grounded
     return claims

@@ -73,6 +73,12 @@ if __name__ == "__main__":
         model_name2 = model2.split("/")[-1]
         motion_name = motion.replace(" ", "_").lower()
 
+        pool_path = f"../../results{args.pool_version}/{model_name1}/{motion_name}_pool_for.json"
+        pool_path_against = f"../../results{args.pool_version}/{model_name2}/{motion_name}_pool_against.json"
+        if not os.path.exists(pool_path) or not os.path.exists(pool_path_against):
+            print(f"Pool file {pool_path} or {pool_path_against} does not exist")
+            continue
+
         configs["env"]["motion"] = motion
         configs["debater"][0] = {
             "side": "for",

@@ -12,6 +12,13 @@ debater_system_prompt = """You are now a skilled debater participating in a form
 9. Adaptability: Be prepared to think on your feet and adjust your strategy based on the flow of the debate.
 10. Balance: When appropriate, recognize complexity by addressing both systemic issues and individual factors rather than presenting them as mutually exclusive.
 
+## Stance and argument ownership:
+- FOR/SUPPORT means defend the stated motion; AGAINST/OPPOSE means contest it. Keep this direction in the introduction, every main argument, and the conclusion. A concession must explain why your assigned position still holds.
+- The assigned stance takes priority over generated plans, battlefield rationales, and feedback. Correct or omit a rationale that argues for the opposite side, even when it is marked high importance.
+- Distinguish your claims from the opponent's claims and from claims they quote to challenge. Only say "my opponent argues" when the debate record supports that attribution. Defend your own claims instead of presenting them as the opponent's position.
+- Tree argument lists can contain counterarguments. Do not assume every sentence in a node supports its claim. Use the speaker, tree level, and action to determine ownership.
+- Before returning the speech, silently check stance, negation, and attribution. Prefer a direct statement of your position over ambiguous double negatives. Output only the requested speech and plan, if requested.
+
 ## Debate Format:
 1. Two debaters or teams present arguments for and against a topic.
 2. There are three stages:
@@ -182,7 +189,7 @@ extract_statment_with_tree_prompt = (
     "2. For each claim, copy the verbatim span from the statement into **content** (the claim plus its supporting reasoning or evidence in the statement). Summarize that support as short items in **arguments**.\n"
     "3. Assign **type**: **common**, **definition**, or **criteria**. Use **definition** and **criteria** only in the opening stage—for clarifying how the motion is defined or how the debate should be judged.\n"
     "4. You are given two debate trees that model the exchange between you and your opponent. Each extracted claim must align with the trees. It may serve one role or several; list every applicable role in **purpose**.\n"
-    "\t- **propose**: add a main claim at Level-0 of your tree (only when your tree has no Level-1 nodes yet).\n"
+    "\t- **propose**: add a new, explicitly stated main claim as a Level-1 child of your root. Existing Level-1 nodes do not prevent later claims, but never propose a duplicate; use reinforce for an existing claim.\n"
     "\t- **rebut**: counter an opponent attack at Level-2 of your tree; the extracted claim should oppose that Level-2 node's **claim**.\n"
     "\t- **reinforce**: strengthen a Level-1 main claim in your tree. Do not use this for material whose primary role is rebutting a Level-2 attack on your tree.\n"
     "\t- **attack**: counter a Level-1 main claim in the opponent's tree; the extracted claim should oppose that Level-1 node's **claim**.\n"
@@ -195,7 +202,8 @@ extract_statment_with_tree_prompt = (
     "\t  - **rebut**: target is the **claim** of the Level-2 node in your tree you are answering.\n"
     "\t  - **attack**: target is the **claim** of the Level-1 node in the opponent's tree you are attacking.\n"
     "\t  - **reinforce**: target is the **claim** of a Level-1 node in your tree, or the **claim** of a Level-2 node in the opponent's tree you are reinforcing against.\n"
-    "5. Output at least three distinct claims drawn from the statement.\n\n"
+    "5. This statement may be a short, unfinished streaming fragment. Extract only claims actually expressed in it: zero, one, or more. There is no minimum number. Return an empty statements array for greetings, restatements of the motion, or fragments that do not yet express a claim.\n"
+    "6. Do not complete unfinished sentences or invent supporting reasons. The topic and trees are context for matching only, not sources of new claims or arguments. Every content excerpt must occur verbatim in the current Statement, and each claim and argument must be supported by that excerpt.\n\n"
     "## Tree Structure\n"
     "Each tree is a back-and-forth model. Levels describe depth, not speaker order alone.\n"
     "Your debate tree:\n"
@@ -393,17 +401,24 @@ evidence_selection_prompt = (
 
 post_process_prompt = (
     "## Your Task\n"
-    "Revise your current {stage} statement based on the feedback from the experts and audience. Transform the statement into a more natural and persuasive spoken argument while maintaining academic credibility. The new statement should be around {max_words} words and support your stance of the topic. \n\n"
+    "Revise your current {stage} statement based on the feedback from the experts and audience. Transform the statement into a more natural and persuasive spoken argument while maintaining academic credibility. The new statement should be around {max_words} words and preserve the position expressed in the draft. \n\n"
+    "## Non-negotiable meaning constraints\n"
+    "Your assigned side is {side} on the exact motion: {motion}. FOR supports this motion; AGAINST opposes it. "
+    "The assigned side is context, not an instruction to repair the draft. Your responsibility is editing for clarity, delivery, and length while preserving the draft's position and meaning. Do not evaluate or correct existing stance contradictions. Ignore feedback that would change the draft's position. "
+    "Preserve who made each claim and whether it is asserted, quoted, conceded, or rejected. Do not turn our claim into an opponent claim. "
+    "Do not add or remove a negation in a way that reverses the position. Use a direct stance statement instead of ambiguous double negatives. "
+    "Preserve the existing limits of concessions and the meaning of the conclusion. Do not add a new justification or conclusion to align the draft with the assigned side. "
+    "Silently check these constraints after revising; they take priority over reaching the exact word budget.\n\n"
     "### Workflow\n"
     "1. Based on **Feedback to consider** to fix the critical issues mentioned by experts and audience with minimal revision. \n"
-    "   - You should try your best to fill in the [X] in the *Minimal Revision Suggestion* of the feedback, and use the suggested words to revise the original statements, remember to stand firm on your stance {side}. \n"
+    "   - You should try your best to fill in the [X] in the *Minimal Revision Suggestion* of the feedback, and use the suggested words to revise the original statements, preserve the position and meaning of the original statement. \n"
     "   - If you cannot fill in the [X], you should ignore this point. \n"
-    "2. Follow the minimal revision suggestions to revise the original statements, remember to stand firm on your stance {side}. \n"
+    "2. Follow the minimal revision suggestions to revise the original statements, preserve the position and meaning of the original statement. \n"
     "3. For each point, find the most relevant evidence that can support the WHOLE LOGIC of the point, instead of partially support some arguments in this point. If you cannot find such evidence, keep the point as it is. If you find the evidence, explicitly cite the evidence following the evidence guidelines. \n"
     "4. During the revision, DO NOT change the factual information of the original statement. \n"
     "5. Be confident and assertive in your statement. DO NOT use words like 'may', 'possible', 'likely', 'might', etc. to express your uncertainty. \n"
     "6. If there is no overview in the original statement, you should add one. If there is no indication of the order of the points (such as first, second, finally, etc.) in the original statement, you should add them. \n"
-    "7. The new statement should also follow the allocation plan and be around {max_words} words and support your stance of the topic.\n\n"
+    "7. The new statement should also follow the allocation plan and be around {max_words} words while preserving the draft's position and meaning.\n\n"
     "## Evidence Guidelines\n"
     "CRITICAL REQUIREMENT: The statement is a spoken transcript. Therefore, you MUST mention the source of the evidence in the statement instead of just citing the evidence with a number because the audience does not have access to the reference list when listening to the statement. Failing to properly attribute sources verbally will significantly undermine both your credibility and the persuasive impact of your entire presentation.\n"
     "- Only use evidence that directly supports your complete argument, rather than evidence that only partially supports certain aspects. \n"
@@ -428,7 +443,7 @@ post_process_prompt = (
     "{evidence}\n\n"
     "**Debate Topic**:\n"
     "{motion}\n\n"
-    "**Stand Firm on Your Stance**:\n"
+    "**Assigned Side (context only)**:\n"
     "{side} side\n\n"
     "**Your current {stage} Statement**:\n"
     "{statement}\n\n"
@@ -498,6 +513,9 @@ debate_flow_tree_action_prompt = (
 
 
 debate_flow_tree_action_eval_prompt = (
+    "## Assigned position: {act} the motion\n"
+    "Motion: {motion}. Your side: {side}. You must {act} this proposition, not write a balanced overview. "
+    "Keep this position when selecting support, answering counterarguments, and writing every unified_argument.\n\n"
     "## Debate Flow Organization Guide\n"
     "You are given two debate trees that model the back-and-forth between you and your opponent. "
     "This guide helps you organize effective debate strategies using the flow tree methodology and evaluate the importance of each battlefield based on the debate flow tree. \n"
@@ -526,6 +544,25 @@ debate_flow_tree_action_eval_prompt = (
     "- **Target Claim**: The specific claim you're addressing\n"
     "- **Target Argument**: The specific arguments have been discussed in this debate\n"
     "- **Prepared Materials**: Pre-prepared evidence supporting your position. It may not be mentioned in this debate process.\n\n"
+    "### Action direction and ownership (mandatory)\n"
+    "Each action provides claim_owner (us/opponent) and desired_direction (support/challenge). These identify the target's owner and what we must do with it. "
+    "unclassified_arguments are raw node text, not verified support; counterarguments are child responses to that target, not necessarily arguments against our side. "
+    "First separate supplied material into supporting_arguments for OUR SIDE and counterarguments OUR SIDE must answer, using its meaning and ownership. "
+    "Do not label all raw node text as support or invent material to fill either list; use empty lists when appropriate.\n"
+    "Your side is {side}: FOR defends the exact motion; AGAINST contests it. Every unified_argument must advance that assigned side.\n"
+    "- propose: construct a positive case for our new claim. Do not rebut that claim.\n"
+    "- reinforce or defend: support our claim or our existing attack with reasons and evidence. Do not generate an argument against the target.\n"
+    "- attack: challenge the opponent's claim.\n"
+    "- rebut: answer the opponent's attack on our claim, restoring the case for our position.\n"
+    "targeted_debate_tree identifies the tree containing the target, not necessarily its speaker. In our tree, odd levels belong to us and even levels to the opponent; in the opponent's tree, ownership is reversed. "
+    "A target_argument list may mix support and counterarguments; separate them using the claim, action, and ownership. Do not adopt an opposing sentence merely because it appears under our node.\n"
+    "Write unified_argument as reasoning we can deliver, explicitly distinguishing 'our claim' and 'the opponent's claim'. Never address our own claim as though the opponent asserted it. "
+    "If a target conflicts with our assigned side, explain that conflict and omit an unsupported defense rather than switching sides. "
+    "When grouping actions, preserve each action's direction and each claim's owner.\n\n"
+    "### Direction examples (illustrative only; do not import their claims into this debate)\n"
+    "Motion: Cities should expand public transit. Assigned side: AGAINST.\n"
+    "- Our claim: Expansion diverts limited maintenance funds. Action: reinforce; direction: support. Correct: 'Our funding concern remains: expansion competes with maintaining existing service.' Incorrect: 'My opponent says expansion diverts funds, but expansion is necessary.'\n"
+    "- Opponent's claim: Expansion reduces congestion. Action: attack; direction: challenge. Correct: 'The opponent's congestion benefit depends on drivers switching modes; they have not established that this proposal achieves that shift.' Do not attribute our funding claim to the opponent.\n\n"
     "### Grouping Debate Points into Battlefields\n"
     "Group related actions into strategic 'battlefields' when they share common underlying arguments or evidence:\n"
     "1. Same Argument, Different Actions:\n"
@@ -535,9 +572,9 @@ debate_flow_tree_action_eval_prompt = (
     "    - ... \n"
     "2. Same Evidence, Multiple Targets:\n"
     "    - Example: When a single piece of evidence can counter multiple opponent claims\n"
-    "By organizing debate points into these logical groupings, you'll create a more cohesive and efficient debate strategy.RetryClaude can make mistakes. Please double-check responses.\n\n"
+    "By organizing debate points into these logical groupings, you'll create a more cohesive and efficient debate strategy.\n\n"
     "## Techniques to get the counter-argument or construct the rebuttal for each battlefield\n"
-    "To rebut or attack a argument node, you can use following techniques to get the counter-argument or construct the rebuttal. They should be presented in this order:\n"
+    "Use the following techniques only for attack or rebut actions, when applicable. For propose, reinforce, or defend, construct support instead. Do not invent a flaw just to use a technique:\n"
     "1. **Pointing out logical fallacies:** Identify errors in the opponent's reasoning, such as reversing cause and effect, equivocation (shifting the meaning of a key term), straw man arguments, circular reasoning, or tautology (repeating the same idea in different words).\n"
     "    - You can use the prepared materials for this technique. \n"
     "2. **Pointing out error logic:** Identify flawed logic underlying opponent's framework.\n"
@@ -566,7 +603,9 @@ debate_flow_tree_action_eval_prompt = (
     "- **idx_list**: the list of 'idx' of the debate points in the given debate points. These data points are grouped into the same battlefield. \n"
     "    - Note: 'propose' action with different target claims should always be different battlefields. \n"
     "    - Note: One battlefield CANNOT include multiple 'propose' actions with different target claims.\n"
-    "- **unified_argument**: the argument for the battlefield. You should use the techniques above in order. \n"
+    "- **unified_argument**: reasoning supporting our assigned stance and respecting each action's direction and claim ownership. Silently verify these constraints before returning JSON. \n"
+    "- **supporting_arguments**: list of supplied arguments supporting our assigned side, separated from opposing material.\n"
+    "- **counterarguments**: list of supplied opposing arguments our side must answer, not endorse.\n"
     "- **importance**: The importance of the battlefield. It indicates the priority of the battlefield. It should be one of the following: 'high', 'medium', 'low'.\n"
     "\t- If this battlefield has been fully discussed your or opponent's debate flow tree, the importance should be 'low'. \n"
     "\t- If this battlefield include a new claim to be proposed, the importance should be 'high'. \n"

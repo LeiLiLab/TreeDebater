@@ -9,6 +9,7 @@ from pydantic import BaseModel, ValidationError
 from pulp import LpMaximize, LpProblem, LpVariable
 
 from .constants import MAX_TRY_NUM
+from .run_paths import reserve_run_path
 from .prompts import debater_system_prompt
 
 log_file_path = ""
@@ -115,17 +116,7 @@ class LazyFileHandler(logging.FileHandler):
 
 def get_output_path(base_dir="../log_files/", suffix="log"):
     global log_file_path
-    if not os.path.exists(base_dir):
-        os.makedirs(base_dir)
-    log_files = [f for f in os.listdir(base_dir) if f.endswith(".log")]
-    # Only "N.log" (integer N), not e.g. "19_io.log" or "debug.log"
-    numbered_logs = [f for f in log_files if len(f) > 4 and f[:-4].isdigit()]
-    if numbered_logs:
-        max_num = max(int(f[:-4]) for f in numbered_logs)
-        new_log_file = f"{max_num + 1}.{suffix}"
-    else:
-        new_log_file = f"1.{suffix}"
-    log_file_path = os.path.join(base_dir, new_log_file)
+    log_file_path = reserve_run_path(base_dir, suffix)
     return log_file_path
 
 

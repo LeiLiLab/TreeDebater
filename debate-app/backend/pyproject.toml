@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "treedebater-app"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["fastapi>=0.115,<1", "uvicorn[standard]>=0.30,<1", "pydantic>=2.8.2,<3", "PyYAML>=6,<7", "openai>=1.60,<3"]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "httpx>=0.27"]
+
+[tool.setuptools.packages.find]
+include = ["debate_app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

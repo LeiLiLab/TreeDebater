@@ -44,6 +44,9 @@ for _p in (_src_dir, _src_dir.parent):
 
 from pydub import AudioSegment
 
+from .config import resolve_config
+import yaml
+
 from .bridges import default_outputs_dir, infer_session_log_id, run_live_chunk_bridge
 from .chunk_audio import clear_watch_chunk_files, split_audio, stream_chunks_to_directory
 from .env import StreamingInputConfig, StreamingInputEnv, load_treedebater_for_side, opponent_side
@@ -98,22 +101,22 @@ def parse_args() -> argparse.Namespace:
         help="Who is speaking into log_files/N_outputs (default: opponent of --debater-side).",
     )
     p.add_argument("--stage", type=str, choices=["opening", "rebuttal", "closing"], default="opening")
-    p.add_argument("--split-mode", type=str, choices=["fixed", "silence"], default="fixed")
-    p.add_argument("--chunk-seconds", type=float, default=10.0)
-    p.add_argument("--silence-window-seconds", type=float, default=0.7)
-    p.add_argument("--audio-format", type=str, default="mp3")
-    p.add_argument("--min-audio-seconds", type=float, default=30.0)
-    p.add_argument("--min-text-words", type=int, default=50)
-    p.add_argument("--poll-interval", type=float, default=1.0)
+    p.add_argument("--split-mode", type=str, choices=["fixed", "silence"], default=None)
+    p.add_argument("--chunk-seconds", type=float, default=None)
+    p.add_argument("--silence-window-seconds", type=float, default=None)
+    p.add_argument("--audio-format", type=str, default=None)
+    p.add_argument("--min-audio-seconds", type=float, default=None)
+    p.add_argument("--min-text-words", type=int, default=None)
+    p.add_argument("--poll-interval", type=float, default=None)
     p.add_argument("--bridge-stable-polls", type=int, default=2, help="Consecutive polls with same file size before loading.")
     p.add_argument(
         "--process-existing-speaker-mp3s",
         action="store_true",
         help="Also chunk speaker MP3s already in N_outputs when the bridge starts (default: only new files).",
     )
-    p.add_argument("--max-audio-wait-seconds", type=float, default=0.0)
-    p.add_argument("--max-text-wait-seconds", type=float, default=0.0)
-    p.add_argument("--max-total-audio-seconds", type=float, default=0.0)
+    p.add_argument("--max-audio-wait-seconds", type=float, default=None)
+    p.add_argument("--max-text-wait-seconds", type=float, default=None)
+    p.add_argument("--max-total-audio-seconds", type=float, default=None)
     p.add_argument("--max-total-seconds", type=float, default=None, help="Only for --audio-file one-shot cap.")
     p.add_argument(
         "--max-wall-seconds",
@@ -173,6 +176,9 @@ def _run_one_shot_audio_file(
 
 def main() -> None:
     args = parse_args()
+    with Path(args.config).open(encoding="utf-8") as f:
+        full_config = yaml.safe_load(f)
+    resolve_config(full_config, args, overlap=False)
 
     watch_dir = Path(args.watch_dir).resolve()
     watch_dir.mkdir(parents=True, exist_ok=True)

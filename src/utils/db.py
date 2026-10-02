@@ -8,6 +8,23 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__f
 CACHE_DIR = os.path.join(_REPO_ROOT, ".cache")
 
 
+def _connect():
+    """Open a usable cache even on first use or when an empty DB already exists."""
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    conn = sqlite3.connect(os.path.join(CACHE_DIR, "search.db"))
+    try:
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS queries
+               (query TEXT PRIMARY KEY, answer TEXT,
+                created_at TIMESTAMP, updated_at TIMESTAMP)"""
+        )
+        conn.commit()
+        return conn
+    except Exception:
+        conn.close()
+        raise
+
+
 def init_db(force: bool = False):
     db_path = os.path.join(CACHE_DIR, "search.db")
 
@@ -17,16 +34,8 @@ def init_db(force: bool = False):
     if force and os.path.exists(db_path):
         os.remove(db_path)
 
-    conn = sqlite3.connect(db_path)
-
+    conn = _connect()
     c = conn.cursor()
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS queries
-                 (query TEXT PRIMARY KEY, 
-                  answer TEXT, 
-                  created_at TIMESTAMP, 
-                  updated_at TIMESTAMP)"""
-    )
     if force:
         current_time = datetime.now().isoformat()
         c.execute(
@@ -46,7 +55,7 @@ def init_db(force: bool = False):
 
 
 def save_query(query: str, answer: str):
-    conn = sqlite3.connect(os.path.join(CACHE_DIR, "search.db"))
+    conn = _connect()
     c = conn.cursor()
     current_time = datetime.now().isoformat()
 
@@ -66,7 +75,7 @@ def save_query(query: str, answer: str):
 
 
 def get_cached_answer(query: str) -> Optional[tuple]:
-    conn = sqlite3.connect(os.path.join(CACHE_DIR, "search.db"))
+    conn = _connect()
     c = conn.cursor()
     c.execute("SELECT answer, created_at, updated_at FROM queries WHERE query = ?", (query,))
     result = c.fetchone()
@@ -75,7 +84,7 @@ def get_cached_answer(query: str) -> Optional[tuple]:
 
 
 def remove_query(query: str) -> bool:
-    conn = sqlite3.connect(os.path.join(CACHE_DIR, "search.db"))
+    conn = _connect()
     c = conn.cursor()
 
     try:

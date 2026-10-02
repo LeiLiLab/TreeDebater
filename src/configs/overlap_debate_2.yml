@@ -8,6 +8,10 @@ env:
   claim_pool_size: 50
   reverse: False
   time_control: True
+  speech_budgets:
+    opening: 240
+    rebuttal: 240
+    closing: 120
 
 debater:
   - side: for
@@ -39,3 +43,38 @@ judge:
 
 audience:
   temperature: 1
+
+# CLI overrides > these settings > defaults in streaming/config.py.
+streaming:
+  input:
+    min_audio_seconds: 15.0
+    min_text_words: 40
+    poll_interval: 1.0
+    audio_format: mp3
+    max_audio_wait_seconds: 0.0
+    max_text_wait_seconds: 0.0
+    max_total_audio_seconds: 0.0
+  playback:
+    increment_seconds: 3.0
+    listener_join_timeout: 300.0
+  output:
+    model: tts-1
+    voice: echo
+    refinement_model: gpt-5-mini
+    max_refinements: 10
+    early_max_refinements: 3
+    max_parallel_tts: 8
+    min_chunk_words: 30
+    tolerance_ratio: 0.1
+    last_chunk_upper_tolerance_ratio: 0.05
+    min_tolerance_seconds: 1.0
+    enable_early_cut: false
+    early_cut_ratio: 1.25
+    ratio_prestart_threshold: 2.0
+    abs_prestart_chars: 1000
+    speed_adjust_min: 0.85
+    speed_adjust_max: 1.15
+  posthoc:
+    split_mode: fixed
+    chunk_seconds: 10.0
+    silence_window_seconds: 0.7

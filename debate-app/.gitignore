@@ -1,0 +1,14 @@
+var/
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+frontend/node_modules/
+frontend/dist/
+frontend/.vinext/
+frontend/.wrangler/
+
+frontend/test-results/
+frontend/playwright-report/

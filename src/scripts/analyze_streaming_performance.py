@@ -215,6 +215,7 @@ class TurnMetrics:
     listener_thread_end: Optional[float] = None
     playback_start: Optional[float] = None
     playback_end: Optional[float] = None
+    previous_opponent_audio_end: Optional[float] = None
 
     # Generation timing
     generation_start: Optional[float] = None
@@ -340,11 +341,12 @@ class TurnMetrics:
 
     @property
     def time_to_first_chunk(self) -> Optional[float]:
-        """Wait time for the first playable chunk (chunk_1)."""
-        for b in self.speaker_bubbles:
-            if b.context == "chunk_1":
-                return b.duration
-        return None
+        """Opponent's last audio chunk end to our first chunk playback start."""
+        starts = [c.playback_start_time for c in self.chunks.values()
+                  if c.playback_start_time is not None]
+        if self.previous_opponent_audio_end is None or not starts:
+            return None
+        return min(starts) - self.previous_opponent_audio_end
 
     @property
     def time_between_chunks(self) -> float:
@@ -724,7 +726,7 @@ def apply_batch_sequential_metrics(
             "generation_time": gen_s,
             "audio_duration": audio,
             "speaker_bubble_total": speaker_bubble,
-            "time_to_first_chunk": time_to_first,
+            "time_to_first_chunk": None,  # No observed audio transition in synthetic batch metrics.
             "time_between_chunks": 0.0,
             "listener_bubble": listener_bubble,
             "listener_bubble_pct": 0.0,
@@ -1029,6 +1031,15 @@ def parse_log_file(log_path: Path, reverse: bool = False) -> Dict[Tuple[str, str
         if ends:
             turn.listener_thread_end = max(ends)
 
+    ordered = sorted((t for t in turns.values() if t.turn_start is not None),
+                     key=lambda t: t.turn_start)
+    for previous, current in zip(ordered, ordered[1:]):
+        if previous.side != current.side:
+            ends = [c.playback_end_time for c in previous.chunks.values()
+                    if c.playback_end_time is not None]
+            if ends:
+                current.previous_opponent_audio_end = max(ends)
+
     return turns
 
 
@@ -1303,7 +1314,7 @@ def print_summary(summary: Dict, verbose: bool = False):
     print("  Speaker bubble:      first chunk gen time + Time Between Chunks")
     print("  Listener bubble:     listener_thread_end - playback_end")
     print("  --- Efficiency Metrics ---")
-    print("  Time to First Chunk: wait time for chunk_1 (LLM work + first TTS chunk + refine time)")
+    print("  Time to First Chunk: opponent last audio end to our first chunk playback start; N/A without both events")
     print("  Time Between Chunks: sum(waits for chunk_2+)")
     # print("  True overlap:        playback_duration - speaker_bubble")
     # print("  Overlap efficiency:  true_overlap / (playback_duration + listener_bubble)")
@@ -1329,7 +1340,7 @@ def print_summary(summary: Dict, verbose: bool = False):
         print("  Total duration:      audio_duration + planning_time (planning = turn wall clock from log)")
         print("  Speaker bubble:      response generation time (not chunk waits)")
         print("  Listener bubble:     0 (generation starts right after opponent finishes)")
-        print("  Time to First Chunk: LLM work + TTS work (single chunk)")
+        print("  Time to First Chunk: N/A without observed opponent-end and own-start events")
         print("  Time Between Chunks: 0")
         print("  Pipeline stats:      omitted (no streaming pipeline)")
     print()

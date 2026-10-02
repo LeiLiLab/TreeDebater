@@ -19,6 +19,7 @@ class StatementItem(SchemaBase):
     content: str | None = None
     type: Literal["common", "definition", "criteria"] | None = None
     purpose: list[PurposeItem] | PurposeItem | None = None
+    planned_action_ids: list[int] = Field(default_factory=list)
 
 
 class StatementsResponse(SchemaBase):
@@ -57,6 +58,8 @@ class ActionListResponse(SchemaBase):
 class BattlefieldEvalItem(SchemaBase):
     battlefield: str
     idx_list: list[int] = Field(default_factory=list)
+    supporting_arguments: list[str] = Field(default_factory=list)
+    counterarguments: list[str] = Field(default_factory=list)
     unified_argument: str = ""
     importance: Literal["high", "medium", "low"] = "medium"
 

@@ -23,6 +23,7 @@ import json
 import sys
 import threading
 import time
+from io import BytesIO
 from pathlib import Path
 from typing import Callable, List, Optional
 
@@ -32,6 +33,7 @@ from pydub import AudioSegment
 from .bridges import run_streaming_tts_chunk_copy_bridge
 from .env import StreamingDebateEnv, opponent_side, tts_outputs_dir_from_log
 from utils.tool import logger
+from .config import add_streaming_arguments, resolve_config
 
 
 class OverlappingStreamingDebateEnv(StreamingDebateEnv):
@@ -136,7 +138,8 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
                 return
 
             try:
-                seg = AudioSegment.from_file(str(path))
+                # A byte stream gives FFmpeg a pipe instead of the terminal stdin.
+                seg = AudioSegment.from_file(BytesIO(path.read_bytes()), format=ext)
                 chunk_duration = len(seg) / 1000.0
             except Exception as e:
                 logger.warning(f"[PlaybackMain] skip unreadable {path}: {e}")
@@ -153,7 +156,9 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
 
             try:
                 write_start = time.time()
-                continuous_audio.export(str(continuous_file), format=ext)
+                temporary_file = continuous_file.with_suffix(".mp3.tmp")
+                continuous_audio.export(str(temporary_file), format=ext)
+                temporary_file.replace(continuous_file)
                 write_end = time.time()
                 logger.debug(
                     f"[PlaybackMain] file_write stage={stage} side={side} chunk_idx={next_idx} "
@@ -252,6 +257,7 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
         def speaker_worker() -> None:
             logger.debug(f"[SpeakerWorker] thread_start stage={stage_key} side={side} t={time.time():.3f}")
             bridge_stop = threading.Event()
+            bridge_drained = threading.Event()
             bridge_thread: Optional[threading.Thread] = None
             if use_live_bridge:
                 chunks_dir = tts_outputs_dir_from_log() / f"{player.config.type}_{stage_key}_{side}_chunks"
@@ -260,6 +266,7 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
                     name="TtsChunkBridge",
                     args=(chunks_dir, turn_watch, side, bridge_stop, live_counts),
                     kwargs={
+                        "drained_event": bridge_drained,
                         "audio_format": self._audio_format,
                         "poll_interval": min(0.5, self._poll_interval),
                     },
@@ -277,14 +284,18 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
                 bridge_stop.set()
                 if bridge_thread is not None:
                     bridge_thread.join(timeout=self._listener_join_timeout)
+                    if bridge_thread.is_alive():
+                        error_holder[0] = TimeoutError("TTS chunk bridge did not finish draining")
+                    elif live_counts[0] > 0 and not bridge_drained.is_set():
+                        error_holder[0] = RuntimeError("TTS chunk bridge failed to deliver every chunk")
 
             if error_holder[0] is None:
                 try:
-                    skip_posthoc = use_live_bridge and live_counts[0] > 0
+                    skip_posthoc = use_live_bridge and bridge_drained.is_set()
                     mp3_path = tts_outputs_dir_from_log() / f"{player.config.type}_{stage_key}_{player.side}.mp3"
                     if not skip_posthoc and mp3_path.is_file() and mp3_path.stat().st_size > 2048:
                         logger.debug(f"[SpeakerWorker] posthoc_chunk_start mode=batch_tts mp3_path={mp3_path.name} t={time.time():.3f}")
-                        audio = AudioSegment.from_file(str(mp3_path))
+                        audio = AudioSegment.from_file(BytesIO(mp3_path.read_bytes()), format="mp3")
                         if self._split_mode == "fixed":
                             chunks = split_audio(audio, mode="fixed", time_seconds=self._chunk_seconds)
                         else:
@@ -340,8 +351,9 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
         if wt.is_alive():
             logger.warning("[OverlappingStreamingDebateEnv] Speaker thread still alive after join timeout.")
 
+        stream_succeeded = False
         if use_streaming_listen:
-            listener_deb.stop_streaming_listen(self._listener_join_timeout)
+            stream_succeeded = listener_deb.stop_streaming_listen(self._listener_join_timeout)
         else:
             # Non-streaming listener: process after playback completes
             logger.debug(f"[NonStreamingListener] batch_listen_start stage={stage_key} side={listener} t={time.time():.3f}")
@@ -359,7 +371,7 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
         response = response_holder[0]
         if response is not None:
             rec: dict = {"stage": stage_key, "side": side, "content": response}
-            if use_streaming_listen:
+            if stream_succeeded:
                 rec["tree_via_streaming"] = True
             self._env.debate_process.append(rec)
 
@@ -376,18 +388,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--config", type=str, required=True, help="YAML config (same layout as env.py).")
     p.add_argument("--watch-dir", type=str, default=None, help="Optional root for per-turn watch subdirs.")
     p.add_argument("--debug", action="store_true", default=False)
-    p.add_argument("--min-audio-seconds", type=float, default=15.0, help="Lower default than streaming.env for overlap.")
-    p.add_argument("--min-text-words", type=int, default=40)
-    p.add_argument("--poll-interval", type=float, default=1.0)
-    p.add_argument("--audio-format", type=str, default="mp3")
-    p.add_argument("--split-mode", type=str, choices=["fixed", "silence"], default="fixed")
-    p.add_argument("--chunk-seconds", type=float, default=10.0)
-    p.add_argument("--silence-window-seconds", type=float, default=0.7)
-    p.add_argument("--max-audio-wait-seconds", type=float, default=0.0)
-    p.add_argument("--max-text-wait-seconds", type=float, default=0.0)
-    p.add_argument("--max-total-audio-seconds", type=float, default=0.0)
-    p.add_argument("--listener-join-timeout", type=float, default=300.0)
-    p.add_argument("--min-playback-increment", type=float, default=3.0, help="Minimum playback increment in seconds (env-level cursor update frequency).")
+    add_streaming_arguments(p)
     return p.parse_args()
 
 
@@ -402,11 +403,13 @@ def main() -> None:
 
     with open(config_path, "r", encoding="utf-8") as f:
         full_config = yaml.load(f, Loader=yaml.FullLoader)
+    resolve_config(full_config, args)
     logger.info(f"Config: {full_config}")
     env_config = EnvConfig(
         debater_config=[DebaterConfig(**c) for c in full_config["debater"]],
         judge_config=JudgeConfig(**full_config["judge"]),
         audience_config=AudienceConfig(**full_config["audience"]),
+        streaming=full_config["streaming"],
         **full_config["env"],
     )
     watch_root = Path(args.watch_dir).resolve() if args.watch_dir else None

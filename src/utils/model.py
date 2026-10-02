@@ -18,6 +18,30 @@ except Exception:
     instructor = None
 
 
+# Retired Deepseek API ids -> current v4 models (API only accepts deepseek-v4-pro / deepseek-v4-flash).
+_DEEPSEEK_LEGACY_ALIASES = {
+    "deepseek-chat": "deepseek-v4-flash",
+    "deepseek-chat-v3": "deepseek-v4-flash",
+    "chat": "deepseek-v4-flash",
+}
+
+
+def normalize_deepseek_litellm_model(model: str) -> str:
+    """Map config model strings to litellm ``deepseek/<api-model>`` without double-prefixing."""
+    raw = model.strip()
+    if "/" in raw:
+        provider, api_model = raw.split("/", 1)
+        if provider.lower() != "deepseek":
+            api_model = raw
+    else:
+        api_model = raw
+
+    resolved = _DEEPSEEK_LEGACY_ALIASES.get(api_model.lower(), api_model)
+    if resolved != api_model:
+        logger.warning("Deepseek model %r is deprecated; using %r", api_model, resolved)
+    return f"deepseek/{resolved}"
+
+
 safety_setting = [
     {
         "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
@@ -58,7 +82,9 @@ def HelperClient(
     if "llama" in model.lower():
         model_name = f"together_ai/{model}"
     elif "deepseek" in model.lower():
-        model_name = f"deepseek/{model}"
+        model_name = normalize_deepseek_litellm_model(model)
+        if "flash" in model_name:
+            kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
     elif "gemini" in model.lower():
         model_name = f"gemini/{model}"
         kwargs = {"api_key": google_api_key, "safety_settings": safety_setting}
@@ -129,9 +155,21 @@ def HelperClient(
     return responses
 
 
+def _deepseek_thinking_model(model_name: str) -> bool:
+    """Deepseek V4/reasoner models use thinking mode and reject instructor tool_choice."""
+    name = model_name.lower()
+    if "deepseek" not in name:
+        return False
+    return any(marker in name for marker in ("v4", "reasoner", "deepseek-r1", "/r1"))
+
+
 def _supports_structured_output(model_name: str) -> bool:
     name = model_name.lower()
-    return any(x in name for x in ["gpt", "o1", "claude", "gemini", "deepseek"])
+    if _deepseek_thinking_model(name):
+        return False
+    if "deepseek" in name:
+        return True
+    return any(x in name for x in ["gpt", "o1", "claude", "gemini"])
 
 
 def _completion_text(model_name: str, messages, wants_json: bool, temperature: float, max_tokens: int, stop, kwargs):
