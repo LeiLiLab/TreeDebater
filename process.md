@@ -280,3 +280,20 @@ git add process.md experiments/incremental_planning/summarize.py experiments/inc
 git commit -m "Record frozen Gemma comparison results and cost audit"
 git status --short
 ```
+
+## Follow-up diagnosis and proposed improvements — 2026-10-02
+
+Read-only inspection for the user's question about how to improve: compared repeat-0 answers, notes, judgments and timings for `test_plastics_split` and `test_water_negation` across legacy, Linear, corrected-tree and adaptive-tree, and re-read the planner update/gate/finalize paths. No new inference calls or implementation changes were made for this diagnosis.
+
+- In the plastics Linear trace, notes correctly preserve the essential-use exemptions and two-year phase-in, but turn the opponent's promised exemption review into a speculative "continuous cycle" and "constant regulatory uncertainty". The final answer then asserts frequent rule changes as fact. This is an inference becoming an unsupported premise, not simply failure to remember the last chunk. The final answer also loses the explicit implementation period.
+- The initial chunk ends with `except`; its qualification arrives in the next chunk. A semantic-completeness buffer is worth testing before generating substantive rebuttal plans for such unfinished clauses.
+- The water corrected-tree answer explicitly mentions household-size adjustments and medical exemptions, yet the judge fails that recognition check because the answer criticizes them. Recognition and agreement must be distinguished in evaluation. This further limits the reliability of aggregate quality rankings.
+
+Proposed next changes, **not yet implemented or experimentally verified**:
+
+1. Start from Linear and replace free-form opponent-state summaries with compact structured current claims, scope, exceptions, withdrawals and verbatim source spans. Store our hypotheses separately; do not promote inferred review frequency or potential harms into opponent facts.
+2. Make each rebuttal identify its current target and required assumptions. When the opponent already grants an exception, explicitly acknowledge it and critique a remaining issue such as eligibility, appeal or implementation; discard attacks requiring the exception to be absent. Use the existing feedback/revision pass for this targeted grounding check before adding another model call. Preserve relevant qualifications when shortening the final answer.
+3. Separate confidently duplicated input, unfinished clauses and substantive changes in the scheduler. Skip only verifiable duplicates; buffer unfinished clauses; process corrections and uncertain pending material at the endpoint. Invoke a model gate only for ambiguous cases. Test this against always-update Linear under the same total budget.
+4. Evaluate these changes individually, then in combination, with fresh held-out cases. The old 12 cases are now diagnostics and must not be presented as untouched test data after tuning on these observations. Use independent/human adjudication for scope preservation, withdrawn-target attacks and unsupported factual premises; separately measure live endpoint-to-first-audio latency.
+
+Tree-driven planning and model training are lower priorities until these grounding and evaluation issues are addressed. This is a proposed experimental order, not a claim that structured state or a cheaper gate has already improved performance.
