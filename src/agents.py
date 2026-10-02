@@ -55,6 +55,7 @@ class DebaterConfig(AgentConfig):
     streaming_listen: bool = False
     single_pass_revision: bool = False
     helper_model: str | None = None
+    planning: dict | None = None
 
 
 @dataclass
@@ -76,7 +77,16 @@ class Agent:
         self.config = config
         self.system_prompt = config.system_prompt
         print(f"[Agent Init] Model: {self.config.model}")
-        if self.config.model.startswith("gpt") or self.config.model.startswith("o1"):
+        if os.environ.get("DEBATE_LLM_API_BASE"):
+            self.client = partial(
+                litellm.completion,
+                model=self.config.model if self.config.model.startswith("openai/") else "openai/" + self.config.model,
+                api_base=os.environ["DEBATE_LLM_API_BASE"],
+                api_key=os.environ.get("DEBATE_LLM_API_KEY", "local-proxy"),
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens,
+            )
+        elif self.config.model.startswith("gpt") or self.config.model.startswith("o1"):
             self.client = partial(
                 litellm.completion,
                 model=self.config.model,

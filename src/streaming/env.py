@@ -151,7 +151,11 @@ class StreamingInputEnv:
         logger.debug(f"[StreamingInputEnv] tree_update_start words={wc} text_preview={merged[:50]}... t={time.time():.3f}")
         tree_start = time.time()
         with self._tree_lock:
-            self.debater._analyze_statement(merged, self.config.statement_side)
+            observer = getattr(self.debater, "observe_opponent", None)
+            if observer is not None:
+                observer(merged, self.config.statement_side, self.config.stage)
+            else:
+                self.debater._analyze_statement(merged, self.config.statement_side)
             self._tree_updates += 1
         tree_end = time.time()
         logger.debug(f"[StreamingInputEnv] tree_update_end words={wc} update_time={tree_end - tree_start:.3f}s t={tree_end:.3f}")

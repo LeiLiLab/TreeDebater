@@ -84,6 +84,8 @@ class TreeDebaterEngine:
         "high_quality_evidence_pool",
         "main_claims",
         "main_claims_content",
+        "planner",
+        "_planning_turn_snapshot",
     )
 
     def __init__(self, config, root):
@@ -135,6 +137,7 @@ class TreeDebaterEngine:
                 use_rehearsal_tree=False,
                 add_retrieval_feedback=False,
                 single_pass_revision=True,
+                planning=self.config.get("planning"),
             )
             player = TreeDebater(cfg, self.config["motion"])
             player.streaming_output_config = OutputConfig(**self.config["streaming"]["output"])
@@ -175,7 +178,7 @@ class TreeDebaterEngine:
         for own_side, p in self.players.items():
             if own_side != side:
                 p.status = stage
-                p._analyze_statement(text, side)
+                p.observe_opponent(text, side, stage)
         return self.trees()
 
     def transcribe(self, path):

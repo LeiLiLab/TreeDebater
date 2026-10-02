@@ -1,4 +1,5 @@
 import time
+import os
 from typing import Any, Type
 
 import litellm
@@ -79,7 +80,11 @@ def HelperClient(
         messages = []
 
     kwargs = {}
-    if "llama" in model.lower():
+    if os.environ.get("DEBATE_LLM_API_BASE"):
+        model_name = model if model.startswith("openai/") else "openai/" + model
+        kwargs = {"api_base": os.environ["DEBATE_LLM_API_BASE"],
+                  "api_key": os.environ.get("DEBATE_LLM_API_KEY", "local-proxy")}
+    elif "llama" in model.lower():
         model_name = f"together_ai/{model}"
     elif "deepseek" in model.lower():
         model_name = normalize_deepseek_litellm_model(model)
@@ -92,8 +97,6 @@ def HelperClient(
         model_name = model
     elif "moonshot" in model.lower() or "kimi" in model.lower():
         # Kimi/Moonshot API support
-        import os
-
         model_name = f"moonshot/{model}"
         # Reduce max_tokens for moonshot models to avoid exceeding limits
         max_tokens = min(max_tokens, 4096)

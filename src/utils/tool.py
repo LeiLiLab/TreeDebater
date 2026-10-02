@@ -405,6 +405,9 @@ def get_response_with_retry(llm, prompt, required_key, *, response_model: type[T
             time.sleep(30)
         except Exception as e:
             import traceback
+            from streaming.experiment_client import BudgetExceeded
+            if isinstance(e, BudgetExceeded):
+                raise
             logger.warning(f"Unexpected error {e} in extracting {required_key} from: {response}\n{traceback.format_exc()}")
             content = {}
             retry += 1

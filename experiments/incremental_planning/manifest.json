@@ -1,0 +1,92 @@
+{
+  "objective": "Linear baseline, corrections, adaptive updates and tree early planning; compare on Gemma",
+  "branch": "feat/incremental-rebuttal-planning",
+  "baseline_commit": "065cc3c897c2e7d337391e465fbe2fb9a7828bac",
+  "model": "google.gemma-4-26b-a4b",
+  "endpoint": "http://127.0.0.1:4000/v1",
+  "currency": "USD",
+  "approved_cumulative_cap": 200,
+  "approval": "User: 我设置 $200 的 budget，在这个范围内的实验都可以进行",
+  "pricing": {
+    "source": "https://aws.amazon.com/bedrock/pricing/",
+    "checked_date": "2026-10-02",
+    "region": "us-east-1",
+    "tier": "standard on-demand",
+    "input_per_million": 0.13,
+    "output_per_million": 0.4,
+    "invoice_status": "usage-based estimates only; no AWS billing export"
+  },
+  "guard": {
+    "ledger": "experiments/incremental_planning/run/cost.sqlite",
+    "reservation": "4 * (request UTF-8 bytes + 8192 framing tokens + max_tokens) / 1000000 USD",
+    "reserved_rate_per_million_both_directions": 1,
+    "retain_reservations_after_success_or_failure": true,
+    "http_retries": 0,
+    "proxy_num_retries": 0,
+    "timeout_seconds": 120,
+    "mechanism": "SQLite BEGIN IMMEDIATE reservation before each dispatch; no dispatch above cap; durable across processes/restarts",
+    "stop": "Stop runner PID/process group; do not stop the shared proxy. Outstanding requests already have reservations."
+  },
+  "pilot": {
+    "maximum_requests": 5,
+    "expected_input_tokens": 25000,
+    "expected_output_tokens": 5000,
+    "estimated_usd": 0.00525,
+    "conservative_upper_usd": 1,
+    "purpose": "Verify upstream Gemma response, usage accounting and structured extraction"
+  },
+  "comparison_plan": {
+    "modes": [
+      "legacy",
+      "end_of_turn",
+      "linear",
+      "corrected_tree",
+      "adaptive_linear",
+      "tree_plan",
+      "adaptive_tree"
+    ],
+    "status": "frozen for heldout-v1 launch",
+    "initial_expected_usd_range": [
+      1,
+      10
+    ],
+    "maximum_total_usd_including_pilot_and_retries": 200,
+    "paid_components": [
+      "Gemma preparation",
+      "Gemma extraction",
+      "Gemma final speech and revision",
+      "Gemma blinded grading"
+    ],
+    "excluded_from_initial_text_replay": [
+      "ASR",
+      "TTS",
+      "web search",
+      "embedding API",
+      "new provisioned cloud compute"
+    ],
+    "run_id": "heldout-v1",
+    "case_split": "test",
+    "cases": 12,
+    "repeats": 2,
+    "answers": 168,
+    "workers": 3,
+    "max_plan_tokens": 700,
+    "max_gate_tokens": 120,
+    "generation_max_tokens": 1600,
+    "judge_max_tokens": 800,
+    "main_temperature": 0.3,
+    "helper_judge_temperature": 0,
+    "speech_word_budget_seconds": 60,
+    "input_schedule_words_per_second": 2.3,
+    "expected_additional_usage_usd": [
+      0.5,
+      3
+    ],
+    "expected_additional_conservative_reservations_usd": [
+      120,
+      170
+    ],
+    "cost_incurred_estimate_before_main_usd": 0.11366388,
+    "reserved_before_main_usd": 21.70924
+  }
+}

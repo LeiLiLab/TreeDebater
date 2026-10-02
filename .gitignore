@@ -26,3 +26,6 @@ src/configs/*/case*
 .cursor/
 
 dependencies
+
+# Local experiment request/response traces and persistent cost accounting.
+experiments/incremental_planning/run/

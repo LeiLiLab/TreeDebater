@@ -1,5 +1,34 @@
 # TreeDebater microphone app
 
+## Incremental rebuttal preparation (experimental branch)
+
+`planning.mode` selects `legacy` (default), `end_of_turn`, `linear`,
+`corrected_tree`, `adaptive_linear`, `tree_plan`, or `adaptive_tree` in session YAML.
+See [`configs/gemma-incremental.yml`](configs/gemma-incremental.yml) for an example.
+For command-line debaters, put the same `planning` mapping in the debater configuration.
+
+Linear policies maintain explicit notes without a debate tree. Tree policies keep the
+existing claim graph; corrected modes support speaker-owned revision/retraction and
+archive dependent attacks before invalidating them. Adaptive policies use a separate
+semantic WAIT/UPDATE call and force remaining input through preparation at the endpoint.
+`max_updates` limits speculative updates; endpoint draining still runs after that limit.
+All modes keep final speaking under the existing turn controller. Preparation does not
+consume evidence, commit assistant messages or invoke TTS. Engine checkpoints include
+the speculative state so recording recovery discards abandoned work.
+
+To use an OpenAI-compatible text proxy, set `DEBATE_LLM_API_BASE` before starting the
+backend, for example `http://127.0.0.1:4000/v1`. Optionally set
+`DEBATE_LLM_API_KEY` in the environment. Both main and helper text models use that
+endpoint; ASR/TTS retain their separate provider configuration. Do not put credentials
+in YAML. Existing sessions with no `planning` setting continue using the legacy policy.
+
+The controlled Gemma text replay is in
+[`../src/scripts/benchmark_incremental_planning.py`](../src/scripts/benchmark_incremental_planning.py).
+It uses a persistent, shared cost ledger and must be run only against an approved
+experiment budget. Settings, commands, results and limitations are recorded in
+[`../process.md`](../process.md). Its estimated text-ready latency is **not** a
+measurement of browser audio latency.
+
 [Public demo](https://dqwang122.github.io/projects/Debate/debate-app/) ·
 [Hosting, availability, and restart instructions](PUBLIC_WEBSITE.md).
 The public frontend is hosted; the backend currently uses a temporary HTTPS

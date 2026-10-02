@@ -8,8 +8,9 @@ class SchemaBase(BaseModel):
 
 
 class PurposeItem(SchemaBase):
-    action: Literal["propose", "rebut", "reinforce", "attack"]
+    action: Literal["propose", "rebut", "reinforce", "attack", "revise", "retract"]
     target: str
+    target_id: str | None = None
     targeted_debate_tree: Literal["you", "opponent"]
 
 

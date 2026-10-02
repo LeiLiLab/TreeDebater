@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import time
+import uuid
 from functools import partial
 from typing import List
 
@@ -95,6 +96,7 @@ class Node:
     def __init__(self, motion: str, side: str, parent=None):
 
         self.motion = motion
+        self.node_id = uuid.uuid4().hex
         self.side = side
         assert self.side == "for" or self.side == "against"
         self.claim = ""
@@ -258,6 +260,7 @@ class Node:
 
     def get_node_info(self):
         info = {
+            "node_id": self.node_id,
             "side": self.side,
             "level": self.level,
             "claim": self.claim,
@@ -306,6 +309,7 @@ class Node:
     @staticmethod
     def from_json(motion, side, parent, json_info):
         node = Node(motion, side, parent)
+        node.node_id = json_info.get("node_id", node.node_id)
         node.claim = json_info["claim"]
         node.argument = json_info["argument"]
         node.evidence = json_info["evidence"]
@@ -743,6 +747,7 @@ class DebateTree(Tree):
             "structure": self.root.get_node_info(),
             "meta_attack_list": self.meta_attack_list,
             "meta_rebuttal_list": self.meta_rebuttal_list,
+            "revisions": getattr(self, "revisions", []),
         }
         return info
 
@@ -757,6 +762,7 @@ class DebateTree(Tree):
         tree.root = Node.from_json(motion, side, None, root_info)
         tree.meta_attack_list = meta_attack_list
         tree.meta_rebuttal_list = meta_rebuttal_list
+        tree.revisions = json_info.get("revisions", [])
         return tree
 
 

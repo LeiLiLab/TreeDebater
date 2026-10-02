@@ -1,0 +1,306 @@
+{
+  "run_id": "dev-v2",
+  "metadata": {
+    "source_digest": "cfaa5a63bda3254480fc54d542551bd454e224710ba25446b568b5e1f765bc2a",
+    "cases_digest": "8eba1212b248f2d082a0638de323a83810e5ff995bc13e6ab9a9488c5e43f62a",
+    "split": "dev",
+    "case_ids": [
+      "dev_car_scope",
+      "dev_school_retract"
+    ],
+    "modes": [
+      "legacy",
+      "end_of_turn",
+      "linear",
+      "corrected_tree",
+      "adaptive_linear",
+      "tree_plan",
+      "adaptive_tree"
+    ],
+    "repeats": 1,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 2,
+    "main_temperature": 0.3,
+    "helper_and_judge_temperature": 0,
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "expected_answers": 14,
+  "completed_answers": 14,
+  "missing": [],
+  "metrics": [
+    {
+      "mode": "legacy",
+      "n": 2,
+      "checklist_rate": 0.6666666666666666,
+      "strength_mean": 4,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 14.68737548450008,
+      "residual_text_median_s": 14.68737548450008,
+      "generation_calls_mean": 8,
+      "generation_cost_mean_usd": 0.0039718,
+      "answer_words_mean": 129,
+      "gate_waits": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "end_of_turn",
+      "n": 2,
+      "checklist_rate": 0.6666666666666666,
+      "strength_mean": 3.5,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 15.138645679020556,
+      "residual_text_median_s": 15.138645679020556,
+      "generation_calls_mean": 6,
+      "generation_cost_mean_usd": 0.003128675,
+      "answer_words_mean": 135.5,
+      "gate_waits": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "linear",
+      "n": 2,
+      "checklist_rate": 0.8333333333333333,
+      "strength_mean": 4,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 11.080654762045015,
+      "residual_text_median_s": 11.080654762045015,
+      "generation_calls_mean": 6,
+      "generation_cost_mean_usd": 0.0032391850000000003,
+      "answer_words_mean": 135.5,
+      "gate_waits": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "corrected_tree",
+      "n": 2,
+      "checklist_rate": 0.6666666666666666,
+      "strength_mean": 4,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 13.979594288481167,
+      "residual_text_median_s": 13.979594288481167,
+      "generation_calls_mean": 8,
+      "generation_cost_mean_usd": 0.0039076250000000005,
+      "answer_words_mean": 122,
+      "gate_waits": 0,
+      "revisions": 2
+    },
+    {
+      "mode": "adaptive_linear",
+      "n": 2,
+      "checklist_rate": 0.8333333333333333,
+      "strength_mean": 4.5,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 15.564998071524315,
+      "residual_text_median_s": 15.564998071524315,
+      "generation_calls_mean": 8,
+      "generation_cost_mean_usd": 0.00342211,
+      "answer_words_mean": 126.5,
+      "gate_waits": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "tree_plan",
+      "n": 2,
+      "checklist_rate": 0.6666666666666666,
+      "strength_mean": 3.5,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 13.973290789494058,
+      "residual_text_median_s": 13.973290789494058,
+      "generation_calls_mean": 10,
+      "generation_cost_mean_usd": 0.005067810000000001,
+      "answer_words_mean": 127.5,
+      "gate_waits": 0,
+      "revisions": 2
+    },
+    {
+      "mode": "adaptive_tree",
+      "n": 2,
+      "checklist_rate": 0.5,
+      "strength_mean": 3.5,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 14.580816527013667,
+      "residual_text_median_s": 14.580816527013667,
+      "generation_calls_mean": 12,
+      "generation_cost_mean_usd": 0.005394445,
+      "answer_words_mean": 142,
+      "gate_waits": 0,
+      "revisions": 2
+    }
+  ],
+  "paired_vs_legacy": {
+    "end_of_turn": {
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "dev_car_scope",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.403500158980023
+        },
+        {
+          "case": "dev_school_retract",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.5009597699390724
+        }
+      ],
+      "quality_diff_mean": 0.0,
+      "quality_diff_95ci": [
+        0.0,
+        0.0
+      ],
+      "latency_diff_mean_s": 0.45127019452047534,
+      "latency_diff_95ci_s": [
+        -2.5009597699390724,
+        3.403500158980023
+      ]
+    },
+    "linear": {
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "dev_car_scope",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -0.4729329920373857
+        },
+        {
+          "case": "dev_school_retract",
+          "quality_diff": 0.0,
+          "latency_diff_s": -6.740508452872746
+        }
+      ],
+      "quality_diff_mean": 0.16666666666666669,
+      "quality_diff_95ci": [
+        0.0,
+        0.33333333333333337
+      ],
+      "latency_diff_mean_s": -3.6067207224550657,
+      "latency_diff_95ci_s": [
+        -6.740508452872746,
+        -0.4729329920373857
+      ]
+    },
+    "corrected_tree": {
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "dev_car_scope",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.3818088619736955
+        },
+        {
+          "case": "dev_school_retract",
+          "quality_diff": 0.0,
+          "latency_diff_s": -4.797371254011523
+        }
+      ],
+      "quality_diff_mean": 0.0,
+      "quality_diff_95ci": [
+        0.0,
+        0.0
+      ],
+      "latency_diff_mean_s": -0.7077811960189138,
+      "latency_diff_95ci_s": [
+        -4.797371254011523,
+        3.3818088619736955
+      ]
+    },
+    "adaptive_linear": {
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "dev_car_scope",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.9621586579596624
+        },
+        {
+          "case": "dev_school_retract",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -2.206913483911194
+        }
+      ],
+      "quality_diff_mean": 0.16666666666666669,
+      "quality_diff_95ci": [
+        0.0,
+        0.33333333333333337
+      ],
+      "latency_diff_mean_s": 0.8776225870242342,
+      "latency_diff_95ci_s": [
+        -2.206913483911194,
+        3.9621586579596624
+      ]
+    },
+    "tree_plan": {
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "dev_car_scope",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.566584087908268
+        },
+        {
+          "case": "dev_school_retract",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.9947534779203124
+        }
+      ],
+      "quality_diff_mean": 0.0,
+      "quality_diff_95ci": [
+        0.0,
+        0.0
+      ],
+      "latency_diff_mean_s": -0.7140846950060222,
+      "latency_diff_95ci_s": [
+        -1.9947534779203124,
+        0.566584087908268
+      ]
+    },
+    "adaptive_tree": {
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "dev_car_scope",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.18576305295573547
+        },
+        {
+          "case": "dev_school_retract",
+          "quality_diff": -0.3333333333333333,
+          "latency_diff_s": -0.027354862017091364
+        }
+      ],
+      "quality_diff_mean": -0.16666666666666666,
+      "quality_diff_95ci": [
+        -0.3333333333333333,
+        0.0
+      ],
+      "latency_diff_mean_s": -0.10655895748641342,
+      "latency_diff_95ci_s": [
+        -0.18576305295573547,
+        -0.027354862017091364
+      ]
+    }
+  },
+  "usage_including_judging": {
+    "calls": 130,
+    "reserved_upper_usd": 11.10268,
+    "unresolved_calls": 0,
+    "input_tokens": 318545,
+    "output_tokens": 41375,
+    "reported_usage_estimate_usd": 0.05796084999999998
+  },
+  "limitations": [
+    "Small authored scenario set, not a standard debate benchmark",
+    "Same model generates and judges; no human or independent-model validation",
+    "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
+    "Exact-target matching shared across arms; embedding fallback disabled",
+    "Cost uses provider-reported tokens and published rates, not a settled invoice"
+  ]
+}

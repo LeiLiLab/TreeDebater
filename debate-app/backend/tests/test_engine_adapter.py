@@ -9,9 +9,38 @@ from unittest.mock import Mock, patch
 from debate_app.engine_adapter import TreeDebaterEngine
 from debate_app.schemas import SessionSettings
 from debate_app.config import ENGINE_ROOT
+from streaming.planning import IncrementalPlanner, PlanningConfig
 
 
 class AdapterTests(unittest.TestCase):
+    def test_streamed_input_uses_policy_and_restore_discards_speculative_work(self):
+        with tempfile.TemporaryDirectory() as root:
+            engine = TreeDebaterEngine({}, root)
+            policy = IncrementalPlanner(PlanningConfig(mode="linear"))
+            policy.start("for:opening")
+            player = SimpleNamespace(planner=policy, _planning_turn_snapshot=None,
+                                     observe_opponent=Mock(), status="opening",
+                                     conversation=[], used_evidence=set())
+            engine.players = {"against": player}
+            engine.trees = Mock(return_value={})
+            engine.checkpoint()
+            policy.observe("All cars should be banned.", llm=lambda *a: "Attack the broad scope",
+                           analyze=Mock(), context=lambda: {})
+            engine.analyze("Only private cars downtown.", "for", "opening")
+            player.observe_opponent.assert_called_once_with("Only private cars downtown.", "for", "opening")
+            self.assertEqual(player.conversation, [])
+            self.assertEqual(player.used_evidence, set())
+            engine.restore()
+            self.assertEqual(player.planner.chunks, [])
+            self.assertEqual(player.planner.plan, "")
+
+    def test_planning_settings_validate_and_reach_engine_config(self):
+        for mode in ("linear", "corrected_tree", "adaptive_linear", "tree_plan", "adaptive_tree", "end_of_turn"):
+            settings = SessionSettings(motion="Limit cars downtown", planning={"mode": mode})
+            self.assertEqual(settings.model_dump()["planning"], {"mode": mode})
+        with self.assertRaises(ValueError):
+            SessionSettings(motion="Limit cars downtown", planning={"mode": "unknown"})
+
     def test_preparation_uses_api_claim_scoring_for_each_ai_side(self):
         agents = ModuleType('agents')
         agents.DebaterConfig = SimpleNamespace

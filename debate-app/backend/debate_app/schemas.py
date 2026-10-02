@@ -17,6 +17,7 @@ class SessionSettings(Model):
     engine: Literal["treedebater", "demo"] = "treedebater"
     ai_model: str = Field(default="gpt-4o-mini", min_length=1, max_length=200)
     helper_model: Optional[str] = None
+    planning: dict = Field(default_factory=dict)
     claim_pool_size: int = Field(default=4, ge=1, le=50)
     budgets: dict[str, float] = Field(
         default_factory=lambda: {"opening": 60.0, "rebuttal": 60.0, "closing": 30.0}
@@ -30,6 +31,9 @@ class SessionSettings(Model):
     @model_validator(mode="after")
     def validate_engine(self):
         from .config import engine_config
+        from streaming.planning import PlanningConfig
+
+        PlanningConfig(**self.planning)
 
         self.motion = self.motion.strip()
         if len(self.motion) < 3:
