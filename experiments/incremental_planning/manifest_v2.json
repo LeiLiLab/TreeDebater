@@ -1,6 +1,6 @@
 {
   "task": "Structured Linear state, targeted grounding revision and lightweight scheduling",
-  "authorization": "User approved USD 200 cumulatively and instructed 进行 on this follow-up plan",
+  "authorization": "User approved USD 200 cumulatively and instructed \u8fdb\u884c on this follow-up plan",
   "branch": "feat/incremental-rebuttal-planning",
   "starting_commit": "5a03348",
   "cap_usd": 200,
@@ -60,8 +60,11 @@
     "run_id": "grounded-heldout-v1"
   },
   "audio_validation": {
-    "status": "preparing provider guard and bounded server-side test",
-    "conservative_reservation_usd_allowance": 2
+    "status": "completed",
+    "run_id": "grounded-audio-v1",
+    "external_audio_bundle_usd": 0.5,
+    "total_reservation_usd": 1.5432320000000002,
+    "summary": "grounded-audio-v1_summary.json"
   },
   "aggregate_additional_estimated_usage_usd_upper": 3,
   "aggregate_additional_reservation_usd_estimate": [
@@ -80,7 +83,7 @@
     "judge_temperature": "unsupported; omitted"
   },
   "holdout_policy": "Freeze prompts before fresh test runs. Old test cases are now diagnostics, never fresh evidence.",
-  "status": "frozen for grounded-heldout-v1 launch",
+  "status": "completed: 40/40 held-out answers and single paired server audio probe",
   "gpt_pricing_source": "https://docs.aws.amazon.com/en_en/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html",
   "gpt_route": "bedrock/us.openai.gpt-5.6-sol; geographic short context rate",
   "judge_change_reason": "Nemotron passed simple controls but misjudged explicit timelines in development; calibrate GPT before held-out comparison.",
@@ -95,5 +98,30 @@
     "estimated_usage_usd": 0.8910075500000003,
     "ledger_entries": 1864,
     "failed_http400_entries": 2
+  },
+  "source_commit": "6d44b01",
+  "judge_recovery_policy": {
+    "primary_max_tokens": 800,
+    "recovery_max_tokens": 1600,
+    "maximum_larger_cap_attempts_per_answer": 1,
+    "completed_judgments_replaced": false,
+    "reason": "Empty/truncated judge output observed at 800 tokens; prompt/model/answer unchanged",
+    "script": "experiments/incremental_planning/resume_judge.py"
+  },
+  "final_cumulative_cost": {
+    "ledger_entries": 2162,
+    "reserved_usd": 199.86095600000002,
+    "estimated_usage_usd": 1.7009509000000014,
+    "input_tokens": 5386770,
+    "output_tokens": 698246,
+    "pending": 0,
+    "error_entries": 5
+  },
+  "verification": {
+    "source_digest_before_post_run_cost_accounting_fix": "2719bc227a384624508ca5d491ffbbd0d12960cce83c811853d23f642ce8f1f0",
+    "cases_digest": "9503696fc7503efbbf62ef816e7a8a05ab8fbb67db58e83fb18ebde907c9a424",
+    "frozen_source_verified": true,
+    "cases_verified": true,
+    "post_run_change": "Retain reported usage and truncation on empty completions; no inference or budget-reservation behavior changed."
   }
 }

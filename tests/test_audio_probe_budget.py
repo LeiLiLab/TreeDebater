@@ -55,3 +55,16 @@ def test_audio_cannot_bypass_existing_global_cap(tmp_path):
     with pytest.raises(BudgetExceeded):
         AudioGuard(tmp_path, "audio", httpx.MockTransport(lambda r: httpx.Response(200)))
     assert c.summary()["calls"] == 1
+
+
+def test_smaller_audio_bundle_preserves_per_request_bound(tmp_path):
+    c = BudgetedClient(tmp_path)
+    guard = AudioGuard(tmp_path, "audio", httpx.MockTransport(lambda r: httpx.Response(200, content=b"audio")), allowance=.1)
+    client = httpx.Client(transport=guard)
+    assert c.summary()["reserved_upper_usd"] == .1
+    # Each 1000-character request reserves $0.06; the second cannot fit.
+    client.post("https://api.openai.com/v1/audio/speech", json={"model": "tts-1", "input": "a"*1000})
+    with pytest.raises(BudgetExceeded):
+        client.post("https://api.openai.com/v1/audio/speech", json={"model": "tts-1", "input": "a"*1000})
+    guard.finish()
+    assert len(guard.artifact["external_calls"]) == 1

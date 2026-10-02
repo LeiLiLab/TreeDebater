@@ -158,6 +158,19 @@ def summarize(run_id):
                                "Text-ready timing precedes post-speech tree analysis; worker-return timing is reported separately",
                                "Exact-target matching shared across arms; embedding fallback disabled",
                                "Cost uses provider-reported tokens and published rates, not a settled invoice"]}
+    recovered = [{"case": r["case"], "mode": r["mode"],
+                  "output_cap": r["judge"]["recovery_output_cap"]}
+                 for r in complete if "recovery_output_cap" in r["judge"]]
+    if recovered:
+        summary["judge_recovery"] = {
+            "primary_output_cap": 800, "recovered_answers": recovered,
+            "policy": "Successful primary judgments retained; one larger-cap recovery allowed after error/truncation, with unchanged prompt/model/answer."}
+        summary["limitations"].append(
+            "Some missing judgments required a 1600-token recovery after 800-token failures; judge output caps were not homogeneous.")
+    summary["completion_audit"] = {
+        "worker_completion_markers": len(list(run.glob("complete_worker*.json"))),
+        "pending_requests": sum(c[2] == "pending" for c in calls),
+        "failed_requests": sum(c[2] == "error" for c in calls)}
     (ROOT / f"{run_id}_summary.json").write_text(json.dumps(summary, indent=2))
     print(f"{run_id}: {len(observed)}/{len(expected)} answers")
     print("mode\tn\tchecklist\tstrength\tstrawman\tresidual_mean_s\tcalls\tcost_usd")

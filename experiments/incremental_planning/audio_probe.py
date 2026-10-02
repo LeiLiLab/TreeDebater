@@ -28,13 +28,16 @@ from scripts.benchmark_incremental_planning import make_player, atomic_json, cod
 
 
 class AudioGuard(httpx.BaseTransport):
-    """Reserve a $1 sub-budget in the shared ledger before any external audio call.
+    """Reserve a bounded sub-budget in the shared ledger before any external audio call.
 
     Per-request 4x upper bounds are durably recorded inside that bundle before HTTP
     dispatch. A provider error latches the transport closed; built-in TTS retries
     cannot cause further requests. Credentials/headers/audio bytes are not logged.
     """
-    def __init__(self, directory, label, inner=None):
+    def __init__(self, directory, label, inner=None, allowance=1.0):
+        if not 0 < allowance <= 1:
+            raise ValueError("Audio allowance must be within (0, 1] USD")
+        self.allowance = allowance
         self.directory = Path(directory)
         self.label = label
         self.lock = threading.Lock()
@@ -45,18 +48,18 @@ class AudioGuard(httpx.BaseTransport):
         try:
             cap = self.db.execute("SELECT cap FROM budget WHERE id=1").fetchone()[0]
             used = self.db.execute("SELECT coalesce(sum(reserved),0) FROM calls").fetchone()[0]
-            if cap != 200 or used + 1 > cap:
-                raise BudgetExceeded("No room for the fixed $1 audio sub-budget")
+            if cap != 200 or used + allowance > cap:
+                raise BudgetExceeded("No room for the audio sub-budget")
             self.request_id = self.db.execute(
-                "INSERT INTO calls(label,created,reserved,state) VALUES(?,?,1,'pending')",
-                (label, datetime.now(timezone.utc).isoformat())).lastrowid
+                "INSERT INTO calls(label,created,reserved,state) VALUES(?,?,?,'pending')",
+                (label, datetime.now(timezone.utc).isoformat(), allowance)).lastrowid
             self.db.commit()
         except BaseException:
             self.db.rollback()
             raise
         self.started = time.perf_counter()
         self.artifact = {"label": label, "request": {"model": "bounded-audio-bundle"},
-                         "reservation_usd": 1, "external_calls": []}
+                         "reservation_usd": allowance, "external_calls": []}
         self.path = self.directory / f"call_{self.request_id:06}.json"
         self.persist()
 
@@ -91,8 +94,8 @@ class AudioGuard(httpx.BaseTransport):
             raise ValueError("Unbudgeted endpoint blocked: " + request.url.path)
         with self.lock:
             used = sum(c["reserved_usd"] for c in self.artifact["external_calls"])
-            if self.failed or len(self.artifact["external_calls"]) >= 24 or used + 4*bound > 1:
-                raise BudgetExceeded("Audio transport closed or its $1/24-request sub-budget exhausted")
+            if self.failed or len(self.artifact["external_calls"]) >= 24 or used + 4*bound > self.allowance:
+                raise BudgetExceeded("Audio transport closed or its bounded/24-request sub-budget exhausted")
             entry = dict(detail, reserved_usd=4*bound, estimated_usd=estimate, state="pending")
             self.artifact["external_calls"].append(entry)
             self.persist()
@@ -149,7 +152,7 @@ def main():
     os.environ["DEBATE_LLM_API_BASE"] = "http://127.0.0.1:4000/v1"
     os.environ["DEBATE_LOG_PROMPTS"] = "0"
     BudgetedClient(directory / "run")  # validate existing shared budget
-    guard = AudioGuard(directory / "run", run_id + "/external-audio")
+    guard = AudioGuard(directory / "run", run_id + "/external-audio", allowance=.5)
     real_openai = openai.OpenAI
     def client_factory(**kwargs):
         kwargs.update(http_client=httpx.Client(transport=guard, timeout=60), max_retries=0,
@@ -198,7 +201,7 @@ def main():
         atomic_json(output / "metadata.json", {"source_digest": code_digest(), "case": case,
                     "modes": modes, "input": "paced synthesized recording, shared real Whisper transcripts",
                     "metric": "server first playable TTS chunk after actual recorded-audio endpoint; no browser transport/playback",
-                    "output_settings": vars(cfg), "shared_cap_usd": 200, "audio_subbudget_usd": 1})
+                    "output_settings": vars(cfg), "shared_cap_usd": 200, "audio_subbudget_usd": .5})
         start = time.perf_counter()
         endpoint = start + sum(seconds for _, seconds in source)
         transcripts, arrivals = [], []

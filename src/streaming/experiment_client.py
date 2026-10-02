@@ -90,6 +90,7 @@ class BudgetedClient:
         key = os.environ.get("DEBATE_LLM_API_KEY")
         if key:
             headers["Authorization"] = "Bearer " + key
+        input_tokens = output_tokens = estimate = None
         try:
             with urlopen(Request(self.base_url + "/chat/completions", data=raw, headers=headers), timeout=120) as r:
                 result = json.load(r)
@@ -102,10 +103,10 @@ class BudgetedClient:
                 input_rate, output_rate = MODEL_RATES[model]
                 estimate = (input_tokens * input_rate + output_tokens * output_rate) / 1_000_000
             content = result["choices"][0]["message"].get("content")
-            if not isinstance(content, str) or not content.strip():
-                raise ValueError("Empty completion")
             if result["choices"][0].get("finish_reason") == "length":
                 artifact["truncated"] = True
+            if not isinstance(content, str) or not content.strip():
+                raise ValueError("Empty completion")
             self.db.execute("""UPDATE calls SET state=?, input_tokens=?, output_tokens=?,
                 estimated_usd=?, seconds=? WHERE id=?""",
                 ("ok" if estimate is not None else "usage_missing", input_tokens, output_tokens,
@@ -114,8 +115,9 @@ class BudgetedClient:
             return content
         except BaseException as exc:
             artifact["error"] = type(exc).__name__ + ": " + str(exc)
-            self.db.execute("UPDATE calls SET state='error', seconds=? WHERE id=?",
-                            (time.perf_counter()-t0, request_id))
+            self.db.execute("""UPDATE calls SET state='error', input_tokens=?, output_tokens=?,
+                estimated_usd=?, seconds=? WHERE id=?""",
+                            (input_tokens, output_tokens, estimate, time.perf_counter()-t0, request_id))
             self.db.commit()
             raise
         finally:

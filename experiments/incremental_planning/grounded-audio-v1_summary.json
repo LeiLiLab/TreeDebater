@@ -1,0 +1,200 @@
+{
+  "input_seconds": 22.896000000007916,
+  "asr_arrivals": [
+    {
+      "input_end_seconds": 8.951999999990221,
+      "asr_ready_seconds": 10.874115403974429,
+      "transcript": "Disposable packaging creates waste that persists after its brief useful life. Restrictions should start with restaurant takeaway items, except"
+    },
+    {
+      "input_end_seconds": 15.504000000015367,
+      "asr_ready_seconds": 17.623143079981674,
+      "transcript": "items needed for medical safety, disability access, or food hygiene, where no suitable substitute exists."
+    },
+    {
+      "input_end_seconds": 22.896000000007916,
+      "asr_ready_seconds": 24.629791693994775,
+      "transcript": "The City should phase this in over two years, publish substitution guidance, and review the exemptions with affected users."
+    }
+  ],
+  "results": {
+    "linear": {
+      "first_playable_chunk_seconds": 16.049581018975005,
+      "chunks": [
+        {
+          "index": 0,
+          "path": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/grounded-audio-v1/linear/default_rebuttal_against_chunks/chunk_000.mp3",
+          "text": "I will challenge the feasibility and stability of the opponent's proposed plan.",
+          "duration_ms": 4914,
+          "endpoint_to_chunk_seconds": 16.049581018975005,
+          "decoded_ms": 4914
+        },
+        {
+          "index": 1,
+          "path": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/grounded-audio-v1/linear/default_rebuttal_against_chunks/chunk_001.mp3",
+          "text": "First, regarding the two-year phase-in, providing \"guidance\" is insufficient; businesses require subsidies for transition or guaranteed market availability of affordable alternatives.",
+          "duration_ms": 11447,
+          "endpoint_to_chunk_seconds": 20.109375183994416,
+          "decoded_ms": 11447
+        },
+        {
+          "index": 2,
+          "path": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/grounded-audio-v1/linear/default_rebuttal_against_chunks/chunk_002.mp3",
+          "text": "A two-year window is far too short for supply chains to overhaul without causing massive economic shocks, such as sudden price hikes for consumers or the closure of small local eateries unable to",
+          "duration_ms": 12507,
+          "endpoint_to_chunk_seconds": 22.058752045966685,
+          "decoded_ms": 12507
+        },
+        {
+          "index": 3,
+          "path": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/grounded-audio-v1/linear/default_rebuttal_against_chunks/chunk_003.mp3",
+          "text": "absorb new costs. Second, your plan to \"review\" exemptions is dangerous.",
+          "duration_ms": 4552,
+          "endpoint_to_chunk_seconds": 23.003956369007938,
+          "decoded_ms": 4552
+        },
+        {
+          "index": 4,
+          "path": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/grounded-audio-v1/linear/default_rebuttal_against_chunks/chunk_004.mp3",
+          "text": "For people relying on specific packaging for medical safety or disability access, an exemption must be a permanent right, not a temporary privilege subject to periodic review.",
+          "duration_ms": 10920,
+          "endpoint_to_chunk_seconds": 24.728740262973588,
+          "decoded_ms": 10920
+        },
+        {
+          "index": 5,
+          "path": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/grounded-audio-v1/linear/default_rebuttal_against_chunks/chunk_005.mp3",
+          "text": "This creates constant uncertainty for our most vulnerable citizens. Instead of these unstable restrictions that punish the vulnerable, we should focus on constructive solutions like improving recycling infrastructure.",
+          "duration_ms": 13651,
+          "endpoint_to_chunk_seconds": 33.80935834697448,
+          "decoded_ms": 13651
+        }
+      ],
+      "answer": "I will challenge the feasibility and stability of the opponent's proposed plan.\n\nFirst, regarding the two-year phase-in, providing \"guidance\" is insufficient; businesses require subsidies for transition or guaranteed market availability of affordable alternatives.\n\nA two-year window is far too short for supply chains to overhaul without causing massive economic shocks, such as sudden price hikes for consumers or the closure of small local eateries unable to\n\nabsorb new costs. Second, your plan to \"review\" exemptions is dangerous.\n\nFor people relying on specific packaging for medical safety or disability access, an exemption must be a permanent right, not a temporary privilege subject to periodic review.\n\nThis creates constant uncertainty for our most vulnerable citizens. Instead of these unstable restrictions that punish the vulnerable, we should focus on constructive solutions like improving recycling infrastructure.\n\n**Reference**\n"
+    },
+    "light_linear": {
+      "first_playable_chunk_seconds": 10.968400946003385,
+      "chunks": [
+        {
+          "index": 0,
+          "path": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/grounded-audio-v1/light_linear/default_rebuttal_against_chunks/chunk_000.mp3",
+          "text": "While my opponent permits exemptions for medical safety, disability access, and food hygiene,",
+          "duration_ms": 5601,
+          "endpoint_to_chunk_seconds": 10.968400946003385,
+          "decoded_ms": 5601
+        },
+        {
+          "index": 1,
+          "path": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/grounded-audio-v1/light_linear/default_rebuttal_against_chunks/chunk_001.mp3",
+          "text": "a substantive disagreement remains regarding the necessity of restrictions when suitable substitutes are not yet viable. The persistence of waste does not inherently necessitate a ban if functional alternatives cannot meet essential requirements.",
+          "duration_ms": 15666,
+          "endpoint_to_chunk_seconds": 14.731619893980678,
+          "decoded_ms": 15666
+        },
+        {
+          "index": 2,
+          "path": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/grounded-audio-v1/light_linear/default_rebuttal_against_chunks/chunk_002.mp3",
+          "text": "Furthermore, the proposal to target only restaurant takeaway may fail to address significant volumes of plastic waste originating from other sectors, such as retail or grocery.",
+          "duration_ms": 10932,
+          "endpoint_to_chunk_seconds": 28.554162982967682,
+          "decoded_ms": 10932
+        },
+        {
+          "index": 3,
+          "path": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/grounded-audio-v1/light_linear/default_rebuttal_against_chunks/chunk_003.mp3",
+          "text": "By focusing exclusively on restaurants, the city risks missing other primary drivers of pollution.",
+          "duration_ms": 5951,
+          "endpoint_to_chunk_seconds": 37.62007813900709,
+          "decoded_ms": 5951
+        },
+        {
+          "index": 4,
+          "path": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/grounded-audio-v1/light_linear/default_rebuttal_against_chunks/chunk_004.mp3",
+          "text": "We must ensure that any restriction is both functionally viable and sufficiently broad to address the actual sources of waste.",
+          "duration_ms": 8089,
+          "endpoint_to_chunk_seconds": 41.70294142398052,
+          "decoded_ms": 8090
+        }
+      ],
+      "answer": "While my opponent permits exemptions for medical safety, disability access, and food hygiene,\n\na substantive disagreement remains regarding the necessity of restrictions when suitable substitutes are not yet viable. The persistence of waste does not inherently necessitate a ban if functional alternatives cannot meet essential requirements.\n\nFurthermore, the proposal to target only restaurant takeaway may fail to address significant volumes of plastic waste originating from other sectors, such as retail or grocery.\n\nBy focusing exclusively on restaurants, the city risks missing other primary drivers of pollution.\n\nWe must ensure that any restriction is both functionally viable and sufficiently broad to address the actual sources of waste.\n\n**Reference**\n"
+    }
+  },
+  "metadata": {
+    "source_digest": "2719bc227a384624508ca5d491ffbbd0d12960cce83c811853d23f642ce8f1f0",
+    "case": {
+      "id": "dev_v2_plastics_split",
+      "split": "dev",
+      "kind": "split_clause",
+      "motion": "The city should restrict disposable plastic packaging",
+      "side": "against",
+      "own_claim": "Restrictions must preserve essential uses",
+      "own_opening": "Packaging policy should account for sanitation, accessibility and whether substitutes are actually suitable.",
+      "chunks": [
+        "Disposable packaging creates waste that persists after its brief useful life. Restrictions should start with restaurant takeaway items, except",
+        "items needed for medical safety, disability access or food hygiene where no suitable substitute exists.",
+        "The city should phase this in over two years, publish substitution guidance and review the exemptions with affected users."
+      ],
+      "checks": [
+        "Recognizes essential-use exemptions",
+        "Recognizes phased implementation",
+        "Critiques suitability, enforcement or environmental tradeoffs without treating exempt uses as banned"
+      ]
+    },
+    "modes": [
+      "linear",
+      "light_linear"
+    ],
+    "input": "paced synthesized recording, shared real Whisper transcripts",
+    "metric": "server first playable TTS chunk after actual recorded-audio endpoint; no browser transport/playback",
+    "output_settings": {
+      "budget_mode": "audio_duration",
+      "model": "tts-1",
+      "voice": "echo",
+      "refinement_model": "gpt-5-mini",
+      "max_refinements": 0,
+      "early_max_refinements": 0,
+      "max_parallel_tts": 1,
+      "min_chunk_words": 1,
+      "tolerance_ratio": 0.1,
+      "last_chunk_upper_tolerance_ratio": 0.05,
+      "min_tolerance_seconds": 1.0,
+      "enable_early_cut": false,
+      "adaptive_delivery": true,
+      "first_chunk_seconds": 6,
+      "later_chunk_seconds": 15,
+      "early_cut_ratio": 1.25,
+      "ratio_prestart_threshold": 2.0,
+      "abs_prestart_chars": 1000,
+      "speed_adjust_min": 1,
+      "speed_adjust_max": 1,
+      "refine_deadline_margin_seconds": 2.0,
+      "speed_adjust_min_slack_seconds": 4.0,
+      "max_chunk_chars": 900,
+      "target_chunk_seconds": 40.0,
+      "min_stream_chunks": 3,
+      "max_stream_chunks": 8,
+      "normalize_seams": true,
+      "seam_head_ms": 60,
+      "seam_tail_ms": 250,
+      "seam_fade_ms": 10
+    },
+    "shared_cap_usd": 200,
+    "audio_subbudget_usd": 0.5
+  },
+  "cost": {
+    "ledger_entries": 12,
+    "reserved_usd": 1.5432320000000002,
+    "estimated_usage_usd": 0.04616671000000001,
+    "input_tokens": 30727,
+    "output_tokens": 3993,
+    "pending": 0,
+    "error_entries": 0
+  },
+  "external_audio_http_requests": 20,
+  "external_audio_reserved_within_bundle": 0.29669999999999996,
+  "limitations": [
+    "One reused development case, one trial per policy; no statistical latency conclusion.",
+    "Real Whisper and TTS, paced synthetic input; no browser playback or microphone/network input transport.",
+    "Both workers share provider infrastructure; TTS refinement calls disabled."
+  ]
+}

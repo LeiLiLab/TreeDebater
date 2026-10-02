@@ -1,0 +1,124 @@
+{
+  "cumulative": {
+    "ledger_entries": 2162,
+    "reserved_usd": 199.86095600000002,
+    "estimated_usage_usd": 1.7009509000000014,
+    "input_tokens": 5386770,
+    "output_tokens": 698246,
+    "pending": 0,
+    "error_entries": 5
+  },
+  "by_run": {
+    "pilot-connectivity": {
+      "ledger_entries": 1,
+      "reserved_usd": 0.03354,
+      "estimated_usage_usd": 5.74e-06,
+      "input_tokens": 38,
+      "output_tokens": 2,
+      "pending": 0,
+      "error_entries": 0
+    },
+    "dev-smoke-v1": {
+      "ledger_entries": 65,
+      "reserved_usd": 5.530652000000001,
+      "estimated_usage_usd": 0.028651730000000004,
+      "input_tokens": 158241,
+      "output_tokens": 20201,
+      "pending": 0,
+      "error_entries": 0
+    },
+    "dev-v2": {
+      "ledger_entries": 130,
+      "reserved_usd": 11.10268,
+      "estimated_usage_usd": 0.05796084999999998,
+      "input_tokens": 318545,
+      "output_tokens": 41375,
+      "pending": 0,
+      "error_entries": 0
+    },
+    "dev-v3": {
+      "ledger_entries": 58,
+      "reserved_usd": 5.042367999999999,
+      "estimated_usage_usd": 0.02704555999999999,
+      "input_tokens": 146332,
+      "output_tokens": 20056,
+      "pending": 0,
+      "error_entries": 0
+    },
+    "heldout-v1": {
+      "ledger_entries": 1536,
+      "reserved_usd": 133.25670800000006,
+      "estimated_usage_usd": 0.6974734299999988,
+      "input_tokens": 3854771,
+      "output_tokens": 490883,
+      "pending": 0,
+      "error_entries": 0
+    },
+    "v2-judge-calibration": {
+      "ledger_entries": 2,
+      "reserved_usd": 0.12190000000000001,
+      "estimated_usage_usd": 0.00047665,
+      "input_tokens": 1102,
+      "output_tokens": 479,
+      "pending": 0,
+      "error_entries": 0
+    },
+    "grounded-dev-v1": {
+      "ledger_entries": 55,
+      "reserved_usd": 5.059859999999999,
+      "estimated_usage_usd": 0.026028800000000005,
+      "input_tokens": 141864,
+      "output_tokens": 17271,
+      "pending": 0,
+      "error_entries": 0
+    },
+    "v2-gpt-calibration": {
+      "ledger_entries": 3,
+      "reserved_usd": 0.81576,
+      "estimated_usage_usd": 0.0172964,
+      "input_tokens": 1111,
+      "output_tokens": 564,
+      "pending": 0,
+      "error_entries": 1
+    },
+    "v2-gpt-parameter-check": {
+      "ledger_entries": 1,
+      "reserved_usd": 0.17070240000000003,
+      "estimated_usage_usd": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "pending": 0,
+      "error_entries": 1
+    },
+    "grounded-dev-v2": {
+      "ledger_entries": 13,
+      "reserved_usd": 1.5625,
+      "estimated_usage_usd": 0.03606839,
+      "input_tokens": 29713,
+      "output_tokens": 4214,
+      "pending": 0,
+      "error_entries": 0
+    },
+    "grounded-heldout-v1": {
+      "ledger_entries": 286,
+      "reserved_usd": 35.62105359999999,
+      "estimated_usage_usd": 0.7637766400000001,
+      "input_tokens": 704326,
+      "output_tokens": 99208,
+      "pending": 0,
+      "error_entries": 3
+    },
+    "grounded-audio-v1": {
+      "ledger_entries": 12,
+      "reserved_usd": 1.5432320000000002,
+      "estimated_usage_usd": 0.04616671000000001,
+      "input_tokens": 30727,
+      "output_tokens": 3993,
+      "pending": 0,
+      "error_entries": 0
+    }
+  },
+  "cap_usd": 200,
+  "pricing": "Provider usage and published rates; not a settled invoice. Two HTTP400 rows have unknown usage and retain full reservations.",
+  "audio_bundle": "One ledger entry wraps each separately recorded external audio HTTP call; token totals exclude audio."
+}

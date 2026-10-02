@@ -92,3 +92,21 @@ def test_expensive_judge_cannot_silently_enter_a_different_context_price_tier(tm
     with pytest.raises(ValueError, match="short-context"):
         client.complete([{"role": "user", "content": "x"*272000}], model="gpt-5.6-sol")
     http.assert_not_called()
+
+
+def test_empty_completion_retains_reported_usage_and_truncation(tmp_path, monkeypatch):
+    result = response()
+    result.read.return_value = json.dumps({
+        "choices": [{"message": {"content": ""}, "finish_reason": "length"}],
+        "usage": {"prompt_tokens": 708, "completion_tokens": 800}})
+    http = Mock(return_value=result)
+    monkeypatch.setattr("streaming.experiment_client.urlopen", http)
+    client = BudgetedClient(tmp_path)
+    with pytest.raises(ValueError, match="Empty completion"):
+        client.complete([], model="gpt-5.6-sol", max_tokens=800)
+    summary = client.summary()
+    assert summary["input_tokens"] == 708 and summary["output_tokens"] == 800
+    assert summary["reported_usage_estimate_usd"] == pytest.approx(.0207152)
+    assert summary["uncertain_calls"] == 1 and summary["reserved_upper_usd"] > .0207152
+    assert json.loads((tmp_path / "call_000001.json").read_text())["truncated"] is True
+    assert http.call_count == 1

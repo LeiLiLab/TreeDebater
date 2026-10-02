@@ -337,3 +337,90 @@ Implemented so far:
 ```bash
 PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id grounded-heldout-v1 --split test --cases-file experiments/incremental_planning/cases_v2.json --modes linear structured_linear grounded_linear light_linear --judge-model gpt-5.6-sol --limit 10 --repeats 1 --workers 2 --worker-index 0 > experiments/incremental_planning/run/grounded-heldout-v1-worker0.log 2>&1
 ```
+
+- Frozen implementation committed as `6d44b01`. Worker 0 initially ran in session `61486`, worker 1 in `37761`.
+- Runtime event: request **1895**, GPT judging `fresh_repair/linear/0`, returned an empty completion at its 800-token limit. Worker 0 exited with code 1 after preserving the generated answer; worker 1 continued. Recovered the response's 708 input / 800 output tokens into the ledger ($0.02071520 estimate), retaining its error state and full reservation. Added an audit marker and truncation flag to the original call artifact without altering its request or response. This repairs cost accounting, not the experiment output.
+- Restarted worker 0 with the identical frozen command and `>>` log append. Resume reuses already-generated answers and completed judgments; only the missing judge call is retried. No prompt, output cap, source code, or data changed.
+
+- Subsequent independent judge calls 1962 (`fresh_lighting/linear/0`) and 1982 (`fresh_evening_access/structured_linear/0`) also returned empty content at 800 tokens. Both worker processes exited after saving their answers. Reconciled each response's 704 input / 800 output tokens ($0.02069760 each), preserving errors/reservations. Cumulative retained reservations before restarting were $177.19833040; 17 answers and 15 judgments were saved. Resume each worker once with identical configuration, allowing one retry per missing judgment; no answer is regenerated or selected based on score.
+
+### Judge truncation recovery protocol (generation remains frozen)
+
+Request 1984, the same-setting retry for `fresh_lighting/linear/0`, returned truncated JSON. To avoid repeated insufficient output caps, `experiments/incremental_planning/resume_judge.py` retains successful 800-token judgments and permits one 1600-token recovery for a missing judgment after an error/truncation. Model, prompt, reasoning setting and answer stay identical. Future primary calls remain 800 tokens. The larger allowance is recorded on recovered judgments, every request remains metered, and a second recovery is refused. This is a documented evaluation-protocol amendment after observing infrastructure failures, not a claim of a completely homogeneous frozen judge configuration. Source inference and case hashes remain unchanged.
+
+Recovery command replaces `src/scripts/benchmark_incremental_planning.py` with `experiments/incremental_planning/resume_judge.py`, keeping every CLI argument and append-only worker log the same. Worker 1 resumes first; worker 0 continues its existing primary run unless it fails.
+
+Full local suite now passed **211 tests and 42 subtests** (`PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 .../python -m pytest tests debate-app/backend/tests -q`), with the same pre-existing Pydantic warning.
+
+- Before any audio dispatch, reduce the probe's external-audio bundle from $1 to **$0.50**, retaining the identical 4x per-request bounds, durable pre-dispatch checks, 24-request ceiling and error latch. This reduces allowed audio work, not the guard's safety margin. Three ≤120-second ASR chunks reserve $0.144; synthetic input and two roughly 60-second outputs are expected to fit the rest. Text inference remains separately metered. Added a regression showing a smaller bundle rejects the second request before dispatch when its bound cannot fit. No historical reservation is reduced or released.
+
+### Follow-up final results and interpretation
+
+All **40/40** unique held-out answers and judgments completed on ten fresh authored cases, four policies, one repeat. Both workers exited successfully. Generator: Gemma 4 26B A4B; independent judge: GPT-5.6 Sol. Frozen inference commit: `6d44b01`. Before any post-run code change, verified source SHA-256 `2719bc227a384624508ca5d491ffbbd0d12960cce83c811853d23f642ce8f1f0` and case SHA-256 `9503696fc7503efbbf62ef816e7a8a05ab8fbb67db58e83fb18ebde907c9a424` against the launch metadata. The final two authored cases remain unused.
+
+| Policy | Checklist pass | Strength / 5 | Strawman flags | Unsupported-fact flags | Mean endpoint-to-text (s) | Mean generation calls |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Linear | 76.7% | 3.0 | 20% | 100% | 15.09 | 6.1 |
+| Structured Linear | 60.0% | 3.1 | 30% | 90% | 12.59 | 6.1 |
+| Grounded Linear | 70.0% | 3.3 | 10% | 0% | 9.46 | 6.1 |
+| Light Linear | 80.0% | 3.7 | 10% | 40% | 9.09 | 5.8 |
+
+All percentages above are **automatic judge outputs**, not verified real-world truth/error rates. A source quotation being present does not establish that the model's interpretation follows from it. Zero unsupported-fact flags for grounded answers does not establish factual correctness. Average answer lengths were 129.5, 131.6, 110.9 and 112.8 words respectively; shortening/revision differences can contribute to timing and quality differences.
+
+Paired bootstrap intervals resample the ten cases (10,000 samples):
+
+- Light versus Linear: checklist **+3.33 percentage points**, 95% interval **[-10.0, +16.7]**; simulated endpoint-to-text **-6.00 seconds**, interval **[-8.23, -3.80]**. Quality improvement is not established.
+- Structured versus Linear: checklist **-16.7 points**, interval **[-30.0, -3.33]**; text latency **-2.50 seconds**, interval **[-4.99, -0.07]**. Structured state alone performed worse on this small set.
+- Grounded versus structured: checklist **+10.0 points**, interval **[-6.67, +30.0]**; latency **-3.13 seconds**, interval **[-5.20, -0.72]**.
+- Light versus grounded: checklist **+10.0 points**, interval **[-6.67, +26.7]**; latency **-0.37 seconds**, interval **[-2.27, +1.57]**. The scheduler's isolated benefit remains uncertain; the larger overall speed difference cannot all be attributed to scheduling.
+
+The light scheduler skipped two exact duplicates and buffered one incomplete clause. Structured-state validation rejected **eight updates** (structured 2, grounded 2, light 4): three source quotes absent from the heard prefix, five invalid limits. Each safely used the raw heard prefix. These are real generation failures and remain counted; no invalid update was silently accepted or regenerated. Their presence is another reason to keep the new policies opt-in.
+
+Judge audit: three empty-completion errors with recovered provider usage, five truncated requests total, no missing request artifacts. The same-cap retries for repair/Linear and evening-access/structured succeeded. Lighting/Linear and bikes/Linear required the single permitted 1600-token recovery; the other 38 final judgments used 800 tokens. Completed judgments were never replaced. The larger recovery cap is a material evaluation limitation, especially because both recovered answers are Linear. The summary's historical `unresolved_calls=3` means three retained non-OK request records, **not pending work**; actual pending count is zero. Spot checks of repair, lighting and evening-access judgments confirmed concrete quotation-based explanations, but no human adjudication or evaluator-accuracy claim is made.
+
+Decision: retain **Light Linear as an opt-in candidate** for further validation. Do not promote structured-only mode or change the default policy based on this run. Grounded feedback appears useful for reducing unsupported assertions in these judgments, while stable quality gains and the scheduler's isolated gains remain unproven. No further paid tuning on the now-observed held-out set was performed.
+
+### Actual audio probe
+
+Command:
+
+```bash
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/audio_probe.py > experiments/incremental_planning/run/grounded-audio-v1.log 2>&1
+```
+
+`grounded-audio-v1` completed successfully on the reused plastics diagnostic. Three synthesized MP3 segments total **22.896 seconds**. Real Whisper transcriptions were shared by both policies, released on the recording's real clock; final ASR became available **1.734 seconds after the audio endpoint**. Both backend workers generated real, decodable TTS chunks:
+
+| Policy | Endpoint to first playable server chunk | Emitted chunks |
+| --- | ---: | ---: |
+| Linear | 16.050 s | 6 |
+| Light Linear | 10.968 s | 5 |
+
+The observed difference is **5.081 seconds** on one trial. This is a server callback measurement including ASR completion, remaining planning, answer generation and initial TTS. It excludes browser playback, microphone transport and network delivery to a client. It is not a statistically established production latency improvement. Both policies used the same 60-second budget, six-second initial / fifteen-second later chunk targets, no TTS model-based rewriting, unit speed and one parallel TTS job per pipeline. Audio-duration targets were not all met exactly; emitted output durations were about 58 and 46 seconds. Raw audio, transcriptions, event timestamps and configuration are saved in `run/grounded-audio-v1`; the tracked compact report is `grounded-audio-v1_summary.json`.
+
+### Final cumulative cost and completion audit
+
+The main follow-up used **286 text requests**, 704,326 input / 99,208 output tokens, estimated **$0.76377664**, retained reservations **$35.62105360**. This includes failed and repeated judging. The audio probe used **11 text requests plus one external-audio bundle**, estimated **$0.04616671**, retained reservations **$1.54323200**. Detailed external HTTP counts and sub-budget bounds are in its summary.
+
+Across all prior and follow-up work: **2,162 ledger entries**, 5,386,770 input / 698,246 output text tokens, estimated attributable usage **$1.70095090**, retained conservative reservations **$199.86095600**, approved cap **$200**. Audio estimates are included in dollars but not text-token totals. The deliberately conservative reservation is not a billed charge. Two earlier HTTP400 requests lack provider usage; their full reservations remain retained, so the usage estimate does not assume those requests were free. `cost_audit_v2.json` records every run's totals. No budget increase, reservation release or ledger reset occurred.
+
+All three final experiment processes exited with code zero, pending requests are zero, and no experiment retry/queue remains. The shared proxy was left unchanged. The small remaining reservation headroom is not authorization to reset historical spending.
+
+After **all** inference and audio work ended, fixed the accounting defect exposed by empty completions: `BudgetedClient` now retains provider token usage and the truncation marker even when the completion content is empty. It still marks the request as an error and retains its original reservation. A regression reproduces the 708-input / 800-output failure and checks its $0.02071520 estimate without dispatching a real request. This post-run bookkeeping fix changes the current source hash but does not alter the frozen experiment's prompts or results.
+
+Reproduction/reporting commands:
+
+```bash
+python experiments/incremental_planning/summarize.py grounded-heldout-v1
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests debate-app/backend/tests -q
+git diff --check
+```
+
+Final verification: **213 tests passed, 42 subtests passed**, one existing Pydantic deprecation warning; `git diff --check` passed. All **2,162** ledger entries have artifacts. Audio bundle contains **20** external HTTP requests (17 TTS, 3 ASR), all successful; emitted durations were 57.991s for Linear and 46.240s for Light. No pending budget entries remain. No push or deployment was performed, and pre-existing untracked user files were preserved.
+
+Final commit command:
+
+```bash
+git add process.md src/streaming/experiment_client.py tests/test_experiment_budget.py tests/test_audio_probe_budget.py experiments/incremental_planning/audio_probe.py experiments/incremental_planning/manifest_v2.json experiments/incremental_planning/summarize.py experiments/incremental_planning/resume_judge.py experiments/incremental_planning/cost_audit_v2.json experiments/incremental_planning/grounded-heldout-v1_summary.json experiments/incremental_planning/grounded-audio-v1_summary.json
+git commit -m "Record grounded Linear comparison and bounded audio validation"
+git status --short
+```
