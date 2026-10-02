@@ -3,7 +3,8 @@
 ## Incremental rebuttal preparation (experimental branch)
 
 `planning.mode` selects `legacy` (default), `end_of_turn`, `linear`,
-`corrected_tree`, `adaptive_linear`, `tree_plan`, or `adaptive_tree` in session YAML.
+`corrected_tree`, `adaptive_linear`, `tree_plan`, `adaptive_tree`, `structured_linear`,
+`grounded_linear`, or `light_linear` in session YAML.
 See [`configs/gemma-incremental.yml`](configs/gemma-incremental.yml) for an example.
 For command-line debaters, put the same `planning` mapping in the debater configuration.
 
@@ -15,6 +16,16 @@ semantic WAIT/UPDATE call and force remaining input through preparation at the e
 All modes keep final speaking under the existing turn controller. Preparation does not
 consume evidence, commit assistant messages or invoke TTS. Engine checkpoints include
 the speculative state so recording recovery discards abandoned work.
+
+The three newer Linear variants form an additive ablation: `structured_linear`
+validates quoted source spans and current rebuttal targets in compact JSON state;
+`grounded_linear` additionally directs the existing feedback/revision calls toward
+scope preservation and unsupported premises; `light_linear` also skips adjacent
+exact repetitions, buffers obviously unfinished clauses, and uses a semantic gate
+only for near-repetition. Pending uncertain material always drains at the endpoint.
+An invalid state response falls back to the verbatim heard prefix without reusing
+invalid model notes. Quote validation does not establish semantic entailment or
+factual truth. All variants are opt-in; the default remains `legacy`.
 
 To use an OpenAI-compatible text proxy, set `DEBATE_LLM_API_BASE` before starting the
 backend, for example `http://127.0.0.1:4000/v1`. Optionally set

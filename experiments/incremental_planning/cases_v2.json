@@ -1,0 +1,269 @@
+[
+  {
+    "id": "dev_v2_plastics_split",
+    "split": "dev",
+    "kind": "split_clause",
+    "motion": "The city should restrict disposable plastic packaging",
+    "side": "against",
+    "own_claim": "Restrictions must preserve essential uses",
+    "own_opening": "Packaging policy should account for sanitation, accessibility and whether substitutes are actually suitable.",
+    "chunks": [
+      "Disposable packaging creates waste that persists after its brief useful life. Restrictions should start with restaurant takeaway items, except",
+      "items needed for medical safety, disability access or food hygiene where no suitable substitute exists.",
+      "The city should phase this in over two years, publish substitution guidance and review the exemptions with affected users."
+    ],
+    "checks": [
+      "Recognizes essential-use exemptions",
+      "Recognizes phased implementation",
+      "Critiques suitability, enforcement or environmental tradeoffs without treating exempt uses as banned"
+    ]
+  },
+  {
+    "id": "dev_v2_water_negation",
+    "split": "dev",
+    "kind": "late_negation",
+    "motion": "Households should pay more for excessive water use",
+    "side": "against",
+    "own_claim": "Water policy should protect essential household needs",
+    "own_opening": "Conservation measures must account for household size and unavoidable water needs.",
+    "chunks": [
+      "We should charge higher prices to households that use a lot of water. A clear price signal can discourage waste.",
+      "People who maintain ornamental lawns during shortages should consider whether that water could be used more responsibly.",
+      "I am not proposing a surcharge on essential use. The higher rate starts only above a household-size-adjusted allowance, and documented medical needs are exempt."
+    ],
+    "checks": [
+      "Recognizes household-size adjustment and medical exemption",
+      "Does not claim essential water is universally surcharged",
+      "Challenges practical measurement, threshold design or remaining distributional effects"
+    ]
+  },
+  {
+    "id": "fresh_lighting",
+    "split": "test",
+    "kind": "late_scope",
+    "motion": "The city should dim street lighting at night",
+    "side": "against",
+    "own_claim": "Lighting must preserve safe movement",
+    "own_opening": "Nighttime lighting supports pedestrians and people who travel outside normal working hours.",
+    "chunks": [
+      "The city should dim street lighting to reduce unnecessary illumination and energy use.",
+      "Residential lighting does not always need its maximum brightness throughout the night. We should compare settings carefully.",
+      "I mean a six-month pilot from midnight to five in the morning on residential side streets only. Crossings, hospital approaches and main roads keep their existing lighting."
+    ],
+    "checks": [
+      "Recognizes the six-month residential-side-street pilot and its midnight-to-five window",
+      "Does not portray crossings, hospital approaches or main roads as being dimmed",
+      "Raises a relevant measurement, pedestrian access or implementation concern without inventing observed accident outcomes"
+    ]
+  },
+  {
+    "id": "fresh_repair",
+    "split": "test",
+    "kind": "split_clause",
+    "motion": "Manufacturers should provide access to appliance repair information",
+    "side": "against",
+    "own_claim": "Repair access must preserve product safety",
+    "own_opening": "Repair policies should consider electrical safety and whether technical information can be used responsibly.",
+    "chunks": [
+      "Manufacturers should provide independent technicians with repair information for household appliances, except",
+      "certified medical devices and security-sensitive authentication keys. The rule concerns ordinary household appliances and does not require releasing those keys.",
+      "The change would phase in for new models over eighteen months. Existing products would be covered only when their manufacturer volunteers documentation."
+    ],
+    "checks": [
+      "Recognizes the medical-device and authentication-key exceptions",
+      "Recognizes phased coverage for new models rather than mandatory retroactive coverage of every product",
+      "Addresses a remaining safety or implementation question without treating the excluded information as mandatory disclosure"
+    ]
+  },
+  {
+    "id": "fresh_archives",
+    "split": "test",
+    "kind": "withdrawal",
+    "motion": "The town should digitize its historical records",
+    "side": "against",
+    "own_claim": "Archives should preserve originals and access",
+    "own_opening": "Digitization should not become an excuse to lose original records or exclude residents without digital access.",
+    "chunks": [
+      "The town should scan its historical records and discard paper copies to free storage space. I think digital access would help readers.",
+      "Scans can be searched from outside the building, while staff can assist visitors who need help finding a document.",
+      "I withdraw the proposal to discard originals. All originals will remain in the archive, and in-person reading will continue. I now propose only an additional searchable copy."
+    ],
+    "checks": [
+      "Recognizes that originals and in-person reading are retained",
+      "Does not attack destruction of originals as the current proposal",
+      "Discusses an unresolved issue such as scan quality, indexing, upkeep or opportunity cost"
+    ]
+  },
+  {
+    "id": "fresh_festival",
+    "split": "test",
+    "kind": "review_inference",
+    "motion": "The town should streamline permits for small festivals",
+    "side": "for",
+    "own_claim": "Clear permits can support community events",
+    "own_opening": "Small community events benefit from a clear and predictable permit process.",
+    "chunks": [
+      "I oppose removing permit checks because neighbors need a way to raise access and noise concerns.",
+      "I would keep the present rules and hold one public review after the summer season to hear how they worked.",
+      "That is a single review, not automatic recurring rule changes. Existing permits remain valid, and any later rule change would need its own public decision."
+    ],
+    "checks": [
+      "Recognizes a single review with existing permits remaining valid",
+      "Does not assert that rules will constantly change or permits be automatically revoked",
+      "Responds to a remaining burden or process concern without inventing review frequency"
+    ]
+  },
+  {
+    "id": "fresh_compost",
+    "split": "test",
+    "kind": "exact_repetition",
+    "motion": "The town should pilot separate collection of food scraps",
+    "side": "against",
+    "own_claim": "Collection changes need a practical operations plan",
+    "own_opening": "Waste collection changes should account for storage, contamination and reliable pickup.",
+    "chunks": [
+      "The town should pilot weekly food-scrap collection in one neighborhood. Participating households would opt in.",
+      "The town should pilot weekly food-scrap collection in one neighborhood. Participating households would opt in.",
+      "Households can stop participating at any time. Existing mixed-waste collection continues throughout the three-month pilot."
+    ],
+    "checks": [
+      "Recognizes voluntary participation and the three-month neighborhood pilot",
+      "Does not claim existing mixed-waste collection will be removed",
+      "Raises a concrete storage, contamination, cost or evaluation question"
+    ]
+  },
+  {
+    "id": "fresh_reservations",
+    "split": "test",
+    "kind": "reversal_reassertion",
+    "motion": "The school should require reservations for sports courts",
+    "side": "against",
+    "own_claim": "Court access should remain practical",
+    "own_opening": "Students need a practical way to use courts without unnecessary booking barriers.",
+    "chunks": [
+      "All evening court use should require a reservation.",
+      "I withdraw that universal requirement: informal evening games may walk in without booking.",
+      "All evening court use should require a reservation.",
+      "That last sentence is my final position: reservations are required for evening use, including informal games, but daytime use remains open."
+    ],
+    "checks": [
+      "Recognizes that the final position reinstates reservations for informal evening games",
+      "Does not treat the withdrawn walk-in exception as still active",
+      "Distinguishes evening reservations from open daytime use while raising a relevant concern"
+    ]
+  },
+  {
+    "id": "fresh_loans",
+    "split": "test",
+    "kind": "numeric_revision",
+    "motion": "The library should charge late return fees",
+    "side": "against",
+    "own_claim": "Library access should not depend on ability to pay",
+    "own_opening": "Return policies should promote access and allow residents to resolve mistakes.",
+    "chunks": [
+      "The library should charge a ten-dollar late fee for each book to encourage timely returns.",
+      "That amount was too high. I replace it with a total cap of two dollars per household per month, and staff may waive it on request.",
+      "The proposed cap is two dollars per household per month, not two dollars for each book. Borrowing privileges would not be suspended for unpaid fees."
+    ],
+    "checks": [
+      "Recognizes the two-dollar household monthly cap rather than ten dollars or a per-book charge",
+      "Acknowledges waiver access and does not claim borrowing is suspended for nonpayment",
+      "Raises a relevant administrative, incentive or remaining access concern"
+    ]
+  },
+  {
+    "id": "fresh_deliveries",
+    "split": "test",
+    "kind": "late_negation",
+    "motion": "The district should restrict overnight delivery noise",
+    "side": "for",
+    "own_claim": "Quiet nights can coexist with essential deliveries",
+    "own_opening": "A carefully scoped noise rule could protect residents while preserving essential services.",
+    "chunks": [
+      "I oppose an overnight delivery rule because some shops and services need deliveries outside ordinary hours.",
+      "Emergency deliveries need reliable access, and we should not assume every noisy arrival could simply move to daytime.",
+      "I am not opposing all limits. I accept a limit on routine commercial unloading between midnight and five, with emergency medical deliveries exempt. My concern is only how nonemergency grocery deliveries will be handled."
+    ],
+    "checks": [
+      "Recognizes the opponent accepts a midnight-to-five limit on routine unloading",
+      "Does not accuse the opponent of rejecting all limits or seeking restrictions on emergency medical deliveries",
+      "Addresses the remaining grocery-delivery implementation disagreement"
+    ]
+  },
+  {
+    "id": "fresh_evening_access",
+    "split": "test",
+    "kind": "ordinary_counterargument",
+    "motion": "The library should open two evenings each week",
+    "side": "for",
+    "own_claim": "Evening access can include residents with daytime commitments",
+    "own_opening": "Opening the library later could help residents who cannot visit during working hours.",
+    "chunks": [
+      "I am concerned about staffing costs for evening opening. A limited budget still needs a staffing plan.",
+      "I am concerned about staffing costs for evening opening. A limited budget still needs a staffing plan.",
+      "I would support a volunteer-assisted three-month trial if qualified staff remain present and the normal daytime hours are preserved."
+    ],
+    "checks": [
+      "Acknowledges conditional support for a three-month trial",
+      "Preserves the qualified-staff and daytime-hours conditions when discussing the trial",
+      "Responds to staffing or trial design rather than portraying the opponent as rejecting evening access entirely"
+    ]
+  },
+  {
+    "id": "fresh_bikes",
+    "split": "test",
+    "kind": "split_qualification",
+    "motion": "The city should add protected bicycle lanes",
+    "side": "for",
+    "own_claim": "Separated routes can broaden travel options",
+    "own_opening": "A coherent bicycle network can give residents additional ways to reach everyday destinations.",
+    "chunks": [
+      "I oppose converting a traffic lane into a bicycle lane on streets where",
+      "there is only one vehicle lane in each direction and no alternative emergency route. That is the situation I am objecting to.",
+      "On wider streets with a verified emergency route, I would support a reversible pilot. I have not claimed that every proposed bicycle lane blocks ambulances."
+    ],
+    "checks": [
+      "Recognizes the opposition is limited to the single-lane/no-alternative-emergency-route situation",
+      "Acknowledges conditional support on wider streets and does not claim blanket opposition",
+      "Addresses route verification or the remaining design tradeoff without inventing emergency-delay statistics"
+    ]
+  },
+  {
+    "id": "fresh_rooftops",
+    "split": "test",
+    "kind": "evidence_withdrawal",
+    "motion": "The city should support rooftop gardens on public buildings",
+    "side": "for",
+    "own_claim": "Suitable rooftops can offer shared outdoor space",
+    "own_opening": "Rooftop gardens may offer useful space when building constraints are addressed.",
+    "chunks": [
+      "I oppose rooftop gardens because I heard they triple maintenance costs and because roofs may have load limits.",
+      "Maintenance and structural checks deserve attention before any spending commitment.",
+      "I withdraw the claim about tripling costs; I have no measurement for it. My remaining objection is to installing a garden without a structural assessment. Assessed, suitable buildings could be considered individually."
+    ],
+    "checks": [
+      "Does not treat the withdrawn tripling-cost claim as current evidence",
+      "Recognizes conditional consideration of buildings that pass structural assessment",
+      "Responds to structural assessment or individual selection rather than portraying blanket opposition"
+    ]
+  },
+  {
+    "id": "fresh_signs",
+    "split": "test",
+    "kind": "scope_and_review",
+    "motion": "The town should replace confusing road signs",
+    "side": "for",
+    "own_claim": "Clear signs can help road users navigate",
+    "own_opening": "Residents and visitors should be able to understand road signs reliably.",
+    "chunks": [
+      "I oppose replacing signs across the entire town before we know whether the proposed designs are clearer.",
+      "We can compare two designs at four intersections, keep the existing legal instructions, and ask road users about readability.",
+      "This is a one-month comparison, not a permanent town-wide replacement. Reviewing the feedback does not automatically authorize a rollout."
+    ],
+    "checks": [
+      "Recognizes the one-month comparison at four intersections",
+      "Does not portray feedback review as automatic authorization of permanent town-wide replacement",
+      "Engages the remaining evidence, evaluation or rollout decision"
+    ]
+  }
+]

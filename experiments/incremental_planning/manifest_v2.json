@@ -1,0 +1,99 @@
+{
+  "task": "Structured Linear state, targeted grounding revision and lightweight scheduling",
+  "authorization": "User approved USD 200 cumulatively and instructed 进行 on this follow-up plan",
+  "branch": "feat/incremental-rebuttal-planning",
+  "starting_commit": "5a03348",
+  "cap_usd": 200,
+  "shared_ledger": "experiments/incremental_planning/run/cost.sqlite",
+  "previous_usage_estimate_usd": 0.81113731,
+  "previous_retained_reservation_usd": 154.965948,
+  "pricing_source": "https://aws.amazon.com/bedrock/pricing/",
+  "pricing_checked": "2026-10-02",
+  "rates_per_million": {
+    "google.gemma-4-26b-a4b": [
+      0.13,
+      0.4
+    ],
+    "nvidia.nemotron-super-3-120b": [
+      0.15,
+      0.65
+    ],
+    "gpt-5.6-sol": [
+      4.4,
+      22
+    ]
+  },
+  "generator": "google.gemma-4-26b-a4b",
+  "judge": "gpt-5.6-sol",
+  "modes": [
+    "linear",
+    "structured_linear",
+    "grounded_linear",
+    "light_linear"
+  ],
+  "pilot": {
+    "maximum_judge_requests": 3,
+    "estimated_usage_usd_upper": 0.03,
+    "conservative_reservation_usd_upper": 0.5
+  },
+  "development": {
+    "cases": "two reused v1 diagnostics",
+    "repeats": 1,
+    "estimated_usage_usd_upper": 0.15,
+    "conservative_reservation_usd_upper": 6
+  },
+  "heldout": {
+    "cases_file": "experiments/incremental_planning/cases_v2.json",
+    "fresh_cases": 10,
+    "repeats": 1,
+    "answers": 40,
+    "workers": 2,
+    "estimated_usage_usd_range": [
+      0.2,
+      1.5
+    ],
+    "conservative_reservation_usd_estimate": [
+      28,
+      34
+    ],
+    "selection": "first ten prewritten test cases, selected before seeing any test output to fit conservative budget",
+    "run_id": "grounded-heldout-v1"
+  },
+  "audio_validation": {
+    "status": "preparing provider guard and bounded server-side test",
+    "conservative_reservation_usd_allowance": 2
+  },
+  "aggregate_additional_estimated_usage_usd_upper": 3,
+  "aggregate_additional_reservation_usd_estimate": [
+    36,
+    44
+  ],
+  "guard": "Retain every pre-dispatch reservation, share old ledger, reject before cumulative USD 200; no cap increase, no reset",
+  "inference_settings": {
+    "main_temperature": 0.3,
+    "plan_max_tokens": 700,
+    "gate_max_tokens": 120,
+    "generation_max_tokens": 1600,
+    "independent_judge_max_tokens": 800,
+    "judge_reasoning_effort": "none",
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted"
+  },
+  "holdout_policy": "Freeze prompts before fresh test runs. Old test cases are now diagnostics, never fresh evidence.",
+  "status": "frozen for grounded-heldout-v1 launch",
+  "gpt_pricing_source": "https://docs.aws.amazon.com/en_en/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html",
+  "gpt_route": "bedrock/us.openai.gpt-5.6-sol; geographic short context rate",
+  "judge_change_reason": "Nemotron passed simple controls but misjudged explicit timelines in development; calibrate GPT before held-out comparison.",
+  "gpt_calibration": {
+    "requests": 3,
+    "expected_usage_usd_upper": 0.05,
+    "conservative_reservation_usd_upper": 1,
+    "status": "two successful calibrated verdicts; two earlier HTTP400 attempts retained separately"
+  },
+  "before_main": {
+    "reserved_usd": 162.69667039999996,
+    "estimated_usage_usd": 0.8910075500000003,
+    "ledger_entries": 1864,
+    "failed_http400_entries": 2
+  }
+}

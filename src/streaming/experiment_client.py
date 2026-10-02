@@ -16,6 +16,8 @@ from urllib.request import Request, urlopen
 
 
 MODEL = "google.gemma-4-26b-a4b"
+MODEL_RATES = {MODEL: (0.13, 0.40), "nvidia.nemotron-super-3-120b": (0.15, 0.65),
+               "gpt-5.6-sol": (4.40, 22.00)}  # Bedrock geographic inference, short context
 
 
 class BudgetExceeded(RuntimeError):
@@ -47,18 +49,27 @@ class BudgetedClient:
                     uncertain_calls=row[3] or 0, input_tokens=row[4], output_tokens=row[5],
                     cap_usd=self.db.execute("SELECT cap FROM budget WHERE id=1").fetchone()[0])
 
-    def complete(self, messages, *, max_tokens=700, temperature=0, json_mode=False):
+    def complete(self, messages, *, max_tokens=700, temperature=0, json_mode=False, model=MODEL):
+        if model not in MODEL_RATES:
+            raise ValueError("No verified price/budget bound for model: " + model)
         if not 0 < max_tokens <= 4096:
             raise ValueError("Experiment output cap must be between 1 and 4096 tokens")
-        body = {"model": MODEL, "messages": messages, "max_tokens": max_tokens,
+        body = {"model": model, "messages": messages, "max_tokens": max_tokens,
                 "temperature": temperature, "num_retries": 0}
+        if model == "gpt-5.6-sol":
+            body["reasoning_effort"] = "none"
+            body.pop("temperature")  # this Bedrock route rejects temperature even with no reasoning
         if json_mode:
             body["response_format"] = {"type": "json_object"}
         raw = json.dumps(body, ensure_ascii=False).encode()
+        if model == "gpt-5.6-sol" and len(raw) + 8192 > 272_000:
+            raise ValueError("GPT judge request exceeds the verified short-context price bound")
         # UTF-8 bytes upper-bound text token counts; ample margin covers chat framing.
-        # $1/M for both directions exceeds standard US pricing ($0.13/$0.40).
+        # Preserve the original $1/M floor, but use higher rates for expensive judges.
         # Keep 4x headroom for proxy/provider retry uncertainty, including lost responses.
-        reservation = 4 * (len(raw) + 8192 + max_tokens) / 1_000_000
+        input_rate, output_rate = MODEL_RATES[model]
+        reservation = 4 * ((len(raw) + 8192) * max(1, input_rate)
+                           + max_tokens * max(1, output_rate)) / 1_000_000
         self.db.execute("BEGIN IMMEDIATE")
         try:
             used = self.db.execute("SELECT coalesce(sum(reserved),0) FROM calls").fetchone()[0]
@@ -73,7 +84,8 @@ class BudgetedClient:
             self.db.rollback()
             raise
         t0 = time.perf_counter()
-        artifact = {"request": body, "reservation_usd": reservation, "label": self.label}
+        artifact = {"request": body, "reservation_usd": reservation, "label": self.label,
+                    "rates_per_million": MODEL_RATES[model]}
         headers = {"Content-Type": "application/json"}
         key = os.environ.get("DEBATE_LLM_API_KEY")
         if key:
@@ -87,7 +99,8 @@ class BudgetedClient:
             output_tokens = usage.get("completion_tokens")
             estimate = None
             if type(input_tokens) is int and type(output_tokens) is int:
-                estimate = (input_tokens * 0.13 + output_tokens * 0.40) / 1_000_000
+                input_rate, output_rate = MODEL_RATES[model]
+                estimate = (input_tokens * input_rate + output_tokens * output_rate) / 1_000_000
             content = result["choices"][0]["message"].get("content")
             if not isinstance(content, str) or not content.strip():
                 raise ValueError("Empty completion")

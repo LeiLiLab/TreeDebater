@@ -1,0 +1,120 @@
+{
+  "run_id": "grounded-dev-v2",
+  "metadata": {
+    "source_digest": "a53771fea68d978a96a360e88dc7b59a0a91d6bee29dfdc9fd7960e18c6d68e1",
+    "cases_digest": "9503696fc7503efbbf62ef816e7a8a05ab8fbb67db58e83fb18ebde907c9a424",
+    "split": "dev",
+    "case_ids": [
+      "dev_v2_plastics_split"
+    ],
+    "modes": [
+      "grounded_linear",
+      "light_linear"
+    ],
+    "repeats": 1,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 1,
+    "judge_model": "gpt-5.6-sol",
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted",
+    "judge_reasoning_effort": "none",
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "expected_answers": 2,
+  "completed_answers": 2,
+  "missing": [],
+  "metrics": [
+    {
+      "mode": "grounded_linear",
+      "n": 1,
+      "checklist_rate": 0.6666666666666666,
+      "strength_mean": 3,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 14.974554317013826,
+      "residual_text_median_s": 14.974554317013826,
+      "residual_worker_return_mean_s": 14.974589466990437,
+      "generation_calls_mean": 6,
+      "generation_cost_mean_usd": 0.00272718,
+      "answer_words_mean": 119,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 1,
+      "revisions": 0
+    },
+    {
+      "mode": "light_linear",
+      "n": 1,
+      "checklist_rate": 1,
+      "strength_mean": 4,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 1,
+      "residual_text_mean_s": 7.972989127971232,
+      "residual_text_median_s": 7.972989127971232,
+      "residual_worker_return_mean_s": 7.973020977980923,
+      "generation_calls_mean": 5,
+      "generation_cost_mean_usd": 0.00218921,
+      "answer_words_mean": 111,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 1,
+      "invalid_states": 1,
+      "revisions": 0
+    }
+  ],
+  "reference_mode": "linear",
+  "paired_vs_baseline": {},
+  "paired_vs_legacy": {},
+  "component_comparisons": {
+    "light_linear_vs_grounded_linear": {
+      "baseline": "grounded_linear",
+      "candidate": "light_linear",
+      "case_count": 1,
+      "case_differences": [
+        {
+          "case": "dev_v2_plastics_split",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -7.001565189042594
+        }
+      ],
+      "quality_diff_mean": 0.33333333333333337,
+      "quality_diff_95ci": [
+        0.33333333333333337,
+        0.33333333333333337
+      ],
+      "latency_diff_mean_s": -7.001565189042594,
+      "latency_diff_95ci_s": [
+        -7.001565189042594,
+        -7.001565189042594
+      ]
+    }
+  },
+  "usage_including_judging": {
+    "calls": 13,
+    "reserved_upper_usd": 1.5625,
+    "unresolved_calls": 0,
+    "input_tokens": 29713,
+    "output_tokens": 4214,
+    "reported_usage_estimate_usd": 0.03606839
+  },
+  "request_audit": {
+    "missing_artifacts": [],
+    "truncated_calls": [],
+    "errors": [],
+    "runtime_warning_counts": []
+  },
+  "limitations": [
+    "Small authored scenario set, not a standard debate benchmark",
+    "Different generator/judge models, but no human adjudication; automatic judging remains fallible",
+    "Spot checks found inconsistent constraint judgments; automated scores are provisional, not established accuracy",
+    "Zero unsupported-fact flags do not establish factual correctness",
+    "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
+    "Text-ready timing precedes post-speech tree analysis; worker-return timing is reported separately",
+    "Exact-target matching shared across arms; embedding fallback disabled",
+    "Cost uses provider-reported tokens and published rates, not a settled invoice"
+  ]
+}

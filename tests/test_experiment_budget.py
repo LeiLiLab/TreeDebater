@@ -61,3 +61,34 @@ def test_usage_is_attributed_to_its_job_under_shared_ledger(tmp_path, monkeypatc
     assert one.summary("one")["calls"] == 1
     assert two.summary("two")["calls"] == 1
     assert one.summary()["calls"] == 2
+
+
+def test_independent_judge_is_priced_and_unpriced_models_never_dispatch(tmp_path, monkeypatch):
+    http = Mock(return_value=response())
+    monkeypatch.setattr("streaming.experiment_client.urlopen", http)
+    client = BudgetedClient(tmp_path)
+    client.complete([{"role": "user", "content": "Judge this"}], model="nvidia.nemotron-super-3-120b")
+    assert client.summary()["reported_usage_estimate_usd"] == pytest.approx((20*.15 + 2*.65)/1e6)
+    with pytest.raises(ValueError):
+        client.complete([], model="unpriced-model")
+    assert http.call_count == 1
+
+
+def test_expensive_judge_reservation_uses_its_own_rates_before_dispatch(tmp_path, monkeypatch):
+    http = Mock(return_value=response())
+    monkeypatch.setattr("streaming.experiment_client.urlopen", http)
+    client = BudgetedClient(tmp_path, cap=.15)
+    # The cheap-model reservation would fit; the GPT input/output bound cannot.
+    with pytest.raises(BudgetExceeded):
+        client.complete([{"role": "user", "content": "Judge this"}], model="gpt-5.6-sol", max_tokens=800)
+    http.assert_not_called()
+    assert client.summary()["calls"] == 0
+
+
+def test_expensive_judge_cannot_silently_enter_a_different_context_price_tier(tmp_path, monkeypatch):
+    http = Mock(return_value=response())
+    monkeypatch.setattr("streaming.experiment_client.urlopen", http)
+    client = BudgetedClient(tmp_path)
+    with pytest.raises(ValueError, match="short-context"):
+        client.complete([{"role": "user", "content": "x"*272000}], model="gpt-5.6-sol")
+    http.assert_not_called()

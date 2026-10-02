@@ -11,7 +11,7 @@ import time
 
 
 MODES = ("legacy", "end_of_turn", "linear", "corrected_tree", "adaptive_linear",
-         "tree_plan", "adaptive_tree")
+         "tree_plan", "adaptive_tree", "structured_linear", "grounded_linear", "light_linear")
 
 
 @dataclass
@@ -31,7 +31,15 @@ class PlanningConfig:
 
     @property
     def linear(self):
-        return self.mode in ("linear", "adaptive_linear")
+        return self.mode in ("linear", "adaptive_linear", "structured_linear", "grounded_linear", "light_linear")
+
+    @property
+    def structured(self):
+        return self.mode in ("structured_linear", "grounded_linear", "light_linear")
+
+    @property
+    def grounded(self):
+        return self.mode in ("grounded_linear", "light_linear")
 
     @property
     def early(self):
@@ -55,6 +63,7 @@ class IncrementalPlanner:
     version: int = 0
     plan_version: int = -1
     plan: str = ""
+    state: dict = field(default_factory=dict)
     updates: int = 0
     finished: bool = False
     events: list[dict] = field(default_factory=list)
@@ -69,6 +78,7 @@ class IncrementalPlanner:
         self.processed = self.version = self.updates = 0
         self.plan_version = -1
         self.plan = ""
+        self.state = {}
         self.finished = False
         return True
 
@@ -81,12 +91,29 @@ class IncrementalPlanner:
         self.version += 1
         if self.config.mode == "end_of_turn":
             return
+        if (self.config.mode == "light_linear" and self.processed == len(self.chunks)-1
+                and self.processed > 0 and self.plan_version == self.version-1
+                and normalize(text) == normalize(self.chunks[-2])):
+            # Adjacent exact repetition only. Repeating an OLD claim after a
+            # correction is substantive and must never be skipped this way.
+            self.processed += 1
+            self.plan_version = self.version
+            self.events.append({"turn": self.turn, "version": self.version, "action": "SKIP_DUPLICATE"})
+            return
         # max_updates bounds speculative work. Final draining always bypasses it.
         if self.updates >= self.config.max_updates:
             self.events.append({"turn": self.turn, "version": self.version, "action": "BUDGET_WAIT"})
             return
         pending = self.chunks[self.processed:]
-        if self.config.mode.startswith("adaptive") and self.plan:
+        light_gate = False
+        if self.config.mode == "light_linear":
+            from .grounding import incomplete_clause, needs_semantic_gate
+            if incomplete_clause(" ".join(pending)) and len(pending) < self.config.max_wait_chunks:
+                self.events.append({"turn": self.turn, "version": self.version, "action": "WAIT_INCOMPLETE"})
+                return
+            if self.processed:
+                light_gate = needs_semantic_gate(self.chunks[self.processed-1], pending)
+        if (self.config.mode.startswith("adaptive") or light_gate) and self.plan:
             prompt = (
                 "Decide whether new opponent speech materially changes our rebuttal preparation. "
                 "UPDATE for a new substantive claim, evidence, negation, qualification, withdrawal, "
@@ -141,9 +168,23 @@ class IncrementalPlanner:
                 + json.dumps({"newest_speech": pending, "context": material, "heard_prefix": self.chunks,
                               "previous_notes": previous, "endpoint": final}, ensure_ascii=False)
             )
-            self.plan = llm(prompt, self.config.max_plan_tokens).strip()
-            if not self.plan:
+            if self.config.structured:
+                from .grounding import parse_state, state_prompt
+                prompt = state_prompt(material, self.chunks, self.state)
+            raw = llm(prompt, self.config.max_plan_tokens).strip()
+            if not raw:
                 raise ValueError("Preparation returned empty notes")
+            if self.config.structured:
+                try:
+                    self.state = parse_state(raw, " ".join(self.chunks))
+                    self.plan = json.dumps(self.state, ensure_ascii=False)
+                except (ValueError, TypeError, KeyError) as exc:
+                    self.state = {}
+                    self.plan = "State validation failed. Use the verbatim opponent prefix without speculative notes:\n" + " ".join(self.chunks)
+                    self.events.append({"turn": self.turn, "version": self.version,
+                                        "action": "INVALID_STATE", "reason": str(exc)})
+            else:
+                self.plan = raw
         self.processed = len(self.chunks)
         self.plan_version = self.version
         self.updates += 1
@@ -163,6 +204,7 @@ class IncrementalPlanner:
             self.processed = 0
             self.version += 1
             self.plan = ""
+            self.state = {}
             self.plan_version = -1
             self.events.append({"turn": self.turn, "action": "RECONCILE"})
         self._update(llm=llm, analyze=analyze, context=context, final=True)
@@ -171,8 +213,18 @@ class IncrementalPlanner:
     def instructions(self):
         if not self.config.early or self.plan_version != self.version:
             return ""
-        return ("Prepared rebuttal notes (provisional analysis, not spoken facts). "
+        distinction = ("Source-anchored state: claims and limits summarize opponent speech; rebuttals are "
+                       "OUR proposed arguments, and assumptions are UNVERIFIED. Never present assumptions "
+                       "as established facts. Use conditional reasoning or ask a concrete question.\n"
+                       if self.config.structured else "")
+        return (distinction + "Prepared rebuttal notes (provisional analysis, not spoken facts). "
                 "The complete opponent statement is authoritative; check every target and qualification.\n"
                 + self.plan + "\nLATEST OPPONENT WORDS — these override any incompatible earlier notes:\n"
                 + self.chunks[-1] + "\nDo not attack withdrawn positions or propose already-granted exceptions "
                 "as if the opponent prohibited them.")
+
+    def grounding_instructions(self):
+        if not self.config.grounded or self.plan_version != self.version:
+            return ""
+        from .grounding import GROUNDING_CHECK
+        return GROUNDING_CHECK + "\nCurrent source-anchored state (not independently verified facts):\n" + self.plan

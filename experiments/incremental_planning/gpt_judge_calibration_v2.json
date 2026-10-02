@@ -1,0 +1,42 @@
+{
+  "acknowledged_but_criticized": {
+    "checks": [
+      {
+        "passed": true,
+        "reason": "Explicitly recognizes all named exemptions: \u201cYou exempt medical, disability and food hygiene necessities where substitutes are unsuitable\u201d."
+      },
+      {
+        "passed": true,
+        "reason": "Explicitly recognizes the timeline: \u201cRegarding your two-year phase-in\u201d."
+      },
+      {
+        "passed": true,
+        "reason": "Critiques implementation and enforcement\u2014\u201cwhether guidance and appeals can be ready before enforcement\u201d and the need for \u201ca clear process to establish that exemption\u201d\u2014while acknowledging that the uses are exempt."
+      }
+    ],
+    "relevance": 5,
+    "rebuttal_strength": 4,
+    "strawman": false,
+    "unsupported_facts": false
+  },
+  "unsupported": {
+    "checks": [
+      {
+        "passed": false,
+        "reason": "\u201cblanket ban removes all medical and disability packaging\u201d directly denies the stated medical-safety and disability-access exemptions."
+      },
+      {
+        "passed": false,
+        "reason": "\u201ctomorrow\u201d contradicts rather than recognizes the opponent\u2019s two-year phase-in."
+      },
+      {
+        "passed": false,
+        "reason": "\u201cremoves all medical and disability packaging\u201d treats expressly exempt uses as banned and offers no supported critique of suitability, enforcement, or environmental tradeoffs."
+      }
+    ],
+    "relevance": 2,
+    "rebuttal_strength": 1,
+    "strawman": true,
+    "unsupported_facts": true
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "grounded": {
+    "checks": [
+      {
+        "passed": true,
+        "reason": "You limit the rule to after midnight and exempt emergency work."
+      },
+      {
+        "passed": true,
+        "reason": "Your proposed single review could help, but its criteria need to be clear."
+      },
+      {
+        "passed": true,
+        "reason": "My concern is how residents and crews can determine whether an activity qualifies as emergency work and appeal a mistaken classification."
+      }
+    ],
+    "relevance": 5,
+    "rebuttal_strength": 4,
+    "strawman": false,
+    "unsupported_facts": false
+  },
+  "unsupported": {
+    "checks": [
+      {
+        "passed": false,
+        "reason": "The answer does not recognize the after-midnight scope or emergency-work exemption. Instead, it falsely claims the rule is a 'blanket ban' that includes emergency crews, which contradicts the opponent's explicit exemption for emergency work. The opponent stated 'Emergency work is exempt,' but the answer treats it as included in the ban, failing to acknowledge the exemption. No span in the answer acknowledges the after-midnight limit or the emergency-work exemption as stated by the opponent."
+      },
+      {
+        "passed": false,
+        "reason": "The answer invents recurring rule changes by claiming 'Your constantly changing rules will certainly destroy every local business within a week.' The opponent explicitly stated 'I propose one review, not recurring changes,' meaning no recurring changes are proposed. The answer falsely asserts recurring changes as a fact, which is an invention not supported by the opponent's statement."
+      },
+      {
+        "passed": false,
+        "reason": "The answer asserts an invented outcome: 'will certainly destroy every local business within a week.' This is a specific, ungrounded certainty about harm that is not supported by the opponent's statement or any provided evidence. The opponent mentioned no such outcome, and the answer presents it as a definite consequence, which violates the check against asserting an invented outcome."
+      }
+    ],
+    "relevance": 2,
+    "rebuttal_strength": 1,
+    "strawman": true,
+    "unsupported_facts": true
+  }
+}

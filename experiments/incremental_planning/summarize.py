@@ -65,6 +65,7 @@ def summarize(run_id):
     for r in complete:
         by_mode[r["mode"]].append(r)
     rows = []
+    reference = "legacy" if "legacy" in metadata["modes"] else "linear"
     for mode in metadata["modes"]:
         rs = by_mode[mode]
         if not rs:
@@ -83,19 +84,25 @@ def summarize(run_id):
                      "generation_cost_mean_usd": mean([r["model_usage"]["reported_usage_estimate_usd"] for r in rs]),
                      "answer_words_mean": mean([r["answer_words"] for r in rs]),
                      "gate_waits": sum(e["action"] == "WAIT" for r in rs for e in r["after_generation"]["events"]),
+                     "duplicate_skips": sum(e["action"] == "SKIP_DUPLICATE" for r in rs for e in r["after_generation"]["events"]),
+                     "incomplete_waits": sum(e["action"] == "WAIT_INCOMPLETE" for r in rs for e in r["after_generation"]["events"]),
+                     "invalid_states": sum(e["action"] == "INVALID_STATE" for r in rs for e in r["after_generation"]["events"]),
                      "revisions": sum(len(r["after_generation"]["opponent_tree"].get("revisions", [])) for r in rs)})
     pairs = {}
     # Average repeated runs within each case before estimating uncertainty.
     for mode in metadata["modes"]:
-        if mode == "legacy":
+        if mode == reference:
             continue
-        paired = paired_comparison(by_mode, metadata, "legacy", mode)
+        paired = paired_comparison(by_mode, metadata, reference, mode)
         if paired:
             pairs[mode] = paired
     components = {}
     for baseline, candidate in (("linear", "adaptive_linear"),
                                 ("corrected_tree", "tree_plan"),
-                                ("tree_plan", "adaptive_tree")):
+                                ("tree_plan", "adaptive_tree"),
+                                ("linear", "structured_linear"),
+                                ("structured_linear", "grounded_linear"),
+                                ("grounded_linear", "light_linear")):
         paired = paired_comparison(by_mode, metadata, baseline, candidate)
         if paired:
             components[candidate + "_vs_" + baseline] = paired
@@ -138,10 +145,13 @@ def summarize(run_id):
         for (mode, category), count in sorted(warnings.items())]
     summary = {"run_id": run_id, "metadata": metadata, "expected_answers": len(expected),
                "completed_answers": len(observed), "missing": sorted(expected-observed),
-               "metrics": rows, "paired_vs_legacy": pairs, "component_comparisons": components,
+               "metrics": rows, "reference_mode": reference, "paired_vs_baseline": pairs,
+               "paired_vs_legacy": pairs if reference == "legacy" else {}, "component_comparisons": components,
                "usage_including_judging": usage, "request_audit": request_audit,
                "limitations": ["Small authored scenario set, not a standard debate benchmark",
-                               "Same model generates and judges; no human or independent-model validation",
+                               ("Same model generates and judges; no human or independent-model validation"
+                                if metadata.get("judge_model", metadata["model"]) == metadata["model"]
+                                else "Different generator/judge models, but no human adjudication; automatic judging remains fallible"),
                                "Spot checks found inconsistent constraint judgments; automated scores are provisional, not established accuracy",
                                "Zero unsupported-fact flags do not establish factual correctness",
                                "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
