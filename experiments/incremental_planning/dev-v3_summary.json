@@ -37,6 +37,7 @@
       "unsupported_fact_rate": 0,
       "residual_text_mean_s": 18.229001446976326,
       "residual_text_median_s": 18.229001446976326,
+      "residual_worker_return_mean_s": 20.302184621978085,
       "generation_calls_mean": 8,
       "generation_cost_mean_usd": 0.0039451700000000004,
       "answer_words_mean": 128,
@@ -52,6 +53,7 @@
       "unsupported_fact_rate": 0,
       "residual_text_mean_s": 15.2574838839937,
       "residual_text_median_s": 15.2574838839937,
+      "residual_worker_return_mean_s": 18.594575854949653,
       "generation_calls_mean": 8,
       "generation_cost_mean_usd": 0.00398951,
       "answer_words_mean": 128,
@@ -67,6 +69,7 @@
       "unsupported_fact_rate": 0,
       "residual_text_mean_s": 14.677051478007343,
       "residual_text_median_s": 14.677051478007343,
+      "residual_worker_return_mean_s": 14.677081628004089,
       "generation_calls_mean": 6,
       "generation_cost_mean_usd": 0.0035836,
       "answer_words_mean": 141,
@@ -82,6 +85,7 @@
       "unsupported_fact_rate": 0,
       "residual_text_mean_s": 20.825776830955874,
       "residual_text_median_s": 20.825776830955874,
+      "residual_worker_return_mean_s": 20.82582901994465,
       "generation_calls_mean": 8,
       "generation_cost_mean_usd": 0.0038028100000000002,
       "answer_words_mean": 133,
@@ -97,6 +101,7 @@
       "unsupported_fact_rate": 0,
       "residual_text_mean_s": 12.425578135007527,
       "residual_text_median_s": 12.425578135007527,
+      "residual_worker_return_mean_s": 14.381759397976566,
       "generation_calls_mean": 10,
       "generation_cost_mean_usd": 0.00533231,
       "answer_words_mean": 135,
@@ -112,6 +117,7 @@
       "unsupported_fact_rate": 0,
       "residual_text_mean_s": 16.56453687202884,
       "residual_text_median_s": 16.56453687202884,
+      "residual_worker_return_mean_s": 18.543536759039853,
       "generation_calls_mean": 12,
       "generation_cost_mean_usd": 0.00557962,
       "answer_words_mean": 133,
@@ -121,6 +127,8 @@
   ],
   "paired_vs_legacy": {
     "corrected_tree": {
+      "baseline": "legacy",
+      "candidate": "corrected_tree",
       "case_count": 1,
       "case_differences": [
         {
@@ -141,6 +149,8 @@
       ]
     },
     "linear": {
+      "baseline": "legacy",
+      "candidate": "linear",
       "case_count": 1,
       "case_differences": [
         {
@@ -161,6 +171,8 @@
       ]
     },
     "adaptive_linear": {
+      "baseline": "legacy",
+      "candidate": "adaptive_linear",
       "case_count": 1,
       "case_differences": [
         {
@@ -181,6 +193,8 @@
       ]
     },
     "tree_plan": {
+      "baseline": "legacy",
+      "candidate": "tree_plan",
       "case_count": 1,
       "case_differences": [
         {
@@ -201,6 +215,8 @@
       ]
     },
     "adaptive_tree": {
+      "baseline": "legacy",
+      "candidate": "adaptive_tree",
       "case_count": 1,
       "case_differences": [
         {
@@ -221,6 +237,74 @@
       ]
     }
   },
+  "component_comparisons": {
+    "adaptive_linear_vs_linear": {
+      "baseline": "linear",
+      "candidate": "adaptive_linear",
+      "case_count": 1,
+      "case_differences": [
+        {
+          "case": "dev_school_retract",
+          "quality_diff": 0,
+          "latency_diff_s": 6.1487253529485315
+        }
+      ],
+      "quality_diff_mean": 0,
+      "quality_diff_95ci": [
+        0,
+        0
+      ],
+      "latency_diff_mean_s": 6.1487253529485315,
+      "latency_diff_95ci_s": [
+        6.1487253529485315,
+        6.1487253529485315
+      ]
+    },
+    "tree_plan_vs_corrected_tree": {
+      "baseline": "corrected_tree",
+      "candidate": "tree_plan",
+      "case_count": 1,
+      "case_differences": [
+        {
+          "case": "dev_school_retract",
+          "quality_diff": 0.6666666666666667,
+          "latency_diff_s": -2.8319057489861734
+        }
+      ],
+      "quality_diff_mean": 0.6666666666666667,
+      "quality_diff_95ci": [
+        0.6666666666666667,
+        0.6666666666666667
+      ],
+      "latency_diff_mean_s": -2.8319057489861734,
+      "latency_diff_95ci_s": [
+        -2.8319057489861734,
+        -2.8319057489861734
+      ]
+    },
+    "adaptive_tree_vs_tree_plan": {
+      "baseline": "tree_plan",
+      "candidate": "adaptive_tree",
+      "case_count": 1,
+      "case_differences": [
+        {
+          "case": "dev_school_retract",
+          "quality_diff": -0.6666666666666667,
+          "latency_diff_s": 4.138958737021312
+        }
+      ],
+      "quality_diff_mean": -0.6666666666666667,
+      "quality_diff_95ci": [
+        -0.6666666666666667,
+        -0.6666666666666667
+      ],
+      "latency_diff_mean_s": 4.138958737021312,
+      "latency_diff_95ci_s": [
+        4.138958737021312,
+        4.138958737021312
+      ]
+    }
+  },
   "usage_including_judging": {
     "calls": 58,
     "reserved_upper_usd": 5.042367999999999,
@@ -229,10 +313,41 @@
     "output_tokens": 20056,
     "reported_usage_estimate_usd": 0.02704555999999999
   },
+  "request_audit": {
+    "missing_artifacts": [],
+    "truncated_calls": [
+      {
+        "id": 203,
+        "label": "dev-v3/dev_school_retract/adaptive_linear/0",
+        "max_tokens": 700
+      },
+      {
+        "id": 222,
+        "label": "dev-v3/dev_school_retract/linear/0",
+        "max_tokens": 700
+      },
+      {
+        "id": 224,
+        "label": "dev-v3/dev_school_retract/linear/0",
+        "max_tokens": 700
+      }
+    ],
+    "errors": [],
+    "runtime_warning_counts": [
+      {
+        "mode": "adaptive_tree",
+        "warning": "Unmatched revise target from for: A classroom concentration improves concentration.",
+        "count": 1
+      }
+    ]
+  },
   "limitations": [
     "Small authored scenario set, not a standard debate benchmark",
     "Same model generates and judges; no human or independent-model validation",
+    "Spot checks found inconsistent constraint judgments; automated scores are provisional, not established accuracy",
+    "Zero unsupported-fact flags do not establish factual correctness",
     "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
+    "Text-ready timing precedes post-speech tree analysis; worker-return timing is reported separately",
     "Exact-target matching shared across arms; embedding fallback disabled",
     "Cost uses provider-reported tokens and published rates, not a settled invoice"
   ]

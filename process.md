@@ -33,13 +33,13 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 
 | Variant | Intended purpose | Status |
 | --- | --- | --- |
-| Current TreeDebater | Online tree / turn-end planning reference | Development replay complete |
-| End-of-turn TreeDebater | Isolate benefit of online preparation | Implemented; development replay complete |
-| Linear incremental | Update explicit linear notes while listening | Implemented; development replay complete |
-| Corrected tree | Isolate revision/retraction support | Implemented; development replay complete |
-| Adaptive linear | Compare scheduling with the same linear state | Implemented; development replay complete |
-| Tree early planning | Prepare tree-driven rebuttal plans before the endpoint | Implemented; development replay complete |
-| Adaptive tree early planning | Combine semantic update scheduling and early planning | Implemented; development replay complete |
+| Current TreeDebater | Online tree / turn-end planning reference | Held-out comparison complete |
+| End-of-turn TreeDebater | Isolate benefit of online preparation | Implemented; held-out comparison complete |
+| Linear incremental | Update explicit linear notes while listening | Implemented; held-out comparison complete |
+| Corrected tree | Revision/retraction plus authoritative context at final revision | Implemented; held-out comparison complete |
+| Adaptive linear | Compare scheduling with the same linear state | Implemented; held-out comparison complete |
+| Tree early planning | Prepare tree-driven rebuttal plans before the endpoint | Implemented; held-out comparison complete |
+| Adaptive tree early planning | Combine semantic update scheduling and early planning | Implemented; held-out comparison complete |
 
 Evaluate targeted rebuttal quality, final-condition correctness, claim coverage, unsupported assertions, end-of-turn residual latency, and total input/output tokens and cost. Include late qualifiers, reversals, withdrawals, repeated content, and split clauses. Report measured text/planning latency separately from actual audible latency; do not describe a simulated timeline as a live audio measurement. Judges see delivered answers, not private preparation traces. Keep development cases separate from final held-out comparison.
 
@@ -56,6 +56,19 @@ Evaluate targeted rebuttal quality, final-condition correctness, claim coverage,
 | File | Change | Verification |
 | --- | --- | --- |
 | `process.md` | Created this ongoing process record | Checked against git state and tool results |
+| `src/streaming/planning.py` | Causal Linear/Adaptive policies, bounded updates, endpoint drain, authoritative transcript reconciliation | Offline policy regressions; real Gemma replay |
+| `src/streaming/argument_revisions.py` | Speaker-owned revise/retract; archive and invalidate dependent attacks | Revision/retraction and wrong-speaker/ID tests |
+| `src/debate_tree.py` | Persist stable node IDs and revision history | Tree and planner regressions |
+| `src/ouragents.py` | Integrate speculative notes, opponent finalization, corrective extraction and final revision context | Integrated backend suite; real generation/feedback/revision replay |
+| `src/agents.py`, `src/utils/model.py` | Planning configuration and optional generic model proxy routing | Existing defaults preserved; real Gemma upstream pilot |
+| `src/utils/helper.py`, `src/utils/llm_schemas.py` | Opt-in correction extraction and target IDs | Extraction suite; tree snapshots from paid runs |
+| `src/streaming/env.py` | Deliver streaming batches to the selected policy | Streaming regressions |
+| `debate-app/backend/debate_app/engine_adapter.py`, `schemas.py` | API settings, streaming policy routing, checkpoint/restore planner state | Backend tests including speculative rollback |
+| `src/streaming/experiment_client.py`, `src/utils/tool.py` | Durable shared pre-dispatch cost guard; do not swallow budget exceptions | Cap/restart/failure/shared-client/attribution tests |
+| `src/scripts/benchmark_incremental_planning.py` | Frozen controlled text replay, usage attribution, blind checklist judging and resume | Development experiments and held-out run artifacts |
+| `experiments/incremental_planning/{cases.json,manifest.json,summarize.py}` | Authored cases, authorization/settings/pricing, paired reporting and artifact audit | Counts/hashes; aggregate invariance check on development results |
+| `tests/test_incremental_planning.py`, `tests/test_experiment_budget.py`, backend `tests/test_engine_adapter.py` | New meaningful regression coverage | Included in 188 tests + 42 subtests passing |
+| `debate-app/configs/gemma-incremental.yml`, `debate-app/README.md`, `.gitignore` | Example opt-in configuration, usage documentation, keep large raw artifacts local | Configuration validation; diff review |
 
 See chronological implementation entries below for changed files and verification.
 
@@ -84,7 +97,7 @@ Files inspected: `src/agents.py`, `src/ouragents.py`, `src/debate_tree.py`, `src
 
 ## Experiment results
 
-Development results are recorded below. Held-out performance improvement is **unverified**.
+The frozen held-out comparison completed **168/168** answers. Full results and limitations are recorded at the end of this log and in `experiments/incremental_planning/heldout-v1_summary.json`. Linear reduced simulated text-ready latency and had a higher mean automated checklist score, but **stable quality improvement is not established**: quality confidence intervals include zero and spot checks found judge inconsistencies. Do not treat these small authored-case results as live speech or standard benchmark results.
 
 ## Timeline
 
@@ -166,3 +179,104 @@ PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/pyth
 ```
 
 Do not tune prompts on these held-out answers. Record any runtime defects and any subsequent rerun separately. The default production policy remains `legacy` pending evidence from this comparison.
+
+### Held-out execution started
+
+- Implementation committed as `ed5990d` (`Add incremental rebuttal policies and guarded Gemma replay`) on `feat/incremental-rebuttal-planning` before dispatch.
+- Launched all three workers with the command above, substituting worker index and log suffix together: worker 0 session `18657`, worker 1 session `68881`, worker 2 session `8182`. All use the same durable `run/cost.sqlite` ledger.
+- First main-run request was dispatched at **2026-10-02 06:57:17 UTC** (timestamp from the durable ledger).
+- Initial progress: 3/168 answers generated and judged; all three workers advancing. Total retained reservations $24.453808 and reported-token estimate $0.12732323, including development. Three unresolved reservations at this instant correspond to the concurrently running requests; inspect their final states at completion.
+- Interpretation constraint: `corrected_tree` versus `legacy` bundles explicit revision/retraction with supplying the authoritative opponent statement to final revision. It does not separately identify the contribution of those two changes. Early modes receive that final-revision context too. `tree_plan` versus `corrected_tree` and `adaptive_tree` versus `tree_plan` are the closer scheduling comparisons.
+- Reporting-only update during execution: added paired component comparisons and raw artifact/error/truncation/warning audits to `experiments/incremental_planning/summarize.py`. No inference code, prompts, cases or run settings changed. Recomputed `dev-v3` and checked every pre-existing aggregate metric and bootstrap interval was unchanged. Its three truncated responses (request IDs 203, 222, 224) were preparation notes capped at 700 tokens, not final answers. Main-run truncations will also be disclosed; no output cap is raised mid-run.
+- Mid-run checkpoint: **88/168 generated and judged**, 1,057 total requests including development, $0.47761392 reported-token estimate, $91.53068 retained reservations; 1,054 completed calls and three active requests, no errors. The three worker manifests were identical, with frozen source digest `abaf76db71bc8a19d817775d8d24dc20c3f1d41064dc70b11ac15e52c18ce413`. An audit of available control responses found no `revise`/`retract` actions emitted in `legacy`/`end_of_turn`; the shared schema permits those actions but those modes do not enable them.
+- Timing audit: the text-ready measurement occurs at final `post_process`, before the tree methods analyze their own delivered answer. The runner already saves that full method duration too. Added a separate `residual_worker_return_mean_s` aggregate from the saved durations, including own-answer analysis; neither number includes TTS/playback. This reporting change requires no new inference and does not change the primary metric.
+
+### Final held-out results — 2026-10-02
+
+**Completed 168/168 answers and judgments**, covering 12 held-out authored cases, seven modes, two repeats. All three worker sessions exited with code 0, and all three completion markers exist. Main-run dispatch-to-last-response interval: **06:57:17–07:19:55 UTC**, approximately **22 minutes 38 seconds**. No paid request failed, no run restart or result-selection retry was needed, and no source/prompt/case settings changed during the comparison.
+
+Reproduce the report without further model calls:
+
+```bash
+cd /home/danqingwang/workspace/clone/TreeDebater
+python experiments/incremental_planning/summarize.py heldout-v1
+```
+
+Each row has 24 answers and 72 checklist judgments. Scores below are **Gemma judgments**, not ground-truth accuracy. Timing columns reconstruct the same serial input schedule from measured calls; neither measures audible response onset. Generation cost includes preparation, gating, final generation/feedback/revision and own-answer analysis where applicable, and excludes the separate checklist judge.
+
+| Mode | Checklist pass | Strength / 5 | Strawman flags | Text ready, mean s | Worker return, mean s | Generation calls / answer | Generation USD / answer |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Legacy | 83.33% | 3.58 | 20.83% | 16.79 | 19.46 | 8.00 | 0.003925 |
+| End-of-turn | 83.33% | 3.58 | 16.67% | 15.94 | 18.38 | 6.00 | 0.003160 |
+| Linear | 88.89% | 3.92 | 12.50% | 14.25 | 14.25 | 6.00 | 0.003327 |
+| Corrected tree | 81.94% | 3.67 | 25.00% | 14.40 | 16.98 | 8.00 | 0.004044 |
+| Adaptive linear | 86.11% | 3.88 | 16.67% | 16.44 | 16.44 | 7.67 | 0.003382 |
+| Tree early planning | 86.11% | 3.96 | 12.50% | 15.07 | 17.36 | 10.00 | 0.005235 |
+| Adaptive tree | 88.89% | 3.96 | 4.17% | 15.41 | 18.04 | 11.33 | 0.005036 |
+
+Answers averaged 129–132 words across modes. Every mode received zero unsupported-fact flags, which **does not establish factual correctness**; the spot checks below show why the evaluator should not be trusted as a fact checker.
+
+Paired comparisons first average the two repetitions within each case, then bootstrap the 12 paired case differences with 10,000 samples. Differences are candidate minus baseline; negative latency is faster. These are descriptive, unadjusted 95% intervals on this small case set, not evidence of generalization or independent validation of the judge.
+
+| Comparison | Checklist difference, percentage points [95% CI] | Text-ready difference, seconds [95% CI] |
+| --- | ---: | ---: |
+| Linear − legacy | +5.56 [−8.33, +16.67] | −2.54 [−5.73, −0.01] |
+| Corrected tree − legacy | −1.39 [−15.28, +9.72] | −2.38 [−4.80, −0.51] |
+| Adaptive linear − legacy | +2.78 [−12.50, +16.67] | −0.35 [−4.43, +3.09] |
+| Tree early planning − legacy | +2.78 [−8.33, +12.50] | −1.72 [−4.99, +1.04] |
+| Adaptive tree − legacy | +5.56 [−4.17, +15.28] | −1.37 [−4.56, +1.18] |
+| Adaptive linear − linear | −2.78 [−11.11, +5.56] | +2.19 [+0.30, +4.18] |
+| Tree early planning − corrected tree | +4.17 [−4.17, +12.50] | +0.67 [−1.22, +2.84] |
+| Adaptive tree − tree early planning | +2.78 [−4.17, +11.11] | +0.34 [−1.02, +1.75] |
+
+Interpretation:
+
+- **Linear is a useful, inexpensive baseline in this replay.** Relative to legacy it uses 25% fewer generation calls, about 15.2% lower generation cost, and about 15.1% lower mean simulated text-ready latency. Its checklist mean improves, but its quality interval spans zero. The latency estimate is sensitive to case variation; one late-negation case contributes a large advantage.
+- **Explicit correction works as a state operation, but that alone did not improve aggregate judged quality.** Opponent-tree history records 13 corrections in corrected-tree, 14 in tree-plan, and 12 in adaptive-tree. These counts are not correction recall rates. A real homework example successfully retracts the unsupported doubling claim, while one later correction still fails target matching.
+- **Adaptive did not yield an overall efficiency win here.** Each adaptive variant chose WAIT eight times across 48 gate decisions. The extra gate calls and mandatory endpoint drain offset saved preparation. Adaptive linear is 2.19 seconds slower than Linear on average; adaptive tree uses more calls than tree-plan despite slightly lower token cost. This short three-batch design does not demonstrate that adaptive scheduling is useless on longer speech.
+- **Tree early planning has not been shown to improve over the correction-only system.** Its quality difference is uncertain, and its mean residual text latency is slightly higher. Serial extraction plus preparation can consume the available listening interval.
+- Keep the production default at `legacy`. The new policies are opt-in and are application-level baselines inspired by incremental listening/planning work; they do not reproduce the papers' training or KV-cache mechanisms. No model weights were trained or changed.
+
+### Final audit and concrete limitations
+
+- All **1,536 main-run requests** have usage records and local request/response artifacts; **zero missing artifacts, zero error/usage-missing/pending records** at completion. The cumulative ledger contains 1,790 successful requests including development and pilot. The three worker manifests match and the inference source and case hashes still match the frozen run.
+- Four main-run calls reached the 700-token preparation-note cap: IDs **325, 775, 811, 1261**, all on `test_homework_evidence`. No final answer or judge response was truncated. All four retained their original outputs and charges.
+- Logs contain **42 unmatched reinforce warnings**, **one unmatched revise warning**, and **two rejected ungrounded/motion-only extractions**. Mode-level counts are in `request_audit.runtime_warning_counts`. No embedding fallback was enabled to hide these issues.
+- No `revise` or `retract` action was emitted in the complete legacy/end-of-turn control responses, despite the shared response schema allowing those tokens. Those modes do not apply correction actions.
+- Deterministic trace spot-check selections: repeat 0 of `test_transit_scope` with legacy/tree-plan, `test_energy_reversal` with legacy/linear, `test_homework_evidence` with corrected-tree, and `test_parks_repetition` with adaptive-tree. These are inspection examples, not an independent human evaluation.
+- **Judge inconsistency:** the transit legacy answer passed the full means-tested one-year-bus-pilot checklist item based only on mentioning “one-year pilot”; its corresponding tree-plan reason incorrectly claimed the answer lacked “one-year” even though the phrase appears in the answer. The energy Linear answer passed the existing-versus-new-reactor distinction without explicitly acknowledging that existing plants remain open. These judgments were preserved, not selectively corrected.
+- **Unsupported factual assertions:** the parks answer asserted that even a short trial causes immediate, permanent business damage, yet received no unsupported-fact flag. Zero flags across the run therefore cannot be reported as zero hallucinations.
+- The data are 12 authored English scenarios, not a public standard debate benchmark, and only two output repetitions per case were run. Generation and grading use the same Gemma model. The replay omits live ASR, default web analysis batching, TTS, playback, search, and semantic target matching. Three workers share one proxy, so call-time variation includes shared-service conditions. Stable quality improvement and actual first-audio latency improvement remain unverified.
+
+### Final cost ledger
+
+Rates used: standard US Bedrock Gemma input **$0.13/M**, output **$0.40/M**. Values are estimates from provider-reported token usage, **not a settled AWS invoice**. All development, grading, and pilot usage is included; no new paid cloud compute was provisioned.
+
+| Run | Requests | Input tokens | Output tokens | Usage estimate USD | Retained conservative reservation USD |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Connectivity pilot | 1 | 38 | 2 | 0.00000574 | 0.033540 |
+| dev-smoke-v1 | 65 | 158,241 | 20,201 | 0.02865173 | 5.530652 |
+| dev-v2 | 130 | 318,545 | 41,375 | 0.05796085 | 11.102680 |
+| dev-v3 | 58 | 146,332 | 20,056 | 0.02704556 | 5.042368 |
+| heldout-v1, including judging | 1,536 | 3,854,771 | 490,883 | 0.69747343 | 133.256708 |
+| **Total** | **1,790** | **4,477,927** | **572,517** | **0.81113731** | **154.965948** |
+
+Approved cumulative cap remains **$200**. The retained reservation is a deliberately conservative upper bound used by the dispatch guard, **not money billed**. All experimental workers have exited; there are no pending requests, automatic retries or remaining experiment jobs. The shared AWS proxy was left running and unchanged.
+
+### Completion evidence
+
+- Implementation branch: `feat/incremental-rebuttal-planning`; frozen implementation commit: `ed5990d`; baseline: `065cc3c897c2e7d337391e465fbe2fb9a7828bac`.
+- Required Linear/correction/Adaptive/tree preparation paths implemented and connected to the streaming backend; configuration and checkpoint regressions included.
+- Final inference-code verification before freezing: **188 tests passed, 42 subtests passed**. Reporting changes preserve the prior metrics and use already saved artifacts; no additional paid inference is necessary to regenerate summaries.
+- Complete Gemma comparison: `experiments/incremental_planning/heldout-v1_summary.json`. All important settings, commands, outcomes, failures, limitations and costs are recorded here; raw artifacts remain in the git-ignored `experiments/incremental_planning/run/` directory.
+- No deployment or push was performed. Pre-existing untracked user files were preserved.
+- Final read-only audit passed: 168 unique results, three worker completion markers, zero unresolved calls, complete call artifacts, unchanged source/data hashes, and retained reservations below $200. Regenerating both `dev-v3` and `heldout-v1` with the final report script preserved every existing metric and paired interval; only explicitly added audit/secondary timing fields changed.
+
+Final repository commands:
+
+```bash
+git diff --check
+git add process.md experiments/incremental_planning/summarize.py experiments/incremental_planning/manifest.json experiments/incremental_planning/dev-v3_summary.json experiments/incremental_planning/heldout-v1_summary.json
+git commit -m "Record frozen Gemma comparison results and cost audit"
+git status --short
+```

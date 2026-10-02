@@ -45,7 +45,7 @@
       "tree_plan",
       "adaptive_tree"
     ],
-    "status": "frozen for heldout-v1 launch",
+    "status": "completed; all 168 answers and judgments saved",
     "initial_expected_usd_range": [
       1,
       10
@@ -88,5 +88,23 @@
     ],
     "cost_incurred_estimate_before_main_usd": 0.11366388,
     "reserved_before_main_usd": 21.70924
+  },
+  "completion": {
+    "implementation_commit": "ed5990d",
+    "run_start_utc": "2026-10-02T06:57:17.761217+00:00",
+    "run_end_utc": "2026-10-02T07:19:55.378289+00:00",
+    "completed_answers": 168,
+    "workers_exited_successfully": 3,
+    "summary": "experiments/incremental_planning/heldout-v1_summary.json",
+    "total_requests_including_development": 1790,
+    "total_input_tokens": 4477927,
+    "total_output_tokens": 572517,
+    "total_reported_usage_estimate_usd": 0.81113731,
+    "total_retained_reservation_usd": 154.965948,
+    "pending_or_failed_requests": 0,
+    "quality_conclusion": "Higher means for Linear and adaptive-tree, but stable quality improvement unverified; intervals include zero and judge inconsistencies were observed.",
+    "default_policy": "legacy",
+    "no_model_training": true,
+    "no_deployment_or_push": true
   }
 }

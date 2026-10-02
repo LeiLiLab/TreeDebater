@@ -1,0 +1,939 @@
+{
+  "run_id": "heldout-v1",
+  "metadata": {
+    "source_digest": "abaf76db71bc8a19d817775d8d24dc20c3f1d41064dc70b11ac15e52c18ce413",
+    "cases_digest": "8eba1212b248f2d082a0638de323a83810e5ff995bc13e6ab9a9488c5e43f62a",
+    "split": "test",
+    "case_ids": [
+      "test_transit_scope",
+      "test_writing_scope",
+      "test_energy_reversal",
+      "test_homework_evidence",
+      "test_water_negation",
+      "test_remote_scope",
+      "test_libraries_regular",
+      "test_uniform_regular",
+      "test_parks_repetition",
+      "test_meals_repetition",
+      "test_voting_split",
+      "test_plastics_split"
+    ],
+    "modes": [
+      "legacy",
+      "end_of_turn",
+      "linear",
+      "corrected_tree",
+      "adaptive_linear",
+      "tree_plan",
+      "adaptive_tree"
+    ],
+    "repeats": 2,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 3,
+    "main_temperature": 0.3,
+    "helper_and_judge_temperature": 0,
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "expected_answers": 168,
+  "completed_answers": 168,
+  "missing": [],
+  "metrics": [
+    {
+      "mode": "legacy",
+      "n": 24,
+      "checklist_rate": 0.8333333333333334,
+      "strength_mean": 3.5833333333333335,
+      "strawman_rate": 0.20833333333333334,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 16.785166953295022,
+      "residual_text_median_s": 15.465738922503078,
+      "residual_worker_return_mean_s": 19.457224773252772,
+      "generation_calls_mean": 8,
+      "generation_cost_mean_usd": 0.003924635833333334,
+      "answer_words_mean": 131.54166666666666,
+      "gate_waits": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "end_of_turn",
+      "n": 24,
+      "checklist_rate": 0.8333333333333334,
+      "strength_mean": 3.5833333333333335,
+      "strawman_rate": 0.16666666666666666,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 15.93788891665948,
+      "residual_text_median_s": 16.115517994971015,
+      "residual_worker_return_mean_s": 18.37586065949775,
+      "generation_calls_mean": 6,
+      "generation_cost_mean_usd": 0.0031604720833333334,
+      "answer_words_mean": 130.625,
+      "gate_waits": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "linear",
+      "n": 24,
+      "checklist_rate": 0.8888888888888888,
+      "strength_mean": 3.9166666666666665,
+      "strawman_rate": 0.125,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 14.247835668415064,
+      "residual_text_median_s": 13.710009022499433,
+      "residual_worker_return_mean_s": 14.247867378794277,
+      "generation_calls_mean": 6,
+      "generation_cost_mean_usd": 0.0033266595833333335,
+      "answer_words_mean": 131.54166666666666,
+      "gate_waits": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "corrected_tree",
+      "n": 24,
+      "checklist_rate": 0.8194444444444444,
+      "strength_mean": 3.6666666666666665,
+      "strawman_rate": 0.25,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 14.40331474479899,
+      "residual_text_median_s": 13.694196468481097,
+      "residual_worker_return_mean_s": 16.98010643630308,
+      "generation_calls_mean": 8,
+      "generation_cost_mean_usd": 0.004044134166666667,
+      "answer_words_mean": 129.41666666666666,
+      "gate_waits": 0,
+      "revisions": 13
+    },
+    {
+      "mode": "adaptive_linear",
+      "n": 24,
+      "checklist_rate": 0.861111111111111,
+      "strength_mean": 3.875,
+      "strawman_rate": 0.16666666666666666,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 16.437664099572377,
+      "residual_text_median_s": 16.557122638478177,
+      "residual_worker_return_mean_s": 16.437695428732642,
+      "generation_calls_mean": 7.666666666666667,
+      "generation_cost_mean_usd": 0.0033818516666666667,
+      "answer_words_mean": 131.83333333333334,
+      "gate_waits": 8,
+      "revisions": 0
+    },
+    {
+      "mode": "tree_plan",
+      "n": 24,
+      "checklist_rate": 0.861111111111111,
+      "strength_mean": 3.9583333333333335,
+      "strawman_rate": 0.125,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 15.069094439713808,
+      "residual_text_median_s": 13.819848190993072,
+      "residual_worker_return_mean_s": 17.357566041423222,
+      "generation_calls_mean": 10,
+      "generation_cost_mean_usd": 0.0052351554166666665,
+      "answer_words_mean": 131.25,
+      "gate_waits": 0,
+      "revisions": 14
+    },
+    {
+      "mode": "adaptive_tree",
+      "n": 24,
+      "checklist_rate": 0.8888888888888888,
+      "strength_mean": 3.9583333333333335,
+      "strawman_rate": 0.041666666666666664,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 15.41197601563666,
+      "residual_text_median_s": 15.204052592016524,
+      "residual_worker_return_mean_s": 18.042700360669794,
+      "generation_calls_mean": 11.333333333333334,
+      "generation_cost_mean_usd": 0.005035825,
+      "answer_words_mean": 130.16666666666666,
+      "gate_waits": 8,
+      "revisions": 12
+    }
+  ],
+  "paired_vs_legacy": {
+    "end_of_turn": {
+      "baseline": "legacy",
+      "candidate": "end_of_turn",
+      "case_count": 12,
+      "case_differences": [
+        {
+          "case": "test_transit_scope",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -0.6850367609877139
+        },
+        {
+          "case": "test_writing_scope",
+          "quality_diff": -0.16666666666666674,
+          "latency_diff_s": 3.604146203986602
+        },
+        {
+          "case": "test_energy_reversal",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 4.736458351515466
+        },
+        {
+          "case": "test_homework_evidence",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 6.70420911203837
+        },
+        {
+          "case": "test_water_negation",
+          "quality_diff": 0.0,
+          "latency_diff_s": -13.8214384180028
+        },
+        {
+          "case": "test_remote_scope",
+          "quality_diff": 0.0,
+          "latency_diff_s": -3.7224884950846864
+        },
+        {
+          "case": "test_libraries_regular",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": 2.0578054244979285
+        },
+        {
+          "case": "test_uniform_regular",
+          "quality_diff": 0,
+          "latency_diff_s": -0.5269408800813835
+        },
+        {
+          "case": "test_parks_repetition",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.253534236981068
+        },
+        {
+          "case": "test_meals_repetition",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 0.7812087929924019
+        },
+        {
+          "case": "test_voting_split",
+          "quality_diff": 0,
+          "latency_diff_s": -8.94675413647201
+        },
+        {
+          "case": "test_plastics_split",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": 1.9050286029523704
+        }
+      ],
+      "quality_diff_mean": 0.0,
+      "quality_diff_95ci": [
+        -0.11111111111111112,
+        0.11111111111111112
+      ],
+      "latency_diff_mean_s": -0.8472780366355434,
+      "latency_diff_95ci_s": [
+        -4.2440857666467,
+        2.046655094774906
+      ]
+    },
+    "linear": {
+      "baseline": "legacy",
+      "candidate": "linear",
+      "case_count": 12,
+      "case_differences": [
+        {
+          "case": "test_transit_scope",
+          "quality_diff": -0.16666666666666674,
+          "latency_diff_s": -2.99815722196945
+        },
+        {
+          "case": "test_writing_scope",
+          "quality_diff": 0,
+          "latency_diff_s": -0.24587828104267828
+        },
+        {
+          "case": "test_energy_reversal",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -3.0414644139818847
+        },
+        {
+          "case": "test_homework_evidence",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": -0.6394196369801612
+        },
+        {
+          "case": "test_water_negation",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -16.659366393985692
+        },
+        {
+          "case": "test_remote_scope",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": -6.107001664524432
+        },
+        {
+          "case": "test_libraries_regular",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": 0.5142744949553162
+        },
+        {
+          "case": "test_uniform_regular",
+          "quality_diff": 0,
+          "latency_diff_s": 5.758213736437028
+        },
+        {
+          "case": "test_parks_repetition",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": -2.0626989029406104
+        },
+        {
+          "case": "test_meals_repetition",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.7699409915076103
+        },
+        {
+          "case": "test_voting_split",
+          "quality_diff": 0,
+          "latency_diff_s": -3.3785888710117433
+        },
+        {
+          "case": "test_plastics_split",
+          "quality_diff": -0.5,
+          "latency_diff_s": 0.18205272799241357
+        }
+      ],
+      "quality_diff_mean": 0.05555555555555555,
+      "quality_diff_95ci": [
+        -0.08333333333333333,
+        0.16666666666666669
+      ],
+      "latency_diff_mean_s": -2.5373312848799587,
+      "latency_diff_95ci_s": [
+        -5.7333456699561784,
+        -0.012205757807047727
+      ]
+    },
+    "corrected_tree": {
+      "baseline": "legacy",
+      "candidate": "corrected_tree",
+      "case_count": 12,
+      "case_differences": [
+        {
+          "case": "test_transit_scope",
+          "quality_diff": 0,
+          "latency_diff_s": -5.696613631938817
+        },
+        {
+          "case": "test_writing_scope",
+          "quality_diff": 0,
+          "latency_diff_s": 0.4939230394666083
+        },
+        {
+          "case": "test_energy_reversal",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.2872004914970603
+        },
+        {
+          "case": "test_homework_evidence",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 0.5880176940117998
+        },
+        {
+          "case": "test_water_negation",
+          "quality_diff": 0.0,
+          "latency_diff_s": -12.794383161934093
+        },
+        {
+          "case": "test_remote_scope",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": -3.059086113527883
+        },
+        {
+          "case": "test_libraries_regular",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 0.5845185784564819
+        },
+        {
+          "case": "test_uniform_regular",
+          "quality_diff": 0,
+          "latency_diff_s": -1.5964482200797647
+        },
+        {
+          "case": "test_parks_repetition",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.9080278139445
+        },
+        {
+          "case": "test_meals_repetition",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.045845458022086
+        },
+        {
+          "case": "test_voting_split",
+          "quality_diff": -0.16666666666666674,
+          "latency_diff_s": -5.2847734594543
+        },
+        {
+          "case": "test_plastics_split",
+          "quality_diff": -0.6666666666666667,
+          "latency_diff_s": 0.8492915535171051
+        }
+      ],
+      "quality_diff_mean": -0.013888888888888895,
+      "quality_diff_95ci": [
+        -0.1527777777777778,
+        0.09722222222222224
+      ],
+      "latency_diff_mean_s": -2.3818522084960323,
+      "latency_diff_95ci_s": [
+        -4.802154217305845,
+        -0.5066095543030918
+      ]
+    },
+    "adaptive_linear": {
+      "baseline": "legacy",
+      "candidate": "adaptive_linear",
+      "case_count": 12,
+      "case_differences": [
+        {
+          "case": "test_transit_scope",
+          "quality_diff": -0.16666666666666674,
+          "latency_diff_s": 3.574520263035083
+        },
+        {
+          "case": "test_writing_scope",
+          "quality_diff": 0,
+          "latency_diff_s": 5.447805999487173
+        },
+        {
+          "case": "test_energy_reversal",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 0.30031334699015133
+        },
+        {
+          "case": "test_homework_evidence",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 8.180567498522581
+        },
+        {
+          "case": "test_water_negation",
+          "quality_diff": 0.0,
+          "latency_diff_s": -16.946221067453735
+        },
+        {
+          "case": "test_remote_scope",
+          "quality_diff": 0.0,
+          "latency_diff_s": -5.711688459559809
+        },
+        {
+          "case": "test_libraries_regular",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 2.561225115437992
+        },
+        {
+          "case": "test_uniform_regular",
+          "quality_diff": 0,
+          "latency_diff_s": 6.155592417794928
+        },
+        {
+          "case": "test_parks_repetition",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -1.6330002594331745
+        },
+        {
+          "case": "test_meals_repetition",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 1.1263605164713226
+        },
+        {
+          "case": "test_voting_split",
+          "quality_diff": -0.16666666666666674,
+          "latency_diff_s": -7.524821231490932
+        },
+        {
+          "case": "test_plastics_split",
+          "quality_diff": -0.6666666666666667,
+          "latency_diff_s": 0.2993116155266762
+        }
+      ],
+      "quality_diff_mean": 0.02777777777777778,
+      "quality_diff_95ci": [
+        -0.12500000000000003,
+        0.16666666666666669
+      ],
+      "latency_diff_mean_s": -0.3475028537226453,
+      "latency_diff_95ci_s": [
+        -4.431878774124978,
+        3.085525131553869
+      ]
+    },
+    "tree_plan": {
+      "baseline": "legacy",
+      "candidate": "tree_plan",
+      "case_count": 12,
+      "case_differences": [
+        {
+          "case": "test_transit_scope",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": 3.363757141516544
+        },
+        {
+          "case": "test_writing_scope",
+          "quality_diff": 0,
+          "latency_diff_s": 4.021099752950249
+        },
+        {
+          "case": "test_energy_reversal",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": -1.410192556999391
+        },
+        {
+          "case": "test_homework_evidence",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 4.671519640018236
+        },
+        {
+          "case": "test_water_negation",
+          "quality_diff": 0.0,
+          "latency_diff_s": -15.669950005947614
+        },
+        {
+          "case": "test_remote_scope",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": -4.198371537524508
+        },
+        {
+          "case": "test_libraries_regular",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 1.5605427770060487
+        },
+        {
+          "case": "test_uniform_regular",
+          "quality_diff": 0,
+          "latency_diff_s": 1.2370776899333578
+        },
+        {
+          "case": "test_parks_repetition",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": -3.8186297184438445
+        },
+        {
+          "case": "test_meals_repetition",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.6172414454922546
+        },
+        {
+          "case": "test_voting_split",
+          "quality_diff": 0,
+          "latency_diff_s": -6.2064214064739645
+        },
+        {
+          "case": "test_plastics_split",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -3.5260604935174342
+        }
+      ],
+      "quality_diff_mean": 0.027777777777777773,
+      "quality_diff_95ci": [
+        -0.08333333333333336,
+        0.125
+      ],
+      "latency_diff_mean_s": -1.7160725135812147,
+      "latency_diff_95ci_s": [
+        -4.994741133414209,
+        1.0444513370045276
+      ]
+    },
+    "adaptive_tree": {
+      "baseline": "legacy",
+      "candidate": "adaptive_tree",
+      "case_count": 12,
+      "case_differences": [
+        {
+          "case": "test_transit_scope",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": 0.6234648100216873
+        },
+        {
+          "case": "test_writing_scope",
+          "quality_diff": 0,
+          "latency_diff_s": 4.256289705488598
+        },
+        {
+          "case": "test_energy_reversal",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 1.8967185684887227
+        },
+        {
+          "case": "test_homework_evidence",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 2.6595878115331324
+        },
+        {
+          "case": "test_water_negation",
+          "quality_diff": 0.0,
+          "latency_diff_s": -13.705079044448212
+        },
+        {
+          "case": "test_remote_scope",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": -4.60363076304202
+        },
+        {
+          "case": "test_libraries_regular",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": 0.3936334000027273
+        },
+        {
+          "case": "test_uniform_regular",
+          "quality_diff": 0,
+          "latency_diff_s": 0.753216231969418
+        },
+        {
+          "case": "test_parks_repetition",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": -0.8140037189004943
+        },
+        {
+          "case": "test_meals_repetition",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 0.7683903809811454
+        },
+        {
+          "case": "test_voting_split",
+          "quality_diff": -0.16666666666666674,
+          "latency_diff_s": -9.758770867949352
+        },
+        {
+          "case": "test_plastics_split",
+          "quality_diff": 0,
+          "latency_diff_s": 1.051892233954277
+        }
+      ],
+      "quality_diff_mean": 0.05555555555555555,
+      "quality_diff_95ci": [
+        -0.04166666666666669,
+        0.15277777777777776
+      ],
+      "latency_diff_mean_s": -1.3731909376583642,
+      "latency_diff_95ci_s": [
+        -4.561264095716372,
+        1.1801994899239328
+      ]
+    }
+  },
+  "component_comparisons": {
+    "adaptive_linear_vs_linear": {
+      "baseline": "linear",
+      "candidate": "adaptive_linear",
+      "case_count": 12,
+      "case_differences": [
+        {
+          "case": "test_transit_scope",
+          "quality_diff": 0.0,
+          "latency_diff_s": 6.572677485004533
+        },
+        {
+          "case": "test_writing_scope",
+          "quality_diff": 0,
+          "latency_diff_s": 5.693684280529851
+        },
+        {
+          "case": "test_energy_reversal",
+          "quality_diff": 0,
+          "latency_diff_s": 3.341777760972036
+        },
+        {
+          "case": "test_homework_evidence",
+          "quality_diff": 0,
+          "latency_diff_s": 8.819987135502743
+        },
+        {
+          "case": "test_water_negation",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -0.28685467346804217
+        },
+        {
+          "case": "test_remote_scope",
+          "quality_diff": -0.16666666666666663,
+          "latency_diff_s": 0.39531320496462286
+        },
+        {
+          "case": "test_libraries_regular",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 2.0469506204826757
+        },
+        {
+          "case": "test_uniform_regular",
+          "quality_diff": 0,
+          "latency_diff_s": 0.39737868135789967
+        },
+        {
+          "case": "test_parks_repetition",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 0.4296986435074359
+        },
+        {
+          "case": "test_meals_repetition",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 2.896301507978933
+        },
+        {
+          "case": "test_voting_split",
+          "quality_diff": -0.16666666666666674,
+          "latency_diff_s": -4.146232360479189
+        },
+        {
+          "case": "test_plastics_split",
+          "quality_diff": -0.16666666666666669,
+          "latency_diff_s": 0.11725888753426261
+        }
+      ],
+      "quality_diff_mean": -0.027777777777777766,
+      "quality_diff_95ci": [
+        -0.11111111111111112,
+        0.05555555555555559
+      ],
+      "latency_diff_mean_s": 2.1898284311573133,
+      "latency_diff_95ci_s": [
+        0.3037009094101529,
+        4.17532990736673
+      ]
+    },
+    "tree_plan_vs_corrected_tree": {
+      "baseline": "corrected_tree",
+      "candidate": "tree_plan",
+      "case_count": 12,
+      "case_differences": [
+        {
+          "case": "test_transit_scope",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": 9.060370773455361
+        },
+        {
+          "case": "test_writing_scope",
+          "quality_diff": 0,
+          "latency_diff_s": 3.527176713483641
+        },
+        {
+          "case": "test_energy_reversal",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": -1.6973930484964512
+        },
+        {
+          "case": "test_homework_evidence",
+          "quality_diff": 0,
+          "latency_diff_s": 4.083501946006436
+        },
+        {
+          "case": "test_water_negation",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.8755668440135214
+        },
+        {
+          "case": "test_remote_scope",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.1392854239966255
+        },
+        {
+          "case": "test_libraries_regular",
+          "quality_diff": 0,
+          "latency_diff_s": 0.9760241985495668
+        },
+        {
+          "case": "test_uniform_regular",
+          "quality_diff": 0,
+          "latency_diff_s": 2.8335259100131225
+        },
+        {
+          "case": "test_parks_repetition",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": -1.9106019044993445
+        },
+        {
+          "case": "test_meals_repetition",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.4286040125298314
+        },
+        {
+          "case": "test_voting_split",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": -0.9216479470196646
+        },
+        {
+          "case": "test_plastics_split",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -4.375352047034539
+        }
+      ],
+      "quality_diff_mean": 0.041666666666666664,
+      "quality_diff_95ci": [
+        -0.04166666666666669,
+        0.125
+      ],
+      "latency_diff_mean_s": 0.6657796949148177,
+      "latency_diff_95ci_s": [
+        -1.2152483368069322,
+        2.8425143242833046
+      ]
+    },
+    "adaptive_tree_vs_tree_plan": {
+      "baseline": "tree_plan",
+      "candidate": "adaptive_tree",
+      "case_count": 12,
+      "case_differences": [
+        {
+          "case": "test_transit_scope",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.7402923314948566
+        },
+        {
+          "case": "test_writing_scope",
+          "quality_diff": 0,
+          "latency_diff_s": 0.23518995253834873
+        },
+        {
+          "case": "test_energy_reversal",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 3.3069111254881136
+        },
+        {
+          "case": "test_homework_evidence",
+          "quality_diff": 0,
+          "latency_diff_s": -2.0119318284851033
+        },
+        {
+          "case": "test_water_negation",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.9648709614994022
+        },
+        {
+          "case": "test_remote_scope",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.40525922551751137
+        },
+        {
+          "case": "test_libraries_regular",
+          "quality_diff": -0.16666666666666674,
+          "latency_diff_s": -1.1669093770033214
+        },
+        {
+          "case": "test_uniform_regular",
+          "quality_diff": 0,
+          "latency_diff_s": -0.48386145796393976
+        },
+        {
+          "case": "test_parks_repetition",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.00462599954335
+        },
+        {
+          "case": "test_meals_repetition",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": 1.3856318264734
+        },
+        {
+          "case": "test_voting_split",
+          "quality_diff": -0.16666666666666674,
+          "latency_diff_s": -3.552349461475387
+        },
+        {
+          "case": "test_plastics_split",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 4.577952727471711
+        }
+      ],
+      "quality_diff_mean": 0.02777777777777778,
+      "quality_diff_95ci": [
+        -0.041666666666666685,
+        0.11111111111111112
+      ],
+      "latency_diff_mean_s": 0.3428815759228505,
+      "latency_diff_95ci_s": [
+        -1.0195362175654734,
+        1.7498157932035008
+      ]
+    }
+  },
+  "usage_including_judging": {
+    "calls": 1536,
+    "reserved_upper_usd": 133.25670800000006,
+    "unresolved_calls": 0,
+    "input_tokens": 3854771,
+    "output_tokens": 490883,
+    "reported_usage_estimate_usd": 0.6974734299999988
+  },
+  "request_audit": {
+    "missing_artifacts": [],
+    "truncated_calls": [
+      {
+        "id": 325,
+        "label": "heldout-v1/test_homework_evidence/tree_plan/1",
+        "max_tokens": 700
+      },
+      {
+        "id": 775,
+        "label": "heldout-v1/test_homework_evidence/tree_plan/0",
+        "max_tokens": 700
+      },
+      {
+        "id": 811,
+        "label": "heldout-v1/test_homework_evidence/adaptive_tree/0",
+        "max_tokens": 700
+      },
+      {
+        "id": 1261,
+        "label": "heldout-v1/test_homework_evidence/adaptive_linear/0",
+        "max_tokens": 700
+      }
+    ],
+    "errors": [],
+    "runtime_warning_counts": [
+      {
+        "mode": "adaptive_tree",
+        "warning": "Cannot find the matched node for action: reinforce",
+        "count": 8
+      },
+      {
+        "mode": "corrected_tree",
+        "warning": "Cannot find the matched node for action: reinforce",
+        "count": 5
+      },
+      {
+        "mode": "corrected_tree",
+        "warning": "Unmatched revise target from for: Reducing homework can lead to doubled attainment.",
+        "count": 1
+      },
+      {
+        "mode": "end_of_turn",
+        "warning": "Cannot find the matched node for action: reinforce",
+        "count": 3
+      },
+      {
+        "mode": "end_of_turn",
+        "warning": "Skipping ungrounded or motion-only extraction: Policy should focus on waste management infrastructure rather than bans.",
+        "count": 1
+      },
+      {
+        "mode": "legacy",
+        "warning": "Cannot find the matched node for action: reinforce",
+        "count": 9
+      },
+      {
+        "mode": "tree_plan",
+        "warning": "Cannot find the matched node for action: reinforce",
+        "count": 17
+      },
+      {
+        "mode": "tree_plan",
+        "warning": "Skipping ungrounded or motion-only extraction: Reviewing exemptions creates uncertainty for people with disabilities.",
+        "count": 1
+      }
+    ]
+  },
+  "limitations": [
+    "Small authored scenario set, not a standard debate benchmark",
+    "Same model generates and judges; no human or independent-model validation",
+    "Spot checks found inconsistent constraint judgments; automated scores are provisional, not established accuracy",
+    "Zero unsupported-fact flags do not establish factual correctness",
+    "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
+    "Text-ready timing precedes post-speech tree analysis; worker-return timing is reported separately",
+    "Exact-target matching shared across arms; embedding fallback disabled",
+    "Cost uses provider-reported tokens and published rates, not a settled invoice"
+  ]
+}

@@ -25,6 +25,27 @@ def interval(differences):
     return [boot[249], boot[9749]]
 
 
+def paired_comparison(by_mode, metadata, baseline, candidate):
+    paired = []
+    for case in metadata["case_ids"]:
+        base = [r for r in by_mode[baseline] if r["case"] == case]
+        test = [r for r in by_mode[candidate] if r["case"] == case]
+        if len(base) != metadata["repeats"] or len(test) != metadata["repeats"]:
+            continue
+        paired.append({"case": case,
+                       "quality_diff": mean([checklist(r) for r in test])-mean([checklist(r) for r in base]),
+                       "latency_diff_s": mean([r["estimated_residual_text_seconds"] for r in test])
+                                         -mean([r["estimated_residual_text_seconds"] for r in base])})
+    if not paired:
+        return None
+    return {"baseline": baseline, "candidate": candidate,
+            "case_count": len(paired), "case_differences": paired,
+            "quality_diff_mean": mean([p["quality_diff"] for p in paired]),
+            "quality_diff_95ci": interval([p["quality_diff"] for p in paired]),
+            "latency_diff_mean_s": mean([p["latency_diff_s"] for p in paired]),
+            "latency_diff_95ci_s": interval([p["latency_diff_s"] for p in paired])}
+
+
 def summarize(run_id):
     run = ROOT / "run" / run_id
     metadata_files = list(run.glob("metadata_worker*.json"))
@@ -55,6 +76,9 @@ def summarize(run_id):
                      "unsupported_fact_rate": mean([int(r["judge"]["unsupported_facts"]) for r in rs]),
                      "residual_text_mean_s": mean(latencies),
                      "residual_text_median_s": statistics.median(latencies),
+                     "residual_worker_return_mean_s": mean([
+                         r["remaining_preparation_seconds"] + r["full_generation_including_own_analysis_seconds"]
+                         for r in rs]),
                      "generation_calls_mean": mean([r["model_usage"]["calls"] for r in rs]),
                      "generation_cost_mean_usd": mean([r["model_usage"]["reported_usage_estimate_usd"] for r in rs]),
                      "answer_words_mean": mean([r["answer_words"] for r in rs]),
@@ -65,22 +89,16 @@ def summarize(run_id):
     for mode in metadata["modes"]:
         if mode == "legacy":
             continue
-        paired = []
-        for case in metadata["case_ids"]:
-            base = [r for r in by_mode["legacy"] if r["case"] == case]
-            test = [r for r in by_mode[mode] if r["case"] == case]
-            if len(base) != metadata["repeats"] or len(test) != metadata["repeats"]:
-                continue
-            paired.append({"case": case,
-                           "quality_diff": mean([checklist(r) for r in test])-mean([checklist(r) for r in base]),
-                           "latency_diff_s": mean([r["estimated_residual_text_seconds"] for r in test])
-                                             -mean([r["estimated_residual_text_seconds"] for r in base])})
+        paired = paired_comparison(by_mode, metadata, "legacy", mode)
         if paired:
-            pairs[mode] = {"case_count": len(paired), "case_differences": paired,
-                           "quality_diff_mean": mean([p["quality_diff"] for p in paired]),
-                           "quality_diff_95ci": interval([p["quality_diff"] for p in paired]),
-                           "latency_diff_mean_s": mean([p["latency_diff_s"] for p in paired]),
-                           "latency_diff_95ci_s": interval([p["latency_diff_s"] for p in paired])}
+            pairs[mode] = paired
+    components = {}
+    for baseline, candidate in (("linear", "adaptive_linear"),
+                                ("corrected_tree", "tree_plan"),
+                                ("tree_plan", "adaptive_tree")):
+        paired = paired_comparison(by_mode, metadata, baseline, candidate)
+        if paired:
+            components[candidate + "_vs_" + baseline] = paired
     db = sqlite3.connect(ROOT / "run/cost.sqlite")
     # IDs are validated by the runner. A prefix comparison avoids LIKE wildcards.
     calls = [r for r in db.execute("SELECT label,reserved,state,input_tokens,output_tokens,estimated_usd FROM calls")
@@ -89,12 +107,45 @@ def summarize(run_id):
              "unresolved_calls": sum(c[2] != "ok" for c in calls),
              "input_tokens": sum(c[3] or 0 for c in calls), "output_tokens": sum(c[4] or 0 for c in calls),
              "reported_usage_estimate_usd": sum(c[5] or 0 for c in calls)}
+    request_audit = {"missing_artifacts": [], "truncated_calls": [], "errors": []}
+    for request_id, label in db.execute("SELECT id,label FROM calls"):
+        if not label.startswith(run_id + "/"):
+            continue
+        artifact_path = ROOT / "run" / f"call_{request_id:06}.json"
+        if not artifact_path.exists():
+            request_audit["missing_artifacts"].append(request_id)
+            continue
+        artifact = json.loads(artifact_path.read_text())
+        if artifact.get("truncated"):
+            request_audit["truncated_calls"].append({"id": request_id, "label": label,
+                                                    "max_tokens": artifact["request"]["max_tokens"]})
+        if artifact.get("error"):
+            request_audit["errors"].append({"id": request_id, "label": label,
+                                           "error": artifact["error"]})
+    warnings = defaultdict(int)
+    for log_path in (ROOT / "run").glob(run_id + "-worker*.log"):
+        current_label = "unknown"
+        for line in log_path.read_text().splitlines():
+            if line.startswith("START "):
+                current_label = line[6:]
+            if " WARNING " in line:
+                message = line.split(" WARNING ", 1)[1]
+                category = message.split(", target:", 1)[0]
+                mode = current_label.split("/")[2] if current_label.count("/") >= 2 else "unknown"
+                warnings[(mode, category)] += 1
+    request_audit["runtime_warning_counts"] = [
+        {"mode": mode, "warning": category, "count": count}
+        for (mode, category), count in sorted(warnings.items())]
     summary = {"run_id": run_id, "metadata": metadata, "expected_answers": len(expected),
                "completed_answers": len(observed), "missing": sorted(expected-observed),
-               "metrics": rows, "paired_vs_legacy": pairs, "usage_including_judging": usage,
+               "metrics": rows, "paired_vs_legacy": pairs, "component_comparisons": components,
+               "usage_including_judging": usage, "request_audit": request_audit,
                "limitations": ["Small authored scenario set, not a standard debate benchmark",
                                "Same model generates and judges; no human or independent-model validation",
+                               "Spot checks found inconsistent constraint judgments; automated scores are provisional, not established accuracy",
+                               "Zero unsupported-fact flags do not establish factual correctness",
                                "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
+                               "Text-ready timing precedes post-speech tree analysis; worker-return timing is reported separately",
                                "Exact-target matching shared across arms; embedding fallback disabled",
                                "Cost uses provider-reported tokens and published rates, not a settled invoice"]}
     (ROOT / f"{run_id}_summary.json").write_text(json.dumps(summary, indent=2))
