@@ -52,6 +52,15 @@ def test_invalid_state_never_publishes_untrusted_model_notes_and_keeps_source():
     assert p.plan_version == p.version  # safe raw-input fallback, not a stale plan
 
 
+def test_observed_phase_in_label_preserves_attributed_limit_without_accepting_fabrication():
+    data = snapshot()
+    data["limits"] = [{"kind": "phase-in", "quote": "phase this in over two years"}]
+    result = parse_state(json.dumps(data), "Restrict cars. We phase this in over two years.")
+    assert result["limits"] == [{"kind": "scope", "quote": "phase this in over two years"}]
+    with pytest.raises(ValueError, match="Source quote"):
+        parse_state(json.dumps(data), "Restrict cars. Phase this in immediately.")
+
+
 def test_exact_adjacent_repetition_skips_model_and_endpoint_work():
     p, cb = policy()
     p.observe("Restrict cars.", **cb)

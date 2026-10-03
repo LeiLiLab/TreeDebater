@@ -1,0 +1,28 @@
+{
+  "offline_replay": {
+    "snapshots": 22,
+    "valid": 19,
+    "invalid": 3
+  },
+  "phase_in_records_now_valid": [
+    2172,
+    2180,
+    2249
+  ],
+  "remaining_failures": [
+    {
+      "id": 2198,
+      "reason": "Source quote is not in the heard prefix"
+    },
+    {
+      "id": 2238,
+      "reason": "Source quote is not in the heard prefix"
+    },
+    {
+      "id": 2240,
+      "reason": "Source quote is not in the heard prefix"
+    }
+  ],
+  "paid_calls": 0,
+  "original_records_unchanged": true
+}

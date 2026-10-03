@@ -1,0 +1,437 @@
+{
+  "run_id": "tree-grounded-dev-v1",
+  "metadata": {
+    "source_digest": "a2cad4c31aa440be4976a9093eac4822fe3da490d75fd0e62b00aafa54a2744d",
+    "cases_digest": "010a549169e25889a58760fa1e682974e5a712b2063c64c39f0e3466285f2b73",
+    "split": "dev",
+    "case_ids": [
+      "tree_dev_plastics",
+      "tree_dev_archives"
+    ],
+    "modes": [
+      "tree_plan",
+      "grounded_linear",
+      "light_linear",
+      "grounded_tree",
+      "light_tree"
+    ],
+    "repeats": 1,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 1,
+    "judge_model": "gpt-5.6-sol",
+    "cap_usd": 200.0,
+    "judge_max_tokens": 1600,
+    "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted",
+    "judge_reasoning_effort": "none",
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "expected_answers": 10,
+  "completed_answers": 10,
+  "missing": [],
+  "metrics": [
+    {
+      "mode": "tree_plan",
+      "n": 2,
+      "checklist_rate": 0.6666666666666666,
+      "strength_mean": 2.5,
+      "strawman_rate": 0.5,
+      "unsupported_fact_rate": 1,
+      "residual_text_mean_s": 11.83162390452344,
+      "residual_text_median_s": 11.83162390452344,
+      "residual_worker_return_mean_s": 13.533093971549533,
+      "generation_calls_mean": 10,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 10,
+      "generation_cost_mean_usd": 0.005195085,
+      "answer_words_mean": 128,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 0,
+      "invalid_targets": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "grounded_linear",
+      "n": 2,
+      "checklist_rate": 0.6666666666666666,
+      "strength_mean": 4,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 8.23912220299826,
+      "residual_text_median_s": 8.23912220299826,
+      "residual_worker_return_mean_s": 8.239155198010849,
+      "generation_calls_mean": 6,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 6,
+      "generation_cost_mean_usd": 0.00276445,
+      "answer_words_mean": 112,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 1,
+      "invalid_targets": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "light_linear",
+      "n": 2,
+      "checklist_rate": 0.8333333333333333,
+      "strength_mean": 4,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 8.528340980992652,
+      "residual_text_median_s": 8.528340980992652,
+      "residual_worker_return_mean_s": 8.528372330503771,
+      "generation_calls_mean": 5.5,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 5.5,
+      "generation_cost_mean_usd": 0.002517045,
+      "answer_words_mean": 112.5,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 1,
+      "invalid_states": 1,
+      "invalid_targets": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "grounded_tree",
+      "n": 2,
+      "checklist_rate": 0.6666666666666666,
+      "strength_mean": 3.5,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0.5,
+      "residual_text_mean_s": 10.413634863536572,
+      "residual_text_median_s": 10.413634863536572,
+      "residual_worker_return_mean_s": 12.35557649153634,
+      "generation_calls_mean": 10,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 10,
+      "generation_cost_mean_usd": 0.004835084999999999,
+      "answer_words_mean": 107.5,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 1,
+      "invalid_targets": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "light_tree",
+      "n": 2,
+      "checklist_rate": 0.8333333333333333,
+      "strength_mean": 3.5,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0.5,
+      "residual_text_mean_s": 10.27563057601219,
+      "residual_text_median_s": 10.27563057601219,
+      "residual_worker_return_mean_s": 12.464366845524637,
+      "generation_calls_mean": 9,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 9,
+      "generation_cost_mean_usd": 0.004429555,
+      "answer_words_mean": 110,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 1,
+      "invalid_states": 3,
+      "invalid_targets": 0,
+      "revisions": 1
+    }
+  ],
+  "reference_mode": "tree_plan",
+  "paired_vs_baseline": {
+    "grounded_linear": {
+      "baseline": "tree_plan",
+      "candidate": "grounded_linear",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "tree_dev_plastics",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -2.3474196170573123
+        },
+        {
+          "case": "tree_dev_archives",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -4.837583785993047
+        }
+      ],
+      "quality_diff_mean": -2.7755575615628914e-17,
+      "quality_diff_95ci": [
+        -0.33333333333333337,
+        0.3333333333333333
+      ],
+      "latency_diff_mean_s": -3.5925017015251797,
+      "latency_diff_95ci_s": [
+        -4.837583785993047,
+        -2.3474196170573123
+      ]
+    },
+    "light_linear": {
+      "baseline": "tree_plan",
+      "candidate": "light_linear",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "tree_dev_plastics",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -3.8085411250358447
+        },
+        {
+          "case": "tree_dev_archives",
+          "quality_diff": 0,
+          "latency_diff_s": -2.7980247220257297
+        }
+      ],
+      "quality_diff_mean": 0.16666666666666666,
+      "quality_diff_95ci": [
+        0,
+        0.3333333333333333
+      ],
+      "latency_diff_mean_s": -3.3032829235307872,
+      "latency_diff_95ci_s": [
+        -3.8085411250358447,
+        -2.7980247220257297
+      ]
+    },
+    "grounded_tree": {
+      "baseline": "tree_plan",
+      "candidate": "grounded_tree",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "tree_dev_plastics",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -1.6087084059836343
+        },
+        {
+          "case": "tree_dev_archives",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -1.227269675990101
+        }
+      ],
+      "quality_diff_mean": -2.7755575615628914e-17,
+      "quality_diff_95ci": [
+        -0.33333333333333337,
+        0.3333333333333333
+      ],
+      "latency_diff_mean_s": -1.4179890409868676,
+      "latency_diff_95ci_s": [
+        -1.6087084059836343,
+        -1.227269675990101
+      ]
+    },
+    "light_tree": {
+      "baseline": "tree_plan",
+      "candidate": "light_tree",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "tree_dev_plastics",
+          "quality_diff": 0.6666666666666667,
+          "latency_diff_s": 0.6804557199357077
+        },
+        {
+          "case": "tree_dev_archives",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -3.7924423769582063
+        }
+      ],
+      "quality_diff_mean": 0.16666666666666669,
+      "quality_diff_95ci": [
+        -0.33333333333333337,
+        0.6666666666666667
+      ],
+      "latency_diff_mean_s": -1.5559933285112493,
+      "latency_diff_95ci_s": [
+        -3.7924423769582063,
+        0.6804557199357077
+      ]
+    }
+  },
+  "paired_vs_legacy": {},
+  "component_comparisons": {
+    "light_linear_vs_grounded_linear": {
+      "baseline": "grounded_linear",
+      "candidate": "light_linear",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "tree_dev_plastics",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.4611215079785325
+        },
+        {
+          "case": "tree_dev_archives",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 2.0395590639673173
+        }
+      ],
+      "quality_diff_mean": 0.16666666666666669,
+      "quality_diff_95ci": [
+        0.0,
+        0.33333333333333337
+      ],
+      "latency_diff_mean_s": 0.28921877799439244,
+      "latency_diff_95ci_s": [
+        -1.4611215079785325,
+        2.0395590639673173
+      ]
+    },
+    "grounded_tree_vs_tree_plan": {
+      "baseline": "tree_plan",
+      "candidate": "grounded_tree",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "tree_dev_plastics",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -1.6087084059836343
+        },
+        {
+          "case": "tree_dev_archives",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -1.227269675990101
+        }
+      ],
+      "quality_diff_mean": -2.7755575615628914e-17,
+      "quality_diff_95ci": [
+        -0.33333333333333337,
+        0.3333333333333333
+      ],
+      "latency_diff_mean_s": -1.4179890409868676,
+      "latency_diff_95ci_s": [
+        -1.6087084059836343,
+        -1.227269675990101
+      ]
+    },
+    "light_tree_vs_grounded_tree": {
+      "baseline": "grounded_tree",
+      "candidate": "light_tree",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "tree_dev_plastics",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 2.289164125919342
+        },
+        {
+          "case": "tree_dev_archives",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.5651727009681053
+        }
+      ],
+      "quality_diff_mean": 0.16666666666666669,
+      "quality_diff_95ci": [
+        0.0,
+        0.33333333333333337
+      ],
+      "latency_diff_mean_s": -0.13800428752438165,
+      "latency_diff_95ci_s": [
+        -2.5651727009681053,
+        2.289164125919342
+      ]
+    },
+    "grounded_tree_vs_grounded_linear": {
+      "baseline": "grounded_linear",
+      "candidate": "grounded_tree",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "tree_dev_plastics",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.738711211073678
+        },
+        {
+          "case": "tree_dev_archives",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.610314110002946
+        }
+      ],
+      "quality_diff_mean": 0.0,
+      "quality_diff_95ci": [
+        0.0,
+        0.0
+      ],
+      "latency_diff_mean_s": 2.174512660538312,
+      "latency_diff_95ci_s": [
+        0.738711211073678,
+        3.610314110002946
+      ]
+    },
+    "light_tree_vs_light_linear": {
+      "baseline": "light_linear",
+      "candidate": "light_tree",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "tree_dev_plastics",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 4.4889968449715525
+        },
+        {
+          "case": "tree_dev_archives",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -0.9944176549324766
+        }
+      ],
+      "quality_diff_mean": 0.0,
+      "quality_diff_95ci": [
+        -0.33333333333333337,
+        0.33333333333333337
+      ],
+      "latency_diff_mean_s": 1.747289595019538,
+      "latency_diff_95ci_s": [
+        -0.9944176549324766,
+        4.4889968449715525
+      ]
+    }
+  },
+  "usage_including_judging": {
+    "calls": 91,
+    "reserved_upper_usd": 11.1337352,
+    "unresolved_calls": 0,
+    "input_tokens": 238365,
+    "output_tokens": 28427,
+    "reported_usage_estimate_usd": 0.17912524000000002
+  },
+  "request_audit": {
+    "missing_artifacts": [],
+    "truncated_calls": [],
+    "errors": [],
+    "runtime_warning_counts": [
+      {
+        "mode": "grounded_tree",
+        "warning": "Cannot find the matched node for action: reinforce",
+        "count": 1
+      },
+      {
+        "mode": "tree_plan",
+        "warning": "Cannot find the matched node for action: reinforce",
+        "count": 2
+      }
+    ]
+  },
+  "limitations": [
+    "Small authored scenario set, not a standard debate benchmark",
+    "Different generator/judge models, but no human adjudication; automatic judging remains fallible",
+    "Spot checks found inconsistent constraint judgments; automated scores are provisional, not established accuracy",
+    "Zero unsupported-fact flags do not establish factual correctness",
+    "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
+    "Text-ready timing precedes post-speech tree analysis; worker-return timing is reported separately",
+    "Exact-target matching shared across arms; embedding fallback disabled",
+    "Cost uses provider-reported tokens and published rates, not a settled invoice"
+  ],
+  "completion_audit": {
+    "worker_completion_markers": 1,
+    "pending_requests": 0,
+    "failed_requests": 0
+  }
+}

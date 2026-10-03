@@ -1,7 +1,7 @@
 {
   "task": "Grounded and selectively scheduled argument-tree rebuttal planning",
-  "status": "prepared; original USD200 cap sufficient after verified budget reconciliation; model runs not launched",
-  "authorization": "Tree-centered experiments and audit requested; original cumulative USD200 authorization remains in force, no increase required.",
+  "status": "development complete; final source frozen for held-out launch",
+  "authorization": "User continued after budget re-audit; original cumulative USD200 authorization remains in force. No cap increase.",
   "starting_commit": "09e3470",
   "generator": "google.gemma-4-26b-a4b",
   "judge": "gpt-5.6-sol",
@@ -41,7 +41,11 @@
       0.4,
       1
     ],
-    "additional_reservation_usd_allowance": 20
+    "additional_reservation_usd_allowance": 20,
+    "completed_answers": 10,
+    "reported_usage_estimate_usd": 0.17912524,
+    "source_commit": "388c386",
+    "post_run_fix": "Normalize source-validated phase-in limit label to scope, clarify timing label in shared prompt; offline replay repairs 3/22 snapshots, preserves rejection of 3 invalid quotes."
   },
   "heldout": {
     "run_id": "tree-grounded-heldout-v1",
@@ -55,7 +59,9 @@
       1.6,
       4
     ],
-    "additional_reservation_usd_allowance": 85
+    "additional_reservation_usd_allowance": 85,
+    "source_digest": "2a553e68d02c45bc8f9b2ecf13932744a8f8aba8f8db905a035b3a2eebb5b92f",
+    "starting_accounted_exposure_usd": 8.90844296
   },
   "retry_reservation_usd_allowance": 10,
   "retry_policy": "No automatic batch retry; at most one same-setting missing-judge retry after diagnosing a failure; every attempt is retained and metered. Never replace successful judgments.",
@@ -97,7 +103,7 @@
   "additional_reservation_planning_upper_usd": 115,
   "guard": "Same SQLite ledger and USD200 cap. Full 4x pre-dispatch bounds remain. Successful text requests reconcile to 4x verified reported cost through append-only settlements; failed, pending, unknown and audio requests retain original bounds. Original calls/reservations/artifacts unchanged.",
   "offline_verification": {
-    "tests_passed": 226,
+    "tests_passed": 234,
     "subtests_passed": 42,
     "warnings": "one existing Pydantic deprecation warning",
     "new_paid_requests": 0

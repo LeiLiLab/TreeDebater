@@ -547,3 +547,36 @@ Re-running bulk reconciliation appended **zero** additional settlements and repr
 git add process.md src/streaming/experiment_client.py src/streaming/experiment_accounting.py tests/test_experiment_budget.py tests/test_experiment_reconciliation.py experiments/incremental_planning/audio_probe.py experiments/incremental_planning/reconcile_budget.py experiments/incremental_planning/budget_reaudit.json experiments/incremental_planning/manifest_v3.json
 git commit -m "Reconcile verified usage without increasing the experiment budget"
 ```
+
+## Tree experiment execution — 2026-10-03 UTC
+
+User instructed **继续** after the cost re-audit. Launch the prepared 10-answer development comparison, then freeze the implementation before the 40-answer fresh comparison. Five arms: tree_plan, grounded_linear, light_linear, grounded_tree, light_tree. All judgments use GPT-5.6 Sol with 1,600 output tokens; generators and other settings remain as recorded above. Starting commit 388c386; starting verified usage estimate $1.70095090, active guarded occupancy $8.191942, no pending requests. Original cumulative USD200 cap remains unchanged. Expected additional usage $2–5, planning upper $10; pre-dispatch allowance $115 fits existing authorization. Guard runs before every request, shares one ledger across workers, and retains every failed attempt. No audio in this batch.
+
+Development command:
+```bash
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id tree-grounded-dev-v1 --split dev --cases-file experiments/incremental_planning/cases_v3.json --modes tree_plan grounded_linear light_linear grounded_tree light_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200 --repeats 1 > experiments/incremental_planning/run/tree-grounded-dev-v1-worker0.log 2>&1
+```
+
+### Development results and final freeze
+
+All **10/10** development answers and GPT-5.6 judgments completed at the same 1,600-token judge cap. 91 requests, 238,365 input / 28,427 output tokens, estimated additional usage **$0.17912524**, zero failed/pending requests. These are two reused diagnostics, not held-out evidence.
+
+| Mode | Checklist | Strength | Strawman flag | Simulated residual text seconds | Generation calls |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Tree Plan | 66.7% | 2.5 | 50% | 11.83 | 10.0 |
+| Grounded Linear | 66.7% | 4.0 | 0% | 8.24 | 6.0 |
+| Light Linear | 83.3% | 4.0 | 0% | 8.53 | 5.5 |
+| Grounded Tree | 66.7% | 3.5 | 0% | 10.41 | 10.0 |
+| Light Tree | 83.3% | 3.5 | 0% | 10.28 | 9.0 |
+
+Development identified three valid source quotes rejected solely because Gemma labeled a timeline `phase-in` instead of `scope`. The parser now canonicalizes this specific equivalent label **after source validation**; the shared structured prompt explicitly assigns timing to `scope`. All structured arms receive the same fix. Offline replay of all 22 structured development responses accepts 19, including the three repaired records (2172, 2180, 2249); the other three ungrounded quotes remain rejected. No answer or score was rewritten or regenerated. Initial offline replay script passed the chunk list instead of its joined text and failed before any model request; corrected replay completed.
+
+Full offline suite after this fix: **234 passed, 42 subtests passed**, one existing Pydantic warning. No further changes are planned based on fresh-case outcomes. The held-out run uses this frozen code, eight pre-authored new cases, five modes, one repetition, two workers. Four cases contain shared prior-round speeches; their setup calls count toward cost but are reported separately from live latency.
+
+```bash
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/summarize.py tree-grounded-dev-v1
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests debate-app/backend/tests -q
+git diff --check
+# Run separately with N=0 and N=1:
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id tree-grounded-heldout-v1 --split test --cases-file experiments/incremental_planning/cases_v3.json --modes tree_plan grounded_linear light_linear grounded_tree light_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200 --repeats 1 --workers 2 --worker-index N > experiments/incremental_planning/run/tree-grounded-heldout-v1-workerN.log 2>&1
+```

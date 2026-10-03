@@ -50,6 +50,10 @@ def parse_state(raw, prefix, *, tree_targets=None):
         if set(item) != keys or not isinstance(item["text"], str) or not item["text"].strip():
             raise ValueError("Invalid current claim")
     for item in data["limits"]:
+        # A phase-in is a temporal scope. Accept the observed equivalent label
+        # only after the same verbatim-source validation as every other limit.
+        if item.get("kind") == "phase-in":
+            item["kind"] = "scope"
         if set(item) != {"kind", "quote"} or item["kind"] not in ("scope", "exception", "withdrawal"):
             raise ValueError("Invalid limit")
     for item in data["rebuttals"]:
@@ -84,6 +88,7 @@ def state_prompt(context, chunks, previous):
         "A claim's quote is attribution, not proof of truth. Limits constrain all applicable targets. "
         "Include the CURRENT timing, phase-in, coverage and exceptions in limits before spending "
         "space on rebuttals; choose fewer rebuttals if necessary. Do not lose a newly stated timeline. "
+        "Use kind scope for timing and phase-in limits. "
         "Return only JSON with exactly these keys: "
         '{"claims":[{"text":"current claim","quote":"verbatim source"}],'
         '"limits":[{"kind":"scope|exception|withdrawal","quote":"verbatim source"}],'
