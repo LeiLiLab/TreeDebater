@@ -7,6 +7,7 @@ All language-model calls, including extraction and judging, use the durable budg
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import os
@@ -103,9 +104,9 @@ def run_case(case, mode, repeat, client):
         available = max(arrival, available) + elapsed
         timings.append({"arrival_seconds": arrival, "work_seconds": elapsed,
                         "worker_ready_seconds": available})
-    before_generation = {
+    before_generation = copy.deepcopy({
         "our_tree": p.debate_tree.get_tree_info(), "opponent_tree": p.oppo_debate_tree.get_tree_info(),
-        "plan": p.planner.plan, "state": p.planner.state, "events": list(p.planner.events)}
+        "plan": p.planner.plan, "state": p.planner.state, "events": list(p.planner.events)})
     history = ([{"stage": "opening", "side": p.side, "content": case["own_opening"]}]
                + case.get("prior_history", [])
                + [{"stage": opponent_stage, "side": p.oppo_side, "content": " ".join(case["chunks"]),

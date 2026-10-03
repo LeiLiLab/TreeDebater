@@ -1,0 +1,129 @@
+{
+  "created_utc": "2026-10-03T03:38:05.310128+00:00",
+  "cap_usd": 200.0,
+  "entries": 2740,
+  "original_calls_sha256": "0caa356379be3f0cd1bb007a7ac47ee14615f55547263e26c7db31bbf30f1d26",
+  "artifacts_manifest_sha256": "899d4235d649c80f831e5b37b932828bf543e0ff21e9210e658c8b0ffbedfa83",
+  "artifacts_checked": 2740,
+  "model_totals": {
+    "google.gemma-4-26b-a4b": {
+      "entries": 2628,
+      "input_tokens": 6901717,
+      "output_tokens": 807132,
+      "usage_estimate_usd": 1.2200760100000005,
+      "original_reservations_usd": 234.56500000000008
+    },
+    "nvidia.nemotron-super-3-120b": {
+      "entries": 10,
+      "input_tokens": 6856,
+      "output_tokens": 2731,
+      "usage_estimate_usd": 0.0028035499999999997,
+      "original_reservations_usd": 0.640252
+    },
+    "gpt-5.6-sol": {
+      "entries": 101,
+      "input_tokens": 70397,
+      "output_tokens": 51766,
+      "usage_estimate_usd": 1.4485987999999992,
+      "original_reservations_usd": 32.377875200000005
+    },
+    "bounded-audio-bundle": {
+      "entries": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "usage_estimate_usd": 0.04057500000000001,
+      "original_reservations_usd": 0.5
+    }
+  },
+  "original_reservations_usd": 268.0831272,
+  "usage_estimate_usd": 2.71205336,
+  "candidate_successful_text_settlements": 2734,
+  "retained_full_reservations": [
+    {
+      "id": 1848,
+      "label": "v2-gpt-calibration/acknowledged_but_criticized",
+      "state": "error",
+      "reservation_usd": 0.273944,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 1849,
+      "label": "v2-gpt-parameter-check",
+      "state": "error",
+      "reservation_usd": 0.17070240000000003,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 1895,
+      "label": "grounded-heldout-v1/fresh_repair/linear/0",
+      "state": "error",
+      "reservation_usd": 0.2865104,
+      "known_usage_estimate_usd": 0.0207152
+    },
+    {
+      "id": 1962,
+      "label": "grounded-heldout-v1/fresh_lighting/linear/0",
+      "state": "error",
+      "reservation_usd": 0.2836944,
+      "known_usage_estimate_usd": 0.0206976
+    },
+    {
+      "id": 1982,
+      "label": "grounded-heldout-v1/fresh_evening_access/structured_linear/0",
+      "state": "error",
+      "reservation_usd": 0.2840288,
+      "known_usage_estimate_usd": 0.0206976
+    },
+    {
+      "id": 2151,
+      "label": "grounded-audio-v1/external-audio",
+      "state": "ok",
+      "reservation_usd": 0.5,
+      "known_usage_estimate_usd": 0.04057500000000001
+    }
+  ],
+  "settlement_margin": 4,
+  "proposed_accounted_exposure_usd": 12.236351840000024,
+  "proposed_available_budget_usd": 187.76364815999997,
+  "external_audio_http_calls": 20,
+  "unknown_usage_request_ids": [
+    1848,
+    1849
+  ],
+  "pending": 0,
+  "issues": [],
+  "applied": false,
+  "verified_text_rates_per_million": {
+    "google.gemma-4-26b-a4b": [
+      0.13,
+      0.4
+    ],
+    "nvidia.nemotron-super-3-120b": [
+      0.15,
+      0.65
+    ],
+    "gpt-5.6-sol": [
+      4.4,
+      22.0
+    ]
+  },
+  "pricing_sources": [
+    "https://aws.amazon.com/bedrock/pricing/",
+    "https://docs.aws.amazon.com/en_en/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html",
+    "https://developers.openai.com/api/docs/models/tts-1",
+    "https://developers.openai.com/api/docs/models/whisper-1"
+  ],
+  "policy": "4x verified cost for successful text responses; all failed/unknown/audio requests retain full original reservations. Originals are never rewritten.",
+  "limitations": [
+    "Usage estimates are not settled invoices; no provider billing statement was available.",
+    "Request logs cannot independently rule out unreported upstream retries; 4x accrual is a conservative allowance, not a proof of a billing upper bound."
+  ],
+  "actual_accounted_exposure_usd": 12.236351840000001,
+  "source_freeze_verification": {
+    "commit": "3accc6e",
+    "source_digest": "2a553e68d02c45bc8f9b2ecf13932744a8f8aba8f8db905a035b3a2eebb5b92f",
+    "cases_digest": "010a549169e25889a58760fa1e682974e5a712b2063c64c39f0e3466285f2b73",
+    "verified_after_all_workers_exited": true,
+    "subsequent_snapshot_fix": "Applied only after all runs and source hash verification: deep-copy benchmark diagnostic snapshot; original results and requests preserved."
+  }
+}

@@ -1,6 +1,6 @@
 {
   "task": "Grounded and selectively scheduled argument-tree rebuttal planning",
-  "status": "development complete; final source frozen for held-out launch",
+  "status": "complete; 10 development and 40 fresh held-out answers judged",
   "authorization": "User continued after budget re-audit; original cumulative USD200 authorization remains in force. No cap increase.",
   "starting_commit": "09e3470",
   "generator": "google.gemma-4-26b-a4b",
@@ -45,7 +45,10 @@
     "completed_answers": 10,
     "reported_usage_estimate_usd": 0.17912524,
     "source_commit": "388c386",
-    "post_run_fix": "Normalize source-validated phase-in limit label to scope, clarify timing label in shared prompt; offline replay repairs 3/22 snapshots, preserves rejection of 3 invalid quotes."
+    "post_run_fix": "Normalize source-validated phase-in limit label to scope, clarify timing label in shared prompt; offline replay repairs 3/22 snapshots, preserves rejection of 3 invalid quotes.",
+    "requests": 91,
+    "failed_requests": 0,
+    "truncated_requests": 0
   },
   "heldout": {
     "run_id": "tree-grounded-heldout-v1",
@@ -61,7 +64,14 @@
     ],
     "additional_reservation_usd_allowance": 85,
     "source_digest": "2a553e68d02c45bc8f9b2ecf13932744a8f8aba8f8db905a035b3a2eebb5b92f",
-    "starting_accounted_exposure_usd": 8.90844296
+    "starting_accounted_exposure_usd": 8.90844296,
+    "source_commit": "3accc6e",
+    "completed_answers": 40,
+    "worker_completion_markers": 2,
+    "reported_usage_estimate_usd": 0.83197722,
+    "requests": 487,
+    "failed_requests": 0,
+    "truncated_requests": 0
   },
   "retry_reservation_usd_allowance": 10,
   "retry_policy": "No automatic batch retry; at most one same-setting missing-judge retry after diagnosing a failure; every attempt is retained and metered. Never replace successful judgments.",
@@ -119,5 +129,28 @@
     "original_reservation_sum_usd": 199.860956,
     "additional_planning_allowance_usd": 115,
     "combined_exposure_plus_allowance_usd": 123.191942
-  }
+  },
+  "final_cost": {
+    "new_requests": 578,
+    "new_usage_estimate_usd": 1.01110246,
+    "cumulative_usage_estimate_usd": 2.71205336,
+    "accounted_exposure_usd": 12.23635184,
+    "available_budget_usd": 187.76364816,
+    "historical_reservation_sum_usd": 268.0831272,
+    "cap_usd": 200,
+    "pending_requests": 0,
+    "estimate_is_settled_invoice": false
+  },
+  "final_offline_verification": {
+    "tests_passed": 235,
+    "subtests_passed": 42,
+    "warnings": "one existing Pydantic deprecation warning"
+  },
+  "post_run_changes": "Deep-copy pre-generation diagnostic snapshots after discovering mutable-list contamination in four records. Does not change inference prompts or existing results. Frozen run identity remains 3accc6e.",
+  "reports": [
+    "tree-grounded-dev-v1_summary.json",
+    "tree-grounded-heldout-v1_summary.json",
+    "tree-grounded-heldout-v1_diagnostics.json",
+    "cost_audit_v3.json"
+  ]
 }

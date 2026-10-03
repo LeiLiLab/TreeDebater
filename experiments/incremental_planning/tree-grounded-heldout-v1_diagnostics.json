@@ -1,0 +1,567 @@
+{
+  "run_id": "tree-grounded-heldout-v1",
+  "metadata": {
+    "source_digest": "2a553e68d02c45bc8f9b2ecf13932744a8f8aba8f8db905a035b3a2eebb5b92f",
+    "cases_digest": "010a549169e25889a58760fa1e682974e5a712b2063c64c39f0e3466285f2b73",
+    "split": "test",
+    "case_ids": [
+      "tree_fresh_microgrid",
+      "tree_fresh_shuttle",
+      "tree_fresh_wetlands",
+      "tree_fresh_alerts",
+      "tree_fresh_tools",
+      "tree_fresh_market",
+      "tree_fresh_river",
+      "tree_fresh_pool"
+    ],
+    "modes": [
+      "tree_plan",
+      "grounded_linear",
+      "light_linear",
+      "grounded_tree",
+      "light_tree"
+    ],
+    "repeats": 1,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 2,
+    "judge_model": "gpt-5.6-sol",
+    "cap_usd": 200.0,
+    "judge_max_tokens": 1600,
+    "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted",
+    "judge_reasoning_effort": "none",
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "group_metrics": [
+    {
+      "group": "cross_turn",
+      "mode": "grounded_linear",
+      "n": 4,
+      "checklist_rate": 0.8333333333333333,
+      "residual_text_seconds": 8.972655704521458,
+      "generation_calls": 7
+    },
+    {
+      "group": "cross_turn",
+      "mode": "grounded_tree",
+      "n": 4,
+      "checklist_rate": 0.8333333333333333,
+      "residual_text_seconds": 11.62441609625239,
+      "generation_calls": 14
+    },
+    {
+      "group": "cross_turn",
+      "mode": "light_linear",
+      "n": 4,
+      "checklist_rate": 0.8333333333333333,
+      "residual_text_seconds": 9.99939896822616,
+      "generation_calls": 7
+    },
+    {
+      "group": "cross_turn",
+      "mode": "light_tree",
+      "n": 4,
+      "checklist_rate": 0.8333333333333333,
+      "residual_text_seconds": 12.616902058245614,
+      "generation_calls": 14
+    },
+    {
+      "group": "cross_turn",
+      "mode": "tree_plan",
+      "n": 4,
+      "checklist_rate": 0.5833333333333333,
+      "residual_text_seconds": 17.99640701005157,
+      "generation_calls": 14
+    },
+    {
+      "group": "long_chunks",
+      "mode": "grounded_linear",
+      "n": 4,
+      "checklist_rate": 0.5,
+      "residual_text_seconds": 10.76284895275603,
+      "generation_calls": 8
+    },
+    {
+      "group": "long_chunks",
+      "mode": "grounded_tree",
+      "n": 4,
+      "checklist_rate": 0.41666666666666663,
+      "residual_text_seconds": 11.119062203273643,
+      "generation_calls": 14
+    },
+    {
+      "group": "long_chunks",
+      "mode": "light_linear",
+      "n": 4,
+      "checklist_rate": 0.5833333333333333,
+      "residual_text_seconds": 11.050024406504235,
+      "generation_calls": 7.25
+    },
+    {
+      "group": "long_chunks",
+      "mode": "light_tree",
+      "n": 4,
+      "checklist_rate": 0.41666666666666663,
+      "residual_text_seconds": 11.29712855478283,
+      "generation_calls": 12.5
+    },
+    {
+      "group": "long_chunks",
+      "mode": "tree_plan",
+      "n": 4,
+      "checklist_rate": 0.41666666666666663,
+      "residual_text_seconds": 16.572804094510502,
+      "generation_calls": 14
+    }
+  ],
+  "final_binding_checks": [
+    {
+      "case": "tree_fresh_alerts",
+      "mode": "grounded_tree",
+      "active_targets": 0,
+      "selected_claims": 0,
+      "serialized_tree_versions_match": true,
+      "final_raw_prefix_fallback": true,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_alerts",
+      "mode": "light_tree",
+      "active_targets": 2,
+      "selected_claims": 2,
+      "serialized_tree_versions_match": false,
+      "final_raw_prefix_fallback": false,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_market",
+      "mode": "grounded_tree",
+      "active_targets": 1,
+      "selected_claims": 1,
+      "serialized_tree_versions_match": true,
+      "final_raw_prefix_fallback": false,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_market",
+      "mode": "light_tree",
+      "active_targets": 1,
+      "selected_claims": 1,
+      "serialized_tree_versions_match": true,
+      "final_raw_prefix_fallback": false,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_microgrid",
+      "mode": "grounded_tree",
+      "active_targets": 0,
+      "selected_claims": 0,
+      "serialized_tree_versions_match": true,
+      "final_raw_prefix_fallback": true,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_microgrid",
+      "mode": "light_tree",
+      "active_targets": 1,
+      "selected_claims": 1,
+      "serialized_tree_versions_match": true,
+      "final_raw_prefix_fallback": false,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_pool",
+      "mode": "grounded_tree",
+      "active_targets": 1,
+      "selected_claims": 1,
+      "serialized_tree_versions_match": false,
+      "final_raw_prefix_fallback": false,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_pool",
+      "mode": "light_tree",
+      "active_targets": 2,
+      "selected_claims": 0,
+      "serialized_tree_versions_match": true,
+      "final_raw_prefix_fallback": true,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_river",
+      "mode": "grounded_tree",
+      "active_targets": 1,
+      "selected_claims": 1,
+      "serialized_tree_versions_match": false,
+      "final_raw_prefix_fallback": false,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_river",
+      "mode": "light_tree",
+      "active_targets": 2,
+      "selected_claims": 2,
+      "serialized_tree_versions_match": true,
+      "final_raw_prefix_fallback": false,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_shuttle",
+      "mode": "grounded_tree",
+      "active_targets": 0,
+      "selected_claims": 0,
+      "serialized_tree_versions_match": true,
+      "final_raw_prefix_fallback": true,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_shuttle",
+      "mode": "light_tree",
+      "active_targets": 0,
+      "selected_claims": 0,
+      "serialized_tree_versions_match": true,
+      "final_raw_prefix_fallback": true,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_tools",
+      "mode": "grounded_tree",
+      "active_targets": 1,
+      "selected_claims": 1,
+      "serialized_tree_versions_match": false,
+      "final_raw_prefix_fallback": false,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_tools",
+      "mode": "light_tree",
+      "active_targets": 2,
+      "selected_claims": 1,
+      "serialized_tree_versions_match": true,
+      "final_raw_prefix_fallback": false,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_wetlands",
+      "mode": "grounded_tree",
+      "active_targets": 2,
+      "selected_claims": 2,
+      "serialized_tree_versions_match": true,
+      "final_raw_prefix_fallback": false,
+      "versions_match_original_planning_request": true
+    },
+    {
+      "case": "tree_fresh_wetlands",
+      "mode": "light_tree",
+      "active_targets": 1,
+      "selected_claims": 1,
+      "serialized_tree_versions_match": true,
+      "final_raw_prefix_fallback": false,
+      "versions_match_original_planning_request": true
+    }
+  ],
+  "structured_snapshot_counts": {
+    "grounded_linear": 36,
+    "light_linear": 33,
+    "grounded_tree": 36,
+    "light_tree": 33
+  },
+  "structured_failures": [
+    {
+      "id": 2301,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/light_linear/0",
+      "reason": "Source quote is not in the heard prefix",
+      "supplied_tree_targets": null
+    },
+    {
+      "id": 2358,
+      "label": "tree-grounded-heldout-v1/tree_fresh_pool/light_tree/0",
+      "reason": "Source quote is not in the heard prefix",
+      "supplied_tree_targets": 1
+    },
+    {
+      "id": 2364,
+      "label": "tree-grounded-heldout-v1/tree_fresh_pool/light_tree/0",
+      "reason": "Quote is not attributed to the selected tree node",
+      "supplied_tree_targets": 2
+    },
+    {
+      "id": 2367,
+      "label": "tree-grounded-heldout-v1/tree_fresh_pool/light_tree/0",
+      "reason": "Quote is not attributed to the selected tree node",
+      "supplied_tree_targets": 2
+    },
+    {
+      "id": 2372,
+      "label": "tree-grounded-heldout-v1/tree_fresh_pool/light_tree/0",
+      "reason": "Quote is not attributed to the selected tree node",
+      "supplied_tree_targets": 2
+    },
+    {
+      "id": 2378,
+      "label": "tree-grounded-heldout-v1/tree_fresh_microgrid/grounded_linear/0",
+      "reason": "Source quote is not in the heard prefix",
+      "supplied_tree_targets": null
+    },
+    {
+      "id": 2394,
+      "label": "tree-grounded-heldout-v1/tree_fresh_alerts/grounded_tree/0",
+      "reason": "Claim must name a distinct active grounded tree node",
+      "supplied_tree_targets": 0
+    },
+    {
+      "id": 2396,
+      "label": "tree-grounded-heldout-v1/tree_fresh_alerts/grounded_tree/0",
+      "reason": "Rebuttal must target a current claim index",
+      "supplied_tree_targets": 0
+    },
+    {
+      "id": 2420,
+      "label": "tree-grounded-heldout-v1/tree_fresh_microgrid/grounded_tree/0",
+      "reason": "Claim must name a distinct active grounded tree node",
+      "supplied_tree_targets": 0
+    },
+    {
+      "id": 2423,
+      "label": "tree-grounded-heldout-v1/tree_fresh_microgrid/grounded_tree/0",
+      "reason": "Claim must name a distinct active grounded tree node",
+      "supplied_tree_targets": 0
+    },
+    {
+      "id": 2426,
+      "label": "tree-grounded-heldout-v1/tree_fresh_microgrid/grounded_tree/0",
+      "reason": "Claim must name a distinct active grounded tree node",
+      "supplied_tree_targets": 0
+    },
+    {
+      "id": 2438,
+      "label": "tree-grounded-heldout-v1/tree_fresh_microgrid/light_linear/0",
+      "reason": "Source quote is not in the heard prefix",
+      "supplied_tree_targets": null
+    },
+    {
+      "id": 2456,
+      "label": "tree-grounded-heldout-v1/tree_fresh_pool/grounded_tree/0",
+      "reason": "Source quote is not in the heard prefix",
+      "supplied_tree_targets": 1
+    },
+    {
+      "id": 2474,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/grounded_linear/0",
+      "reason": "Source quote is not in the heard prefix",
+      "supplied_tree_targets": null
+    },
+    {
+      "id": 2495,
+      "label": "tree-grounded-heldout-v1/tree_fresh_tools/grounded_linear/0",
+      "reason": "Invalid limit",
+      "supplied_tree_targets": null
+    },
+    {
+      "id": 2497,
+      "label": "tree-grounded-heldout-v1/tree_fresh_tools/grounded_linear/0",
+      "reason": "Invalid limit",
+      "supplied_tree_targets": null
+    },
+    {
+      "id": 2499,
+      "label": "tree-grounded-heldout-v1/tree_fresh_tools/grounded_linear/0",
+      "reason": "Invalid limit",
+      "supplied_tree_targets": null
+    },
+    {
+      "id": 2500,
+      "label": "tree-grounded-heldout-v1/tree_fresh_tools/grounded_linear/0",
+      "reason": "Invalid limit",
+      "supplied_tree_targets": null
+    },
+    {
+      "id": 2608,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/grounded_tree/0",
+      "reason": "Claim must name a distinct active grounded tree node",
+      "supplied_tree_targets": 0
+    },
+    {
+      "id": 2611,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/grounded_tree/0",
+      "reason": "Rebuttal must target a current claim index",
+      "supplied_tree_targets": 0
+    },
+    {
+      "id": 2615,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/grounded_tree/0",
+      "reason": "Claim must name a distinct active grounded tree node",
+      "supplied_tree_targets": 0
+    },
+    {
+      "id": 2645,
+      "label": "tree-grounded-heldout-v1/tree_fresh_tools/light_linear/0",
+      "reason": "Invalid limit",
+      "supplied_tree_targets": null
+    },
+    {
+      "id": 2646,
+      "label": "tree-grounded-heldout-v1/tree_fresh_tools/light_linear/0",
+      "reason": "Invalid limit",
+      "supplied_tree_targets": null
+    },
+    {
+      "id": 2649,
+      "label": "tree-grounded-heldout-v1/tree_fresh_tools/light_linear/0",
+      "reason": "Invalid limit",
+      "supplied_tree_targets": null
+    },
+    {
+      "id": 2699,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/light_tree/0",
+      "reason": "Claim must name a distinct active grounded tree node",
+      "supplied_tree_targets": 0
+    },
+    {
+      "id": 2703,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/light_tree/0",
+      "reason": "Claim must name a distinct active grounded tree node",
+      "supplied_tree_targets": 0
+    },
+    {
+      "id": 2718,
+      "label": "tree-grounded-heldout-v1/tree_fresh_river/light_tree/0",
+      "reason": "Quote is not attributed to the selected tree node",
+      "supplied_tree_targets": 2
+    }
+  ],
+  "failure_counts": [
+    {
+      "mode": "grounded_linear",
+      "reason": "Invalid limit",
+      "count": 4
+    },
+    {
+      "mode": "grounded_linear",
+      "reason": "Source quote is not in the heard prefix",
+      "count": 2
+    },
+    {
+      "mode": "grounded_tree",
+      "reason": "Claim must name a distinct active grounded tree node",
+      "count": 6
+    },
+    {
+      "mode": "grounded_tree",
+      "reason": "Rebuttal must target a current claim index",
+      "count": 2
+    },
+    {
+      "mode": "grounded_tree",
+      "reason": "Source quote is not in the heard prefix",
+      "count": 1
+    },
+    {
+      "mode": "light_linear",
+      "reason": "Invalid limit",
+      "count": 3
+    },
+    {
+      "mode": "light_linear",
+      "reason": "Source quote is not in the heard prefix",
+      "count": 2
+    },
+    {
+      "mode": "light_tree",
+      "reason": "Claim must name a distinct active grounded tree node",
+      "count": 2
+    },
+    {
+      "mode": "light_tree",
+      "reason": "Quote is not attributed to the selected tree node",
+      "count": 4
+    },
+    {
+      "mode": "light_tree",
+      "reason": "Source quote is not in the heard prefix",
+      "count": 1
+    }
+  ],
+  "empty_tree_target_requests": [
+    {
+      "id": 2350,
+      "label": "tree-grounded-heldout-v1/tree_fresh_river/grounded_tree/0"
+    },
+    {
+      "id": 2352,
+      "label": "tree-grounded-heldout-v1/tree_fresh_river/grounded_tree/0"
+    },
+    {
+      "id": 2354,
+      "label": "tree-grounded-heldout-v1/tree_fresh_river/grounded_tree/0"
+    },
+    {
+      "id": 2391,
+      "label": "tree-grounded-heldout-v1/tree_fresh_alerts/grounded_tree/0"
+    },
+    {
+      "id": 2394,
+      "label": "tree-grounded-heldout-v1/tree_fresh_alerts/grounded_tree/0"
+    },
+    {
+      "id": 2396,
+      "label": "tree-grounded-heldout-v1/tree_fresh_alerts/grounded_tree/0"
+    },
+    {
+      "id": 2399,
+      "label": "tree-grounded-heldout-v1/tree_fresh_market/light_tree/0"
+    },
+    {
+      "id": 2420,
+      "label": "tree-grounded-heldout-v1/tree_fresh_microgrid/grounded_tree/0"
+    },
+    {
+      "id": 2423,
+      "label": "tree-grounded-heldout-v1/tree_fresh_microgrid/grounded_tree/0"
+    },
+    {
+      "id": 2426,
+      "label": "tree-grounded-heldout-v1/tree_fresh_microgrid/grounded_tree/0"
+    },
+    {
+      "id": 2550,
+      "label": "tree-grounded-heldout-v1/tree_fresh_market/grounded_tree/0"
+    },
+    {
+      "id": 2608,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/grounded_tree/0"
+    },
+    {
+      "id": 2611,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/grounded_tree/0"
+    },
+    {
+      "id": 2615,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/grounded_tree/0"
+    },
+    {
+      "id": 2696,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/light_tree/0"
+    },
+    {
+      "id": 2699,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/light_tree/0"
+    },
+    {
+      "id": 2703,
+      "label": "tree-grounded-heldout-v1/tree_fresh_shuttle/light_tree/0"
+    }
+  ],
+  "request_artifact_hashes_sha256": "cab41c4a49cbb5aa586b89601a3822c719e2bb0259f0fcb46a400b8adebaa5c0",
+  "paid_requests": 0,
+  "limitations": [
+    "Subgroups contain only four authored cases and are descriptive, not independent validation.",
+    "Source binding checks attribution/version consistency, not entailment or argument quality.",
+    "No answer, judgment or inference configuration is changed by this analysis.",
+    "4 serialized pre-generation tree versions differ from the original planning requests. This run used shallow snapshots whose argument lists could change during later own-speech analysis; original request-time bindings are checked separately and originals are preserved."
+  ]
+}

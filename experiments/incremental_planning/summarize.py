@@ -122,6 +122,11 @@ def summarize(run_id):
              "unresolved_calls": sum(c[2] != "ok" for c in calls),
              "input_tokens": sum(c[3] or 0 for c in calls), "output_tokens": sum(c[4] or 0 for c in calls),
              "reported_usage_estimate_usd": sum(c[5] or 0 for c in calls)}
+    usage["accounted_exposure_usd"] = sum(charge for label, charge in db.execute(
+        """SELECT c.label, CASE WHEN c.state='ok' AND c.reserved=s.original_reserved
+        THEN coalesce(s.charge_usd,c.reserved) ELSE c.reserved END
+        FROM calls c LEFT JOIN budget_settlements s ON c.id=s.call_id""")
+        if label.startswith(run_id + "/"))
     request_audit = {"missing_artifacts": [], "truncated_calls": [], "errors": []}
     for request_id, label in db.execute("SELECT id,label FROM calls"):
         if not label.startswith(run_id + "/"):
@@ -179,6 +184,16 @@ def summarize(run_id):
         "worker_completion_markers": len(list(run.glob("complete_worker*.json"))),
         "pending_requests": sum(c[2] == "pending" for c in calls),
         "failed_requests": sum(c[2] == "error" for c in calls)}
+    diagnostics_path = ROOT / f"{run_id}_diagnostics.json"
+    if diagnostics_path.exists():
+        diagnostics = json.loads(diagnostics_path.read_text())
+        bindings = diagnostics["final_binding_checks"]
+        fallback_count = sum(b["final_raw_prefix_fallback"] for b in bindings)
+        summary["post_run_diagnostics"] = str(diagnostics_path.relative_to(ROOT))
+        summary["limitations"].extend([
+            "Composite checklist items can fail for omitted qualifications even when the answer does not contradict them.",
+            f"{fallback_count}/{len(bindings)} grounded/light-tree answers fall back to the raw prefix; aggregate gains do not isolate tree binding from grounding feedback."])
+        summary["limitations"].extend(diagnostics["limitations"])
     (ROOT / f"{run_id}_summary.json").write_text(json.dumps(summary, indent=2))
     print(f"{run_id}: {len(observed)}/{len(expected)} answers")
     print("mode\tn\tchecklist\tstrength\tstrawman\tresidual_mean_s\tcalls\tcost_usd")

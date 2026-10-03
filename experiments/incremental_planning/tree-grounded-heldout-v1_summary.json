@@ -1,0 +1,781 @@
+{
+  "run_id": "tree-grounded-heldout-v1",
+  "metadata": {
+    "source_digest": "2a553e68d02c45bc8f9b2ecf13932744a8f8aba8f8db905a035b3a2eebb5b92f",
+    "cases_digest": "010a549169e25889a58760fa1e682974e5a712b2063c64c39f0e3466285f2b73",
+    "split": "test",
+    "case_ids": [
+      "tree_fresh_microgrid",
+      "tree_fresh_shuttle",
+      "tree_fresh_wetlands",
+      "tree_fresh_alerts",
+      "tree_fresh_tools",
+      "tree_fresh_market",
+      "tree_fresh_river",
+      "tree_fresh_pool"
+    ],
+    "modes": [
+      "tree_plan",
+      "grounded_linear",
+      "light_linear",
+      "grounded_tree",
+      "light_tree"
+    ],
+    "repeats": 1,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 2,
+    "judge_model": "gpt-5.6-sol",
+    "cap_usd": 200.0,
+    "judge_max_tokens": 1600,
+    "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted",
+    "judge_reasoning_effort": "none",
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "expected_answers": 40,
+  "completed_answers": 40,
+  "missing": [],
+  "metrics": [
+    {
+      "mode": "tree_plan",
+      "n": 8,
+      "checklist_rate": 0.5,
+      "strength_mean": 3,
+      "strawman_rate": 0.375,
+      "unsupported_fact_rate": 0.875,
+      "residual_text_mean_s": 17.284605552281036,
+      "residual_text_median_s": 18.510806407488417,
+      "residual_worker_return_mean_s": 20.502695310539465,
+      "generation_calls_mean": 14,
+      "prior_context_setup_calls_mean": 1,
+      "live_generation_calls_mean": 13,
+      "generation_cost_mean_usd": 0.007092028750000001,
+      "answer_words_mean": 131,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 0,
+      "invalid_targets": 0,
+      "revisions": 8
+    },
+    {
+      "mode": "grounded_linear",
+      "n": 8,
+      "checklist_rate": 0.6666666666666666,
+      "strength_mean": 3.625,
+      "strawman_rate": 0.125,
+      "unsupported_fact_rate": 0.375,
+      "residual_text_mean_s": 9.867752328638744,
+      "residual_text_median_s": 10.223258827521931,
+      "residual_worker_return_mean_s": 9.86778567951842,
+      "generation_calls_mean": 7.5,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 7.5,
+      "generation_cost_mean_usd": 0.0036872650000000003,
+      "answer_words_mean": 104.75,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 6,
+      "invalid_targets": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "light_linear",
+      "n": 8,
+      "checklist_rate": 0.7083333333333333,
+      "strength_mean": 3.625,
+      "strawman_rate": 0.25,
+      "unsupported_fact_rate": 0.375,
+      "residual_text_mean_s": 10.524711687365198,
+      "residual_text_median_s": 9.352550052979495,
+      "residual_worker_return_mean_s": 10.52474491961766,
+      "generation_calls_mean": 7.125,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 7.125,
+      "generation_cost_mean_usd": 0.00348432125,
+      "answer_words_mean": 112.75,
+      "gate_waits": 0,
+      "duplicate_skips": 2,
+      "incomplete_waits": 1,
+      "invalid_states": 5,
+      "invalid_targets": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "grounded_tree",
+      "n": 8,
+      "checklist_rate": 0.625,
+      "strength_mean": 3.5,
+      "strawman_rate": 0.25,
+      "unsupported_fact_rate": 0.125,
+      "residual_text_mean_s": 11.371739149763016,
+      "residual_text_median_s": 11.246558748011012,
+      "residual_worker_return_mean_s": 13.422586911154212,
+      "generation_calls_mean": 14,
+      "prior_context_setup_calls_mean": 1,
+      "live_generation_calls_mean": 13,
+      "generation_cost_mean_usd": 0.0065381,
+      "answer_words_mean": 114.375,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 9,
+      "invalid_targets": 0,
+      "revisions": 7
+    },
+    {
+      "mode": "light_tree",
+      "n": 8,
+      "checklist_rate": 0.625,
+      "strength_mean": 3.875,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0.25,
+      "residual_text_mean_s": 11.957015306514222,
+      "residual_text_median_s": 12.085507354000583,
+      "residual_worker_return_mean_s": 14.197467850259272,
+      "generation_calls_mean": 13.25,
+      "prior_context_setup_calls_mean": 1,
+      "live_generation_calls_mean": 12.25,
+      "generation_cost_mean_usd": 0.0063598875000000004,
+      "answer_words_mean": 108.125,
+      "gate_waits": 0,
+      "duplicate_skips": 2,
+      "incomplete_waits": 1,
+      "invalid_states": 7,
+      "invalid_targets": 0,
+      "revisions": 7
+    }
+  ],
+  "reference_mode": "tree_plan",
+  "paired_vs_baseline": {
+    "grounded_linear": {
+      "baseline": "tree_plan",
+      "candidate": "grounded_linear",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -12.096208736940753
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.0,
+          "latency_diff_s": -11.44776309496956
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.0,
+          "latency_diff_s": -3.862950542999897
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": 0.6666666666666667,
+          "latency_diff_s": -8.688082847210232
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": -3.135248874023091
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.4621054110466503
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -10.938540378934704
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.0,
+          "latency_diff_s": -6.703925903013442
+        }
+      ],
+      "quality_diff_mean": 0.16666666666666669,
+      "quality_diff_95ci": [
+        0.041666666666666664,
+        0.33333333333333337
+      ],
+      "latency_diff_mean_s": -7.416853223642291,
+      "latency_diff_95ci_s": [
+        -9.95885864352496,
+        -4.893285906131496
+      ]
+    },
+    "light_linear": {
+      "baseline": "tree_plan",
+      "candidate": "light_linear",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -6.899257294018753
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.0,
+          "latency_diff_s": -11.815154607000295
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -2.6990228550857864
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -10.574597411196798
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.9967300790012814
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -4.55583715508692
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.0,
+          "latency_diff_s": -10.727619389945175
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -8.804392285994254
+        }
+      ],
+      "quality_diff_mean": 0.20833333333333334,
+      "quality_diff_95ci": [
+        0.08333333333333334,
+        0.3333333333333333
+      ],
+      "latency_diff_mean_s": -6.7598938649158375,
+      "latency_diff_95ci_s": [
+        -9.6278118854145,
+        -3.5156305542914197
+      ]
+    },
+    "grounded_tree": {
+      "baseline": "tree_plan",
+      "candidate": "grounded_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0.0,
+          "latency_diff_s": -8.283870045037474
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -5.8348157439613715
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.0,
+          "latency_diff_s": -3.357366616022773
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": 0.6666666666666667,
+          "latency_diff_s": -8.011911250175096
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": -3.5855847190250643
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.0665428830543533
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.0,
+          "latency_diff_s": -9.50472192291636
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.0,
+          "latency_diff_s": -7.65811803995166
+        }
+      ],
+      "quality_diff_mean": 0.125,
+      "quality_diff_95ci": [
+        0.0,
+        0.2916666666666667
+      ],
+      "latency_diff_mean_s": -5.912866402518019,
+      "latency_diff_95ci_s": [
+        -7.741525782344979,
+        -3.968121846774011
+      ]
+    },
+    "light_tree": {
+      "baseline": "tree_plan",
+      "candidate": "light_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -6.068066400010139
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.0,
+          "latency_diff_s": -8.728604239993729
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -0.8335667140199803
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -5.887782453199968
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.8809159729862586
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.0,
+          "latency_diff_s": -3.6554898540489376
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.0,
+          "latency_diff_s": -12.491315566876438
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.0,
+          "latency_diff_s": -5.8368127109715715
+        }
+      ],
+      "quality_diff_mean": 0.125,
+      "quality_diff_95ci": [
+        0.041666666666666664,
+        0.25
+      ],
+      "latency_diff_mean_s": -5.327590245766813,
+      "latency_diff_95ci_s": [
+        -8.065957142599117,
+        -2.6402749014074365
+      ]
+    }
+  },
+  "paired_vs_legacy": {},
+  "component_comparisons": {
+    "light_linear_vs_grounded_linear": {
+      "baseline": "grounded_linear",
+      "candidate": "light_linear",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0,
+          "latency_diff_s": 5.196951442922
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.3673915120307356
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 1.1639276879141107
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -1.886514563986566
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": 5.1319789530243725
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -2.0937317440402694
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": -0.3333333333333333,
+          "latency_diff_s": 0.21092098898952827
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -2.1004663829808123
+        }
+      ],
+      "quality_diff_mean": 0.041666666666666664,
+      "quality_diff_95ci": [
+        -0.125,
+        0.20833333333333334
+      ],
+      "latency_diff_mean_s": 0.6569593587264535,
+      "latency_diff_95ci_s": [
+        -1.1834920242836233,
+        2.7525643032349763
+      ]
+    },
+    "grounded_tree_vs_tree_plan": {
+      "baseline": "tree_plan",
+      "candidate": "grounded_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0.0,
+          "latency_diff_s": -8.283870045037474
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -5.8348157439613715
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.0,
+          "latency_diff_s": -3.357366616022773
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": 0.6666666666666667,
+          "latency_diff_s": -8.011911250175096
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": -3.5855847190250643
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.0665428830543533
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.0,
+          "latency_diff_s": -9.50472192291636
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.0,
+          "latency_diff_s": -7.65811803995166
+        }
+      ],
+      "quality_diff_mean": 0.125,
+      "quality_diff_95ci": [
+        0.0,
+        0.2916666666666667
+      ],
+      "latency_diff_mean_s": -5.912866402518019,
+      "latency_diff_95ci_s": [
+        -7.741525782344979,
+        -3.968121846774011
+      ]
+    },
+    "light_tree_vs_grounded_tree": {
+      "baseline": "grounded_tree",
+      "candidate": "light_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 2.2158036450273357
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -2.893788496032357
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 2.523799902002793
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": 2.1241287969751284
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": 4.466500692011323
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.5889469709945843
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.9865936439600773
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.8213053289800882
+        }
+      ],
+      "quality_diff_mean": 0.0,
+      "quality_diff_95ci": [
+        -0.16666666666666669,
+        0.16666666666666669
+      ],
+      "latency_diff_mean_s": 0.5852761567512061,
+      "latency_diff_95ci_s": [
+        -1.4101719209866133,
+        2.4365555526383105
+      ]
+    },
+    "grounded_tree_vs_grounded_linear": {
+      "baseline": "grounded_linear",
+      "candidate": "grounded_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": 3.8123386919032782
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 5.612947351008188
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.5055839269771241
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": 0,
+          "latency_diff_s": 0.6761715970351361
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.4503358450019732
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.395562527992297
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": -0.3333333333333333,
+          "latency_diff_s": 1.4338184560183436
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.954192136938218
+        }
+      ],
+      "quality_diff_mean": -0.041666666666666664,
+      "quality_diff_95ci": [
+        -0.16666666666666669,
+        0.08333333333333334
+      ],
+      "latency_diff_mean_s": 1.503986821124272,
+      "latency_diff_95ci_s": [
+        0.19191864575259387,
+        3.0298774179827888
+      ]
+    },
+    "light_tree_vs_light_linear": {
+      "baseline": "light_linear",
+      "candidate": "light_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0,
+          "latency_diff_s": 0.8311908940086141
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.0865503670065664
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0,
+          "latency_diff_s": 1.8654561410658062
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": 0.0,
+          "latency_diff_s": 4.68681495799683
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.1158141060150228
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": -0.3333333333333333,
+          "latency_diff_s": 0.9003473010379821
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.763696176931262
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": -0.3333333333333333,
+          "latency_diff_s": 2.9675795750226825
+        }
+      ],
+      "quality_diff_mean": -0.08333333333333333,
+      "quality_diff_95ci": [
+        -0.20833333333333331,
+        0.0
+      ],
+      "latency_diff_mean_s": 1.4323036191490246,
+      "latency_diff_95ci_s": [
+        -0.005073087850178126,
+        2.802502581012959
+      ]
+    }
+  },
+  "usage_including_judging": {
+    "calls": 487,
+    "reserved_upper_usd": 57.088435999999994,
+    "unresolved_calls": 0,
+    "input_tokens": 1353835,
+    "output_tokens": 134956,
+    "reported_usage_estimate_usd": 0.8319772199999995,
+    "accounted_exposure_usd": 3.327908879999998
+  },
+  "request_audit": {
+    "missing_artifacts": [],
+    "truncated_calls": [],
+    "errors": [],
+    "runtime_warning_counts": [
+      {
+        "mode": "grounded_tree",
+        "warning": "Cannot find the matched node for action: reinforce",
+        "count": 3
+      },
+      {
+        "mode": "grounded_tree",
+        "warning": "Unmatched revise target from for: A boardwalk provides year-round access to the wetlands.",
+        "count": 1
+      },
+      {
+        "mode": "grounded_tree",
+        "warning": "Unmatched revise target from for: N/A",
+        "count": 1
+      },
+      {
+        "mode": "grounded_tree",
+        "warning": "Unmatched revise target from for: The community battery can provide essential backup power for homes and critical infrastructure.",
+        "count": 1
+      },
+      {
+        "mode": "grounded_tree",
+        "warning": "Unmatched revise target from for: The library should implement a four-month trial of lending ordinary household tools from a single branch.",
+        "count": 1
+      },
+      {
+        "mode": "grounded_tree",
+        "warning": "Unmatched revise target from for: The waste heat is not free; the facility would charge a negotiated service fee.",
+        "count": 1
+      },
+      {
+        "mode": "light_tree",
+        "warning": "Cannot find the matched node for action: reinforce",
+        "count": 6
+      },
+      {
+        "mode": "light_tree",
+        "warning": "Skipping ungrounded or motion-only extraction: The boardwalk proposal is financially unviable due to the lack of a secured maintenance budget.",
+        "count": 1
+      },
+      {
+        "mode": "light_tree",
+        "warning": "Unmatched retract target from for: Mandatory smartphone dependence would exclude some residents.",
+        "count": 1
+      },
+      {
+        "mode": "light_tree",
+        "warning": "Unmatched revise target from for: A boardwalk provides year-round access to the wetlands.",
+        "count": 1
+      },
+      {
+        "mode": "tree_plan",
+        "warning": "Cannot find the matched node for action: reinforce",
+        "count": 6
+      },
+      {
+        "mode": "tree_plan",
+        "warning": "Unmatched revise target from for: N/A",
+        "count": 2
+      },
+      {
+        "mode": "tree_plan",
+        "warning": "Unmatched revise target from for: The boardwalk will be used for guided visits during the permitted season rather than unrestricted year-round access.",
+        "count": 1
+      },
+      {
+        "mode": "tree_plan",
+        "warning": "Unmatched revise target from for: The library should implement a four-month trial of lending ordinary household tools from a single branch.",
+        "count": 1
+      }
+    ]
+  },
+  "limitations": [
+    "Small authored scenario set, not a standard debate benchmark",
+    "Different generator/judge models, but no human adjudication; automatic judging remains fallible",
+    "Spot checks found inconsistent constraint judgments; automated scores are provisional, not established accuracy",
+    "Zero unsupported-fact flags do not establish factual correctness",
+    "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
+    "Text-ready timing precedes post-speech tree analysis; worker-return timing is reported separately",
+    "Exact-target matching shared across arms; embedding fallback disabled",
+    "Cost uses provider-reported tokens and published rates, not a settled invoice",
+    "Composite checklist items can fail for omitted qualifications even when the answer does not contradict them.",
+    "5/16 grounded/light-tree answers fall back to the raw prefix; aggregate gains do not isolate tree binding from grounding feedback.",
+    "Subgroups contain only four authored cases and are descriptive, not independent validation.",
+    "Source binding checks attribution/version consistency, not entailment or argument quality.",
+    "No answer, judgment or inference configuration is changed by this analysis.",
+    "4 serialized pre-generation tree versions differ from the original planning requests. This run used shallow snapshots whose argument lists could change during later own-speech analysis; original request-time bindings are checked separately and originals are preserved."
+  ],
+  "completion_audit": {
+    "worker_completion_markers": 2,
+    "pending_requests": 0,
+    "failed_requests": 0
+  },
+  "post_run_diagnostics": "tree-grounded-heldout-v1_diagnostics.json"
+}

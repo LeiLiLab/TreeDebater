@@ -400,7 +400,8 @@
     "unresolved_calls": 0,
     "input_tokens": 238365,
     "output_tokens": 28427,
-    "reported_usage_estimate_usd": 0.17912524000000002
+    "reported_usage_estimate_usd": 0.17912524000000002,
+    "accounted_exposure_usd": 0.7165009600000001
   },
   "request_audit": {
     "missing_artifacts": [],

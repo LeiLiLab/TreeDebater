@@ -42,13 +42,13 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 | Linear (`linear`) | 不用论证树，每段输入更新自由文本反驳笔记 | 简单、较低开销；限定条件和假设容易混淆 | 第一轮 12 × 2；第二轮 10 × 1，GPT-5.6 评分 |
 | Corrected Tree (`corrected_tree`) | 树支持说话者自己的修改/撤回，归档失效分支 | 修正旧目标；仍在端点后规划反驳 | 第一轮：12 × 2，Gemma 评分 |
 | Adaptive Linear (`adaptive_linear`) | Linear 加模型门控，决定更新或等待 | 可跳过重复工作；门控本身增加调用与延迟 | 第一轮：12 × 2，Gemma 评分 |
-| Tree Plan (`tree_plan`) | 可纠错论证树驱动流式反驳笔记 | 同时组织论证关系和提前准备；树与笔记维护较贵 | 第一轮：12 × 2，Gemma 评分 |
+| Tree Plan (`tree_plan`) | 可纠错论证树驱动流式反驳笔记 | 同时组织论证关系和提前准备；树与笔记维护较贵 | 第一轮：12 × 2，Gemma 评分；第三轮：8 × 1，GPT-5.6，通过率 50.0%，模拟文本等待 17.28s |
 | Adaptive Tree (`adaptive_tree`) | Tree Plan 加模型门控，按需更新树和笔记 | 尝试减少更新；流程更复杂且有门控开销 | 第一轮：12 × 2，Gemma 评分 |
 | Structured Linear (`structured_linear`) | 将当前观点、原文引用、范围/例外和反驳假设分开保存 | 可检查来源；结构合法不保证语义正确，本轮通过率下降 | 第二轮：10 × 1，GPT-5.6 评分；另有旧案例开发诊断 |
-| Grounded Linear (`grounded_linear`) | 结构化状态加针对目标、例外和事实依据的反馈/修订 | 不新增反馈调用；减少无依据断言，但整体质量收益未证实 | 第二轮：10 × 1，GPT-5.6 评分 |
-| Light Linear (`light_linear`) | Grounded Linear 加精确重复跳过、未完句缓冲、选择性门控 | 减少无效工作；调度的独立收益仍不确定 | 第二轮：10 × 1，GPT-5.6 评分；单次真实 ASR/TTS 对照 |
-| Grounded Tree (`grounded_tree`) | 保留论证树；反驳绑定有效节点和节点原文，利用攻击关系与未回应目标排序；加依据核对 | 强化树对反驳的直接作用；增加提取、维护和绑定校验成本，仍依赖语义提取正确性 | 第三轮：已实现并通过离线验证，预算重新审计通过，付费评测待运行 |
-| Light Tree (`light_tree`) | Grounded Tree 加重复跳过、未完句缓冲与选择性门控，结束时强制处理积压 | 尝试减少树与计划的无效更新；不能假定树的成本或质量已改善 | 第三轮：已实现并通过离线验证，预算重新审计通过，付费评测待运行 |
+| Grounded Linear (`grounded_linear`) | 结构化状态加针对目标、例外和事实依据的反馈/修订 | 不新增反馈调用；减少无依据断言，但整体质量收益未证实 | 第二轮：10 × 1；第三轮：8 × 1，均 GPT-5.6；第三轮通过率 66.7%，等待 9.87s |
+| Light Linear (`light_linear`) | Grounded Linear 加精确重复跳过、未完句缓冲、选择性门控 | 减少无效工作；调度的独立收益仍不确定 | 第二轮：10 × 1；第三轮：8 × 1，均 GPT-5.6；第三轮通过率 70.8%，等待 10.52s；另有旧案例单次真实 ASR/TTS 对照 |
+| Grounded Tree (`grounded_tree`) | 保留论证树；反驳绑定有效节点和节点原文，利用攻击关系与未回应目标排序；加依据核对 | 让反驳可绑定树目标；比原版更快，但提取/匹配失败仍会触发原文回退，树的独立质量收益未证实 | 第三轮：8 × 1，GPT-5.6，通过率 62.5%，等待 11.37s；9 次中间状态回退，3/8 最终回退 |
+| Light Tree (`light_tree`) | Grounded Tree 加重复跳过、未完句缓冲与选择性门控，结束时强制处理积压 | 本轮调用从 Grounded Tree 的 14.0 降至 13.25；延迟未进一步下降，质量仍受提取与条件覆盖限制 | 第三轮：8 × 1，GPT-5.6，通过率 62.5%，等待 11.96s；7 次中间状态回退，2/8 最终回退 |
 
 第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
 
@@ -56,7 +56,7 @@ Evaluate targeted rebuttal quality, final-condition correctness, claim coverage,
 
 ## Budget and accounting
 
-**Latest audit:** the USD200 cap remains unchanged. Historical pre-dispatch reservations total $199.860956, but successful requests have now been reconciled through an append-only audit: current conservative budget occupancy is **$8.191942**, leaving **$191.808058**. This supersedes the earlier proposal to raise the cap to USD320. Details are in “Budget re-audit” below.
+**Latest completed run:** approved cumulative cap remains **USD200**. After the third comparison, provider-usage estimate is **$2.71205336**, active conservative budget occupancy **$12.23635184**, and remaining guarded headroom **$187.76364816**, with zero pending requests. Historical pre-dispatch reservations total $268.0831272; this audit sum is not current occupancy. Successful requests settle at 4× verified usage; failed/unknown/audio reservations remain. The previous USD320 proposal is withdrawn.
 
 - Approved cumulative cap: **USD 200.00**.
 - At creation of this log: **0 paid inference requests launched by this task; attributable experiment cost USD 0.00**. Existing unrelated proxy traffic is excluded.
@@ -110,7 +110,9 @@ Files inspected: `src/agents.py`, `src/ouragents.py`, `src/debate_tree.py`, `src
 
 ## Experiment results
 
-The frozen held-out comparison completed **168/168** answers. Full results and limitations are recorded at the end of this log and in `experiments/incremental_planning/heldout-v1_summary.json`. Linear reduced simulated text-ready latency and had a higher mean automated checklist score, but **stable quality improvement is not established**: quality confidence intervals include zero and spot checks found judge inconsistencies. Do not treat these small authored-case results as live speech or standard benchmark results.
+Latest: the third comparison completed **40/40 fresh answers**, plus **10/10 development answers**, all judged by GPT-5.6. See “Third comparison completed” below and `tree-grounded-heldout-v1_summary.json`. Grounded/Light Tree improve the original Tree Plan pipeline on this sample, while matched Linear ablations remain competitive; tree binding has unresolved extraction failures.
+
+Historical first round: the frozen held-out comparison completed **168/168** answers. Full results and limitations are recorded at the end of this log and in `experiments/incremental_planning/heldout-v1_summary.json`. Linear reduced simulated text-ready latency and had a higher mean automated checklist score, but **stable quality improvement is not established**: quality confidence intervals include zero and spot checks found judge inconsistencies. Do not treat these small authored-case results as live speech or standard benchmark results.
 
 ## Timeline
 
@@ -579,4 +581,80 @@ PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/e
 git diff --check
 # Run separately with N=0 and N=1:
 PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id tree-grounded-heldout-v1 --split test --cases-file experiments/incremental_planning/cases_v3.json --modes tree_plan grounded_linear light_linear grounded_tree light_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200 --repeats 1 --workers 2 --worker-index N > experiments/incremental_planning/run/tree-grounded-heldout-v1-workerN.log 2>&1
+```
+
+## Third comparison completed — tree-centered variants, 2026-10-03 UTC
+
+**40/40 fresh answers and 10/10 development answers completed.** Generator Gemma, independent GPT-5.6 Sol judge, all 50 judgments capped at 1,600 tokens, no automatic or manual retries needed. Two held-out workers exited successfully, zero pending requests, zero missing artifacts, zero failed or truncated calls in either new run. Fresh inference source frozen at **3accc6e**, SHA-256 `2a553e68d02c45bc8f9b2ecf13932744a8f8aba8f8db905a035b3a2eebb5b92f`; cases SHA-256 `010a549169e25889a58760fa1e682974e5a712b2063c64c39f0e3466285f2b73`. Both hashes were verified after all workers exited and before the subsequent reporting-only snapshot fix.
+
+### Fresh comparison: eight cases per mode
+
+| 方案 | 检查项通过率 | 反驳强度 / 5 | 歪曲对手标记 | 无依据事实标记 | 模拟端点后文本等待 | 含自己的树分析的 worker 返回 | 生成调用（含历史初始化） | 每回答生成费用估算 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Tree Plan | 50.0% | 3.00 | 37.5% | 87.5% | 17.28s | 20.50s | 14.00 | $0.007092 |
+| Grounded Linear（消融） | 66.7% | 3.63 | 12.5% | 37.5% | 9.87s | 9.87s | 7.50 | $0.003687 |
+| Light Linear（消融） | 70.8% | 3.63 | 25.0% | 37.5% | 10.52s | 10.52s | 7.13 | $0.003484 |
+| Grounded Tree | 62.5% | 3.50 | 25.0% | 12.5% | 11.37s | 13.42s | 14.00 | $0.006538 |
+| Light Tree | 62.5% | 3.88 | 0.0% | 25.0% | 11.96s | 14.20s | 13.25 | $0.006360 |
+
+These are automated flags, not verified factual-error rates. Each tree mode averages one prior-context initialization request across all eight cases (two on each of four cross-turn cases); these are included in the request/cost columns. Live generation averages 13.00 / 13.00 / 12.25 calls for Tree Plan / Grounded Tree / Light Tree. Judging is excluded from per-answer generation cost and included in total run cost below. Mean answer lengths are 131.0, 104.75, 112.75, 114.38 and 108.13 words in table order: shorter outputs are a contributor to latency differences, so this is a whole-pipeline comparison rather than isolated scheduling speed. No live audio experiment was run in this round.
+
+### Paired case comparisons
+
+Case bootstrap: 10,000 resamples, eight cases, one generation each. Differences are candidate minus baseline; negative time means faster. These unadjusted intervals are descriptive and do not remove small-sample, judge or multiple-comparison limitations.
+
+| Candidate − baseline | Checklist difference (95% interval), percentage points | Text latency difference (95% interval) |
+| --- | ---: | ---: |
+| Grounded Tree − Tree Plan | +12.5 [0.0, +29.2] | −5.91s [−7.74, −3.97] |
+| Light Tree − Tree Plan | +12.5 [+4.2, +25.0] | −5.33s [−8.07, −2.64] |
+| Light Tree − Grounded Tree | 0.0 [−16.7, +16.7] | +0.59s [−1.41, +2.44] |
+| Grounded Tree − Grounded Linear | −4.2 [−16.7, +8.3] | +1.50s [+0.19, +3.03] |
+| Light Tree − Light Linear | −8.3 [−20.8, 0.0] | +1.43s [−0.01, +2.80] |
+
+Light Tree improves three cases over Tree Plan and ties five, giving a positive paired checklist interval in this small sample. Both grounded tree pipelines reduce simulated endpoint latency versus Tree Plan. However, **this does not establish that node binding itself is responsible**: the variants also change feedback/revision, and some answers use the raw-prefix fallback. Light scheduling saves 0.75 tree-generation calls per answer (5.4%) but has no demonstrated incremental quality or latency benefit over Grounded Tree. Tree methods do not outperform their matched Linear ablations here. Keep trees as the main research method and Linear as the ablation; do not change production defaults based on this sample.
+
+Descriptive subgroups (four cases each): Tree Plan scores 58.3% on cross-turn cases and 41.7% on long chunks. All four grounded/light variants score 83.3% cross-turn. On long chunks, Grounded/Light Tree each score 41.7%, Grounded Linear 50.0%, Light Linear 58.3%. This suggests condition coverage during longer inputs deserves attention; these tiny subgroups are not independent validation.
+
+### Tree diagnostics and retained failures
+
+- 36 structured planning snapshots for Grounded Tree, with 9 rejected; 33 for Light Tree, with 7 rejected. Final usable bound state exists in 5/8 and 6/8 answers respectively. All 11 nonempty final states match their original request-time node versions; zero runtime `INVALID_TARGET` events. This validates those recorded bindings, not semantic correctness or comprehensive coverage.
+- Across both tree variants, 17 planning requests were supplied an empty eligible target list. Eight rejected snapshots still invented or reused an unavailable ID; two produced an invalid rebuttal index. The remaining six rejections were source/attribution errors (Grounded Tree 1, Light Tree 5). All rejected snapshots fall back to raw heard text.
+- Root-cause example, microgrid Grounded Tree: extraction request **2419** emitted `retract` then `revise` for the same node, so the revision no longer found its target. Requests **2421/2424** mislabeled opponent responses as `rebut` on our root-side claim; legacy `update_node` fallback treated them as reinforcement of our node. Speaker-ownership validation correctly refused to attach opponent source text to that node, leaving no eligible opponent targets. Planning requests **2420/2423/2426** then selected nonexistent targets and were rejected. This is an extraction/action-application limitation, not evidence that the underlying argument-tree idea is ineffective. No held-out-driven inference repair or rerun was performed.
+- Exact matching produced unresolved correction warnings: Tree Plan 4, Grounded Tree 5, Light Tree 2; unmatched reinforce warnings: 6, 3, 6 respectively. One additional Light Tree extraction was skipped as ungrounded. These are warning occurrences, not independent case counts or always opponent-only events.
+- Grounded/Light Linear had 6/5 rejected snapshots, including 4/3 unsupported limit labels in the tools case. The development-only `phase-in` fix did not cover every label the model might emit. Fresh results are retained; no additional permissive parsing was introduced after inspection.
+- Light variants each skipped two exact duplicates and waited once for an incomplete clause; there were zero semantic-gate WAIT events. These cases mainly test cheap deterministic scheduling rather than the benefit of a learned gate.
+
+### Judge and snapshot audit
+
+Spot checks of shuttle, microgrid, river and pool show that several checklist failures are **omissions of one part of a compound requirement**, not direct contradictions. For example, the shuttle Light Tree answer acknowledges accessible vehicles but does not say “every run”; the pool Grounded Tree answer acknowledges unknown prices, a backup boiler and a study but does not explicitly state both withdrawal of the free-heating claim and study-before-contract sequencing. The checklist penalizes those omissions. The river Grounded/Light Tree answers focus on unresolved warning thresholds but omit monthly-versus-quarterly timing. Automatic strawman/unsupported flags also remain fallible and do not include separate flag-level rationales. All original judgments are retained.
+
+Offline snapshot validation initially found four mismatched versions (Light Tree alerts; Grounded Tree pool, river, tools). Investigation showed the saved `before_generation` dictionaries shared mutable argument lists with the real trees: subsequent analysis of our generated speech appended to those lists before JSON persistence. Original pre-dispatch planning request artifacts are immutable and verify all 11 selected final states against their supplied targets. The results' original snapshot fields remain untouched; `tree-grounded-heldout-v1_diagnostics.json` records both checks. After all inference finished, the benchmark now deep-copies its diagnostic snapshot. A regression executes a simulated generation followed by tree mutation and verifies that the earlier snapshot stays unchanged. This changes future logging only, not the completed answers, scores, call durations or costs.
+
+### Cost, validation and next priorities
+
+| Component | New requests | Usage estimate USD | Active guarded occupancy attributable to run USD |
+| --- | ---: | ---: | ---: |
+| Tree development | 91 | 0.17912524 | 0.71650096 |
+| Tree held-out | 487 | 0.83197722 | 3.32790888 |
+| **New work total** | **578** | **1.01110246** | **4.04440984** |
+| **All work cumulative** | **2,740 ledger entries** | **2.71205336** | **12.23635184** |
+
+Original cumulative cap remains **$200**, leaving **$187.76364816** guarded headroom. Audit checked all 2,740 original artifacts, no issues, zero pending calls. The same five historical failed entries and $0.50 audio bundle retain full bounds; no new failures were added. Historical reservation sum $268.0831272 is an audit sum across completed requests, not current budget use. Usage remains a provider-token/rate estimate, not a settled bill. No cap increase, ledger reset, proxy change, push or deployment.
+
+Final full suite: **235 tests passed, 42 subtests passed**, one existing Pydantic warning. Both evaluation workers exited 0. Post-run diagnosis invokes no model. Files: `tree-grounded-heldout-v1_summary.json`, `tree-grounded-heldout-v1_diagnostics.json`, `tree-grounded-dev-v1_summary.json`, `tree-dev-parser-replay.json`, `cost_audit_v3.json`, `manifest_v3.json`.
+
+Recommended next research priorities (not launched in this batch): resolve contradictory extraction action sequences and speaker/action ownership before scheduling complexity; make relevant timing/exception coverage explicit in tree plans; then use new unseen cases and matched grounded-tree ablations to isolate the contribution of node binding. The current sample is retained as evaluation evidence, not reused as fresh validation.
+
+```bash
+PYTHONPATH=src /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/reconcile_budget.py --output experiments/incremental_planning/cost_audit_v3.json
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/diagnose_tree_run.py tree-grounded-heldout-v1
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/summarize.py tree-grounded-heldout-v1
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests debate-app/backend/tests -q
+git diff --check
+```
+
+Final result commit command (only task-owned files):
+```bash
+git add process.md src/scripts/benchmark_incremental_planning.py tests/test_benchmark_tree_history.py experiments/incremental_planning/manifest_v3.json experiments/incremental_planning/summarize.py experiments/incremental_planning/diagnose_tree_run.py experiments/incremental_planning/tree-grounded-dev-v1_summary.json experiments/incremental_planning/tree-grounded-heldout-v1_summary.json experiments/incremental_planning/tree-grounded-heldout-v1_diagnostics.json experiments/incremental_planning/cost_audit_v3.json
+git commit -m "Report tree comparison and preserve diagnostic snapshots"
 ```

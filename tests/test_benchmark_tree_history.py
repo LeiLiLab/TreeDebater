@@ -37,3 +37,30 @@ def test_judge_receives_prior_context_and_uniform_explicit_output_cap():
     args, kwargs = client.complete.call_args
     assert kwargs['model'] == 'gpt-5.6-sol' and kwargs['max_tokens'] == 1600
     assert 'Allow ambulances.' in args[0][0]['content']
+
+
+def test_saved_pre_generation_tree_is_not_mutated_by_own_speech_analysis(monkeypatch):
+    from agents import Debater
+    from debate_tree import DebateTree
+    from scripts.benchmark_incremental_planning import run_case
+    ours, theirs = DebateTree('Transport', 'against'), DebateTree('Transport', 'for')
+    node = theirs.update_node('propose', new_claim='Limit cars', new_argument=['Initial reason'], target='Limit cars')
+    planner = SimpleNamespace(plan='', state={'limits': []}, events=[])
+    player = SimpleNamespace(side='against', oppo_side='for', debate_tree=ours,
+                             oppo_debate_tree=theirs, planner=planner, observe_opponent=Mock())
+    monkeypatch.setattr(Debater, 'post_process', lambda *a, **kw: 'Answer')
+    def generate(*args, **kwargs):
+        result = Debater.post_process(player)
+        node.argument.append('Added by subsequent own-speech analysis')
+        planner.state['limits'].append('Later state')
+        return result
+    player.rebuttal_generation = generate
+    monkeypatch.setattr('scripts.benchmark_incremental_planning.make_player', lambda *a: player)
+    client = Mock(label='offline')
+    client.summary.return_value = dict.fromkeys(('calls', 'input_tokens', 'output_tokens',
+                                                'reported_usage_estimate_usd', 'reserved_upper_usd'), 0)
+    sample = case();sample.update(id='offline', kind='regression')
+    result = run_case(sample, 'grounded_tree', 0, client)
+    assert result['before_generation']['opponent_tree']['structure']['children'][0]['argument'] == ['Initial reason']
+    assert result['before_generation']['state'] == {'limits': []}
+    assert len(result['after_generation']['opponent_tree']['structure']['children'][0]['argument']) == 2
