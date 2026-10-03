@@ -743,3 +743,28 @@ PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/pyth
 ```
 
 Final pre-development full suite: **254 passed, 42 subtests passed**, one existing Pydantic deprecation warning. `git diff --check` passed.
+
+### First development pass and mechanism refinement
+
+`branch-dev-v1` completed 10/10 answers, 122 requests, 369,095 input / 31,670 output tokens, usage estimate **$0.19233635**, zero provider errors/truncations. Tree integrity audit found no wrong-speaker edges or ungrounded attached sources. The repaired Grounded Tree retained valid final bindings in both old failure cases; old deletion/ownership failures no longer occurred in these sampled runs.
+
+| Dev arm (2 old cases) | Checklist | Text seconds | Final bound states | Rejected structured snapshots |
+| --- | ---: | ---: | ---: | ---: |
+| Linear | 83.3% | 12.88 | n/a | n/a |
+| Grounded Linear | 83.3% | 9.45 | n/a | 2/8 |
+| Grounded Tree | 83.3% | 9.65 | 2/2 | 1/8 |
+| Flat Tree | 66.7% | 8.61 | 0/2 | 3/8 |
+| Branch Tree | 100.0% | 11.34 | 1/2 | 6/8 |
+
+The high Branch Tree checklist score does **not** validate its intended mechanism: strict planning validation rejected extra JSON fields, prose after JSON, or punctuation after JSON. Indexed planning now requests `BranchPlanResponse` JSON schema through the existing metered helper interface; validation remains strict. It does not silently salvage or alter the original bad records.
+
+Inspection also found that an explicit opponent acceptance of our publication request was absent from the graph, and planning repeated the old objection. Added `concede` to the source-owned extraction schema only (legacy extraction schema unchanged). Such an edge preserves the exact acceptance and its speaker without asserting implementation is complete. Branch briefs now include other replies to the same objection, so an already-granted safeguard is visible when evaluating a sibling reply. Candidate limits also include acceptance/publication markers. Flat Tree sees the same claim/source material but no concession-edge labels or sibling structure.
+
+New regressions check sibling concession visibility, preservation of the other speaker's claim, and typed planning output. Full suite **256 passed, 42 subtests passed**. No fresh-case model output has been generated. Add a six-answer `branch-dev-v2` check of Grounded Tree, Flat Tree and Branch Tree on the same two old development cases; this stays inside the previously recorded $20 development allowance and original $200 cumulative cap. Retain all v1 answers, judgments and diagnostics under their original source identity.
+
+```bash
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/diagnose_branch_run.py branch-dev-v1
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/summarize.py branch-dev-v1
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests debate-app/backend/tests -q
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id branch-dev-v2 --split dev --cases-file experiments/incremental_planning/cases_v4.json --modes grounded_tree flat_tree branch_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200 --repeats 1 > experiments/incremental_planning/run/branch-dev-v2-worker0.log 2>&1
+```

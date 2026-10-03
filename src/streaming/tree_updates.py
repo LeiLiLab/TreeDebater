@@ -97,7 +97,7 @@ def apply_statements(trees, statements, transcript, side):
                     if arg not in node.argument:node.argument.append(arg)
                 attach_source(node,item['content'],transcript,side)
                 record('REINFORCE',node_id=node.node_id)
-            elif action in ('attack','rebut') and node.side!=side:
+            elif action in ('attack','rebut','concede') and node.side!=side:
                 # Ownership determines the child speaker; root parity does not.
                 child=next((c for c in node.children if c.side==side and claim_key(c.claim)==claim_key(item['claim'])),None)
                 if child is None:
@@ -105,9 +105,10 @@ def apply_statements(trees, statements, transcript, side):
                 else:
                     for arg in item['arguments']:
                         if arg not in child.argument:child.argument.append(arg)
-                child.relation='reply' if action=='rebut' else 'attack'
+                child.relation={'rebut':'reply','attack':'attack','concede':'concede'}[action]
                 attach_source(child,item['content'],transcript,side)
-                node.update_status('attacked');child.update_status('proposed')
+                if action!='concede':node.update_status('attacked')
+                child.update_status('proposed')
                 record('LINK_RESPONSE',node_id=child.node_id,target_id=node.node_id,relation=child.relation)
             else:
                 # Do not reinterpret opponent support as an attack or vice versa.
@@ -119,7 +120,7 @@ def apply_statements(trees, statements, transcript, side):
 
 RELATION_INSTRUCTIONS = """
 SOURCE-OWNED NODE UPDATES: The registry below lists actual node IDs and speakers.
-For EVERY attack/rebut/reinforce/revise/retract, copy its node_id into target_id;
+For EVERY attack/rebut/reinforce/revise/retract/concede, copy its node_id into target_id;
 choose by meaning, not paraphrased target text or tree-root parity. For propose,
 use target_id=null and target=N/A. attack/rebut connects the current speaker's new
 claim to a node owned by the OTHER speaker. reinforce/revise/retract targets ONLY
@@ -132,4 +133,9 @@ Keep independently qualified claims separate. Preserve timing, exemptions,
 conditions and explicitly unanswered implementation questions in claim/arguments.
 All content fields must be exact current-speech excerpts. Prior context is for
 linking only; do not manufacture new quotations from it.
+Additional action concede: when the speaker explicitly accepts the OTHER speaker's
+objection or commits to their requested safeguard, link this acceptance to that
+other-speaker node with concede and a verbatim current quote. Do not discard an
+explicit acceptance as empty/filler, and do not label it an attack or reinforce.
+Only the accepted part is conceded; a conditional promise is not fulfilled work.
 """

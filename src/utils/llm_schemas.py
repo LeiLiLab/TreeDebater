@@ -27,6 +27,38 @@ class StatementsResponse(SchemaBase):
     statements: list[StatementItem]
 
 
+class LinkedPurposeItem(PurposeItem):
+    action: Literal["propose", "rebut", "reinforce", "attack", "revise", "retract", "concede"]
+
+
+class LinkedStatementItem(StatementItem):
+    purpose: list[LinkedPurposeItem] | LinkedPurposeItem | None = None
+
+
+class LinkedStatementsResponse(SchemaBase):
+    statements: list[LinkedStatementItem]
+
+
+class BranchChoice(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    target: int
+
+
+class BranchMove(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    target: int
+    move: Literal["challenge_support", "challenge_inference", "answer_objection", "concede_then_distinguish"]
+    point: str
+    assumptions: list[str]
+
+
+class BranchPlanResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    claims: list[BranchChoice]
+    limits: list[int]
+    rebuttals: list[BranchMove]
+
+
 class SelectionClaimsOnlyResponse(SchemaBase):
     selection: list[str]
 

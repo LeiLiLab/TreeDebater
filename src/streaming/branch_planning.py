@@ -6,7 +6,7 @@ from .grounding import normalize, parse_state
 
 
 MOVES = ('challenge_support', 'challenge_inference', 'answer_objection', 'concede_then_distinguish')
-LIMIT_MARKERS = re.compile(r'\b(?:only|not|no|except|unless|before|after|until|during|within|remain|retain|withdraw|replace|exempt|trial|pilot|monthly|quarterly|annual|year|month|week|day|hour|must|requires?|conditional|subject to)\b|\d|例外|除非|仅|不|撤回', re.I)
+LIMIT_MARKERS = re.compile(r'\b(?:only|not|no|except|unless|before|after|until|during|within|remain|retain|withdraw|replace|exempt|trial|pilot|monthly|quarterly|annual|year|month|week|day|hour|must|requires?|conditional|subject to|accept|agree|concede|commit|publish)\b|\d|例外|除非|仅|不|撤回', re.I)
 
 
 def planning_material(targets, trees, opponent_side, *, topology):
@@ -37,8 +37,13 @@ def planning_material(targets, trees, opponent_side, *, topology):
             briefs.append({'node_id':target['node_id'],'path':path,
                 'opponent_position':target['claim'],
                 'latest_our_objection':own_objections[-1] if own_objections else None,
+                'other_replies_to_same_objection':[
+                    r for r in own_objections[-1]['responses']
+                    if r['side']==opponent_side and r['node_id']!=target['node_id']
+                ] if own_objections else [],
+                'is_concession':target['concession'],
                 'our_existing_responses':[r for r in target['responses'] if r['side'] != opponent_side],
-                'needs_response':target['unanswered'],
+                'needs_response':target['unanswered'] and not target['concession'],
                 'interpretation':'Response presence is structural; it does not establish resolution, truth or victory.'})
         result['branch_briefs']=briefs
     else:
@@ -74,7 +79,10 @@ def branch_prompt(context, chunks, previous):
             'opponent reply and the remaining gap. Prefer a live unanswered reply over an already '
             'answered ancestor. Explain why the proposed response affects the parent claim. Distinguish '
             'a rebuttal to a supporting premise from refuting the entire independent case. A response '
-            'edge alone does not prove the earlier issue solved; assess its content.\n')
+            'edge alone does not prove the earlier issue solved; assess its content. Read the OTHER '
+            'replies to the same objection before alleging a safeguard is missing: a sibling concession '
+            'may already grant it. A concession acknowledges a specific requirement, not completed '
+            'implementation; question the remaining execution gap rather than deny the acceptance.\n')
     return prompt+json.dumps({'context':context,'heard_prefix':chunks,'previous_state':previous},ensure_ascii=False)
 
 

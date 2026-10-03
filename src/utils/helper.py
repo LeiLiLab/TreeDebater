@@ -564,11 +564,15 @@ def extract_statement(llm, motion, statement, claims=None, tree=None, side=None,
         side=side,
         stage=stage,
     )
+    extraction_schema = StatementsResponse
+    if relation_targets is not None:
+        from utils.llm_schemas import LinkedStatementsResponse
+        extraction_schema = LinkedStatementsResponse
     claims, response = get_response_with_retry(
         llm,
         prompt,
         "statements",
-        response_model=StatementsResponse,
+        response_model=extraction_schema,
     )
     log_llm_io(
         logger,

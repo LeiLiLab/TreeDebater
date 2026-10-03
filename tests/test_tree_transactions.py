@@ -169,3 +169,33 @@ def test_indexed_plan_is_used_by_generation_without_rendered_tree_leakage(mode):
     assert 'UNWANTED_RENDERED_TREE' not in prompt
     assert ('"branch_briefs"' in prompt)==(mode=='branch_tree')
     assert 'position_limits' in prompt and 'BRANCH DELIVERY' in prompt
+
+
+def test_sibling_concession_is_visible_to_branch_planning_without_marking_it_fulfilled():
+    own,other=setup_trees();objection=add(other,'Publish selection criteria and a maintenance budget.')
+    accepted=item('I accept publication of selection criteria and a maintenance budget.', 'concede',objection)
+    response=item('A generator comparison must precede a battery purchase.', 'rebut',objection)
+    speech=accepted['content']+' '+response['content']
+    apply_statements((own,other),[accepted,response],speech,'for')
+    assert objection.argument==[] and len(objection.children)==2
+    targets=tree_targets((own,other),'for')
+    material=planning_material(targets,(own,other),'for',topology=True)
+    reply=next(b for b in material['branch_briefs'] if not b['is_concession'])
+    assert reply['other_replies_to_same_objection'][0]['relation']=='concede'
+    assert reply['other_replies_to_same_objection'][0]['sources']==[accepted['content']]
+    concession=next(b for b in material['branch_briefs'] if b['is_concession'])
+    assert not concession['needs_response'] and accepted['content'] in material['position_limits']
+    flat=planning_material(targets,(own,other),'for',topology=False)
+    assert material['position_limits']==flat['position_limits']
+    assert all('concession' not in n for n in flat['tree_targets'])
+
+
+def test_branch_planning_requests_json_schema_and_accepts_validated_model_object():
+    from ouragents import TreeDebater
+    from streaming.planning import IncrementalPlanner, PlanningConfig
+    from utils.llm_schemas import BranchPlanResponse
+    p=TreeDebater.__new__(TreeDebater);p.planner=IncrementalPlanner(PlanningConfig(mode='branch_tree'))
+    p.helper_client=Mock(return_value=[BranchPlanResponse(claims=[],limits=[],rebuttals=[])])
+    response=p._planning_llm('Prepare compact JSON rebuttal choices. Test.',700)
+    assert json.loads(response)=={'claims':[],'limits':[],'rebuttals':[]}
+    assert p.helper_client.call_args.kwargs['response_model'] is BranchPlanResponse

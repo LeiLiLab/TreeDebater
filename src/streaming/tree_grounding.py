@@ -22,6 +22,10 @@ def tree_targets(trees, opponent_side):
     nodes are absent. A version binds claim, supporting material, ancestry and
     direct responses so an old plan cannot silently attach to a changed branch.
     """
+    def response_info(node):
+        return {"node_id": node.node_id, "claim": node.claim, "side": node.side,
+                "arguments": list(node.argument), "sources": list(node.source_spans),
+                "relation": getattr(node, "relation", None)}
     targets = []
     seen = set()
     for tree in trees:
@@ -35,18 +39,17 @@ def tree_targets(trees, opponent_side):
             while parent is not None and parent.parent is not None:
                 ancestry.append({"node_id": parent.node_id, "side": parent.side,
                                  "claim": parent.claim, "arguments": list(parent.argument),
-                                 "sources": list(getattr(parent, "source_spans", []))})
+                                 "sources": list(getattr(parent, "source_spans", [])),
+                                 "responses": [response_info(c) for c in parent.children]})
                 parent = parent.parent
-            responses = [{"node_id": c.node_id, "claim": c.claim, "side": c.side,
-                          "arguments": list(c.argument), "sources": list(c.source_spans),
-                          "relation": getattr(c, "relation", None)}
-                         for c in node.children]
+            responses = [response_info(c) for c in node.children]
             item = {"node_id": node.node_id, "claim": node.claim,
                     "arguments": list(node.argument), "sources": list(node.source_spans),
                     "ancestors": ancestry, "responses": responses,
+                    "concession": getattr(node, "relation", None) == "concede",
                     "unanswered": not any(c.side != opponent_side for c in node.children),
                     "attacks_our_claim": bool(ancestry and ancestry[0]["side"] != opponent_side)}
             item["version"] = hashlib.sha256(json.dumps(item, sort_keys=True).encode()).hexdigest()[:16]
             targets.append(item)
-    targets.sort(key=lambda n: (not n["unanswered"], not n["attacks_our_claim"]))
+    targets.sort(key=lambda n: (n["concession"], not n["unanswered"], not n["attacks_our_claim"]))
     return targets

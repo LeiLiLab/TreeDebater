@@ -1,0 +1,210 @@
+{
+  "run_id": "branch-dev-v1",
+  "metrics": [
+    {
+      "mode": "branch_tree",
+      "answers": 2,
+      "with_bound_targets": 1,
+      "final_raw_fallbacks": 1,
+      "graph_update_events": {
+        "REINFORCE": 4,
+        "LINK_RESPONSE": 5,
+        "APPLY_CORRECTION": 2
+      },
+      "structured_snapshots": 8,
+      "rejected_snapshots": 6,
+      "selected_reply_paths": 1
+    },
+    {
+      "mode": "flat_tree",
+      "answers": 2,
+      "with_bound_targets": 0,
+      "final_raw_fallbacks": 2,
+      "graph_update_events": {
+        "REINFORCE": 3,
+        "LINK_RESPONSE": 4,
+        "COALESCE_CORRECTION": 1,
+        "APPLY_CORRECTION": 2
+      },
+      "structured_snapshots": 8,
+      "rejected_snapshots": 3,
+      "selected_reply_paths": 0
+    },
+    {
+      "mode": "grounded_tree",
+      "answers": 2,
+      "with_bound_targets": 2,
+      "final_raw_fallbacks": 0,
+      "graph_update_events": {
+        "REINFORCE": 1,
+        "LINK_RESPONSE": 8,
+        "COALESCE_CORRECTION": 1,
+        "APPLY_CORRECTION": 2
+      },
+      "structured_snapshots": 8,
+      "rejected_snapshots": 1,
+      "selected_reply_paths": 3
+    }
+  ],
+  "final_binding_checks": [
+    {
+      "case": "branch_dev_microgrid",
+      "repeat": 0,
+      "mode": "branch_tree",
+      "active_targets": 2,
+      "selected_claims": 2,
+      "final_raw_prefix_fallback": false,
+      "selected_versions_valid": true,
+      "selected_reply_paths": 1,
+      "retained_position_limits": 2,
+      "request_versions_valid": true
+    },
+    {
+      "case": "branch_dev_microgrid",
+      "repeat": 0,
+      "mode": "flat_tree",
+      "active_targets": 2,
+      "selected_claims": 0,
+      "final_raw_prefix_fallback": true,
+      "selected_versions_valid": true,
+      "selected_reply_paths": 0,
+      "retained_position_limits": 0,
+      "request_versions_valid": true
+    },
+    {
+      "case": "branch_dev_microgrid",
+      "repeat": 0,
+      "mode": "grounded_tree",
+      "active_targets": 4,
+      "selected_claims": 2,
+      "final_raw_prefix_fallback": false,
+      "selected_versions_valid": true,
+      "selected_reply_paths": 2,
+      "retained_position_limits": 0,
+      "request_versions_valid": true
+    },
+    {
+      "case": "branch_dev_shuttle",
+      "repeat": 0,
+      "mode": "branch_tree",
+      "active_targets": 2,
+      "selected_claims": 0,
+      "final_raw_prefix_fallback": true,
+      "selected_versions_valid": true,
+      "selected_reply_paths": 0,
+      "retained_position_limits": 0,
+      "request_versions_valid": true
+    },
+    {
+      "case": "branch_dev_shuttle",
+      "repeat": 0,
+      "mode": "flat_tree",
+      "active_targets": 1,
+      "selected_claims": 0,
+      "final_raw_prefix_fallback": true,
+      "selected_versions_valid": true,
+      "selected_reply_paths": 0,
+      "retained_position_limits": 0,
+      "request_versions_valid": true
+    },
+    {
+      "case": "branch_dev_shuttle",
+      "repeat": 0,
+      "mode": "grounded_tree",
+      "active_targets": 1,
+      "selected_claims": 1,
+      "final_raw_prefix_fallback": false,
+      "selected_versions_valid": true,
+      "selected_reply_paths": 1,
+      "retained_position_limits": 0,
+      "request_versions_valid": true
+    }
+  ],
+  "integrity_issues": [],
+  "structured_snapshot_counts": {
+    "grounded_linear": 8,
+    "branch_tree": 8,
+    "flat_tree": 8,
+    "grounded_tree": 8
+  },
+  "invalid_snapshots": [
+    {
+      "id": 2809,
+      "label": "branch-dev-v1/branch_dev_shuttle/grounded_linear/0",
+      "reason": "Source quote is not in the heard prefix",
+      "supplied_targets": 0
+    },
+    {
+      "id": 2817,
+      "label": "branch-dev-v1/branch_dev_microgrid/grounded_linear/0",
+      "reason": "Source quote is not in the heard prefix",
+      "supplied_targets": 0
+    },
+    {
+      "id": 2828,
+      "label": "branch-dev-v1/branch_dev_microgrid/branch_tree/0",
+      "reason": "Invalid branch move",
+      "supplied_targets": 1
+    },
+    {
+      "id": 2830,
+      "label": "branch-dev-v1/branch_dev_microgrid/branch_tree/0",
+      "reason": "Extra data: line 2 column 1 (char 514)",
+      "supplied_targets": 1
+    },
+    {
+      "id": 2857,
+      "label": "branch-dev-v1/branch_dev_shuttle/flat_tree/0",
+      "reason": "Invalid branch move",
+      "supplied_targets": 1
+    },
+    {
+      "id": 2868,
+      "label": "branch-dev-v1/branch_dev_shuttle/grounded_tree/0",
+      "reason": "Claim must name a distinct active grounded tree node",
+      "supplied_targets": 0
+    },
+    {
+      "id": 2881,
+      "label": "branch-dev-v1/branch_dev_microgrid/flat_tree/0",
+      "reason": "Invalid branch move",
+      "supplied_targets": 1
+    },
+    {
+      "id": 2887,
+      "label": "branch-dev-v1/branch_dev_microgrid/flat_tree/0",
+      "reason": "Extra data: line 1 column 640 (char 639)",
+      "supplied_targets": 2
+    },
+    {
+      "id": 2904,
+      "label": "branch-dev-v1/branch_dev_shuttle/branch_tree/0",
+      "reason": "Extra data: line 2 column 1 (char 520)",
+      "supplied_targets": 3
+    },
+    {
+      "id": 2906,
+      "label": "branch-dev-v1/branch_dev_shuttle/branch_tree/0",
+      "reason": "Extra data: line 2 column 1 (char 405)",
+      "supplied_targets": 2
+    },
+    {
+      "id": 2908,
+      "label": "branch-dev-v1/branch_dev_shuttle/branch_tree/0",
+      "reason": "Extra data: line 2 column 1 (char 533)",
+      "supplied_targets": 2
+    },
+    {
+      "id": 2910,
+      "label": "branch-dev-v1/branch_dev_shuttle/branch_tree/0",
+      "reason": "Invalid branch move",
+      "supplied_targets": 2
+    }
+  ],
+  "paid_requests": 0,
+  "limitations": [
+    "Speaker/source ownership and version consistency do not validate semantic entailment of extracted claims.",
+    "An edge records a response, not whether the issue was resolved.",
+    "Counts include historical setup and all observed chunks; repeated cases are not independent samples."
+  ]
+}

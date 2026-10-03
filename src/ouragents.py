@@ -144,7 +144,12 @@ class TreeDebater(Debater):
         return result
 
     def _planning_llm(self, prompt, max_tokens):
-        return self.helper_client(prompt, max_tokens=max_tokens)[0]
+        options = {}
+        if self.planner.config.branch_state and prompt.startswith("Prepare compact JSON rebuttal choices"):
+            from utils.llm_schemas import BranchPlanResponse
+            options["response_model"] = BranchPlanResponse
+        response = self.helper_client(prompt, max_tokens=max_tokens, **options)[0]
+        return response.model_dump_json() if hasattr(response, "model_dump_json") else response
 
     def _start_planning_turn(self, side, stage):
         if self.planner.start(f"{side}:{stage}"):
