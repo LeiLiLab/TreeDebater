@@ -1,6 +1,6 @@
 {
   "task": "Evaluate claim condition extraction and existing-call condition review against the pre-change pipeline",
-  "status": "prepared for launch",
+  "status": "completed: 64 generated and 64 judged",
   "created_utc": "2026-10-03T20:12:36.902155+00:00",
   "authorization": "User requested checking quality improvement; continue existing user-approved cumulative USD200 task budget, no increase/reset.",
   "source_commit": "d0cc148",
@@ -92,5 +92,89 @@
     "Saved baseline model samples/judgments are reused; decoding variability and provider drift remain possible.",
     "Text-only simulated endpoint latency excludes ASR/TTS; automatic judge flags need spot checking."
   ],
-  "offline_preflight": "314 tests +42 subtests passed on unchanged d0cc148 source; compile/diff checks pass. Zero pending budget calls before launch."
+  "offline_preflight": "314 tests +42 subtests passed on unchanged d0cc148 source; compile/diff checks pass. Zero pending budget calls before launch.",
+  "judge_retries": [
+    {
+      "failed_request_id": 5419,
+      "label": "conditions-regression-v1/retained_fresh_archive/grounded_linear/0",
+      "reason": "HTTP503",
+      "status": "succeeded; no further retry",
+      "answer_regenerated": false,
+      "unknown_usage_bound_usd": 0.3811984,
+      "retry_request_id": 5457,
+      "retry_usage_usd": 0.0174152,
+      "identical_request_verified": true
+    },
+    {
+      "failed_request_id": 5771,
+      "label": "conditions-regression-v1/retained_fresh_waterstation/flat_tree/1",
+      "reason": "HTTP503",
+      "status": "succeeded; no further retry",
+      "answer_regenerated": false,
+      "unknown_usage_bound_usd": 0.36287680000000005,
+      "retry_request_id": 5780,
+      "retry_usage_usd": 0.011382799999999998,
+      "identical_request_verified": true
+    },
+    {
+      "failed_request_id": 5779,
+      "label": "conditions-regression-v1/retained_fresh_nightgarden/grounded_linear/0",
+      "reason": "HTTP503",
+      "status": "succeeded; no further retry",
+      "answer_regenerated": false,
+      "unknown_usage_bound_usd": 0.36916,
+      "retry_request_id": 5844,
+      "retry_usage_usd": 0.0187308,
+      "identical_request_verified": true
+    },
+    {
+      "failed_request_id": 6207,
+      "label": "conditions-regression-v1/retained_fresh_workshop/flat_tree/1",
+      "reason": "HTTP503",
+      "status": "succeeded; no further retry",
+      "answer_regenerated": false,
+      "unknown_usage_bound_usd": 0.3637744,
+      "retry_request_id": 6235,
+      "retry_usage_usd": 0.0129096,
+      "identical_request_verified": true
+    },
+    {
+      "failed_request_id": 6234,
+      "label": "conditions-regression-v1/retained_fresh_courtyard/branch_tree/0",
+      "reason": "HTTP503",
+      "status": "succeeded; no further retry",
+      "answer_regenerated": false,
+      "unknown_usage_bound_usd": 0.37586559999999997,
+      "retry_request_id": 6236,
+      "retry_usage_usd": 0.020983599999999998,
+      "identical_request_verified": true
+    }
+  ],
+  "completed_utc": "2026-10-03T20:41:42.691446+00:00",
+  "generated_answers": 64,
+  "judged_answers": 64,
+  "missing_judgments": [],
+  "summary": "conditions-regression-v1_summary.json",
+  "diagnostics": "conditions-regression-v1_diagnostics.json",
+  "review_diagnostics": "conditions-regression-v1_review_diagnostics.json",
+  "comparison": "conditions-regression-v1_comparison.json",
+  "cost_audit": "cost_audit_v6.json",
+  "source_and_cases_unchanged": true,
+  "final_cost": {
+    "requests": 973,
+    "generation_requests": 904,
+    "judge_requests": 69,
+    "known_usage_estimate_usd": 1.855536579999999,
+    "generation_usage_estimate_usd": 0.73957778,
+    "judging_usage_estimate_usd": 1.1159588,
+    "unknown_request_reservations_usd": 1.8528752000000002,
+    "additional_accounted_exposure_usd": 9.27502152,
+    "cumulative_requests": 6316,
+    "cumulative_known_usage_usd": 9.462349890000015,
+    "cumulative_accounted_exposure_usd": 42.21521155999996,
+    "remaining_guarded_budget_usd": 157.78478844000006,
+    "pending": 0,
+    "audit_issues": []
+  },
+  "conclusion": "Condition checklist means improved for tree modes, but all before/after quality intervals include zero; no reliable overall improvement. Error flags worsen in several arms. Grounded Tree has a severe planning-type compatibility regression (15/16 final fallbacks). Extraction recall and review applicability remain unreliable."
 }

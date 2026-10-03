@@ -161,8 +161,14 @@ keeping a substantive response. Grounded linear modes use their source limits;
 tree modes also use typed conditions from prior turns. This adds no model stage,
 but larger prompts and feedback can increase tokens and latency. Local checks verify
 attribution and quoted evidence, not semantic correctness or extraction completeness.
-These changes have offline regression coverage only; prior frozen benchmark scores
-do not measure this revision. See [the process log](../process.md).
+A same-case model regression now has 64 answers and judgments: complete-case Branch
+checklist coverage changes from 57.1% to 64.3%, with a difference interval crossing
+zero, and no established overall quality gain. Grounded Tree has a known planning
+compatibility regression: the model sometimes returns new condition types in the
+older limit schema, causing 15/16 final plans to fall back in this run. Semantic
+extraction and review applicability also remain imperfect. Historical scores remain
+bound to their frozen versions; see [the process log](../process.md) for settings,
+failures, costs and the before/after comparison.
 
 ## Run locally
 

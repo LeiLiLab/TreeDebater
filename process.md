@@ -45,15 +45,15 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 | Tree Plan (`tree_plan`) | 可纠错论证树驱动流式反驳笔记 | 同时组织论证关系和提前准备；树与笔记维护较贵 | 第一轮：12 × 2，Gemma 评分；第三轮：8 × 1，GPT-5.6，通过率 50.0%，模拟文本等待 17.28s |
 | Adaptive Tree (`adaptive_tree`) | Tree Plan 加模型门控，按需更新树和笔记 | 尝试减少更新；流程更复杂且有门控开销 | 第一轮：12 × 2，Gemma 评分 |
 | Structured Linear (`structured_linear`) | 将当前观点、原文引用、范围/例外和反驳假设分开保存 | 可检查来源；结构合法不保证语义正确，本轮通过率下降 | 第二轮：10 × 1，GPT-5.6 评分；另有旧案例开发诊断 |
-| Grounded Linear (`grounded_linear`) | 结构化状态加针对目标、例外和事实依据的反馈/修订 | 不新增反馈调用；减少无依据断言，但条件覆盖与语义可靠性仍有限 | 第二轮 10 × 1；第三轮 8 × 1，通过率 66.7%；第四轮 8 × 2，通过率 39.6%，等待 8.79s，均 GPT-5.6；第五轮保留树对照：16/16 评分，条件检查 45.8%，模拟等待 10.20s |
+| Grounded Linear (`grounded_linear`) | 结构化状态加针对目标、例外和事实依据的反馈/修订 | 不新增反馈调用；减少无依据断言，但条件覆盖与语义可靠性仍有限 | 第二轮 10 × 1；第三轮 8 × 1，通过率 66.7%；第四轮 8 × 2，通过率 39.6%，等待 8.79s，均 GPT-5.6；第五轮保留树对照：16/16 评分，条件检查 45.8%，模拟等待 10.20s；第六轮同案例回归：45.8%→45.8%，16/16 评分。 |
 | Light Linear (`light_linear`) | Grounded Linear 加精确重复跳过、未完句缓冲、选择性门控 | 减少无效工作；调度的独立收益仍不确定 | 第二轮：10 × 1；第三轮：8 × 1，均 GPT-5.6；第三轮通过率 70.8%，等待 10.52s；另有旧案例单次真实 ASR/TTS 对照 |
-| Grounded Tree (`grounded_tree`) | 反驳绑定有效节点与原文，利用攻击关系和未回应目标排序；第四轮修复冲突更新、节点归属和回应关系 | 修复后绑定更可靠；仍付出建树成本，提取正确性和最终条件覆盖不由绑定保证 | 第三轮 8 × 1，通过率 62.5%，最终回退 3/8；第四轮 8 × 2，通过率 47.9%，等待 10.20s，最终回退 1/16，均 GPT-5.6；不同案例不能作修复前后质量比较；第五轮：16/16 评分，43.8%，13.19s |
+| Grounded Tree (`grounded_tree`) | 反驳绑定有效节点与原文，利用攻击关系和未回应目标排序；第四轮修复冲突更新、节点归属和回应关系 | 修复后绑定更可靠；仍付出建树成本，提取正确性和最终条件覆盖不由绑定保证 | 第三轮 8 × 1，通过率 62.5%，最终回退 3/8；第四轮 8 × 2，通过率 47.9%，等待 10.20s，最终回退 1/16，均 GPT-5.6；不同案例不能作修复前后质量比较；第五轮：16/16 评分，43.8%，13.19s；第六轮：43.8%→52.1%，但最终回退 15/16；新旧条件类型冲突需修复。 |
 | Light Tree (`light_tree`) | Grounded Tree 加重复跳过、未完句缓冲与选择性门控，结束时强制处理积压 | 本轮调用从 Grounded Tree 的 14.0 降至 13.25；延迟未进一步下降，质量仍受提取与条件覆盖限制 | 第三轮：8 × 1，GPT-5.6，通过率 62.5%，等待 11.96s；7 次中间状态回退，2/8 最终回退 |
-| Flat Tree (`flat_tree`) | 修复后的同一树更新与节点来源；索引式规划和限定条件账本，但规划/输出移除祖先、回应边和结构排序 | 隔离显式关系指导；仍可从发言推断关系、支付建树成本，索引格式仍会失败 | 第四轮 8 × 2，GPT-5.6，通过率 41.7%，等待 9.53s，最终回退 4/16；第五轮：16/16 评分，56.3%，10.96s |
-| Branch Tree (`branch_tree`) | 在同一来源机制上使用质疑—回应路径、已有回应、同一质疑的其他回应与让步边 | 关系直接参与下一步反驳；上下文和成本增加，最终仍会遗漏限定条件；对 Flat 的独立增益未证实 | 第四轮 8 × 2，GPT-5.6，通过率 43.8%，等待 10.62s，最终回退 3/16；相对 Flat +2.1 个百分点，95% 区间跨零；第五轮：15/16 评分（1 条 503 耗尽重试），55.6%，12.43s；与线性基线的完整案例区间跨零 |
+| Flat Tree (`flat_tree`) | 修复后的同一树更新与节点来源；索引式规划和限定条件账本，但规划/输出移除祖先、回应边和结构排序 | 隔离显式关系指导；仍可从发言推断关系、支付建树成本，索引格式仍会失败 | 第四轮 8 × 2，GPT-5.6，通过率 41.7%，等待 9.53s，最终回退 4/16；第五轮：16/16 评分，56.3%，10.96s；第六轮：56.3%→66.7%，最终回退 7/16；错误标记增加。 |
+| Branch Tree (`branch_tree`) | 在同一来源机制上使用质疑—回应路径、已有回应、同一质疑的其他回应与让步边 | 关系直接参与下一步反驳；上下文和成本增加，最终仍会遗漏限定条件；对 Flat 的独立增益未证实 | 第四轮 8 × 2，GPT-5.6，通过率 43.8%，等待 10.62s，最终回退 3/16；相对 Flat +2.1 个百分点，95% 区间跨零；第五轮：15/16 评分（1 条 503 耗尽重试），55.6%，12.43s；与线性基线的完整案例区间跨零；第六轮完整 7 案例配对：57.1%→64.3%，差值 95% 区间 [-11.9,+23.8] 个百分点；整体质量未可靠提高。 |
 | 完整保留树 + 规则选择（现有纠错树模式的新实现） | 撤回只标记，修改新增版本；旧节点与回应链保留；生成按当前性、最近更新、回应情况选择有限子图 | 来源/版本审计通过；限定条件列表和最终回答仍会遗漏信息，节点上限不等于 token 上限 | 第五轮 8 个新案例 × 2 次 × 5 配置：80 回答、79 评分；成功绑定树的 Branch 子集覆盖率 47.2%，整体优势未确立 |
 | Branch 宽视图（同一模式的参数消融） | 相同保留历史和当前性规则，节点上限从 8+16 放宽到 128+256，仍最多规划 3 个主张 | 本轮未截断当前视图；并非旧代码或无限长度生成，另行抽取的图存在差异 | 第五轮：16/16 评分，47.9%，12.43s；默认 Branch 的完整案例均分较高，但不足以归因于节点裁剪 |
-| 主张条件提取 + 条件保留检查（现有模式改进） | 既有提取调用返回归属主张的范围/时间/例外/前提/让步与来源；既有反馈逐条检查、最终修订读取当前条件 | 不增加模型阶段；增加提示/输出长度，模型仍可能漏提或误判；原文归属校验不保证语义正确 | 用户要求先做前两项；已实现，离线回归验证；本次未启动付费评测，旧分数不代表本版本 |
+| 主张条件提取 + 条件保留检查（现有模式改进） | 提取范围/时间/例外/前提/让步与原文归属；既有反馈逐条检查，最终修订读取当前条件 | 生成侧调用 904→904；输入输出变长；提取漏项、误判无关和无依据断言仍在，Grounded Tree 类型兼容出现回归 | 第六轮 64 回答/64 评分；三个树模式清单均分上升，但所有前后差值区间跨零，不能认定整体质量稳定提升 |
 
 第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
 各轮成绩属于当时冻结的代码。最新的“保留树 + 规则选择”修改现有纠错树模式，不增加新的模式名；以前评测采用的整条分支归档移除行为保留在历史提交中。
@@ -62,7 +62,7 @@ Evaluate targeted rebuttal quality, final-condition correctness, claim coverage,
 
 ## Budget and accounting
 
-**Latest completed evaluation:** retained-tree comparison finished with **80 generated answers, 79 judgments**; one judgment remains unavailable after its allowed retry also returned HTTP 503. Approved cumulative cap remains **USD200**; cumulative known provider-usage estimate **$7.60681331**, active guarded occupancy **$32.94019004**, available **$167.05980996**, zero pending requests. Historical reservations total **$621.08684240**, not current occupancy. This round adds **$2.26738128 known usage** and retains **$0.75634240** for the two requests with unknown usage. The earlier USD320 proposal remains withdrawn.
+**Latest completed evaluation:** condition-retention regression finished with **64 generated answers and 64 judgments**, compared with the frozen pre-change run on the same eight cases. Tree-mode checklist means rose, but all before/after intervals include zero and several error flags worsened; Grounded Tree fell back in 15/16 answers. New known usage **$1.85553658**; five HTTP 503 requests retain **$1.85287520** in conservative unknown-usage reservations, and their one unchanged retry each succeeded. Cumulative **6,316 requests**, **$9.46234989 known usage**, **$42.21521156 guarded occupancy**, **$157.78478844 headroom** under the unchanged **$200** cap; zero pending. Historical reservations total **$765.38193600**, not current occupancy. Earlier frozen reports remain unchanged.
 
 - Approved cumulative cap: **USD 200.00**.
 - At creation of this log: **0 paid inference requests launched by this task; attributable experiment cost USD 0.00**. Existing unrelated proxy traffic is excluded.
@@ -1167,3 +1167,143 @@ judge retry after diagnosis. Stop these workers on budget/accounting failure.
 
 Manifest: `experiments/incremental_planning/manifest_v6.json`. Preflight: unchanged
 source already passed **314 tests +42 subtests**, compilation and diff checks.
+
+
+## Condition-retention quality regression — completed results (2026-10-03)
+
+Completed **64/64 generated answers and 64/64 judgments** on frozen `d0cc148`
+inference source. Both workers exited and have completion markers. All source,
+case, prompt-setting and selected-version checks passed. Results are a regression
+on eight known authored cases, **not fresh held-out evidence**. No inference code
+or rubric changed during the run, and no answer was regenerated.
+
+### Before/after quality on complete paired cases
+
+Average the two repeats within each case, then bootstrap cases. Branch excludes
+courtyard because the old run has one exhausted missing judgment: seven independent
+cases/14 answers per version. Other modes use eight cases/16 answers per version.
+Intervals are unadjusted for multiple comparisons. All checklist change intervals
+include zero; the small set does not establish a stable before/after gain.
+
+| Mode | Cases | Checklist before → after | Change, percentage points [95% interval] | Strength before → after (1–5) |
+| --- | --- | --- | --- | --- |
+| Grounded Linear | 8 | 45.8% → 45.8% | 0.0 [-8.3, +8.3] | 3.44 → 3.56 |
+| Grounded Tree | 8 | 43.8% → 52.1% | +8.3 [-6.3, +20.8] | 3.50 → 3.63 |
+| Flat Tree | 8 | 56.3% → 66.7% | +10.4 [-6.3, +25.0] | 3.81 → 3.56 |
+| Branch Tree | 7 | 57.1% → 64.3% | +7.1 [-11.9, +23.8] | 3.43 → 3.36 |
+
+All-judged descriptive Branch scores are **55.6% (15 old) → 62.5% (16 new)**;
+these are not the complete-case paired rates above. Letting the one unavailable
+old score range anywhere from zero to one gives a full-16-answer old mean between
+52.1% and 58.3%, hence a descriptive gain of **4.2–10.4 points**. These are logical
+missing-score bounds, not confidence intervals or replacements for the missing
+verdict. New Branch exceeds new Grounded Linear by **16.7 points [2.1,31.3]** on
+this checklist, but differs from new Flat by **−4.2 points [−14.6,4.2]**. This does
+not isolate the value of explicit tree edges or demonstrate overall debate quality.
+
+Error flags did not improve consistently. On complete paired cases, Grounded Tree's
+unsupported-fact flag rises **31.3% → 75.0%**, and Flat's strawman flag rises
+**12.5% → 43.8%**. Branch goes **35.7% → 42.9%** for strawman and **50.0% → 57.1%**
+for unsupported facts. These are automated flags, not adjudicated error rates;
+spot checks below both confirm concrete problems and expose judge inconsistency.
+No mode shows a reliable before/after increase in rebuttal strength.
+
+### What the data flow audit shows
+
+- **No added generation-side requests:** exactly **904 before and 904 after**,
+  including extraction, preparation, drafting, audience feedback, final revision
+  and own-speech analysis. Each new answer has one condition-review request and
+  one final-revision request. New generation usage is **$0.73957778**, versus
+  **$0.63565555** before, reflecting larger prompts/output despite equal calls.
+- **Review structure succeeds; semantics remain weak:** all **64 reviews** parse
+  as the requested JSON, with no truncated outputs. Across **361 condition rows**,
+  the validated model statuses are 142 preserved, 135 not applicable, 57 missing,
+  2 contradicted and 25 unchecked. Eight unknown review IDs were rejected. Statuses
+  are model opinions with locally checked evidence, not confirmed applicability
+  or final correctness. The 135 not-applicable labels are not all proven wrong.
+- **Grounded Tree compatibility regressed:** **52/64 planning snapshots rejected**
+  (41 invalid-limit errors, eight source errors, two invalid targets, one quote
+  attribution error), and **15/16 final answers use fallback**, versus 3/16 before.
+  Actual responses copied new `timing` / `precondition` / `concession` categories
+  into the legacy `limits` schema, which accepts only scope/exception/withdrawal.
+  Calls 5363 and 5366 are concrete examples. This is a real protocol compatibility
+  problem even though strict validation prevents invalid state from being used.
+- **Flat:** 20/64 rejected snapshots and **7/16 final fallbacks**, versus 4/16 before.
+  Rejections were 12 excessive-list responses and eight invalid rebuttal indices.
+  **Branch:** 3/64 rejections and **0/16 final fallbacks**, versus 3/16 before.
+  All new Branch answers have bound targets; its score no longer mixes final raw
+  fallback answers, but that alone does not validate its semantic reasoning.
+- Tree source/owner/version audits report **zero integrity issues**. Eleven invalid
+  constraint entries were rejected in Grounded Tree (none in Flat/Branch). Semantic
+  extraction recall is still unproven by these attribution checks. Nodes omitted
+  by selection remain separate from conditions never recognized by extraction.
+
+### Concrete output and judge checks
+
+1. **Night garden, Branch repeat 0:** checklist rises **1/3 → 3/3**, preserving
+   four weeks, Friday/eight, named volunteers and the existing-time fallback.
+   Yet it asserts “a named volunteer is not a trained professional” without a
+   source and says complaints are recorded only after the trial, confusing the
+   timing of publication with recording. Strength falls 4→3 and both error flags
+   appear. Better condition coverage can coexist with worse reasoning.
+2. **Archive, Branch repeat 0:** “need separate costings” becomes an explicit
+   precondition and reaches the final answer; checklist rises **1/3 → 2/3**.
+   Repeat 1 still has that current claim and source in the stored tree, but its
+   `constraints` list is empty; the keyword fallback misses it and the answer
+   omits separate costings, staying at 1/3. This is inconsistent semantic extraction,
+   not deletion of the underlying node. Repeat 1 also drops “per session” when
+   compressing the two booked research places.
+3. **Equipment, Branch repeat 0:** scope, school-term duration, two-day loans and
+   allocation concession are in the ledger, but the audience marks them not
+   applicable. Final coverage remains 1/3, and the answer adds an unsupported
+   replacement-cost concern. A checklist cannot guarantee good applicability
+   judgments or repair unrelated invented assertions.
+4. **Parcel, Branch repeat 0:** new wording adds six weeks, optional and fee-free,
+   but the judge newly fails its home-delivery recognition for omitting “on request.”
+   The old answer also omitted that phrase and nevertheless passed that check.
+   The two answers both score 2/3 on different items. Preserve both verdicts and
+   flag inconsistent strictness rather than silently correcting the scores.
+
+The next fixes should address Grounded Tree's type/schema compatibility, the
+recognition of prerequisite claims, and the audience's relevance and factual
+judgments. They were **not patched during this frozen evaluation**. The two prior
+changes meet the no-extra-call objective, but their overall quality benefit is
+not established and the compatibility regression needs attention.
+
+### Timing, cost and completion
+
+All-generated mean simulated text-ready waits before→after: Grounded Linear
+**10.20→10.06s**, Grounded Tree **13.19→12.23s**, Flat **10.96→11.65s**, Branch
+**12.43→12.91s**. Branch's seven-case paired wait difference is −0.22s
+[−0.85,+0.46], not a reliable speedup. These measurements exclude ASR/TTS and live
+playback. Plans and speech length caps remain unchanged.
+
+New total **973 requests** = 904 generation-side +69 judge requests. Five HTTP 503
+judge failures (5419, 5771, 5779, 6207, 6234) each received exactly one unchanged
+request retry (5457, 5780, 5844, 6235, 6236). Request equality was verified; each
+retry succeeded. Original failure artifacts and their **$1.85287520** unknown-usage
+bound remain charged to the guard. No further retries remain.
+
+New known provider-usage estimate **$1.85553658** = $0.73957778 generation-side +
+$1.11595880 judging; **5,047,963 input /266,359 output tokens**. New guarded exposure
+**$9.27502152**. Cumulative **6,316 requests**, **$9.46234989 known usage**,
+**$42.21521156 guarded exposure**, **$157.78478844 remaining** under the unchanged
+**$200** cap, **zero pending requests**. The read-only audit verified all 6,316
+artifacts with zero issues; no settlement rewrite or budget increase. Costs remain
+provisional usage/rate estimates, not settled provider invoices.
+
+Artifacts: `manifest_v6.json`, `conditions-regression-v1_summary.json`,
+`conditions-regression-v1_diagnostics.json`, `conditions-regression-v1_review_diagnostics.json`,
+`conditions-regression-v1_comparison.json`, `cost_audit_v6.json`. All raw artifacts
+are retained under the shared run directory. Historical reports were not rerun
+against changed inference code. Offline report checks include source/data hashes,
+complete unique identities, paired arithmetic and whole-case exclusion for missing
+judgments, tree binding checks, Python compilation and `git diff --check`.
+
+```bash
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/summarize.py conditions-regression-v1
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/diagnose_branch_run.py conditions-regression-v1 --cases-file experiments/incremental_planning/cases_v5.json
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/diagnose_condition_review.py
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/compare_conditions.py
+PYTHONPATH=src /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/reconcile_budget.py --output experiments/incremental_planning/cost_audit_v6.json
+```
