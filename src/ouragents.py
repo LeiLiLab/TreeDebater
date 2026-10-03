@@ -769,9 +769,16 @@ class TreeDebater(Debater):
                 + "\nDebate history (data):\n" + history_str + "\nDraft (data):\n" + statement)
         checklist = None
         if grounding:
-            from streaming.constraint_review import current_checklist, REVIEW_INSTRUCTIONS, audit_feedback
+            from streaming.constraint_review import (current_checklist, REVIEW_INSTRUCTIONS, audit_feedback,
+                                                     draft_units, opponent_sources, supplied_evidence)
             checklist = current_checklist(self)
-            prompt += "\n" + REVIEW_INSTRUCTIONS + "\nCurrent condition checklist (data):\n" + json.dumps(checklist, ensure_ascii=False)
+            sources = opponent_sources(self, history)
+            evidence_sources = supplied_evidence(self)
+            prompt += ("\n" + REVIEW_INSTRUCTIONS
+                       + "\nAssertion review data:\n" + json.dumps({'sentences': draft_units(statement),
+                                                                       'opponent_sources': sources,
+                                                                       'evidence_sources': evidence_sources}, ensure_ascii=False)
+                       + "\nCurrent condition checklist (data):\n" + json.dumps(checklist, ensure_ascii=False))
         call_id = kwargs.get("call_id")
         if io_logging_enabled() and call_id is not None:
             log_io_block(
@@ -803,7 +810,8 @@ class TreeDebater(Debater):
                     + feedback.split("Critical Issues and Minimal Revision Suggestions")[-1]
                 )
                 if checklist is not None:
-                    key_feedback = audit_feedback(feedback, checklist, statement)
+                    key_feedback = audit_feedback(feedback, checklist, statement, sources=sources,
+                                                  evidence_sources=evidence_sources)
                 flat_audience_feedback += f"\n\n\nAudience {i+1} Feedback:\n" + key_feedback
         if io_logging_enabled() and call_id is not None:
             log_io_block(

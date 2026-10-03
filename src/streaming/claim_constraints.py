@@ -2,9 +2,9 @@
 import hashlib
 import json
 
-from .grounding import normalize
+from .grounding import normalize, LIMIT_KINDS
 
-KINDS = ('scope', 'timing', 'exception', 'precondition', 'concession')
+KINDS = tuple(kind for kind in LIMIT_KINDS if kind != 'withdrawal')
 
 
 def validate_constraints(items, content, side, predecessor=None):
@@ -97,6 +97,24 @@ def constraint_ledger(targets, side=None):
     return ledger
 
 
+def source_candidates(targets, side=None):
+    """Keep unclassified source material visible when semantic extraction omits it.
+
+    These are review candidates, not asserted condition types. No keyword filter
+    may discard an entire prerequisite claim just because constraints was empty.
+    """
+    result = []
+    for node_id, node in sorted(source_nodes(targets, side).items()):
+        if node.get('constraints'):
+            continue
+        for quote in dict.fromkeys(node.get('sources', [])):
+            identity = json.dumps([node_id, quote])
+            result.append({'constraint_id': 'source-' + hashlib.sha256(identity.encode()).hexdigest()[:16],
+                           'kind': 'source_candidate', 'quote': quote, 'source_node_id': node_id,
+                           'node_id': node_id, 'claim': node['claim']})
+    return result
+
+
 CONSTRAINT_EXTRACTION = """
 CLAIM-OWNED QUALIFICATIONS: For every statement return constraints (use [] if none).
 Extract each material scope, timing, exception, precondition or concession as
@@ -105,7 +123,10 @@ content; include the necessary source sentences in content. Use source_node_id=n
 for current speech. Keep numbers, units, negation, alternatives and conditional
 fallbacks together; e.g. Friday until eight, or existing closing time if no volunteer.
 Recognize meaning, not particular keywords: 'need separate costings' is a
-precondition even without 'must' or 'require'. A concession is an accepted condition,
+precondition even without 'must' or 'require'. A statement whose whole claim IS a
+prerequisite must also put that prerequisite in constraints; do not leave [] merely
+because claim already says it. Include the subject in the quote so a shortened
+'need separate costings' fragment cannot lose what needs costing. A concession is an accepted condition,
 not proof it has been implemented. Attach each condition only to the claim it
 actually qualifies. Keep independent proposals separate rather than giving them
 one blended scope. Preserve the condition in claim/arguments as well when needed

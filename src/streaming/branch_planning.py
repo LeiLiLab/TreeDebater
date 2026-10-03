@@ -8,6 +8,7 @@ from .claim_constraints import source_nodes, constraint_ledger
 
 
 MOVES = ('challenge_support', 'challenge_inference', 'answer_objection', 'concede_then_distinguish')
+# Historical marker vocabulary kept for offline diagnostics, not a recall filter.
 LIMIT_MARKERS = re.compile(r'\b(?:only|not|no|except|unless|before|after|until|during|within|remain|retain|withdraw|replace|exempt|trial|pilot|monthly|quarterly|annual|year|month|week|day|hour|must|requires?|conditional|subject to|accept|agree|concede|commit|publish)\b|\d|例外|除非|仅|不|撤回', re.I)
 
 
@@ -28,7 +29,7 @@ def planning_material(targets, trees, opponent_side, *, topology):
         # Complete source sentences, never a guessed paraphrase. May overinclude
         # factual context: these are candidate boundaries, not entailment labels.
         for sentence in re.split(r'(?<=[.!?。])\s+', quote):
-            if LIMIT_MARKERS.search(sentence) and normalize(sentence) not in {normalize(q) for q in source_limits}:
+            if sentence.strip() and normalize(sentence) not in {normalize(q) for q in source_limits}:
                 source_limits.append(sentence)
     nodes = source_nodes(targets, opponent_side)
     ledger = constraint_ledger(targets, opponent_side)
@@ -39,7 +40,8 @@ def planning_material(targets, trees, opponent_side, *, topology):
                 if normalize(condition['quote']) not in {normalize(q) for q in source_limits}:
                     source_limits.append(condition['quote'])
         else:
-            # Compatibility for trees extracted before typed qualifications.
+            # Unclassified source candidates: an empty typed list does not
+            # establish that the claim has no prerequisite or qualification.
             for quote in node['sources']:
                 add_quote(quote)
     withdrawals=[]

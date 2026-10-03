@@ -5,6 +5,9 @@ import json
 import re
 
 
+LIMIT_KINDS = ('scope', 'timing', 'exception', 'precondition', 'concession', 'withdrawal')
+
+
 def normalize(text):
     return " ".join(text.split())
 
@@ -25,7 +28,12 @@ def parse_state(raw, prefix, *, tree_targets=None):
     linked = None
     if tree_targets is not None:
         linked = {n["node_id"]: n for n in tree_targets}
-        heard = normalize(prefix + " " + " ".join(q for n in tree_targets for q in n["sources"]))
+        from .claim_constraints import source_nodes
+        side = next((n.get("side") for n in tree_targets if n.get("side")), None)
+        # Limits may come from verified opponent context already in the bounded
+        # view. Claim quotations remain restricted to their actual target below.
+        nodes = source_nodes(tree_targets, side)
+        heard = normalize(prefix + " " + " ".join(q for n in nodes.values() for q in n["sources"]))
         seen = set()
         for item in data["claims"]:
             if (not isinstance(item, dict) or set(item) != {"node_id", "quote"}
@@ -54,7 +62,7 @@ def parse_state(raw, prefix, *, tree_targets=None):
         # only after the same verbatim-source validation as every other limit.
         if item.get("kind") == "phase-in":
             item["kind"] = "scope"
-        if set(item) != {"kind", "quote"} or item["kind"] not in ("scope", "exception", "withdrawal"):
+        if set(item) != {"kind", "quote"} or item["kind"] not in LIMIT_KINDS:
             raise ValueError("Invalid limit")
     for item in data["rebuttals"]:
         if not isinstance(item, dict) or set(item) != {"target", "point", "assumptions"}:
@@ -92,10 +100,11 @@ def state_prompt(context, chunks, previous):
         "A claim's quote is attribution, not proof of truth. Limits constrain all applicable targets. "
         "Include the CURRENT timing, phase-in, coverage and exceptions in limits before spending "
         "space on rebuttals; choose fewer rebuttals if necessary. Do not lose a newly stated timeline. "
-        "Use kind scope for timing and phase-in limits. "
+        "Use the same kinds as extracted conditions: scope, timing, exception, precondition, concession; "
+        "withdrawal marks a withdrawn position. Quotes remain mandatory for every kind. "
         "Return only JSON with exactly these keys: "
         '{"claims":[{"text":"current claim","quote":"verbatim source"}],'
-        '"limits":[{"kind":"scope|exception|withdrawal","quote":"verbatim source"}],'
+        '"limits":[{"kind":"scope|timing|exception|precondition|concession|withdrawal","quote":"verbatim source"}],'
         '"rebuttals":[{"target":0,"point":"possible grounded response","assumptions":["unverified premise"]}]}. '
         "Use at most 3 claims, 6 limits and 2 rebuttals. Prefer 1-2 strong responses; keep JSON concise, "
         "ideally under 500 tokens. Preserve essential limits before adding rhetoric.\n"
@@ -141,7 +150,11 @@ GROUNDING_CHECK = (
     "invent review frequency, implementation delays or outcomes. Acknowledge a relevant concession "
     "explicitly as something the opponent permits. If an existing exception already covers our "
     "concern, explain a genuine remaining execution question or discard that attack. "
-    "briefly, then explain a remaining substantive disagreement. When shortening, remove generic "
+    "A missing specification is not proof that a safeguard, skill or funding does not exist. "
+    "Distinguish a commitment from completed work without claiming failure. Preserve which action "
+    "a time limit modifies: later publication does not imply later recording or implementation. "
+    "Choose one concrete unresolved issue and explain why it matters conditionally. Do not introduce "
+    "a new factual premise to make the criticism sound stronger. When shortening, remove generic "
     "roadmaps and repeated rhetoric before dropping qualifications. Do not mechanically enumerate "
     "every condition if unrelated to the selected rebuttal."
 )

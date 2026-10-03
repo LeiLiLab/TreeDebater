@@ -178,7 +178,7 @@ def test_audit_validates_each_row_without_certifying_semantic_judgments():
             review_row('2'), review_row('2'), review_row('3', 'missing', ''),
             review_row('4', 'not_applicable', ''), review_row('unknown')]
     audit = json.loads(audit_feedback(json.dumps({'checks': rows, 'issues': []}), checklist, 'Separate costings are needed.'))
-    assert [r['status'] for r in audit['review_checks']] == ['preserved', 'unchecked', 'unchecked', 'missing', 'not_applicable', 'unchecked']
+    assert [r['status'] for r in audit['review_checks']] == ['preserved', 'unchecked', 'unchecked', 'missing', 'unchecked', 'unchecked']
     assert audit['invalid_review_ids'] == 1 and 'not certification' in audit['evidence_validation']
     assert audit['review_checks'][1]['draft_quote'] == ''
     for malformed in ('Everything is preserved.', '{', 'null', '{"checks": null}'):

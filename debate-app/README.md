@@ -148,14 +148,19 @@ an old condition only when extraction explicitly references that exact predecess
 Replaced conditions stay on the historical version. Old snapshots without the field
 still load. Selected views and grounded plans retain these conditions independently
 of the model's compact limit choices. Branch and Flat receive equal condition ledgers;
-keyword scanning remains a compatibility fallback for nodes without typed conditions.
+all selected source sentences remain review candidates for nodes without typed
+conditions, including prerequisite claims without a marker keyword.
 Condition changes invalidate cached plans, and raw-prefix fallback still supplies
 conditions from the current selected view.
 
 Grounded modes reuse the existing audience feedback and final revision calls for
-condition retention. Feedback checks each condition against a draft excerpt and
+condition retention and sentence-level premise review. Feedback checks each condition against a draft excerpt and
 reports preserved, missing, contradicted, not applicable, or uncertain. Invalid,
 duplicate, or absent checks become `unchecked`; malformed feedback adds no retry.
+An unrelated-proposal exemption requires draft/source quotations and cannot dismiss
+a planned target. Every draft sentence needs an assertion review; supported claims
+need verbatim opponent or provided evidence excerpts. These checks establish
+attribution, not entailment.
 The final revision receives a fresh checklist to repair relevant omissions while
 keeping a substantive response. Grounded linear modes use their source limits;
 tree modes also use typed conditions from prior turns. This adds no model stage,
@@ -163,10 +168,13 @@ but larger prompts and feedback can increase tokens and latency. Local checks ve
 attribution and quoted evidence, not semantic correctness or extraction completeness.
 A same-case model regression now has 64 answers and judgments: complete-case Branch
 checklist coverage changes from 57.1% to 64.3%, with a difference interval crossing
-zero, and no established overall quality gain. Grounded Tree has a known planning
+zero, and no established overall quality gain. That frozen Grounded Tree version had a planning
 compatibility regression: the model sometimes returns new condition types in the
 older limit schema, causing 15/16 final plans to fall back in this run. Semantic
-extraction and review applicability also remain imperfect. Historical scores remain
+extraction and review applicability also remain imperfect. The current repair unifies
+the six planning limit types, strengthens applicability/premise review and preserves
+unclassified source candidates. Offline replay accepts 54/64 old plans versus 12/64;
+335 tests and 42 subtests pass. Same-case model verification is pending. Historical scores remain
 bound to their frozen versions; see [the process log](../process.md) for settings,
 failures, costs and the before/after comparison.
 

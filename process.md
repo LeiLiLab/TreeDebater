@@ -55,6 +55,8 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 | Branch 宽视图（同一模式的参数消融） | 相同保留历史和当前性规则，节点上限从 8+16 放宽到 128+256，仍最多规划 3 个主张 | 本轮未截断当前视图；并非旧代码或无限长度生成，另行抽取的图存在差异 | 第五轮：16/16 评分，47.9%，12.43s；默认 Branch 的完整案例均分较高，但不足以归因于节点裁剪 |
 | 主张条件提取 + 条件保留检查（现有模式改进） | 提取范围/时间/例外/前提/让步与原文归属；既有反馈逐条检查，最终修订读取当前条件 | 生成侧调用 904→904；输入输出变长；提取漏项、误判无关和无依据断言仍在，Grounded Tree 类型兼容出现回归 | 第六轮 64 回答/64 评分；三个树模式清单均分上升，但所有前后差值区间跨零，不能认定整体质量稳定提升 |
 
+| 条件协议与事实审查修复（现有模式改进） | 统一六种规划限定类型；未分类原文进入候选；无关豁免需证据；既有反馈逐句审查事实前提 | 不增加模型阶段；语义判断仍可能出错，候选与逐句反馈增加 token 压力 | 离线旧计划接受 12/64→54/64，335 测试及 42 子测试通过；同案例模型复测待运行 |
+
 第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
 各轮成绩属于当时冻结的代码。最新的“保留树 + 规则选择”修改现有纠错树模式，不增加新的模式名；以前评测采用的整条分支归档移除行为保留在历史提交中。
 
@@ -1307,3 +1309,30 @@ PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/pyth
 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/compare_conditions.py
 PYTHONPATH=src /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/reconcile_budget.py --output experiments/incremental_planning/cost_audit_v6.json
 ```
+
+## 2026-10-03 — repair condition protocol and review loopholes
+
+User requested **修复** following the sixth-round regression. Planning now accepts
+`scope/timing/exception/precondition/concession/withdrawal` consistently. Conditions
+may cite verified selected opponent context, while target claim quotations still
+require their own node sources. Extraction asks for complete prerequisite claims.
+Selected nodes without typed conditions expose all source sentences as unclassified
+candidates, preserving separate-costing prerequisites without a keyword test.
+
+The existing audience call checks every indexed draft sentence, including factual
+premises within hedged claims. Supported assertions require actual opponent or
+provided evidence excerpts; our earlier assertions are not evidence. Applicability
+exemptions require exact draft/source quotes for an independent proposal and cannot
+remove a planned-target condition. Invalid/missing/duplicate evidence becomes
+unchecked. The existing revision call prioritizes unsupported premises, accurate
+time modifiers and the full bounds of the proposal being challenged. No new model
+stage, automatic retries, tree-view cap or generation-token changes. Local checks
+verify attribution and coverage only, not truth or semantic entailment.
+
+Validation: **335 tests +42 subtests passed**, one existing Pydantic warning, Python
+compilation and diff checks passed. Offline parser replay of all 64 old Grounded Tree
+snapshots accepts **54 instead of 12**, recovering 42 with no previously valid plan
+rejected. This is a parser counterfactual on stored responses, not new quality
+evidence. `condition-repair-parser-replay.json` preserves all failures and hashes.
+No paid calls during implementation; cumulative known usage $9.46234989, guarded
+exposure $42.21521156 under the unchanged $200 authorization.

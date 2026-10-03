@@ -1,4 +1,5 @@
 """Compare frozen before/after pipelines on the same cases; no model calls."""
+import argparse
 from collections import defaultdict
 import json
 from pathlib import Path
@@ -47,15 +48,15 @@ def paired(old, new, metadata, metric):
             'difference_95ci':interval([c['difference'] for c in cases]) if cases else None}
 
 
-def compare():
-    before, old = load(BASELINE)
-    after, new = load(CANDIDATE)
+def compare(baseline=BASELINE, candidate=CANDIDATE, baseline_manifest="manifest_v5.json", candidate_manifest="manifest_v6.json"):
+    before, old = load(baseline)
+    after, new = load(candidate)
     bm, am = before['metadata'], after['metadata']
     diffs = {k for k in set(bm)|set(am) if bm.get(k) != am.get(k)}
     if diffs != {'source_digest'}:
         raise ValueError('Unexpected settings differences: '+str(diffs))
-    frozen = json.loads((ROOT/'manifest_v6.json').read_text())
-    original = json.loads((ROOT/'manifest_v5.json').read_text())
+    frozen = json.loads((ROOT/candidate_manifest).read_text())
+    original = json.loads((ROOT/baseline_manifest).read_text())
     if am['source_digest'] != frozen['source_digest'] or bm['source_digest'] != original['source_digest']:
         raise ValueError('Source digest mismatch')
     if am['cases_digest'] != frozen['cases_digest']:
@@ -90,7 +91,7 @@ def compare():
         for kind in sorted({r['kind'] for r in a+b}):
             subgroups.append(dict(mode=mode,kind=kind,comparison=paired(
                 [r for r in a if r['kind']==kind], [r for r in b if r['kind']==kind], am,checklist)))
-    report = dict(baseline_run=BASELINE,candidate_run=CANDIDATE,metadata_before=bm,metadata_after=am,
+    report = dict(baseline_run=baseline,candidate_run=candidate,metadata_before=bm,metadata_after=am,
         primary_comparison='branch_tree/checklist_rate',paired_before_after=comparisons,
         descriptive=descriptive,subgroups=subgroups,missing_sensitivity=missing_sensitivity,missing_before=before['missing'],missing_after=after['missing'],
         within_new=after['component_comparisons'],cost_new=after['usage_including_judging'],
@@ -99,7 +100,7 @@ def compare():
             'Paired estimates drop a whole case if either version lacks a repeat judgment; descriptive rows use all judged answers.',
             'Case-bootstrap intervals average repeats first and are not corrected for multiple comparisons.',
             'Generation and judging are fresh samples; no direct causal isolation of extraction versus review.'])
-    output=ROOT/'conditions-regression-v1_comparison.json'
+    output=ROOT/f'{candidate}_comparison.json'
     output.write_text(json.dumps(report,indent=2)+'\n')
     for mode,result in comparisons.items():
         print(mode,{k:{x:y for x,y in v.items() if x!='cases'} for k,v in result.items()})
@@ -107,4 +108,9 @@ def compare():
 
 
 if __name__=='__main__':
-    compare()
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--baseline', default=BASELINE)
+    parser.add_argument('--candidate', default=CANDIDATE)
+    parser.add_argument('--baseline-manifest', default='manifest_v5.json')
+    parser.add_argument('--candidate-manifest', default='manifest_v6.json')
+    compare(**vars(parser.parse_args()))

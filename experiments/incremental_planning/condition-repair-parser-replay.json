@@ -1,0 +1,398 @@
+{
+  "original_run": "conditions-regression-v1",
+  "paid_requests": 0,
+  "snapshots": 64,
+  "accepted_before": 12,
+  "accepted_after": 54,
+  "recovered": 42,
+  "results": [
+    {
+      "id": 5354,
+      "label": "conditions-regression-v1/retained_fresh_parcel/grounded_tree/1",
+      "before_error": null,
+      "after_error": null
+    },
+    {
+      "id": 5357,
+      "label": "conditions-regression-v1/retained_fresh_courtyard/grounded_tree/0",
+      "before_error": null,
+      "after_error": null
+    },
+    {
+      "id": 5359,
+      "label": "conditions-regression-v1/retained_fresh_parcel/grounded_tree/1",
+      "before_error": null,
+      "after_error": null
+    },
+    {
+      "id": 5362,
+      "label": "conditions-regression-v1/retained_fresh_courtyard/grounded_tree/0",
+      "before_error": null,
+      "after_error": null
+    },
+    {
+      "id": 5363,
+      "label": "conditions-regression-v1/retained_fresh_parcel/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5366,
+      "label": "conditions-regression-v1/retained_fresh_courtyard/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5367,
+      "label": "conditions-regression-v1/retained_fresh_parcel/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5370,
+      "label": "conditions-regression-v1/retained_fresh_courtyard/grounded_tree/0",
+      "before_error": "Claim must name a distinct active grounded tree node",
+      "after_error": "Claim must name a distinct active grounded tree node"
+    },
+    {
+      "id": 5422,
+      "label": "conditions-regression-v1/retained_fresh_visitor/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5424,
+      "label": "conditions-regression-v1/retained_fresh_visitor/grounded_tree/1",
+      "before_error": null,
+      "after_error": null
+    },
+    {
+      "id": 5426,
+      "label": "conditions-regression-v1/retained_fresh_visitor/grounded_tree/1",
+      "before_error": null,
+      "after_error": null
+    },
+    {
+      "id": 5428,
+      "label": "conditions-regression-v1/retained_fresh_visitor/grounded_tree/1",
+      "before_error": null,
+      "after_error": null
+    },
+    {
+      "id": 5437,
+      "label": "conditions-regression-v1/retained_fresh_waterstation/grounded_tree/1",
+      "before_error": null,
+      "after_error": null
+    },
+    {
+      "id": 5439,
+      "label": "conditions-regression-v1/retained_fresh_waterstation/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5441,
+      "label": "conditions-regression-v1/retained_fresh_waterstation/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5443,
+      "label": "conditions-regression-v1/retained_fresh_waterstation/grounded_tree/1",
+      "before_error": "Quote is not attributed to the selected tree node",
+      "after_error": "Quote is not attributed to the selected tree node"
+    },
+    {
+      "id": 5517,
+      "label": "conditions-regression-v1/retained_fresh_visitor/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5520,
+      "label": "conditions-regression-v1/retained_fresh_visitor/grounded_tree/0",
+      "before_error": "Source quote is not in the heard prefix",
+      "after_error": "Source quote is not in the heard prefix"
+    },
+    {
+      "id": 5522,
+      "label": "conditions-regression-v1/retained_fresh_visitor/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5525,
+      "label": "conditions-regression-v1/retained_fresh_visitor/grounded_tree/0",
+      "before_error": "Source quote is not in the heard prefix",
+      "after_error": "Source quote is not in the heard prefix"
+    },
+    {
+      "id": 5561,
+      "label": "conditions-regression-v1/retained_fresh_equipment/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5564,
+      "label": "conditions-regression-v1/retained_fresh_equipment/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5568,
+      "label": "conditions-regression-v1/retained_fresh_equipment/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5572,
+      "label": "conditions-regression-v1/retained_fresh_equipment/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5835,
+      "label": "conditions-regression-v1/retained_fresh_workshop/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5837,
+      "label": "conditions-regression-v1/retained_fresh_workshop/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5839,
+      "label": "conditions-regression-v1/retained_fresh_workshop/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5841,
+      "label": "conditions-regression-v1/retained_fresh_workshop/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5874,
+      "label": "conditions-regression-v1/retained_fresh_workshop/grounded_tree/1",
+      "before_error": null,
+      "after_error": null
+    },
+    {
+      "id": 5880,
+      "label": "conditions-regression-v1/retained_fresh_workshop/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5884,
+      "label": "conditions-regression-v1/retained_fresh_workshop/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5887,
+      "label": "conditions-regression-v1/retained_fresh_workshop/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5911,
+      "label": "conditions-regression-v1/retained_fresh_courtyard/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5915,
+      "label": "conditions-regression-v1/retained_fresh_courtyard/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5919,
+      "label": "conditions-regression-v1/retained_fresh_courtyard/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5924,
+      "label": "conditions-regression-v1/retained_fresh_courtyard/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5960,
+      "label": "conditions-regression-v1/retained_fresh_waterstation/grounded_tree/0",
+      "before_error": null,
+      "after_error": null
+    },
+    {
+      "id": 5963,
+      "label": "conditions-regression-v1/retained_fresh_waterstation/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5965,
+      "label": "conditions-regression-v1/retained_fresh_waterstation/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 5971,
+      "label": "conditions-regression-v1/retained_fresh_waterstation/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6037,
+      "label": "conditions-regression-v1/retained_fresh_archive/grounded_tree/1",
+      "before_error": null,
+      "after_error": null
+    },
+    {
+      "id": 6040,
+      "label": "conditions-regression-v1/retained_fresh_archive/grounded_tree/1",
+      "before_error": null,
+      "after_error": null
+    },
+    {
+      "id": 6044,
+      "label": "conditions-regression-v1/retained_fresh_archive/grounded_tree/1",
+      "before_error": "Claim must name a distinct active grounded tree node",
+      "after_error": "Claim must name a distinct active grounded tree node"
+    },
+    {
+      "id": 6048,
+      "label": "conditions-regression-v1/retained_fresh_archive/grounded_tree/1",
+      "before_error": "Source quote is not in the heard prefix",
+      "after_error": null
+    },
+    {
+      "id": 6083,
+      "label": "conditions-regression-v1/retained_fresh_nightgarden/grounded_tree/1",
+      "before_error": "Source quote is not in the heard prefix",
+      "after_error": "Source quote is not in the heard prefix"
+    },
+    {
+      "id": 6087,
+      "label": "conditions-regression-v1/retained_fresh_nightgarden/grounded_tree/1",
+      "before_error": "Source quote is not in the heard prefix",
+      "after_error": "Source quote is not in the heard prefix"
+    },
+    {
+      "id": 6091,
+      "label": "conditions-regression-v1/retained_fresh_nightgarden/grounded_tree/1",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6094,
+      "label": "conditions-regression-v1/retained_fresh_nightgarden/grounded_tree/1",
+      "before_error": "Source quote is not in the heard prefix",
+      "after_error": "Source quote is not in the heard prefix"
+    },
+    {
+      "id": 6107,
+      "label": "conditions-regression-v1/retained_fresh_archive/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6110,
+      "label": "conditions-regression-v1/retained_fresh_archive/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6115,
+      "label": "conditions-regression-v1/retained_fresh_archive/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6118,
+      "label": "conditions-regression-v1/retained_fresh_archive/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6159,
+      "label": "conditions-regression-v1/retained_fresh_equipment/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6162,
+      "label": "conditions-regression-v1/retained_fresh_equipment/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6165,
+      "label": "conditions-regression-v1/retained_fresh_equipment/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6168,
+      "label": "conditions-regression-v1/retained_fresh_equipment/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6181,
+      "label": "conditions-regression-v1/retained_fresh_parcel/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6183,
+      "label": "conditions-regression-v1/retained_fresh_parcel/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6186,
+      "label": "conditions-regression-v1/retained_fresh_parcel/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6192,
+      "label": "conditions-regression-v1/retained_fresh_parcel/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6281,
+      "label": "conditions-regression-v1/retained_fresh_nightgarden/grounded_tree/0",
+      "before_error": "Source quote is not in the heard prefix",
+      "after_error": "Source quote is not in the heard prefix"
+    },
+    {
+      "id": 6285,
+      "label": "conditions-regression-v1/retained_fresh_nightgarden/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6290,
+      "label": "conditions-regression-v1/retained_fresh_nightgarden/grounded_tree/0",
+      "before_error": "Invalid limit",
+      "after_error": null
+    },
+    {
+      "id": 6295,
+      "label": "conditions-regression-v1/retained_fresh_nightgarden/grounded_tree/0",
+      "before_error": "Source quote is not in the heard prefix",
+      "after_error": "Source quote is not in the heard prefix"
+    }
+  ],
+  "limitations": [
+    "Frozen completions only; changes in prompting and generation need fresh evaluation.",
+    "Accepted source attribution/shape does not validate semantic entailment."
+  ]
+}
