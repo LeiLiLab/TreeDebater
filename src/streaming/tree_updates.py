@@ -1,5 +1,6 @@
 """Speaker-owned, source-checked tree transactions; no similarity or model calls."""
 from .argument_revisions import claim_key, revise_claim
+from .claim_constraints import bind_constraints, exported_constraints, validate_constraints
 from .tree_grounding import attach_source
 from .grounding import normalize
 from .tree_selection import is_current, selection_status
@@ -9,6 +10,7 @@ def target_registry(trees):
     return [{"node_id": n.node_id, "side": n.side, "claim": n.claim,
              "parent_id": n.parent.node_id if n.parent.parent is not None else None,
              "selection_status": selection_status(n),
+             "constraints": exported_constraints(n),
              "superseded_by": getattr(n, 'superseded_by', None)}
             for tree in trees for n in tree.get_all_nodes() if n.parent is not None]
 
@@ -37,11 +39,18 @@ def apply_statements(trees, statements, transcript, side):
     def record(action, **fields):
         events.append(dict(action=action, side=side, **fields))
 
+    def attach_conditions(node, item):
+        conditions, errors = validate_constraints(item.get('constraints', []), item['content'], side)
+        bind_constraints(node, conditions)
+        for reason in errors:
+            record('REJECT_CONSTRAINT', node_id=node.node_id, reason=reason)
+
     def propose(item, reason=None):
         node = own.update_node('propose', new_claim=item['claim'], new_argument=list(item['arguments']), target=item['claim'])
         node.relation = 'propose'
         node.update_order = max(getattr(node, 'update_order', 0), update_order)
         attach_source(node, item['content'], transcript, side)
+        attach_conditions(node, item)
         if reason:
             record('UNLINKED_CLAIM', node_id=node.node_id, reason=reason)
         return node
@@ -94,9 +103,12 @@ def apply_statements(trees, statements, transcript, side):
                 record('INACTIVE_CORRECTION', requested=p['action'], node_id=node.node_id)
                 if p['action']=='revise':propose(item,'historical correction target')
                 continue
+            _, errors = validate_constraints(item.get('constraints', []), item['content'], side, node)
+            for reason in errors:
+                record('REJECT_CONSTRAINT', node_id=node.node_id, reason=reason)
             count=revise_claim(trees,target=node.claim,side=side,action=p['action'],claim=item['claim'],
                                arguments=item['arguments'],source=item['content'],target_id=node.node_id,
-                               update_order=update_order)
+                               update_order=update_order, constraints=item.get('constraints', []))
             record('APPLY_CORRECTION', requested=p['action'],node_id=node.node_id,matches=count)
             continue
         if not purposes:
@@ -111,6 +123,7 @@ def apply_statements(trees, statements, transcript, side):
                 for arg in item['arguments']:
                     if arg not in node.argument:node.argument.append(arg)
                 attach_source(node,item['content'],transcript,side)
+                attach_conditions(node, item)
                 node.update_order = max(getattr(node, 'update_order', 0), update_order)
                 record('REINFORCE',node_id=node.node_id)
             elif action in ('attack','rebut','concede') and node.side!=side:
@@ -125,6 +138,7 @@ def apply_statements(trees, statements, transcript, side):
                 child.relation={'rebut':'reply','attack':'attack','concede':'concede'}[action]
                 child.update_order = max(getattr(child, 'update_order', 0), update_order)
                 attach_source(child,item['content'],transcript,side)
+                attach_conditions(child, item)
                 if action!='concede':node.update_status('attacked')
                 child.update_status('proposed')
                 record('LINK_RESPONSE',node_id=child.node_id,target_id=node.node_id,relation=child.relation)

@@ -69,6 +69,10 @@ def parse_state(raw, prefix, *, tree_targets=None):
         if linked is not None:
             target = data["claims"][item["target"]]
             item.update(target_node_id=target["node_id"], target_version=target["target_version"])
+    if tree_targets is not None:
+        from .claim_constraints import constraint_ledger
+        side = next((n.get("side") for n in tree_targets if n.get("side")), None)
+        data["constraints"] = constraint_ledger(tree_targets, side)
     return data
 
 
@@ -117,7 +121,9 @@ def state_prompt(context, chunks, previous):
             "claims: omit any incompatible target and retain the new qualification in limits. If no "
             "faithful active target exists, return empty claims/rebuttals with relevant limits rather "
             "than inventing a tree link. Return only node_id and quote inside each claim; the server "
-            "supplies claim text and version. Rebuttals still use claim-list indices. "
+            "supplies claim text, version and claim-owned constraints. Read node constraints for all "
+            "relevant qualifications; do not transfer a condition to another claim. No extra output key "
+            "is needed for constraints. Rebuttals still use claim-list indices. "
         )
     return prompt + json.dumps({"context": context, "heard_prefix": chunks,
                                "previous_state": previous}, ensure_ascii=False)

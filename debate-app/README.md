@@ -141,6 +141,29 @@ These modes are opt-in; comparative results are recorded in `process.md`. The re
 tree/selection revision has offline regression coverage; earlier benchmark scores
 describe the earlier frozen implementation, not this revision.
 
+Correction-enabled extraction now stores typed `constraints` on the actual claim:
+`scope`, `timing`, `exception`, `precondition`, and `concession`, with verbatim source
+quotes. Conditions must belong to the statement excerpt; revising a claim carries
+an old condition only when extraction explicitly references that exact predecessor.
+Replaced conditions stay on the historical version. Old snapshots without the field
+still load. Selected views and grounded plans retain these conditions independently
+of the model's compact limit choices. Branch and Flat receive equal condition ledgers;
+keyword scanning remains a compatibility fallback for nodes without typed conditions.
+Condition changes invalidate cached plans, and raw-prefix fallback still supplies
+conditions from the current selected view.
+
+Grounded modes reuse the existing audience feedback and final revision calls for
+condition retention. Feedback checks each condition against a draft excerpt and
+reports preserved, missing, contradicted, not applicable, or uncertain. Invalid,
+duplicate, or absent checks become `unchecked`; malformed feedback adds no retry.
+The final revision receives a fresh checklist to repair relevant omissions while
+keeping a substantive response. Grounded linear modes use their source limits;
+tree modes also use typed conditions from prior turns. This adds no model stage,
+but larger prompts and feedback can increase tokens and latency. Local checks verify
+attribution and quoted evidence, not semantic correctness or extraction completeness.
+These changes have offline regression coverage only; prior frozen benchmark scores
+do not measure this revision. See [the process log](../process.md).
+
 ## Run locally
 
 Use Python **3.10 or newer**. For real debates, activate the same environment that runs

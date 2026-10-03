@@ -31,7 +31,14 @@ class LinkedPurposeItem(PurposeItem):
     action: Literal["propose", "rebut", "reinforce", "attack", "revise", "retract", "concede"]
 
 
+class ClaimConstraint(SchemaBase):
+    kind: Literal["scope", "timing", "exception", "precondition", "concession"]
+    quote: str
+    source_node_id: str | None = None
+
+
 class LinkedStatementItem(StatementItem):
+    constraints: list[ClaimConstraint] = Field(default_factory=list)
     purpose: list[LinkedPurposeItem] | LinkedPurposeItem | None = None
 
 

@@ -53,6 +53,7 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 | Branch Tree (`branch_tree`) | 在同一来源机制上使用质疑—回应路径、已有回应、同一质疑的其他回应与让步边 | 关系直接参与下一步反驳；上下文和成本增加，最终仍会遗漏限定条件；对 Flat 的独立增益未证实 | 第四轮 8 × 2，GPT-5.6，通过率 43.8%，等待 10.62s，最终回退 3/16；相对 Flat +2.1 个百分点，95% 区间跨零；第五轮：15/16 评分（1 条 503 耗尽重试），55.6%，12.43s；与线性基线的完整案例区间跨零 |
 | 完整保留树 + 规则选择（现有纠错树模式的新实现） | 撤回只标记，修改新增版本；旧节点与回应链保留；生成按当前性、最近更新、回应情况选择有限子图 | 来源/版本审计通过；限定条件列表和最终回答仍会遗漏信息，节点上限不等于 token 上限 | 第五轮 8 个新案例 × 2 次 × 5 配置：80 回答、79 评分；成功绑定树的 Branch 子集覆盖率 47.2%，整体优势未确立 |
 | Branch 宽视图（同一模式的参数消融） | 相同保留历史和当前性规则，节点上限从 8+16 放宽到 128+256，仍最多规划 3 个主张 | 本轮未截断当前视图；并非旧代码或无限长度生成，另行抽取的图存在差异 | 第五轮：16/16 评分，47.9%，12.43s；默认 Branch 的完整案例均分较高，但不足以归因于节点裁剪 |
+| 主张条件提取 + 条件保留检查（现有模式改进） | 既有提取调用返回归属主张的范围/时间/例外/前提/让步与来源；既有反馈逐条检查、最终修订读取当前条件 | 不增加模型阶段；增加提示/输出长度，模型仍可能漏提或误判；原文归属校验不保证语义正确 | 用户要求先做前两项；已实现，离线回归验证；本次未启动付费评测，旧分数不代表本版本 |
 
 第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
 各轮成绩属于当时冻结的代码。最新的“保留树 + 规则选择”修改现有纠错树模式，不增加新的模式名；以前评测采用的整条分支归档移除行为保留在历史提交中。
@@ -1062,3 +1063,70 @@ PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/pyth
 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/compare_retained_views.py
 PYTHONPATH=src /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/reconcile_budget.py --output experiments/incremental_planning/cost_audit_v5.json
 ```
+
+
+## Claim qualifications and final condition retention — implementation only (2026-10-03)
+
+User requested the first two follow-ups from the retained-tree diagnosis: semantic
+condition extraction and condition retention within the existing feedback/revision
+steps. Work starts from `d82c9e6`; no larger-tree experiment or paid replay was launched.
+
+- The existing linked extraction schema returns claim-owned `scope`, `timing`,
+  `exception`, `precondition`, and `concession` records. Each has a verbatim `quote`
+  and source node ID. Current quotes must lie inside that statement's checked
+  excerpt, rather than anywhere in the transcript. Invalid conditions generate
+  `REJECT_CONSTRAINT` events without dropping a valid claim. Reinforcement and
+  replies attach conditions to the actual resulting speaker-owned node.
+- On revision, extraction explicitly names the predecessor when retaining one of
+  its registered conditions. Replacement timing is not inherited automatically;
+  original condition provenance and the archived node remain available. Conditions
+  survive JSON/checkpoints, and older trees without the field remain loadable.
+- Selected tree views carry typed conditions into Grounded/Light Tree, Branch and
+  Flat plans. The server retains the selected condition ledger even if the model
+  chooses no compact limits. The keyword-free “need separate costings” condition is
+  covered without extending the marker regex. Legacy nodes without typed conditions
+  retain keyword boundary fallback. Flat preserves the same condition material and
+  removes explicit argument edges. Condition changes invalidate cached plans;
+  source-prefix fallback still receives the current selected conditions.
+- Grounded audience feedback requests one status per condition with a draft quote,
+  reason and repair. Local validation checks IDs, duplicate/missing rows and verbatim
+  draft evidence. Missing/invalid checks become `unchecked`; malformed feedback is
+  preserved as unverified and causes no additional request. Model statuses remain
+  fallible judgments, even with a valid quotation. The existing final revision call
+  receives a freshly rebuilt checklist, handles relevant omissions/contradictions,
+  and distinguishes accepted safeguards from completed implementation. Conditions
+  unrelated to its argument need not be recited; copying the opponent's case is not
+  a substitute for rebuttal. Grounded/Light Linear also review their existing limits.
+- No mode, default, model, node cap, scheduling threshold, or generation/feedback/
+  revision call stage was added. Prompt and response length can increase. Complete
+  semantic extraction, correct applicability judgments and improved final answers
+  remain unproven until a future model evaluation. Existing extraction/length-control
+  retry policies are unchanged; malformed audience review alone never adds retries.
+
+Offline validation includes source ownership, explicit condition inheritance,
+serialization compatibility, condition-only cache invalidation, equal Flat/Branch
+context concessions, fresh checklists after revision/withdrawal, malformed and
+fabricated feedback, and mocked night-garden/courtyard condition propagation across
+all four grounded tree modes. Integration checks exercise the actual schema, tree,
+planning, feedback and revision paths, with one existing audience call and one
+existing final revision call. A mocked extraction call also checks the new schema
+and predecessor registry. These tests establish data flow and local invariants,
+not a measured increase in semantic recall or final answer coverage.
+
+Validation command:
+
+```bash
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests debate-app/backend/tests -q
+```
+
+Final validation: **314 tests and 42 subtests passed** in 23.44 seconds; one existing
+Pydantic deprecation warning. The first focused run exposed two test fixture issues
+(the serialized tree uses `structure`, and Flat's allowed fields now include
+`constraints`); both were corrected before the successful focused and full suites.
+Python compilation and `git diff --check` also passed.
+
+Cost for this implementation: **0 new inference requests, $0 new experiment spend**.
+Cumulative accounting remains **5,343 requests**, **$7.60681331 known usage**,
+**$32.94019004 guarded exposure** against the approved **$200** cap, **zero pending**.
+The retained-tree evaluation's 80 answers/79 judgments and frozen reports are
+unchanged; no historical diagnostics were regenerated against the new code.

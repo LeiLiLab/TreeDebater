@@ -4,6 +4,7 @@ import hashlib
 import re
 
 from .grounding import normalize, parse_state
+from .claim_constraints import source_nodes, constraint_ledger
 
 
 MOVES = ('challenge_support', 'challenge_inference', 'answer_objection', 'concede_then_distinguish')
@@ -14,6 +15,7 @@ def material_version(material):
     """Bind the full delivered coverage ledger, not only selected claim paths."""
     bound = {'targets': [(n['node_id'], n['version']) for n in material['tree_targets']],
              'position_limits': material['position_limits'],
+             'constraints': material.get('constraints', []),
              'correction_history': material['correction_history'],
              'use_topology': material['use_topology']}
     return hashlib.sha256(json.dumps(bound, sort_keys=True).encode()).hexdigest()[:16]
@@ -28,22 +30,20 @@ def planning_material(targets, trees, opponent_side, *, topology):
         for sentence in re.split(r'(?<=[.!?。])\s+', quote):
             if LIMIT_MARKERS.search(sentence) and normalize(sentence) not in {normalize(q) for q in source_limits}:
                 source_limits.append(sentence)
-    source_nodes = {}
-    for target in targets:
-        source_nodes[target['node_id']] = target
-        for ancestor in target['ancestors']:
-            if ancestor['side'] == opponent_side:
-                source_nodes[ancestor['node_id']] = ancestor
-            for reply in ancestor['responses']:
-                if reply['side'] == opponent_side:
-                    source_nodes[reply['node_id']] = reply
-        for reply in target['responses']:
-            if reply['side'] == opponent_side:
-                source_nodes[reply['node_id']] = reply
-    for node_id in sorted(source_nodes):
-        for quote in source_nodes[node_id]['sources']:add_quote(quote)
+    nodes = source_nodes(targets, opponent_side)
+    ledger = constraint_ledger(targets, opponent_side)
+    for node_id in sorted(nodes):
+        node = nodes[node_id]
+        if node.get('constraints'):
+            for condition in node['constraints']:
+                if normalize(condition['quote']) not in {normalize(q) for q in source_limits}:
+                    source_limits.append(condition['quote'])
+        else:
+            # Compatibility for trees extracted before typed qualifications.
+            for quote in node['sources']:
+                add_quote(quote)
     withdrawals=[]
-    selected_ids = set(source_nodes)
+    selected_ids = set(nodes)
     for tree in trees:
         for revision in getattr(tree,'revisions',[]):
             if revision['side'] != opponent_side:continue
@@ -57,7 +57,7 @@ def planning_material(targets, trees, opponent_side, *, topology):
     # Keep this bounded as well as the selected node view.
     recent = [event for _, event in sorted(withdrawals, key=lambda item: item[0])][-6:]
     result = {'tree_targets':targets,'position_limits':source_limits,'correction_history':recent,
-              'use_topology':topology}
+              'use_topology':topology, 'constraints':ledger}
     if topology:
         briefs=[]
         for target in targets:
@@ -78,7 +78,8 @@ def planning_material(targets, trees, opponent_side, *, topology):
         result['branch_briefs']=briefs
     else:
         # Do not leak topology through target ordering, ancestry or response flags.
-        result['tree_targets']=[{k:n[k] for k in ('node_id','claim','arguments','sources','version')}
+        result['tree_targets']=[dict({k:n[k] for k in ('node_id','claim','arguments','sources','version')},
+                                    constraints=n.get('constraints', []))
                                 for n in sorted(targets,key=lambda n:n['node_id'])]
     return result
 
@@ -90,7 +91,8 @@ def branch_prompt(context, chunks, previous):
         'Select up to 6 material boundaries by index in context.position_limits. The server copies source '
         'quotes and binds IDs/versions; never invent target IDs or quote strings. Latest speech overrides '
         'earlier claims and correction history. Do not target a withdrawn position or conflate independent '
-        'branches. Preserve the exact timing, exceptions and trial scope relevant to the response. '
+        'branches. Read context.constraints as claim-owned qualifications, including prerequisites with no '
+        'marker keywords; the server retains this ledger even when limits is empty. Preserve the exact timing, exceptions and trial scope relevant to the response. '
         'An unanswered implementation question is not proof the policy fails. A study before commitment '
         'is not a commitment without evidence. A supplied solution may be criticized for adequacy, but '
         'do not repeat an old objection as though that solution were never offered. '
@@ -147,6 +149,7 @@ def parse_branch_state(raw, prefix, material):
     for item,original in zip(state['rebuttals'],data['rebuttals']):item['move']=original['move']
     # Keep the coverage ledger even if the model selects no limits. This costs no
     # extra inference and prevents a compact plan from silently deleting context.
+    state['constraints']=material.get('constraints', [])
     state['position_limits']=material['position_limits']
     state['correction_history']=material['correction_history']
     state['material_version']=material_version(material)
@@ -159,7 +162,8 @@ def parse_branch_state(raw, prefix, material):
 BRANCH_DELIVERY = (
     '\nBRANCH DELIVERY: Acknowledge the material current boundaries in position_limits, including '
     'relevant scope, timeline, permissions and prerequisites, concisely before challenging the remaining '
-    'gap. Correction history is historical: later speech may replace it. If branch_briefs are supplied, '
+    'gap. The constraints ledger binds each typed condition to its node; do not transfer conditions '
+    'across independent claims. Correction history is historical: later speech may replace it. If branch_briefs are supplied, '
     'connect our earlier objection to the opponent reply and explain what remains unresolved. Do not '
     'repeat an answered objection as if no response existed. A conditional implementation risk is not '
     'proof of an observed failure; separate what is conceded from the precise remaining disagreement. '

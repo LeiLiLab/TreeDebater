@@ -122,7 +122,7 @@ def test_branch_briefs_link_prior_objection_reply_and_limits_while_flat_control_
     assert brief['latest_our_objection']['claim']=='Wheelchair access is missing.'
     assert rich['position_limits']==flat['position_limits']
     assert 'branch_briefs' not in flat
-    assert all(set(n)=={'node_id','claim','arguments','sources','version'} for n in flat['tree_targets'])
+    assert all(set(n)=={'node_id','claim','arguments','sources','version','constraints'} for n in flat['tree_targets'])
     assert 'Use branch_briefs' in branch_prompt(rich,[],{})
     assert 'Use branch_briefs' not in branch_prompt(flat,[],{})
 

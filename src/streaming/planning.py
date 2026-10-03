@@ -253,7 +253,9 @@ class IncrementalPlanner:
         if not self.config.grounded_tree or not self.state:
             return
         targets = {n["node_id"]: n["version"] for n in context["tree_targets"]}
-        stale_material = False
+        from .claim_constraints import constraint_ledger
+        side = next((n.get("side") for n in context["tree_targets"] if n.get("side")), None)
+        stale_material = self.state.get("constraints", []) != constraint_ledger(context["tree_targets"], side)
         if self.config.branch_state:
             from .branch_planning import material_version
             stale_material = self.state.get('material_version') != material_version(context)

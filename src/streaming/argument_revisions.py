@@ -2,13 +2,14 @@
 import copy
 
 from .tree_selection import is_current
+from .claim_constraints import bind_constraints, validate_constraints
 
 
 def claim_key(text):
     return " ".join(text.split()).casefold().rstrip(".!?")
 
 
-def revise_claim(trees, *, target, side, action, claim, arguments, source, target_id=None, update_order=None):
+def revise_claim(trees, *, target, side, action, claim, arguments, source, target_id=None, update_order=None, constraints=None):
     if action not in ("revise", "retract") or not source.strip() or not target.strip():
         return 0
     if target_id:
@@ -54,6 +55,8 @@ def revise_claim(trees, *, target, side, action, claim, arguments, source, targe
             replacement = parent.add_node(new_claim=claim, new_argument=list(arguments), side=side)
             replacement.relation = getattr(node, "relation", None) if parent is node.parent else 'propose'
             replacement.source_spans = [source]
+            conditions, _ = validate_constraints(constraints or [], source, side, node)
+            bind_constraints(replacement, conditions)
             replacement.update_order = order
             replacement.supersedes = node.node_id
             replacement.update_status("proposed")

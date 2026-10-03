@@ -3,6 +3,7 @@ import hashlib
 import json
 
 from .grounding import normalize
+from .claim_constraints import exported_constraints
 from .tree_selection import DEFAULT_MAX_TARGETS, DEFAULT_MAX_CONTEXT_NODES, is_current, select_nodes
 
 
@@ -28,7 +29,7 @@ def tree_targets(trees, opponent_side, *, max_targets=DEFAULT_MAX_TARGETS,
     def response_info(node):
         return {"node_id": node.node_id, "claim": node.claim, "side": node.side,
                 "arguments": list(node.argument), "sources": list(node.source_spans),
-                "relation": getattr(node, "relation", None)}
+                "relation": getattr(node, "relation", None), "constraints": exported_constraints(node)}
     chosen, context = select_nodes(trees, opponent_side, max_targets=max_targets,
                                    max_context_nodes=max_context_nodes)
     included = {n.node_id for n in chosen + context}
@@ -39,13 +40,15 @@ def tree_targets(trees, opponent_side, *, max_targets=DEFAULT_MAX_TARGETS,
         while parent is not None and parent.parent is not None and parent.node_id in included:
             ancestry.append({"node_id": parent.node_id, "side": parent.side,
                              "claim": parent.claim, "arguments": list(parent.argument),
+                             "constraints": exported_constraints(parent),
                              "sources": list(getattr(parent, "source_spans", [])),
                              "omitted_response_count": sum(is_current(c) and c.node_id not in included
                                                            for c in parent.children),
                              "responses": [response_info(c) for c in parent.children if c.node_id in included]})
             parent = parent.parent
         responses = [response_info(c) for c in node.children if c.node_id in included]
-        item = {"node_id": node.node_id, "claim": node.claim,
+        item = {"node_id": node.node_id, "claim": node.claim, "side": node.side,
+                "constraints": exported_constraints(node),
                 "arguments": list(node.argument), "sources": list(node.source_spans),
                 "ancestors": ancestry, "responses": responses,
                 "omitted_response_count": sum(is_current(c) and c.node_id not in included for c in node.children),

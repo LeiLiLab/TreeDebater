@@ -103,6 +103,7 @@ class Node:
         self.argument = []
         self.evidence = []
         self.source_spans = []  # verified transcript excerpts, not proof of entailment
+        self.constraints = []  # typed qualifications attributed to this claim
         self.position_status = "current"  # distinct from structural attacked/proposed status
         self.supersedes = None
         self.superseded_by = None
@@ -274,6 +275,7 @@ class Node:
             "argument": self.argument,
             "evidence": self.evidence,
             "source_spans": self.source_spans,
+            "constraints": self.constraints,
             "position_status": self.position_status,
             "selection_status": selection_status(self),
             "supersedes": self.supersedes,
@@ -329,6 +331,7 @@ class Node:
         node.argument = json_info["argument"]
         node.evidence = json_info["evidence"]
         node.source_spans = list(json_info.get("source_spans", []))
+        node.constraints = list(json_info.get("constraints", []))
         node.position_status = json_info.get("position_status", "current")
         node.supersedes = json_info.get("supersedes")
         node.superseded_by = json_info.get("superseded_by")

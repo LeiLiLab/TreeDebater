@@ -551,7 +551,8 @@ def extract_statement(llm, motion, statement, claims=None, tree=None, side=None,
 
     if relation_targets is not None:
         from streaming.tree_updates import RELATION_INSTRUCTIONS
-        prompt += RELATION_INSTRUCTIONS + "\n" + json.dumps(relation_targets)
+        from streaming.claim_constraints import CONSTRAINT_EXTRACTION
+        prompt += RELATION_INSTRUCTIONS + CONSTRAINT_EXTRACTION + "\n" + json.dumps(relation_targets)
 
     if tree is not None and planned_actions:
         prompt += (

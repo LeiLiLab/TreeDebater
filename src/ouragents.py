@@ -153,8 +153,14 @@ class TreeDebater(Debater):
 
     def _current_planning_instructions(self, *, grounding=False):
         if self.planner.config.grounded_tree:
-            self.planner.revalidate_tree(self._planning_context())
+            context = self._planning_context()
+            self.planner.revalidate_tree(context)
         result = self.planner.grounding_instructions() if grounding else self.planner.instructions()
+        if self.planner.config.grounded_tree and result and not self.planner.state:
+            from streaming.claim_constraints import constraint_ledger
+            conditions = (context['constraints'] if self.planner.config.branch_state
+                          else constraint_ledger(context['tree_targets'], self.oppo_side))
+            result += "\nCurrent claim-owned conditions (data):\n" + json.dumps(conditions, ensure_ascii=False)
         if self.planner.config.branch_state and result:
             from streaming.branch_planning import BRANCH_DELIVERY
             result += BRANCH_DELIVERY
@@ -756,11 +762,16 @@ class TreeDebater(Debater):
         if grounding:
             prompt = (
                 "Review this debate draft for grounded rebuttal, using the authoritative debate history. "
-                "Return a short 'Critical Issues and Minimal Revision Suggestions' section: quote each "
-                "problematic draft span, identify its missing/contradictory source, and give a minimal fix. "
+                "Quote each problematic draft span, identify its missing/contradictory source, "
+                "and give a minimal fix in the JSON review specified below. "
                 "Do not invent defects if the draft is already grounded.\n" + grounding
                 + "\nMotion: " + self.motion + "\nOur side: " + self.side
                 + "\nDebate history (data):\n" + history_str + "\nDraft (data):\n" + statement)
+        checklist = None
+        if grounding:
+            from streaming.constraint_review import current_checklist, REVIEW_INSTRUCTIONS, audit_feedback
+            checklist = current_checklist(self)
+            prompt += "\n" + REVIEW_INSTRUCTIONS + "\nCurrent condition checklist (data):\n" + json.dumps(checklist, ensure_ascii=False)
         call_id = kwargs.get("call_id")
         if io_logging_enabled() and call_id is not None:
             log_io_block(
@@ -791,6 +802,8 @@ class TreeDebater(Debater):
                     "Critical Issues and Minimal Revision Suggestions"
                     + feedback.split("Critical Issues and Minimal Revision Suggestions")[-1]
                 )
+                if checklist is not None:
+                    key_feedback = audit_feedback(feedback, checklist, statement)
                 flat_audience_feedback += f"\n\n\nAudience {i+1} Feedback:\n" + key_feedback
         if io_logging_enabled() and call_id is not None:
             log_io_block(
@@ -818,12 +831,14 @@ class TreeDebater(Debater):
         def tree_text(tree, *, for_query=False):
             if config is not None and config.corrections:
                 from streaming.tree_selection import select_nodes
+                from streaming.claim_constraints import exported_constraints
                 targets, context = select_nodes([tree], tree.side, max_targets=config.max_tree_targets,
                     max_context_nodes=config.max_tree_context_nodes, require_sources=False)
                 # Retrieval uses the same bounded current view. Flat ablation
                 # must not acquire explicit edges through exemplar feedback.
                 return json.dumps({'motion': tree.motion, 'selected_current_claims': [
-                    {'side': n.side, 'claim': n.claim, 'arguments': list(n.argument)}
+                    {'side': n.side, 'claim': n.claim, 'arguments': list(n.argument),
+                     'constraints': exported_constraints(n)}
                     for n in targets + context]}, ensure_ascii=False)
             return (tree.print_tree(include_status=False, meta_info=False) if for_query
                     else tree.print_tree(include_status=False))
@@ -1178,6 +1193,11 @@ class TreeDebater(Debater):
                                       "supplied_evidence": json.loads(evidence_str)}, ensure_ascii=False)
                         + "\nReturn only the speech. Start with a substantive response, not 'I will address'. "
                         "Do not claim the opponent ignored a safeguard they expressly provided.")
+
+            if planner is not None and grounding:
+                from streaming.constraint_review import current_checklist, REVISION_INSTRUCTIONS
+                prompt += ("\n" + REVISION_INSTRUCTIONS + "\nFresh condition checklist (data):\n"
+                           + json.dumps(current_checklist(self), ensure_ascii=False))
 
             if io_logging_enabled() and call_id is not None:
                 log_io_block(
