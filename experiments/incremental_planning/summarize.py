@@ -65,7 +65,8 @@ def summarize(run_id):
     for r in complete:
         by_mode[r["mode"]].append(r)
     rows = []
-    reference = "legacy" if "legacy" in metadata["modes"] else "linear"
+    reference = next((m for m in ("legacy", "linear", "tree_plan") if m in metadata["modes"]),
+                     metadata["modes"][0])
     for mode in metadata["modes"]:
         rs = by_mode[mode]
         if not rs:
@@ -81,12 +82,15 @@ def summarize(run_id):
                          r["remaining_preparation_seconds"] + r["full_generation_including_own_analysis_seconds"]
                          for r in rs]),
                      "generation_calls_mean": mean([r["model_usage"]["calls"] for r in rs]),
+                     "prior_context_setup_calls_mean": mean([r.get("prior_context_setup_calls", 0) for r in rs]),
+                     "live_generation_calls_mean": mean([r.get("live_generation_calls", r["model_usage"]["calls"]) for r in rs]),
                      "generation_cost_mean_usd": mean([r["model_usage"]["reported_usage_estimate_usd"] for r in rs]),
                      "answer_words_mean": mean([r["answer_words"] for r in rs]),
                      "gate_waits": sum(e["action"] == "WAIT" for r in rs for e in r["after_generation"]["events"]),
                      "duplicate_skips": sum(e["action"] == "SKIP_DUPLICATE" for r in rs for e in r["after_generation"]["events"]),
                      "incomplete_waits": sum(e["action"] == "WAIT_INCOMPLETE" for r in rs for e in r["after_generation"]["events"]),
                      "invalid_states": sum(e["action"] == "INVALID_STATE" for r in rs for e in r["after_generation"]["events"]),
+                     "invalid_targets": sum(e["action"] == "INVALID_TARGET" for r in rs for e in r["after_generation"]["events"]),
                      "revisions": sum(len(r["after_generation"]["opponent_tree"].get("revisions", [])) for r in rs)})
     pairs = {}
     # Average repeated runs within each case before estimating uncertainty.
@@ -102,7 +106,11 @@ def summarize(run_id):
                                 ("tree_plan", "adaptive_tree"),
                                 ("linear", "structured_linear"),
                                 ("structured_linear", "grounded_linear"),
-                                ("grounded_linear", "light_linear")):
+                                ("grounded_linear", "light_linear"),
+                                ("tree_plan", "grounded_tree"),
+                                ("grounded_tree", "light_tree"),
+                                ("grounded_linear", "grounded_tree"),
+                                ("light_linear", "light_tree")):
         paired = paired_comparison(by_mode, metadata, baseline, candidate)
         if paired:
             components[candidate + "_vs_" + baseline] = paired

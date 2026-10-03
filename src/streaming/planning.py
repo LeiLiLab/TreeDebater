@@ -11,7 +11,8 @@ import time
 
 
 MODES = ("legacy", "end_of_turn", "linear", "corrected_tree", "adaptive_linear",
-         "tree_plan", "adaptive_tree", "structured_linear", "grounded_linear", "light_linear")
+         "tree_plan", "adaptive_tree", "structured_linear", "grounded_linear", "light_linear",
+         "grounded_tree", "light_tree")
 
 
 @dataclass
@@ -35,19 +36,27 @@ class PlanningConfig:
 
     @property
     def structured(self):
-        return self.mode in ("structured_linear", "grounded_linear", "light_linear")
+        return self.mode in ("structured_linear", "grounded_linear", "light_linear") or self.grounded_tree
 
     @property
     def grounded(self):
-        return self.mode in ("grounded_linear", "light_linear")
+        return self.mode in ("grounded_linear", "light_linear") or self.grounded_tree
+
+    @property
+    def grounded_tree(self):
+        return self.mode in ("grounded_tree", "light_tree")
+
+    @property
+    def light(self):
+        return self.mode in ("light_linear", "light_tree")
 
     @property
     def early(self):
-        return self.linear or self.mode in ("tree_plan", "adaptive_tree")
+        return self.linear or self.mode in ("tree_plan", "adaptive_tree") or self.grounded_tree
 
     @property
     def corrections(self):
-        return self.mode in ("corrected_tree", "tree_plan", "adaptive_tree")
+        return self.mode in ("corrected_tree", "tree_plan", "adaptive_tree") or self.grounded_tree
 
 
 def normalize(text):
@@ -91,7 +100,7 @@ class IncrementalPlanner:
         self.version += 1
         if self.config.mode == "end_of_turn":
             return
-        if (self.config.mode == "light_linear" and self.processed == len(self.chunks)-1
+        if (self.config.light and self.processed == len(self.chunks)-1
                 and self.processed > 0 and self.plan_version == self.version-1
                 and normalize(text) == normalize(self.chunks[-2])):
             # Adjacent exact repetition only. Repeating an OLD claim after a
@@ -106,7 +115,7 @@ class IncrementalPlanner:
             return
         pending = self.chunks[self.processed:]
         light_gate = False
-        if self.config.mode == "light_linear":
+        if self.config.light:
             from .grounding import incomplete_clause, needs_semantic_gate
             if incomplete_clause(" ".join(pending)) and len(pending) < self.config.max_wait_chunks:
                 self.events.append({"turn": self.turn, "version": self.version, "action": "WAIT_INCOMPLETE"})
@@ -176,7 +185,9 @@ class IncrementalPlanner:
                 raise ValueError("Preparation returned empty notes")
             if self.config.structured:
                 try:
-                    self.state = parse_state(raw, " ".join(self.chunks))
+                    self.state = parse_state(raw, " ".join(self.chunks),
+                                             tree_targets=material.get("tree_targets", [])
+                                             if self.config.grounded_tree else None)
                     self.plan = json.dumps(self.state, ensure_ascii=False)
                 except (ValueError, TypeError, KeyError) as exc:
                     self.state = {}
@@ -222,6 +233,16 @@ class IncrementalPlanner:
                 + self.plan + "\nLATEST OPPONENT WORDS — these override any incompatible earlier notes:\n"
                 + self.chunks[-1] + "\nDo not attack withdrawn positions or propose already-granted exceptions "
                 "as if the opponent prohibited them.")
+
+    def revalidate_tree(self, context):
+        """Do not deliver notes bound to a removed or changed tree target."""
+        if not self.config.grounded_tree or not self.state:
+            return
+        targets = {n["node_id"]: n["version"] for n in context["tree_targets"]}
+        if any(targets.get(c["node_id"]) != c["target_version"] for c in self.state["claims"]):
+            self.state = {}
+            self.plan = "Tree targets changed. Use the verbatim opponent prefix:\n" + " ".join(self.chunks)
+            self.events.append({"turn": self.turn, "version": self.version, "action": "INVALID_TARGET"})
 
     def grounding_instructions(self):
         if not self.config.grounded or self.plan_version != self.version:

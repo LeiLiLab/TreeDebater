@@ -40,6 +40,8 @@ def revise_claim(trees, *, target, side, action, claim, arguments, source, targe
             node.claim = claim
             node.argument = list(arguments)
             node.evidence = []
+            if hasattr(node, "source_spans"):
+                node.source_spans = [source]
             # Old attacks/replies depend on the old premise. Archive them above;
             # require revalidation before reusing them against the narrower claim.
             node.children = []

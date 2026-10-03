@@ -31,15 +31,26 @@
 
 Keep the model, input chunks, prior debate context, evidence, answer budget, and final generation/revision path comparable. Separate the effects of state representation, correction, and update scheduling.
 
-| Variant | Intended purpose | Status |
-| --- | --- | --- |
-| Current TreeDebater | Online tree / turn-end planning reference | Held-out comparison complete |
-| End-of-turn TreeDebater | Isolate benefit of online preparation | Implemented; held-out comparison complete |
-| Linear incremental | Update explicit linear notes while listening | Implemented; held-out comparison complete |
-| Corrected tree | Revision/retraction plus authoritative context at final revision | Implemented; held-out comparison complete |
-| Adaptive linear | Compare scheduling with the same linear state | Implemented; held-out comparison complete |
-| Tree early planning | Prepare tree-driven rebuttal plans before the endpoint | Implemented; held-out comparison complete |
-| Adaptive tree early planning | Combine semantic update scheduling and early planning | Implemented; held-out comparison complete |
+### 方案总表（持续维护，包含所有已尝试方案）
+
+每次增加或修改方案都更新本表；具体配置、实验轮次、结果和失败记录追加在后面的过程日志。实现/离线验证不等同于模型评测完成。
+
+| 方案 | 特点 | 主要取舍 | 尝试与验证状态 |
+| --- | --- | --- | --- |
+| Legacy (`legacy`) | 边听边维护原始论证树，结束后规划并生成反驳 | 保留论证关系；缺少显式撤回修正和提前反驳笔记 | 第一轮：12 案例 × 2 次，Gemma 评分 |
+| End-of-turn (`end_of_turn`) | 收集完整发言后集中分析树和生成反驳 | 减少重复分析；工作集中在端点后 | 第一轮：12 × 2，Gemma 评分 |
+| Linear (`linear`) | 不用论证树，每段输入更新自由文本反驳笔记 | 简单、较低开销；限定条件和假设容易混淆 | 第一轮 12 × 2；第二轮 10 × 1，GPT-5.6 评分 |
+| Corrected Tree (`corrected_tree`) | 树支持说话者自己的修改/撤回，归档失效分支 | 修正旧目标；仍在端点后规划反驳 | 第一轮：12 × 2，Gemma 评分 |
+| Adaptive Linear (`adaptive_linear`) | Linear 加模型门控，决定更新或等待 | 可跳过重复工作；门控本身增加调用与延迟 | 第一轮：12 × 2，Gemma 评分 |
+| Tree Plan (`tree_plan`) | 可纠错论证树驱动流式反驳笔记 | 同时组织论证关系和提前准备；树与笔记维护较贵 | 第一轮：12 × 2，Gemma 评分 |
+| Adaptive Tree (`adaptive_tree`) | Tree Plan 加模型门控，按需更新树和笔记 | 尝试减少更新；流程更复杂且有门控开销 | 第一轮：12 × 2，Gemma 评分 |
+| Structured Linear (`structured_linear`) | 将当前观点、原文引用、范围/例外和反驳假设分开保存 | 可检查来源；结构合法不保证语义正确，本轮通过率下降 | 第二轮：10 × 1，GPT-5.6 评分；另有旧案例开发诊断 |
+| Grounded Linear (`grounded_linear`) | 结构化状态加针对目标、例外和事实依据的反馈/修订 | 不新增反馈调用；减少无依据断言，但整体质量收益未证实 | 第二轮：10 × 1，GPT-5.6 评分 |
+| Light Linear (`light_linear`) | Grounded Linear 加精确重复跳过、未完句缓冲、选择性门控 | 减少无效工作；调度的独立收益仍不确定 | 第二轮：10 × 1，GPT-5.6 评分；单次真实 ASR/TTS 对照 |
+| Grounded Tree (`grounded_tree`) | 保留论证树；反驳绑定有效节点和节点原文，利用攻击关系与未回应目标排序；加依据核对 | 强化树对反驳的直接作用；增加提取、维护和绑定校验成本，仍依赖语义提取正确性 | 第三轮：已实现并通过离线验证，付费评测待预算确认 |
+| Light Tree (`light_tree`) | Grounded Tree 加重复跳过、未完句缓冲与选择性门控，结束时强制处理积压 | 尝试减少树与计划的无效更新；不能假定树的成本或质量已改善 | 第三轮：已实现并通过离线验证，付费评测待预算确认 |
+
+第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
 
 Evaluate targeted rebuttal quality, final-condition correctness, claim coverage, unsupported assertions, end-of-turn residual latency, and total input/output tokens and cost. Include late qualifiers, reversals, withdrawals, repeated content, and split clauses. Report measured text/planning latency separately from actual audible latency; do not describe a simulated timeline as a live audio measurement. Judges see delivered answers, not private preparation traces. Keep development cases separate from final held-out comparison.
 
@@ -424,3 +435,57 @@ git add process.md src/streaming/experiment_client.py tests/test_experiment_budg
 git commit -m "Record grounded Linear comparison and bounded audio validation"
 git status --short
 ```
+
+## Tree-centered follow-up — prepared 2026-10-02 (America/New_York)
+
+User instruction: **进行基于树的尝试** and maintain a single large **方案 / 特点 / 主要取舍** table covering every attempted variant. The consolidated table near the beginning of this file now lists all twelve policies, preserves each round's evaluator/sample context, and distinguishes implementation/offline tests from completed paid evaluations. Argument trees remain the main method; grounded/light Linear are matched ablation controls.
+
+### New mechanisms
+
+- **Grounded Tree** keeps both existing argument trees active. Each updated node can retain an excerpt validated against the actual speaker's transcript. Planning receives active node IDs, source spans, arguments, ancestor relationships and existing responses. Candidates prioritize unanswered branches, then attacks on our claims; this is a structural heuristic, not a claim of argument quality.
+- Each proposed response selects a current node. The server validates that its quote belongs to that node and attaches the node ID and a content/ancestry/response version to the plan. Quotes from previously heard turns remain usable through node provenance. Quotes establish attribution, **not entailment or truth**.
+- Revisions archive dependent branches and replace their source evidence; retractions remove active targets. Before using notes in generation, feedback or final revision, validate target versions again. Removed/changed targets invalidate the notes and fall back to the observed transcript. No speculative response is committed to the spoken tree.
+- **Light Tree** adds the same adjacent-exact-duplicate skip, incomplete-clause buffer and selective near-repetition gate used by Light Linear. Pending material drains at the endpoint; tree extraction applies only the pending input. It does not promise to eliminate semantic extraction errors or guarantee less total work.
+- `Node` JSON serialization now preserves source spans. Inspection also exposed that restoration inferred child speaker sides solely from alternating depth even though root-level proposals have their root speaker's side. Restoration now honors the saved `side` field; an offline regression checks root proposal and attack ownership plus provenance across round trips.
+- Existing Linear grounding and old tree modes remain available. Default stays `legacy`. No deployment/push is included.
+
+### Prepared comparison
+
+`manifest_v3.json` and `cases_v3.json` specify five arms: **Tree Plan, Grounded Linear, Light Linear, Grounded Tree, Light Tree**. Development: two previously observed plastics/archives diagnostics × five arms = 10 answers. Held-out: eight newly authored cases × five arms = 40 answers, one repeat, two workers. Four fresh cases provide fixed preceding opponent/own speeches and test cross-turn branch withdrawal or already-answered objections; four use longer chunk sequences with partial withdrawals, duplicates and split exceptions. Cases were written before generating any third-round model output.
+
+Every arm sees identical prior speeches. Tree arms additionally extract their structure, and those setup calls/costs are included in totals and reported separately from endpoint latency. All generation remains Gemma. **All scoring uses GPT-5.6 Sol with a uniform 1600-token cap from the first attempt**, reasoning `none`, temperature omitted. No mixed 800/1600 grading in this round. The judge sees the prior speeches as well as the current opponent turn, answer and checklist. Exact matching/no embedding fallback is shared across arms. No audio experiment is included in this batch.
+
+Paired comparisons: Tree Plan → Grounded Tree; Grounded Tree → Light Tree; Grounded Linear ↔ Grounded Tree; Light Linear ↔ Light Tree. The last two hold grounding/scheduling families constant, but the source-linked target schema and context necessarily differ with the presence of a tree. Do not describe this as isolating an abstract graph representation from every implementation detail.
+
+Prepared launch commands (not yet executed):
+
+```bash
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id tree-grounded-dev-v1 --split dev --cases-file experiments/incremental_planning/cases_v3.json --modes tree_plan grounded_linear light_linear grounded_tree light_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 320 --repeats 1 > experiments/incremental_planning/run/tree-grounded-dev-v1-worker0.log 2>&1
+# After development verification and a source freeze, run worker 0 and worker 1:
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id tree-grounded-heldout-v1 --split test --cases-file experiments/incremental_planning/cases_v3.json --modes tree_plan grounded_linear light_linear grounded_tree light_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 320 --repeats 1 --workers 2 --worker-index 0 > experiments/incremental_planning/run/tree-grounded-heldout-v1-worker0.log 2>&1
+```
+
+### Budget amendment required before paid launch
+
+Read-only ledger audit remains **2,162 entries, $1.70095090 estimated usage, $199.86095600 retained reservations, zero pending**, against the approved **$200 cumulative cap**. Remaining reservation headroom is **$0.139044**. A single properly reserved GPT judge call at the prepared 1600-token cap cannot fit; launching a partially generated batch would be unhelpful. No new paid request has been dispatched.
+
+Rechecked official [AWS Gemma pricing](https://aws.amazon.com/bedrock/pricing/) ($0.13 input / $0.40 output per million) and [GPT-5.6 geographic pricing](https://docs.aws.amazon.com/en_en/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html) ($4.40 / $22 per million, short context). Estimate for the 50-answer development+held-out batch, including extraction, planning, generation, existing feedback/revision and judging: **$2–$5 additional provider usage**, planning allowance **$10**; all values are USD and are not settled invoices. Retained conservative reservation allowances are **$20 development + $85 held-out + $10 diagnosed retries = $115**. The historical reservations are deliberately much larger than reported usage; none are released or reset.
+
+Proposed new cumulative ceiling: **$320**. This allows the prepared $115 reservation allowance above the historical $199.860956, with a small margin. The shared SQLite pre-dispatch cap and 4x per-request bounds remain the stop mechanism. No automatic batch restarts; any one permitted missing-judge retry uses the same settings and retains its own reservation. Stop before any request that cannot fit. The added `--cap-usd` runner option only verifies an existing ledger cap; it cannot raise that cap.
+
+The [experiment-cost-guard skill](/mnt/data4/danqingwang/.codex/skills/experiment-cost-guard/SKILL.md) requires: **“never increase the cap automatically”** and **“Ask for explicit approval to resume under that cap.”** The user's implementation request does not specify a higher dollar ceiling. Therefore all code/data/documentation/offline verification proceeds, while paid model evaluation awaits explicit approval of this concrete budget amendment. No change has been made to the approved cap.
+
+### Third-round offline verification and handoff
+
+Full local suite: **226 tests passed, 42 subtests passed**, one pre-existing Pydantic deprecation warning. New regressions exercise actual tree nodes (model calls mocked): node-specific quote attribution, wrong-speaker rejection, source/side serialization, structural target ranking, target-version invalidation after revision, removal of dependent attacks, real TreeDebater observation/planning integration, exact-duplicate skipping, split-clause buffering, final-ASR restoration, prior-turn sources, and shared prior-history/GPT-judge settings. Existing grounded feedback/revision tests now also cover both new tree modes without extra feedback calls. These prove software behavior under controlled fixtures, not generated-answer quality or a speedup.
+
+Commands executed (no paid inference):
+
+```bash
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests debate-app/backend/tests -q
+git diff --check
+git add process.md debate-app/README.md debate-app/backend/tests/test_engine_adapter.py src/debate_tree.py src/ouragents.py src/streaming/planning.py src/streaming/grounding.py src/streaming/tree_grounding.py src/streaming/argument_revisions.py src/scripts/benchmark_incremental_planning.py tests/test_grounded_tree.py tests/test_grounded_integration.py tests/test_benchmark_tree_history.py experiments/incremental_planning/cases_v3.json experiments/incremental_planning/manifest_v3.json experiments/incremental_planning/summarize.py experiments/incremental_planning/resume_judge.py
+git commit -m "Add source-bound tree planning and document all experiment variants"
+```
+
+Current paid status: **not launched**, zero new ledger entries, existing cap unchanged at $200. No paid workers or retries are active. User's existing untracked files are preserved.

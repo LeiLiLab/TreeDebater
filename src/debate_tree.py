@@ -102,6 +102,7 @@ class Node:
         self.claim = ""
         self.argument = []
         self.evidence = []
+        self.source_spans = []  # verified transcript excerpts, not proof of entailment
         self.parent = parent
         self.children = []
         self.scores = None  # {"defense": x, "support": y}
@@ -266,6 +267,7 @@ class Node:
             "claim": self.claim,
             "argument": self.argument,
             "evidence": self.evidence,
+            "source_spans": self.source_spans,
             "status": self.status,
             "visit_count": self.visit_count,
             "scores": self.scores,
@@ -308,16 +310,17 @@ class Node:
 
     @staticmethod
     def from_json(motion, side, parent, json_info):
-        node = Node(motion, side, parent)
+        node = Node(motion, json_info.get("side", side), parent)
         node.node_id = json_info.get("node_id", node.node_id)
         node.claim = json_info["claim"]
         node.argument = json_info["argument"]
         node.evidence = json_info["evidence"]
+        node.source_spans = list(json_info.get("source_spans", []))
         node.status = json_info["status"]
         node.visit_count = json_info["visit_count"]
         node.scores = json_info["scores"]
         for child_info in json_info["children"]:
-            child_node = Node.from_json(motion, "against" if side == "for" else "for", node, child_info)
+            child_node = Node.from_json(motion, "against" if node.side == "for" else "for", node, child_info)
             node.children.append(child_node)
         return node
 
@@ -699,10 +702,10 @@ class DebateTree(Tree):
                         if argument not in existing.argument:
                             existing.argument.append(argument)
                     # Preserve attacks, rebuttals, and status on the existing node.
-                    return
+                    return existing
             new_node = self.root.add_node(new_claim=new_claim, new_argument=new_argument, side=self.root.side)
             new_node.update_status("proposed")
-            return
+            return new_node
 
         if action == "rebut":
             target_node_side = "against" if self.root.side == "for" else "for"
@@ -731,10 +734,12 @@ class DebateTree(Tree):
             match_node.argument.extend(new_argument)
             match_node.argument = list(set(match_node.argument))
             match_node.update_status(match_node.status)
+            return match_node
         elif action == "rebut" or action == "attack":
             new_node = match_node.add_node(new_claim=new_claim, new_argument=new_argument)
             match_node.update_status("attacked")
             new_node.update_status("proposed")
+            return new_node
         else:
             raise ValueError(f"Unknown action: {action}")
         return

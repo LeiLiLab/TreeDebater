@@ -1,0 +1,108 @@
+{
+  "task": "Grounded and selectively scheduled argument-tree rebuttal planning",
+  "status": "prepared; paid runs await explicit cumulative budget amendment",
+  "authorization": "Implementation and all-variant process table requested; prior cumulative USD200 remains unchanged",
+  "starting_commit": "09e3470",
+  "generator": "google.gemma-4-26b-a4b",
+  "judge": "gpt-5.6-sol",
+  "judge_route": "bedrock/us.openai.gpt-5.6-sol",
+  "pricing_checked_client_date": "2026-10-02",
+  "rates_per_million": {
+    "google.gemma-4-26b-a4b": [
+      0.13,
+      0.4
+    ],
+    "gpt-5.6-sol": [
+      4.4,
+      22
+    ]
+  },
+  "pricing_sources": [
+    "https://aws.amazon.com/bedrock/pricing/",
+    "https://docs.aws.amazon.com/en_en/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html"
+  ],
+  "modes": [
+    "tree_plan",
+    "grounded_linear",
+    "light_linear",
+    "grounded_tree",
+    "light_tree"
+  ],
+  "cases_file": "experiments/incremental_planning/cases_v3.json",
+  "cases_digest": "010a549169e25889a58760fa1e682974e5a712b2063c64c39f0e3466285f2b73",
+  "development": {
+    "run_id": "tree-grounded-dev-v1",
+    "cases": 2,
+    "case_origin": "reused plastics/archives diagnostics, not fresh evidence",
+    "answers": 10,
+    "repeats": 1,
+    "workers": 1,
+    "estimated_usage_usd_range": [
+      0.4,
+      1
+    ],
+    "additional_reservation_usd_allowance": 20
+  },
+  "heldout": {
+    "run_id": "tree-grounded-heldout-v1",
+    "fresh_cases": 8,
+    "cross_turn_cases": 4,
+    "extended_chunk_cases": 4,
+    "answers": 40,
+    "repeats": 1,
+    "workers": 2,
+    "estimated_usage_usd_range": [
+      1.6,
+      4
+    ],
+    "additional_reservation_usd_allowance": 85
+  },
+  "retry_reservation_usd_allowance": 10,
+  "retry_policy": "No automatic batch retry; at most one same-setting missing-judge retry after diagnosing a failure; every attempt is retained and metered. Never replace successful judgments.",
+  "generation_settings": {
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "plan_max_tokens": 700,
+    "gate_max_tokens": 120,
+    "generation_max_tokens": 1600,
+    "speech_budget_seconds": 60,
+    "judge_max_tokens": 1600,
+    "judge_reasoning_effort": "none",
+    "judge_temperature": "unsupported; omitted"
+  },
+  "matching": "exact target matching; embedding fallback disabled in every arm",
+  "history": "identical fixed prior speeches in all arms; tree setup calls included in total cost, reported separately from live endpoint latency",
+  "metrics": [
+    "checklist correctness",
+    "strawman and unsupported-premise flags",
+    "tree binding failures and source/state fallbacks",
+    "simulated residual text latency",
+    "total and prior-context setup requests/cost",
+    "paired case bootstrap comparisons"
+  ],
+  "holdout_policy": "Fresh cases authored before outputs. Freeze code/prompts after dev and before test. No tuning on test output.",
+  "billable_components": "Gemma generation/extraction/planning/feedback/revision/own-speech analysis and GPT judging including failed/repeated calls. No ASR/TTS, external search, paid embeddings or newly provisioned compute.",
+  "prior_cost": {
+    "ledger_entries": 2162,
+    "retained_reservation_usd": 199.86095600000002,
+    "estimated_usage_usd": 1.7009509000000014,
+    "pending_requests": 0
+  },
+  "approved_cap_usd": 200,
+  "proposed_cumulative_cap_usd": 320,
+  "additional_estimated_usage_usd_range": [
+    2,
+    5
+  ],
+  "additional_usage_planning_upper_usd": 10,
+  "additional_reservation_planning_upper_usd": 115,
+  "guard": "Same SQLite ledger and retained pre-dispatch reservations, 4x request-byte/output price bounds. --cap-usd cannot alter the database cap; it must match. No approval has been recorded for USD320 and the cap remains USD200.",
+  "offline_verification": {
+    "tests_passed": 226,
+    "subtests_passed": 42,
+    "warnings": "one existing Pydantic deprecation warning",
+    "new_paid_requests": 0
+  },
+  "prepared_source_digest": "7b41cc46374038daac4ed9cec349db7fd584a669d0ec605e445c35ded6efbb9c",
+  "source_freeze_policy": "Prepared implementation will be frozen after development review before fresh held-out launch."
+}

@@ -120,7 +120,19 @@ class TreeDebater(Debater):
         if not self.planner.config.linear:
             context["our_tree"] = self.debate_tree.print_tree(include_status=True)
             context["opponent_tree"] = self.oppo_debate_tree.print_tree(include_status=True, reverse=True)
+        if self.planner.config.grounded_tree:
+            from streaming.tree_grounding import tree_targets
+            context["tree_targets"] = tree_targets((self.debate_tree, self.oppo_debate_tree), self.oppo_side)
+            # The structured topology includes claims, support, ancestors and responses.
+            # Avoid duplicating the complete trees as unlinked prose in the same prompt.
+            context.pop("our_tree")
+            context.pop("opponent_tree")
         return context
+
+    def _current_planning_instructions(self, *, grounding=False):
+        if self.planner.config.grounded_tree:
+            self.planner.revalidate_tree(self._planning_context())
+        return self.planner.grounding_instructions() if grounding else self.planner.instructions()
 
     def _planning_llm(self, prompt, max_tokens):
         return self.helper_client(prompt, max_tokens=max_tokens)[0]
@@ -334,7 +346,7 @@ class TreeDebater(Debater):
 
         planner = getattr(self, "planner", None)
         if planner is not None and planner.config.early:
-            return prompt.replace("{tips}", planner.instructions())
+            return prompt.replace("{tips}", self._current_planning_instructions())
 
         # add debate flow tree related tips if debate flow tree is enabled, if no rehearsal tree, it will be empty
         if self.status != "closing" and self.use_debate_flow_tree:
@@ -700,7 +712,7 @@ class TreeDebater(Debater):
             retrieval=extra_tree_info,
             history=history_str,
         )
-        grounding = self.planner.grounding_instructions() if getattr(self, "planner", None) else ""
+        grounding = self._current_planning_instructions(grounding=True) if getattr(self, "planner", None) else ""
         if grounding:
             prompt = (
                 "Review this debate draft for grounded rebuttal, using the authoritative debate history. "
@@ -1100,7 +1112,7 @@ class TreeDebater(Debater):
                     "actual terms, and preserve these distinctions while shortening the speech. "
                     "Do not invent empirical findings or sources.\n")
             if planner is not None:
-                grounding = planner.grounding_instructions()
+                grounding = self._current_planning_instructions(grounding=True)
                 if grounding:
                     prompt = (
                         f"Write the final spoken rebuttal in at most {n_words} words. Prioritize accurate "
@@ -1333,7 +1345,9 @@ class TreeDebater(Debater):
                             if not x["revision_matches"]:
                                 logger.warning("Unmatched %s target from %s: %s", action, statement_side, target)
                         continue
-                    target_tree.update_node(action, new_claim=claim, new_argument=arguments, target=target)
+                    updated_node = target_tree.update_node(action, new_claim=claim, new_argument=arguments, target=target)
+                    from streaming.tree_grounding import attach_source
+                    attach_source(updated_node, x.get("content"), statements, statement_side)
 
             thoughts = {
                 "stage": self.status,

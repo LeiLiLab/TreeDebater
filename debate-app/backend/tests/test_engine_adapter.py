@@ -36,7 +36,7 @@ class AdapterTests(unittest.TestCase):
 
     def test_planning_settings_validate_and_reach_engine_config(self):
         for mode in ("linear", "corrected_tree", "adaptive_linear", "tree_plan", "adaptive_tree", "end_of_turn",
-                     "structured_linear", "grounded_linear", "light_linear"):
+                     "structured_linear", "grounded_linear", "light_linear", "grounded_tree", "light_tree"):
             settings = SessionSettings(motion="Limit cars downtown", planning={"mode": mode})
             self.assertEqual(settings.model_dump()["planning"], {"mode": mode})
         with self.assertRaises(ValueError):

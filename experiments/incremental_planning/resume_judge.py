@@ -12,7 +12,9 @@ from scripts import benchmark_incremental_planning as benchmark
 original_judge = benchmark.judge
 
 
-def recovery_judge(case, answer, client, model):
+def recovery_judge(case, answer, client, model, max_tokens=None):
+    if max_tokens not in (None, 800):
+        raise ValueError("This historical recovery policy only supports an 800-token primary judge")
     artifacts = []
     for (request_id,) in client.db.execute("SELECT id FROM calls WHERE label=?", (client.label,)):
         path = client.directory / f"call_{request_id:06}.json"

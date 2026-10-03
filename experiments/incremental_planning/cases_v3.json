@@ -1,0 +1,256 @@
+[
+  {
+    "id": "tree_dev_plastics",
+    "split": "dev",
+    "kind": "split_clause",
+    "motion": "The city should restrict disposable plastic packaging",
+    "side": "against",
+    "own_claim": "Restrictions must preserve essential uses",
+    "own_opening": "Packaging policy should account for sanitation, accessibility and whether substitutes are actually suitable.",
+    "chunks": [
+      "Disposable packaging creates waste that persists after its brief useful life. Restrictions should start with restaurant takeaway items, except",
+      "items needed for medical safety, disability access or food hygiene where no suitable substitute exists.",
+      "The city should phase this in over two years, publish substitution guidance and review the exemptions with affected users."
+    ],
+    "checks": [
+      "Recognizes essential-use exemptions",
+      "Recognizes phased implementation",
+      "Critiques suitability, enforcement or environmental tradeoffs without treating exempt uses as banned"
+    ]
+  },
+  {
+    "id": "tree_dev_archives",
+    "split": "dev",
+    "kind": "withdrawal",
+    "motion": "The town should digitize its historical records",
+    "side": "against",
+    "own_claim": "Archives should preserve originals and access",
+    "own_opening": "Digitization should not become an excuse to lose original records or exclude residents without digital access.",
+    "chunks": [
+      "The town should scan its historical records and discard paper copies to free storage space. I think digital access would help readers.",
+      "Scans can be searched from outside the building, while staff can assist visitors who need help finding a document.",
+      "I withdraw the proposal to discard originals. All originals will remain in the archive, and in-person reading will continue. I now propose only an additional searchable copy."
+    ],
+    "checks": [
+      "Recognizes that originals and in-person reading are retained",
+      "Does not attack destruction of originals as the current proposal",
+      "Discusses an unresolved issue such as scan quality, indexing, upkeep or opportunity cost"
+    ]
+  },
+  {
+    "id": "tree_fresh_microgrid",
+    "split": "test",
+    "kind": "cross_turn_branch_withdrawal",
+    "motion": "The town should install a community battery",
+    "side": "against",
+    "own_claim": "Energy investment needs transparent priorities",
+    "own_opening": "We should compare reliability, maintenance and who receives backup power before committing public funds.",
+    "chunks": [
+      "I accept your request for publication of the selection criteria and a maintenance budget before purchase.",
+      "I withdraw the earlier promise of backup for every home. This proposal supplies only the clinic and emergency shelter during outages.",
+      "The purchasing decision is still open. A public comparison with a smaller generator must come first; the battery is not already selected.",
+      "My remaining case is that the clinic and shelter need a shared backup plan, with the battery assessed as one option."
+    ],
+    "checks": [
+      "Recognizes that backup is restricted to the clinic and shelter, not every household",
+      "Does not claim that selection criteria or maintenance disclosure have been refused, or that the battery is already selected",
+      "Addresses an unresolved comparison, capacity or allocation issue rather than relying on the withdrawn universal-backup promise"
+    ],
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "A community battery should provide backup for every home during an outage. It could also support the clinic and emergency shelter."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Before purchase, publish selection criteria and a maintenance budget. Compare alternatives instead of assuming a battery is best."
+      }
+    ]
+  },
+  {
+    "id": "tree_fresh_shuttle",
+    "split": "test",
+    "kind": "cross_turn_exception_and_answered_attack",
+    "motion": "The district should introduce a school shuttle",
+    "side": "against",
+    "own_claim": "Transport changes must preserve access",
+    "own_opening": "Families have different mobility needs, and replacing existing transport requires a clear fallback.",
+    "chunks": [
+      "You asked how wheelchair users would board. The trial contract now requires an accessible vehicle on every scheduled run.",
+      "I also withdraw replacing the existing routes. The shuttle would be additional service for one term on two routes.",
+      "I have not answered your separate question about missed pickups; a fallback procedure still needs to be agreed.",
+      "Our proposal is therefore an accessible additional trial, with missed-pickup arrangements unresolved, rather than a replacement of existing transport."
+    ],
+    "checks": [
+      "Recognizes accessible vehicles on every run and additional rather than replacement service",
+      "Does not repeat the claim that wheelchair access has no proposed provision",
+      "Engages the explicitly unresolved missed-pickup procedure without inventing observed failures"
+    ],
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "A school shuttle could replace existing routes and simplify transport. We have not yet chosen the vehicle specification."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "How would wheelchair users board, and what happens after a missed pickup? Both questions need answers before replacing the routes."
+      }
+    ]
+  },
+  {
+    "id": "tree_fresh_wetlands",
+    "split": "test",
+    "kind": "cross_turn_multiple_branches",
+    "motion": "The county should build a wetlands boardwalk",
+    "side": "against",
+    "own_claim": "Wetland access must protect habitat",
+    "own_opening": "Public access has value, but habitat disturbance and continuing upkeep need separate treatment.",
+    "chunks": [
+      "Your habitat concern changes my design: the route will avoid the nesting area and close during the breeding season.",
+      "This does not settle your maintenance concern. I still propose a boardwalk, but I have no funded maintenance agreement to offer today.",
+      "I withdraw my earlier suggestion of unrestricted year-round access. Guided visits during the permitted season remain the proposed use.",
+      "Please assess this seasonal guided-access plan and the unresolved maintenance commitment separately."
+    ],
+    "checks": [
+      "Recognizes breeding-season closure, avoidance of the nesting area and guided access",
+      "Does not attack unrestricted year-round access as the current proposal",
+      "Distinguishes the answered habitat restriction from the unresolved maintenance funding question"
+    ],
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "A boardwalk could offer unrestricted year-round access to the wetlands. Volunteers might maintain it."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Disturbance near nesting areas and a dependable maintenance budget are separate issues. A volunteer suggestion is not a funded upkeep plan."
+      }
+    ]
+  },
+  {
+    "id": "tree_fresh_alerts",
+    "split": "test",
+    "kind": "cross_turn_support_and_scope",
+    "motion": "The region should introduce a public emergency alert app",
+    "side": "against",
+    "own_claim": "Warnings must reach residents without smartphones",
+    "own_opening": "A warning system should preserve access for residents who lack a compatible phone or reliable connectivity.",
+    "chunks": [
+      "I accept your concern about residents without smartphones. Existing sirens and radio notices will continue; the app would supplement them.",
+      "I retract the claim that installation should be mandatory. Enrollment is voluntary and residents can unsubscribe.",
+      "We still disagree about a central cost: someone must maintain translations and test whether alerts remain understandable.",
+      "I propose funding a six-month supplementary trial, with translation coverage published before enrollment, rather than replacing the existing warning channels."
+    ],
+    "checks": [
+      "Recognizes voluntary enrollment and continuation of sirens and radio notices",
+      "Does not portray smartphone ownership or installation as mandatory under the current plan",
+      "Addresses an unresolved translation, testing or maintenance question while acknowledging the six-month supplementary trial"
+    ],
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "All residents should install an emergency alert app, which could eventually replace sirens and radio notices."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Mandatory smartphone dependence would exclude some residents. Sirens and radio must remain, and translation and testing require continuing resources."
+      }
+    ]
+  },
+  {
+    "id": "tree_fresh_tools",
+    "split": "test",
+    "kind": "long_scope_duplicate",
+    "motion": "The library should lend household tools",
+    "side": "against",
+    "own_claim": "Shared tools require accountable maintenance",
+    "own_opening": "Borrowing programs need a workable inspection process and clear responsibility for damaged equipment.",
+    "chunks": [
+      "The library should test lending ordinary household tools from one branch. The trial would last four months.",
+      "Borrowers would receive basic safety instructions and return the tools to a staffed desk.",
+      "Borrowers would receive basic safety instructions and return the tools to a staffed desk.",
+      "The collection excludes powered cutting tools and equipment that needs professional certification. Borrowers do not pay a cash deposit.",
+      "An inspection log must be completed after each return. The staff hours and replacement fund have not yet been specified; these remain open questions."
+    ],
+    "checks": [
+      "Recognizes the four-month one-branch trial and exclusion of powered cutting tools",
+      "Does not claim that borrowers must pay a cash deposit or that no inspections are proposed",
+      "Critiques an unresolved staffing or replacement-funding question without inventing accident statistics"
+    ]
+  },
+  {
+    "id": "tree_fresh_market",
+    "split": "test",
+    "kind": "long_partial_withdrawal",
+    "motion": "The council should expand its weekend street market",
+    "side": "against",
+    "own_claim": "Market access must coexist with resident mobility",
+    "own_opening": "We should assess loading access, accessible routes and the costs of managing larger market areas.",
+    "chunks": [
+      "The council should expand the weekend street market and close the entire adjoining street to vehicles.",
+      "More stalls may give local vendors room to participate, but a route for residents and deliveries needs consideration.",
+      "I withdraw closing the entire street. One marked lane will stay open for residents, emergency vehicles and scheduled deliveries.",
+      "I withdraw closing the entire street. One marked lane will stay open for residents, emergency vehicles and scheduled deliveries.",
+      "The expansion would be limited to six Sundays. Stall fees would pay for stewards, but the staffing requirement and fee level remain to be determined."
+    ],
+    "checks": [
+      "Recognizes the open lane for residents, emergency vehicles and scheduled deliveries",
+      "Does not attack a complete street closure as the current proposal",
+      "Addresses the unresolved staffing or fee design and acknowledges the six-Sunday limit"
+    ]
+  },
+  {
+    "id": "tree_fresh_river",
+    "split": "test",
+    "kind": "long_split_exception",
+    "motion": "The county should expand river water sampling",
+    "side": "against",
+    "own_claim": "Environmental testing needs a clear follow-up process",
+    "own_opening": "Sampling is useful only if collection, reporting and responses to concerning results are defined.",
+    "chunks": [
+      "The county should invite trained volunteers to collect river samples each month, except",
+      "at sites requiring boats or entry into fast-flowing water. Staff would handle those sites, and volunteers would remain on approved banks.",
+      "An accredited laboratory would perform the analysis. Volunteers would not interpret chemical results or issue safety notices.",
+      "I propose a one-year pilot with quarterly public reports. That reporting schedule does not mean laboratory testing happens only quarterly.",
+      "We have not fixed the threshold or responsible office for issuing a public warning. Those decisions must be completed before the first sample is collected."
+    ],
+    "checks": [
+      "Recognizes the limits on volunteer collection and staff handling of hazardous sites",
+      "Distinguishes monthly sampling from quarterly reports and does not assign laboratory interpretation to volunteers",
+      "Focuses on the unresolved warning threshold or responsible office without alleging that volunteers issue safety notices"
+    ]
+  },
+  {
+    "id": "tree_fresh_pool",
+    "split": "test",
+    "kind": "long_independent_arguments",
+    "motion": "The town should recover waste heat for a swimming pool",
+    "side": "against",
+    "own_claim": "Pool investment should compare complete operating costs",
+    "own_opening": "Energy options should be compared on maintenance, reliability and the actual terms offered to the town.",
+    "chunks": [
+      "The town should consider buying waste heat from the nearby facility to warm its pool. This could use heat that would otherwise be discarded.",
+      "I initially described the arrangement as free heating. That wording was wrong: the facility would charge a negotiated service fee.",
+      "I withdraw the claim that heating is free, but retain the separate argument that discarded heat may be useful. No price or savings estimate has been agreed.",
+      "The current boiler would remain available as backup. The proposal does not commit the pool to relying on one heat source.",
+      "I am asking for a comparison study before any supply contract, not approval of a completed deal. Reliability obligations and the fee are still open."
+    ],
+    "checks": [
+      "Recognizes that free heating was withdrawn and no price or savings estimate is agreed",
+      "Recognizes the retained backup boiler and study-before-contract sequence",
+      "Challenges unresolved terms or reliability without claiming that withdrawal of the free-heating claim disproves all possible waste-heat value"
+    ]
+  }
+]

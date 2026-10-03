@@ -4,7 +4,7 @@
 
 `planning.mode` selects `legacy` (default), `end_of_turn`, `linear`,
 `corrected_tree`, `adaptive_linear`, `tree_plan`, `adaptive_tree`, `structured_linear`,
-`grounded_linear`, or `light_linear` in session YAML.
+`grounded_linear`, `light_linear`, `grounded_tree`, or `light_tree` in session YAML.
 See [`configs/gemma-incremental.yml`](configs/gemma-incremental.yml) for an example.
 For command-line debaters, put the same `planning` mapping in the debater configuration.
 
@@ -83,6 +83,16 @@ The transcript selector lets you revisit earlier turns during a debate. Choose a
 stage and speaker to read that turn, or use **Back to live** / **Follow current turn**
 to return to ongoing transcription. Recording and playback continue while you read
 an earlier turn, and live updates preserve your selection.
+
+The tree-centered follow-up keeps the original argument trees active. `grounded_tree`
+selects source-attributed active nodes, prioritizes unanswered branches and attacks
+on our claims, and binds each response to a stable node ID plus a branch version.
+Revisions archive dependent branches; removed or changed targets invalidate old
+notes. Existing feedback/revision calls check source fidelity. `light_tree` adds
+the same bounded scheduling as `light_linear`. Source spans survive checkpoints
+and JSON serialization, including prior turns. These checks establish attribution
+and target identity, not semantic entailment. See the continually maintained
+[all-variant table](../process.md#方案总表持续维护包含所有已尝试方案) for evaluation status.
 
 ## Run locally
 
