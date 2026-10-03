@@ -11,7 +11,7 @@ sys.path.insert(0,str(ROOT/'src'))
 from debate_tree import DebateTree
 from streaming.tree_grounding import tree_targets
 from streaming.grounding import parse_state, normalize
-from streaming.branch_planning import parse_branch_state
+from streaming.branch_planning import parse_branch_state, planning_material, material_version
 from streaming.tree_selection import select_nodes, is_current
 
 
@@ -31,13 +31,28 @@ def diagnose(run_id, cases_file):
         active={n['node_id']:n for n in tree_targets(trees,opponent,**selection_limits)}
         stored=[n for t in trees for n in t.get_all_nodes() if n.parent is not None]
         eligible=[n for n in stored if n.side==opponent and is_current(n) and n.source_spans]
-        _, context_nodes=select_nodes(trees,opponent,**selection_limits)
+        target_nodes, context_nodes=select_nodes(trees,opponent,**selection_limits)
+        all_targets, all_context=select_nodes(trees,opponent,max_targets=max(1,len(stored)),
+                                             max_context_nodes=max(1,len(stored)))
+        actual_ids={n.node_id for n in target_nodes+context_nodes}
+        all_view_ids={n.node_id for n in all_targets+all_context}
+        assert len(active)<=selection_limits['max_targets']
+        assert len(context_nodes)<=selection_limits['max_context_nodes']
+        assert all(is_current(n) for n in target_nodes+context_nodes)
+        assert len(actual_ids)==len(target_nodes)+len(context_nodes)
+        coverage_valid=True
+        if result['mode'] in ('flat_tree','branch_tree') and before['state']:
+            material=planning_material(list(active.values()),trees,opponent,topology=result['mode']=='branch_tree')
+            coverage_valid=before['state'].get('material_version')==material_version(material)
         selected=before['state'].get('claims',[])
         bindings.append(dict(case=result['case'],repeat=result['repeat'],mode=result['mode'],
             active_targets=len(active),selected_claims=len(selected),
             stored_nodes=len(stored),historical_or_dependent_nodes=sum(not is_current(n) for n in stored),
             eligible_opponent_nodes=len(eligible),omitted_eligible_targets=len(eligible)-len(active),
             additional_context_nodes=len(context_nodes),
+            omitted_nodes_from_full_current_view=len(all_view_ids-actual_ids),
+            context_cap_saturated=len(context_nodes)==limits['max_tree_context_nodes'],
+            coverage_material_version_valid=coverage_valid,
             target_cap_binding=len(eligible)>limits['max_tree_targets'],
             final_raw_prefix_fallback=not bool(before['state']),
             selected_versions_valid=all(c['node_id'] in active and c['target_version']==active[c['node_id']]['version'] for c in selected),
@@ -103,7 +118,8 @@ def diagnose(run_id, cases_file):
     (base/f'{run_id}_diagnostics.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({'metrics':by_mode,'integrity_issues':integrity},indent=2))
     assert not integrity
-    assert all(b['selected_versions_valid'] and b['request_versions_valid'] for b in bindings)
+    assert all(b['selected_versions_valid'] and b['request_versions_valid']
+               and b['coverage_material_version_valid'] for b in bindings)
     return report
 
 

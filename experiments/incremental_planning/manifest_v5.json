@@ -1,6 +1,6 @@
 {
   "task": "Evaluate retained history with bounded generation views after implementation review",
-  "status": "prepared; frozen before first new model output",
+  "status": "evaluation finished: 80 generated, 79 judged; one exhausted judgment unavailable",
   "created_utc": "2026-10-03T17:32:45.109922+00:00",
   "authorization": "Existing user-approved cumulative USD200 task budget; user now requested model evaluation. No increase or reset.",
   "starting_commit": "9899ce0",
@@ -21,7 +21,13 @@
       "answers": 64,
       "workers": 2,
       "max_tree_targets": 8,
-      "max_tree_context_nodes": 16
+      "max_tree_context_nodes": 16,
+      "generated_answers": 64,
+      "judged_answers": 63,
+      "requests": 970,
+      "known_usage_estimate_usd": 1.748969949999999,
+      "summary": "retained-heldout-v1_summary.json",
+      "diagnostics": "retained-heldout-v1_diagnostics.json"
     },
     {
       "run_id": "retained-wide-v1",
@@ -33,7 +39,13 @@
       "answers": 16,
       "workers": 1,
       "max_tree_targets": 128,
-      "max_tree_context_nodes": 256
+      "max_tree_context_nodes": 256,
+      "generated_answers": 16,
+      "judged_answers": 16,
+      "requests": 280,
+      "known_usage_estimate_usd": 0.51841133,
+      "summary": "retained-wide-v1_summary.json",
+      "diagnostics": "retained-wide-v1_diagnostics.json"
     }
   ],
   "model": "google.gemma-4-26b-a4b",
@@ -103,5 +115,60 @@
     "Text-only simulated residual latency excludes ASR/TTS.",
     "New cases do not establish a before/after quality change relative to earlier rounds."
   ],
-  "offline_preflight": "Full suite 290 tests passed, 42 subtests; one existing Pydantic warning; 23.07s"
+  "offline_preflight": "Full suite 290 tests passed, 42 subtests; one existing Pydantic warning; 23.07s",
+  "source_commit": "93eabcd",
+  "judge_retries": [
+    {
+      "failed_request_id": 4971,
+      "label": "retained-heldout-v1/retained_fresh_equipment/grounded_linear/0",
+      "reason": "1600-token judge output truncated; JSON unterminated string",
+      "retry_policy": "one unchanged 1600-token retry using saved answer",
+      "known_failed_usage_usd": 0.0395296,
+      "status": "succeeded; no further retry",
+      "answer_regenerated": false,
+      "retry_request_id": 5024,
+      "retry_usage_usd": 0.0275836,
+      "identical_request_verified": true
+    },
+    {
+      "failed_request_id": 5237,
+      "label": "retained-heldout-v1/retained_fresh_courtyard/branch_tree/1",
+      "reason": "HTTP 503 Service Unavailable",
+      "retry_policy": "one unchanged 1600-token retry using saved answer",
+      "known_failed_usage_usd": null,
+      "failed_reservation_retained_usd": 0.3781712,
+      "status": "retry exhausted; judgment unavailable",
+      "answer_regenerated": false,
+      "retry_request_id": 5263,
+      "retry_usage_usd": null,
+      "retry_reservation_retained_usd": 0.3781712,
+      "identical_request_verified": true
+    }
+  ],
+  "missing_judgments": [
+    [
+      "retained_fresh_courtyard",
+      "branch_tree",
+      1
+    ]
+  ],
+  "missing_data_policy": "Preserve all 80 generated answers; report 79 judgments if remaining jobs finish. Exclude any case lacking both repeats from paired comparisons involving that arm; retain unpaired descriptive counts and report them. No further retry of the exhausted judge.",
+  "completed_utc": "2026-10-03T18:08:31.640063+00:00",
+  "generated_answers": 80,
+  "judged_answers": 79,
+  "comparison": "retained-views-v1_comparison.json",
+  "cost_audit": "cost_audit_v5.json",
+  "source_and_cases_unchanged": true,
+  "final_cost": {
+    "requests": 1250,
+    "known_usage_estimate_usd": 2.26738128,
+    "unknown_request_reservations_usd": 0.7563424,
+    "additional_accounted_exposure_usd": 9.82586752,
+    "cumulative_known_usage_usd": 7.606813310000004,
+    "cumulative_accounted_exposure_usd": 32.94019004,
+    "remaining_guarded_budget_usd": 167.05980996,
+    "pending": 0,
+    "audit_issues": []
+  },
+  "conclusion": "No established stable overall advantage over Grounded Linear. Branch complete-case cap comparison favors default, but little actual node omission, distinct extracted graphs, fallback outputs and missing-judge sensitivity prevent attribution to pruning. Condition-ledger recall and final-answer retention remain bottlenecks."
 }

@@ -45,13 +45,14 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 | Tree Plan (`tree_plan`) | 可纠错论证树驱动流式反驳笔记 | 同时组织论证关系和提前准备；树与笔记维护较贵 | 第一轮：12 × 2，Gemma 评分；第三轮：8 × 1，GPT-5.6，通过率 50.0%，模拟文本等待 17.28s |
 | Adaptive Tree (`adaptive_tree`) | Tree Plan 加模型门控，按需更新树和笔记 | 尝试减少更新；流程更复杂且有门控开销 | 第一轮：12 × 2，Gemma 评分 |
 | Structured Linear (`structured_linear`) | 将当前观点、原文引用、范围/例外和反驳假设分开保存 | 可检查来源；结构合法不保证语义正确，本轮通过率下降 | 第二轮：10 × 1，GPT-5.6 评分；另有旧案例开发诊断 |
-| Grounded Linear (`grounded_linear`) | 结构化状态加针对目标、例外和事实依据的反馈/修订 | 不新增反馈调用；减少无依据断言，但条件覆盖与语义可靠性仍有限 | 第二轮 10 × 1；第三轮 8 × 1，通过率 66.7%；第四轮 8 × 2，通过率 39.6%，等待 8.79s，均 GPT-5.6 |
+| Grounded Linear (`grounded_linear`) | 结构化状态加针对目标、例外和事实依据的反馈/修订 | 不新增反馈调用；减少无依据断言，但条件覆盖与语义可靠性仍有限 | 第二轮 10 × 1；第三轮 8 × 1，通过率 66.7%；第四轮 8 × 2，通过率 39.6%，等待 8.79s，均 GPT-5.6；第五轮保留树对照：16/16 评分，条件检查 45.8%，模拟等待 10.20s |
 | Light Linear (`light_linear`) | Grounded Linear 加精确重复跳过、未完句缓冲、选择性门控 | 减少无效工作；调度的独立收益仍不确定 | 第二轮：10 × 1；第三轮：8 × 1，均 GPT-5.6；第三轮通过率 70.8%，等待 10.52s；另有旧案例单次真实 ASR/TTS 对照 |
-| Grounded Tree (`grounded_tree`) | 反驳绑定有效节点与原文，利用攻击关系和未回应目标排序；第四轮修复冲突更新、节点归属和回应关系 | 修复后绑定更可靠；仍付出建树成本，提取正确性和最终条件覆盖不由绑定保证 | 第三轮 8 × 1，通过率 62.5%，最终回退 3/8；第四轮 8 × 2，通过率 47.9%，等待 10.20s，最终回退 1/16，均 GPT-5.6；不同案例不能作修复前后质量比较 |
+| Grounded Tree (`grounded_tree`) | 反驳绑定有效节点与原文，利用攻击关系和未回应目标排序；第四轮修复冲突更新、节点归属和回应关系 | 修复后绑定更可靠；仍付出建树成本，提取正确性和最终条件覆盖不由绑定保证 | 第三轮 8 × 1，通过率 62.5%，最终回退 3/8；第四轮 8 × 2，通过率 47.9%，等待 10.20s，最终回退 1/16，均 GPT-5.6；不同案例不能作修复前后质量比较；第五轮：16/16 评分，43.8%，13.19s |
 | Light Tree (`light_tree`) | Grounded Tree 加重复跳过、未完句缓冲与选择性门控，结束时强制处理积压 | 本轮调用从 Grounded Tree 的 14.0 降至 13.25；延迟未进一步下降，质量仍受提取与条件覆盖限制 | 第三轮：8 × 1，GPT-5.6，通过率 62.5%，等待 11.96s；7 次中间状态回退，2/8 最终回退 |
-| Flat Tree (`flat_tree`) | 修复后的同一树更新与节点来源；索引式规划和限定条件账本，但规划/输出移除祖先、回应边和结构排序 | 隔离显式关系指导；仍可从发言推断关系、支付建树成本，索引格式仍会失败 | 第四轮 8 × 2，GPT-5.6，通过率 41.7%，等待 9.53s，最终回退 4/16 |
-| Branch Tree (`branch_tree`) | 在同一来源机制上使用质疑—回应路径、已有回应、同一质疑的其他回应与让步边 | 关系直接参与下一步反驳；上下文和成本增加，最终仍会遗漏限定条件；对 Flat 的独立增益未证实 | 第四轮 8 × 2，GPT-5.6，通过率 43.8%，等待 10.62s，最终回退 3/16；相对 Flat +2.1 个百分点，95% 区间跨零 |
-| 完整保留树 + 规则选择（现有纠错树模式的新实现） | 撤回只标记，修改新增版本；旧节点与回应链保留；生成按当前性、最近更新、回应情况选择有限子图 | 历史可追溯且不再把整个树送入生成；历史存储/抽取开销增加，有限视图仍可能遗漏相关内容，语义修正判断仍依赖模型 | 实现/质量审查已通过 289 项测试；第五轮新案例模型评测已准备，默认 8+16 节点与放宽上限 128+256 对照；结果待完成，不能沿用第四轮分数 |
+| Flat Tree (`flat_tree`) | 修复后的同一树更新与节点来源；索引式规划和限定条件账本，但规划/输出移除祖先、回应边和结构排序 | 隔离显式关系指导；仍可从发言推断关系、支付建树成本，索引格式仍会失败 | 第四轮 8 × 2，GPT-5.6，通过率 41.7%，等待 9.53s，最终回退 4/16；第五轮：16/16 评分，56.3%，10.96s |
+| Branch Tree (`branch_tree`) | 在同一来源机制上使用质疑—回应路径、已有回应、同一质疑的其他回应与让步边 | 关系直接参与下一步反驳；上下文和成本增加，最终仍会遗漏限定条件；对 Flat 的独立增益未证实 | 第四轮 8 × 2，GPT-5.6，通过率 43.8%，等待 10.62s，最终回退 3/16；相对 Flat +2.1 个百分点，95% 区间跨零；第五轮：15/16 评分（1 条 503 耗尽重试），55.6%，12.43s；与线性基线的完整案例区间跨零 |
+| 完整保留树 + 规则选择（现有纠错树模式的新实现） | 撤回只标记，修改新增版本；旧节点与回应链保留；生成按当前性、最近更新、回应情况选择有限子图 | 来源/版本审计通过；限定条件列表和最终回答仍会遗漏信息，节点上限不等于 token 上限 | 第五轮 8 个新案例 × 2 次 × 5 配置：80 回答、79 评分；成功绑定树的 Branch 子集覆盖率 47.2%，整体优势未确立 |
+| Branch 宽视图（同一模式的参数消融） | 相同保留历史和当前性规则，节点上限从 8+16 放宽到 128+256，仍最多规划 3 个主张 | 本轮未截断当前视图；并非旧代码或无限长度生成，另行抽取的图存在差异 | 第五轮：16/16 评分，47.9%，12.43s；默认 Branch 的完整案例均分较高，但不足以归因于节点裁剪 |
 
 第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
 各轮成绩属于当时冻结的代码。最新的“保留树 + 规则选择”修改现有纠错树模式，不增加新的模式名；以前评测采用的整条分支归档移除行为保留在历史提交中。
@@ -60,7 +61,7 @@ Evaluate targeted rebuttal quality, final-condition correctness, claim coverage,
 
 ## Budget and accounting
 
-**Latest completed run:** the 80-answer branch comparison is complete. Approved cumulative cap remains **USD200**; cumulative provider-usage estimate **$5.33943203**, active guarded occupancy **$23.11432252**, available **$176.88567748**, zero pending requests. Historical pre-dispatch reservations total $442.58019360 and are not current occupancy. Successful requests settle at 4× verified usage; historical failed/unknown/audio bounds remain. The current retained-tree implementation uses offline tests only and adds no experiment spend. The earlier USD320 proposal is withdrawn.
+**Latest completed evaluation:** retained-tree comparison finished with **80 generated answers, 79 judgments**; one judgment remains unavailable after its allowed retry also returned HTTP 503. Approved cumulative cap remains **USD200**; cumulative known provider-usage estimate **$7.60681331**, active guarded occupancy **$32.94019004**, available **$167.05980996**, zero pending requests. Historical reservations total **$621.08684240**, not current occupancy. This round adds **$2.26738128 known usage** and retains **$0.75634240** for the two requests with unknown usage. The earlier USD320 proposal remains withdrawn.
 
 - Approved cumulative cap: **USD 200.00**.
 - At creation of this log: **0 paid inference requests launched by this task; attributable experiment cost USD 0.00**. Existing unrelated proxy traffic is excluded.
@@ -964,3 +965,100 @@ PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/pyth
 ```
 
 Final launch preflight: **290 tests passed, 42 subtests**, one existing Pydantic warning, **23.07 s**. Local proxy liveliness returned HTTP 200. No paid pilot is required; this run evaluates the already-reviewed implementation without prompt tuning.
+
+Launch source frozen at **93eabcd**. Main workers 0/1 and wide worker 0 launched with the exact commands above. First **7/80** answers judged without request errors; both source and data digests match the manifest. Only offline reporting/documentation may change during evaluation.
+
+Runtime recovery: main worker 1 stopped at `retained_fresh_equipment/grounded_linear/0` because judge request **4971** returned truncated JSON at the unchanged **1600-token** cap. The completed answer is saved; generation is not repeated. Its **984 input / 1600 output tokens, $0.03952960** remain recorded. Per the frozen policy, resume worker 1 once with identical arguments and output cap to retry only the missing judgment, then continue its unstarted jobs. Preserve the original log by appending. Other workers and completed judgments are unchanged. A valid usage receipt with malformed task output is still charged normally; it is not a free request.
+
+The single unchanged retry succeeded as request **5024**, **$0.02758360** usage. Its full request object equals request 4971 (same answer, prompt, model and 1600-token cap). Worker 1 continues remaining jobs; there is no further retry for this judgment.
+
+A separate main-worker-0 judge request **5237** for `retained_fresh_courtyard/branch_tree/1` received **HTTP 503**. Its answer is saved. The complete **$0.37817120** reservation stays charged because usage is unknown. Resume worker 0 with identical arguments for this missing judgment's single same-setting retry; no answer or completed verdict is replaced. This is distinct from the already-resolved 4971 failure.
+
+The permitted retry **5263** also returned HTTP 503; both request objects are identical. No further attempt is made for this judgment. Each failed attempt retains **$0.37817120**, total **$0.75634240**, with unknown billed usage. The answer remains unmodified and unscored. `resume_retained_remaining.py` finishes worker 0's remaining partition using the frozen benchmark functions, hashes, model settings and shared guard while skipping only this exhausted judgment. It records a `finished_worker0.json` marker, not a false all-judged completion. Pairwise tests involving Branch exclude the incomplete courtyard case entirely (both repeats); standalone tables explicitly report the unequal judged count. This missing-data decision follows the predeclared retry limit, without reference to the unavailable score.
+
+
+## Retained-tree model evaluation results — 2026-10-03 UTC
+
+**Result:** the reviewed implementation completes real generation and preserves source/version integrity, but this small test does **not establish a stable overall advantage over Grounded Linear or a causal benefit from node pruning**. Flat has the highest descriptive checklist mean and rebuttal-strength mean; Default Branch has a higher complete-case mean than Wide Branch, but the cap seldom removes current-view information, extracted graphs differ, high-scoring fallback outputs contribute to its mean, and one missing judgment materially affects uncertainty.
+
+Frozen inference/evaluation source: **93eabcd**, containing reviewed implementation **9899ce0** plus CLI-only evaluation caps. Both source and `cases_v5.json` hashes match the pre-launch manifest. **80/80 answers generated, 79/80 scored** by GPT-5.6 Sol. Eight newly authored cases, two repetitions, five configurations. No source, prompt or data tuning after outputs began. Prior rounds use different cases and cannot establish a before/after quality gain here.
+
+### Main descriptive results
+
+Checklist means are explicit coverage of three composite conditions per answer, **not an overall debate-ability score**. Error flags and strength are fallible automatic judgments. All configurations generate 16 answers; only Default Branch has 15 available judgments. Quality/error means below use available judgments; latency, calls, word counts and generation costs in `retained-views-v1_comparison.json` use **all 16 generated answers per configuration**, including the unscored answer. The generic per-run summary reports timing on its judged subset; use the comparison artifact for the all-generated timing table.
+
+| Configuration | Judged / generated | Condition checklist | Strength / 5 | Strawman flag | Unsupported-fact flag | Simulated text-ready wait | Generation cost / answer |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Grounded Linear | 16 / 16 | 45.83% | 3.44 | 18.8% | 37.5% | 10.20s | $0.003590 |
+| Grounded Tree, 8+16 | 16 / 16 | 43.75% | 3.50 | 18.8% | 31.2% | 13.19s | $0.011175 |
+| Flat Tree, 8+16 | 16 / 16 | 56.25% | 3.81 | 12.5% | 31.2% | 10.96s | $0.009993 |
+| Branch Tree, 8+16 | 15 / 16 | 55.56% | 3.40 | 33.3% | 46.7% | 12.43s | $0.014971 |
+| Branch Tree, 128+256 | 16 / 16 | 47.92% | 3.56 | 12.5% | 25.0% | 12.43s | $0.014157 |
+
+Grounded Linear makes **7.0 generation-side calls/answer**; every tree configuration makes **16.5**, including **4.5 prior-history setup calls** and 12 live calls on average. Mean complete-worker return is **10.20 / 16.09 / 16.76 / 15.93 / 15.23 s** in table order; the text-ready wait excludes subsequent own-speech tree analysis. These are measured model durations on the fixed simulated text arrival schedule, not live audio latency. Default Branch generation costs about **4.17× Grounded Linear** and **1.50× Flat** in this sample. Its planning input is **826,295 tokens**, versus **306,092 Flat** and **747,966 Wide Branch** over 64 planning calls each. Default caps did **not** demonstrate token/cost savings over the separately sampled Wide pipeline.
+
+### Paired effects and missing-score sensitivity
+
+Average the two repetitions within each case, then bootstrap cases 10,000 times. Intervals are unadjusted for multiple comparisons. The missing Default Branch courtyard score causes **the whole courtyard case to be excluded from its paired tests**, leaving seven paired cases; descriptive means above retain all available judgments and therefore differ from these complete-case means.
+
+| Candidate minus reference | Paired cases | Checklist difference, percentage points | 95% case-bootstrap interval | Text-ready wait difference |
+| --- | --- | --- | --- | --- |
+| grounded_tree − grounded_linear | 8 | -2.08 | [-14.58, +10.42] | +2.99s |
+| branch_tree − grounded_linear | 7 | +9.52 | [-2.38, +21.43] | +2.32s |
+| branch_tree − flat_tree | 7 | +4.76 | [+0.00, +11.90] | +1.57s |
+| branch_tree − branch_wide | 7 | +11.90 | [+4.76, +21.43] | +0.01s |
+
+Default Branch vs Grounded Linear is **57.14% vs 47.62%** on the seven complete cases; its quality interval crosses zero, while its text-wait difference is **+2.32 s [1.23, 3.38]**. Branch vs Flat is **57.14% vs 52.38%** on those cases; the interval touches zero. The secondary Flat-vs-Linear comparison across all eight cases is **+10.42 pp [-4.17, +27.08]**, also uncertain.
+
+Default Branch vs Wide is **57.14% vs 45.24%** on seven complete cases, **+11.90 pp [+4.76, +21.43]**. This conditional statistical result is retained, but it is **not evidence that clipping nodes caused the improvement**. For the missing judgment, an explicitly hypothetical all-fail to all-pass bound gives Default Branch's eight-case mean **52.08%–58.33%**. Under the all-fail assumption its eight-case difference vs Wide is **+4.17 pp [-14.58, +18.75]**; under all-pass it is **+10.42 pp [+2.08, +18.75]**. The sensitivity scenarios are not imputed scores and never alter the raw answer or judge artifacts.
+
+### Did the selection mechanism actually operate?
+
+Across **64 tree answers**, all nonempty claim bindings pass saved-tree and raw-request version/source checks; all selected target/context nodes are currently eligible, node budgets and distinct-node counts hold, and Branch/Flat material fingerprints match. **Zero source/owner integrity issues** were found. These checks validate identity/attribution, not semantic extraction or argumentative truth.
+
+| Configuration | Target cap binds at final snapshot | Mean eligible / selected targets | Mean nodes omitted from the full current view | Final raw-prefix fallback | Valid bound-claim plans |
+| --- | --- | --- | --- | --- | --- |
+| branch_tree | 4 / 16 | 6.88 / 6.31 | 0.19 | 3 / 16 | 13 / 16 |
+| flat_tree | 3 / 16 | 6.50 / 6.00 | 0.25 | 4 / 16 | 12 / 16 |
+| grounded_tree | 4 / 16 | 6.50 / 6.25 | 0.00 | 3 / 16 | 13 / 16 |
+| branch_wide | 0 / 16 | 6.31 / 6.31 | 0.00 | 0 / 16 | 16 / 16 |
+
+The **16-node context cap never saturates**. Default Branch hits the 8-target cap for archive repeat 1, courtyard repeats 0/1, and visitor repeat 0. However, surrounding context recovers most omitted targets: only the two courtyard answers actually omit current-view nodes, **one and two nodes respectively**. Wide's 128/256 caps never truncate its current view. Multi-idea speeches are often consolidated into a few extracted nodes, so these cases are a limited stress test of large-tree pruning. Different arms have different extracted trees despite zero helper temperature; the numerical cap description in the prompt also differs. Shared-graph controlled replay and substantially larger natural trees would be needed to isolate pruning effects.
+
+Planning rejections per 64 snapshots: **Grounded Tree 9**, **Flat 12**, **Default Branch 6**, **Wide Branch 4**. Grounded Tree's failures were quote-attribution checks. Flat had six oversized lists, five invalid rebuttal indices and one invalid target index. Default Branch had five oversized lists and one invalid rebuttal index. Wide had one oversized list, one invalid rebuttal index and two invalid target indices. Strict parsing and fallback were retained; no parser relaxation or token-cap change was made after observing these failures. Grounded Linear had 12 rejected snapshots (10 source-quote checks, two invalid limits).
+
+Default Branch's **three fallback answers average 88.9% checklist coverage**, while its **12 judged answers with bound plans average 47.2%** (13 generated with bound plans, one unscored). Wide's 16 bound plans average 47.9%. These subsets contain different cases and are **descriptive, not a causal comparison**; they show why the aggregate Branch mean cannot be attributed to successful tree use alone.
+
+### Concrete output checks
+
+- **Courtyard, Default Branch repeat 0:** the delivered coverage ledger contains the exact two-benches/three-planters/three-month limit, clear access path and named-waterer condition. The answer reduces these to generic “specific constraints for access and watering” and omits the named scope. Its two failed coverage checks are consistent with the answer. Flat repeat 0, using raw-prefix fallback, retains the item count and trial duration but still omits the access-path and named-waterer conditions. Information already in the ledger can be lost during final drafting/revision.
+- **Night garden, Default Branch repeat 0:** the ledger contains Friday-only opening until eight and the existing-closing-time fallback when no volunteer attends. The answer retains the four-week trial and volunteer requirement but drops Friday/eight and the fallback. Preserving and correctly binding the reasserted position does not ensure faithful final compression.
+- **Archive, Wide repeat 0:** the full current tree retains the source “Scanning and the listening point need separate costings.” The keyword-based boundary ledger omits that source (the source uses “need”, outside the current marker list), and the selected plan concentrates on staffing. The answer misses the separate-costing condition and compresses six Saturdays into six weeks while omitting two booked places. This failure occurs without node-budget truncation; the ledger itself has incomplete semantic coverage.
+- **Equipment, Default Branch repeat 1:** an invalid final indexed plan causes raw-prefix fallback. The answer reproduces much of the opponent's speech verbatim, preserving all checklist conditions and receiving 3/3 checks, but the judge still flags unsupported facts. High literal coverage is not sufficient evidence of a better substantive rebuttal; this high-scoring answer does not demonstrate successful tree guidance.
+- **Parcel, Wide repeat 1:** the answer correctly preserves the prior-turn home-delivery concession, but drops six weeks and no collection fee even though they are present in its ledger. This is another generation-stage omission, not a failure to store prior context.
+
+Spot checks did not replace or edit any automated verdict. Composite checks deliberately require all named conditions, so an omission can fail even when the answer does not contradict the opponent. Automated error flags remain unadjudicated and should not be treated as factual ground truth. Four dense cases have lower descriptive coverage than the position-change cases, but those tiny subgroup means are not independent significance tests.
+
+### Cost, completeness and verification
+
+| Component | Requests | Known usage estimate | Active guarded exposure |
+| --- | --- | --- | --- |
+| Main four-arm run | 970 | $1.74896995 | $7.75222220 |
+| Wide Branch control | 280 | $0.51841133 | $2.07364532 |
+| **This evaluation** | **1,250** | **$2.26738128** | **$9.82586752** |
+| **All work cumulative** | **5,343** | **$7.60681331** | **$32.94019004** |
+
+New known usage: **5,891,639 input / 313,564 output tokens**; **$0.86216208 generation-side + $1.40521920 judging**. The two 503 requests have unknown usage, not zero bills; their **$0.75634240** aggregate bound is included in guarded exposure. The truncated-but-billed judge and its successful retry remain included. No answer was regenerated. All 5,343 request artifacts and accounting entries pass the read-only audit with **zero issues and zero pending requests**. No settlement rewrite or budget increase. Remaining guarded headroom is **$167.05980996** under the original **$200** ceiling. Token/rate estimates are provisional, not provider invoice settlement.
+
+Main worker 1 and Wide worker 0 have all-judged completion markers. Main worker 0 has an explicit finished-with-one-unavailable-judgment marker. All workers exited; no retries or inference tasks remain active. The missing score is `retained_fresh_courtyard/branch_tree/1`, and no third attempt was dispatched after HTTP 503 requests 5237 and 5263. Inference remains frozen at the pre-launch source digest. The pre-launch full suite passed **290 tests, 42 subtests**; only offline reports, diagnostics and the remaining-job wrapper changed after launch. Final checks compile reporting scripts, verify paired arithmetic/completeness, confirm source/data hashes, and run `git diff --check`.
+
+Artifacts: `retained-heldout-v1_summary.json`, `retained-wide-v1_summary.json`, their `_diagnostics.json` files, `retained-views-v1_comparison.json`, `cost_audit_v5.json`, `manifest_v5.json`. All original raw requests, answers, errors and judgments are preserved. Default mode remains unchanged; no deployment. The next useful quality work is better boundary recall and final-answer condition retention, followed by a controlled larger-tree test; it has **not** been implemented or launched in this evaluation.
+
+```bash
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/diagnose_branch_run.py retained-heldout-v1 --cases-file experiments/incremental_planning/cases_v5.json
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/diagnose_branch_run.py retained-wide-v1 --cases-file experiments/incremental_planning/cases_v5.json
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/summarize.py retained-heldout-v1
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/summarize.py retained-wide-v1
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/compare_retained_views.py
+PYTHONPATH=src /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/reconcile_budget.py --output experiments/incremental_planning/cost_audit_v5.json
+```

@@ -1,0 +1,642 @@
+{
+  "run_id": "retained-heldout-v1",
+  "metadata": {
+    "tree_limits": {
+      "max_tree_targets": 8,
+      "max_tree_context_nodes": 16
+    },
+    "source_digest": "6c1bc6386c8eac0c78420ccc6f2d29d4b709e9280320575a09cc3324cce6374b",
+    "cases_digest": "74efd27c324fdfbbd4aa9fe6f9b988c53f86fc9e30616b650d71dfcc92bae92c",
+    "split": "test",
+    "case_ids": [
+      "retained_fresh_workshop",
+      "retained_fresh_parcel",
+      "retained_fresh_nightgarden",
+      "retained_fresh_waterstation",
+      "retained_fresh_archive",
+      "retained_fresh_courtyard",
+      "retained_fresh_equipment",
+      "retained_fresh_visitor"
+    ],
+    "modes": [
+      "grounded_linear",
+      "grounded_tree",
+      "flat_tree",
+      "branch_tree"
+    ],
+    "repeats": 2,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 2,
+    "judge_model": "gpt-5.6-sol",
+    "cap_usd": 200.0,
+    "judge_max_tokens": 1600,
+    "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted",
+    "judge_reasoning_effort": "none",
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "expected_answers": 64,
+  "completed_answers": 63,
+  "missing": [
+    [
+      "retained_fresh_courtyard",
+      "branch_tree",
+      1
+    ]
+  ],
+  "metrics": [
+    {
+      "mode": "grounded_linear",
+      "n": 16,
+      "checklist_rate": 0.4583333333333333,
+      "strength_mean": 3.4375,
+      "strawman_rate": 0.1875,
+      "unsupported_fact_rate": 0.375,
+      "residual_text_mean_s": 10.196001246687956,
+      "residual_text_median_s": 9.880202102009207,
+      "residual_worker_return_mean_s": 10.196041398310626,
+      "generation_calls_mean": 7,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 7,
+      "generation_cost_mean_usd": 0.0035901168750000004,
+      "answer_words_mean": 113.0625,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 12,
+      "invalid_targets": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "grounded_tree",
+      "n": 16,
+      "checklist_rate": 0.4375,
+      "strength_mean": 3.5,
+      "strawman_rate": 0.1875,
+      "unsupported_fact_rate": 0.3125,
+      "residual_text_mean_s": 13.190089457343635,
+      "residual_text_median_s": 11.97742749225986,
+      "residual_worker_return_mean_s": 16.088910514837114,
+      "generation_calls_mean": 16.5,
+      "prior_context_setup_calls_mean": 4.5,
+      "live_generation_calls_mean": 12,
+      "generation_cost_mean_usd": 0.011174666875000001,
+      "answer_words_mean": 110.625,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 9,
+      "invalid_targets": 0,
+      "revisions": 8
+    },
+    {
+      "mode": "flat_tree",
+      "n": 16,
+      "checklist_rate": 0.5625,
+      "strength_mean": 3.8125,
+      "strawman_rate": 0.125,
+      "unsupported_fact_rate": 0.3125,
+      "residual_text_mean_s": 10.955105706554605,
+      "residual_text_median_s": 10.448125637019984,
+      "residual_worker_return_mean_s": 16.75930120299381,
+      "generation_calls_mean": 16.5,
+      "prior_context_setup_calls_mean": 4.5,
+      "live_generation_calls_mean": 12,
+      "generation_cost_mean_usd": 0.0099926975,
+      "answer_words_mean": 116.125,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 12,
+      "invalid_targets": 0,
+      "revisions": 8
+    },
+    {
+      "mode": "branch_tree",
+      "n": 15,
+      "checklist_rate": 0.5555555555555556,
+      "strength_mean": 3.4,
+      "strawman_rate": 0.3333333333333333,
+      "unsupported_fact_rate": 0.4666666666666667,
+      "residual_text_mean_s": 12.46035791692118,
+      "residual_text_median_s": 12.058666504977737,
+      "residual_worker_return_mean_s": 15.84654645964763,
+      "generation_calls_mean": 16.4,
+      "prior_context_setup_calls_mean": 4.4,
+      "live_generation_calls_mean": 12,
+      "generation_cost_mean_usd": 0.014661376,
+      "answer_words_mean": 118.4,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 6,
+      "invalid_targets": 0,
+      "revisions": 8
+    }
+  ],
+  "reference_mode": "grounded_linear",
+  "paired_vs_baseline": {
+    "grounded_tree": {
+      "baseline": "grounded_linear",
+      "candidate": "grounded_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": -0.33333333333333326,
+          "latency_diff_s": 1.3159246880095452
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.2598817985272035
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 12.453301226982148
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": -0.16666666666666663,
+          "latency_diff_s": 0.4485817490203772
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.017076184041798115
+        },
+        {
+          "case": "retained_fresh_courtyard",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.6555232491733953
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.2977932355133817
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.5046235539775807
+        }
+      ],
+      "quality_diff_mean": -0.020833333333333322,
+      "quality_diff_95ci": [
+        -0.14583333333333331,
+        0.10416666666666666
+      ],
+      "latency_diff_mean_s": 2.9940882106556788,
+      "latency_diff_95ci_s": [
+        1.0687381158859353,
+        5.917201050148794
+      ]
+    },
+    "flat_tree": {
+      "baseline": "grounded_linear",
+      "candidate": "flat_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": -0.16666666666666663,
+          "latency_diff_s": 1.8228284590295516
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 1.9461712600314058
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 0.5847014504834078
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": -0.16666666666666663,
+          "latency_diff_s": -1.6672206799557898
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.0773071669973433
+        },
+        {
+          "case": "retained_fresh_courtyard",
+          "quality_diff": 0.49999999999999994,
+          "latency_diff_s": 0.8234380344219971
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": 0.0,
+          "latency_diff_s": 2.1014635504689068
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": 2.5387607714510523
+        }
+      ],
+      "quality_diff_mean": 0.10416666666666666,
+      "quality_diff_95ci": [
+        -0.04166666666666666,
+        0.2708333333333333
+      ],
+      "latency_diff_mean_s": 0.7591044598666485,
+      "latency_diff_95ci_s": [
+        -0.44375543731075595,
+        1.8022111675381893
+      ]
+    },
+    "branch_tree": {
+      "baseline": "grounded_linear",
+      "candidate": "branch_tree",
+      "case_count": 7,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.9789556570467539
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 3.662273293506587
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 1.3541780859522987
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": -0.16666666666666663,
+          "latency_diff_s": -0.042056510952534154
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": 0.0,
+          "latency_diff_s": 2.8231192488709205
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": 4.422225725022145
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.0338431550189853
+        }
+      ],
+      "quality_diff_mean": 0.09523809523809525,
+      "quality_diff_95ci": [
+        -0.023809523809523805,
+        0.21428571428571427
+      ],
+      "latency_diff_mean_s": 2.3189340934950224,
+      "latency_diff_95ci_s": [
+        1.232736822887091,
+        3.3834728480848884
+      ]
+    }
+  },
+  "paired_vs_legacy": {},
+  "component_comparisons": {
+    "grounded_tree_vs_grounded_linear": {
+      "baseline": "grounded_linear",
+      "candidate": "grounded_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": -0.33333333333333326,
+          "latency_diff_s": 1.3159246880095452
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.2598817985272035
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 12.453301226982148
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": -0.16666666666666663,
+          "latency_diff_s": 0.4485817490203772
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.017076184041798115
+        },
+        {
+          "case": "retained_fresh_courtyard",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.6555232491733953
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.2977932355133817
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.5046235539775807
+        }
+      ],
+      "quality_diff_mean": -0.020833333333333322,
+      "quality_diff_95ci": [
+        -0.14583333333333331,
+        0.10416666666666666
+      ],
+      "latency_diff_mean_s": 2.9940882106556788,
+      "latency_diff_95ci_s": [
+        1.0687381158859353,
+        5.917201050148794
+      ]
+    },
+    "flat_tree_vs_grounded_tree": {
+      "baseline": "grounded_tree",
+      "candidate": "flat_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": 0.5069037710200064
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -1.3137105384957977
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": 0.0,
+          "latency_diff_s": -11.86859977649874
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.115802428976167
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.0943833510391414
+        },
+        {
+          "case": "retained_fresh_courtyard",
+          "quality_diff": 0.49999999999999994,
+          "latency_diff_s": -0.8320852147513982
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.196329685044475
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.0341372174734715
+        }
+      ],
+      "quality_diff_mean": 0.12499999999999999,
+      "quality_diff_95ci": [
+        0.02083333333333333,
+        0.2708333333333333
+      ],
+      "latency_diff_mean_s": -2.23498375078903,
+      "latency_diff_95ci_s": [
+        -5.24206280193539,
+        -0.256922415443114
+      ]
+    },
+    "branch_tree_vs_flat_tree": {
+      "baseline": "flat_tree",
+      "candidate": "branch_tree",
+      "case_count": 7,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": -0.8438728019827977
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.716102033475181
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.7694766354688909
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.6251641690032557
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": 0.0,
+          "latency_diff_s": 4.900426415868264
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": 2.320762174553238
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.495082383567933
+        }
+      ],
+      "quality_diff_mean": 0.047619047619047616,
+      "quality_diff_95ci": [
+        0.0,
+        0.11904761904761903
+      ],
+      "latency_diff_mean_s": 1.5690201442791378,
+      "latency_diff_95ci_s": [
+        0.4218944583636975,
+        2.8803988575220596
+      ]
+    },
+    "branch_tree_vs_grounded_linear": {
+      "baseline": "grounded_linear",
+      "candidate": "branch_tree",
+      "case_count": 7,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.9789556570467539
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 3.662273293506587
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 1.3541780859522987
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": -0.16666666666666663,
+          "latency_diff_s": -0.042056510952534154
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": 0.0,
+          "latency_diff_s": 2.8231192488709205
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": 4.422225725022145
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.0338431550189853
+        }
+      ],
+      "quality_diff_mean": 0.09523809523809525,
+      "quality_diff_95ci": [
+        -0.023809523809523805,
+        0.21428571428571427
+      ],
+      "latency_diff_mean_s": 2.3189340934950224,
+      "latency_diff_95ci_s": [
+        1.232736822887091,
+        3.3834728480848884
+      ]
+    },
+    "branch_tree_vs_grounded_tree": {
+      "baseline": "grounded_tree",
+      "candidate": "branch_tree",
+      "case_count": 7,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": 0.33333333333333326,
+          "latency_diff_s": -0.3369690309627913
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 0.4023914949793834
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": 0.0,
+          "latency_diff_s": -11.09912314102985
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.49063825997291133
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": 0.0,
+          "latency_diff_s": 2.8060430648291224
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": 1.124432489508763
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.5292196010414045
+        }
+      ],
+      "quality_diff_mean": 0.11904761904761904,
+      "quality_diff_95ci": [
+        0.02380952380952381,
+        0.23809523809523805
+      ],
+      "latency_diff_mean_s": -0.866377683086697,
+      "latency_diff_95ci_s": [
+        -4.460029534421794,
+        1.485406174730279
+      ]
+    }
+  },
+  "usage_including_judging": {
+    "calls": 970,
+    "reserved_upper_usd": 134.96065840000006,
+    "unresolved_calls": 2,
+    "input_tokens": 4298456,
+    "output_tokens": 250001,
+    "reported_usage_estimate_usd": 1.748969949999999,
+    "accounted_exposure_usd": 7.752222199999996
+  },
+  "request_audit": {
+    "missing_artifacts": [],
+    "truncated_calls": [
+      {
+        "id": 4971,
+        "label": "retained-heldout-v1/retained_fresh_equipment/grounded_linear/0",
+        "max_tokens": 1600
+      }
+    ],
+    "errors": [
+      {
+        "id": 5237,
+        "label": "retained-heldout-v1/retained_fresh_courtyard/branch_tree/1",
+        "error": "HTTPError: HTTP Error 503: Service Unavailable"
+      },
+      {
+        "id": 5263,
+        "label": "retained-heldout-v1/retained_fresh_courtyard/branch_tree/1",
+        "error": "HTTPError: HTTP Error 503: Service Unavailable"
+      }
+    ],
+    "runtime_warning_counts": [
+      {
+        "mode": "grounded_tree",
+        "warning": "Skipping ungrounded or motion-only extraction: The proposed trial is ineffective because it relies on unpredictable volunteer presence.",
+        "count": 1
+      }
+    ]
+  },
+  "limitations": [
+    "Small authored scenario set, not a standard debate benchmark",
+    "Different generator/judge models, but no human adjudication; automatic judging remains fallible",
+    "Spot checks found inconsistent constraint judgments; automated scores are provisional, not established accuracy",
+    "Zero unsupported-fact flags do not establish factual correctness",
+    "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
+    "Text-ready timing precedes post-speech tree analysis; worker-return timing is reported separately",
+    "Exact-target matching shared across arms; embedding fallback disabled",
+    "Cost uses provider-reported tokens and published rates, not a settled invoice",
+    "Composite checklist items can fail for omitted qualifications even when the answer does not contradict them.",
+    "10/48 source-bound tree answers fall back to the raw prefix; aggregate gains do not isolate tree binding from grounding feedback.",
+    "Speaker/source ownership and version consistency do not validate semantic entailment of extracted claims.",
+    "An edge records a response, not whether the issue was resolved.",
+    "Counts include historical setup and all observed chunks; repeated cases are not independent samples."
+  ],
+  "completion_audit": {
+    "worker_completion_markers": 1,
+    "pending_requests": 0,
+    "failed_requests": 2
+  },
+  "post_run_diagnostics": "retained-heldout-v1_diagnostics.json"
+}

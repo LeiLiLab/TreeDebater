@@ -1,0 +1,112 @@
+{
+  "run_id": "retained-wide-v1",
+  "metadata": {
+    "tree_limits": {
+      "max_tree_targets": 128,
+      "max_tree_context_nodes": 256
+    },
+    "source_digest": "6c1bc6386c8eac0c78420ccc6f2d29d4b709e9280320575a09cc3324cce6374b",
+    "cases_digest": "74efd27c324fdfbbd4aa9fe6f9b988c53f86fc9e30616b650d71dfcc92bae92c",
+    "split": "test",
+    "case_ids": [
+      "retained_fresh_workshop",
+      "retained_fresh_parcel",
+      "retained_fresh_nightgarden",
+      "retained_fresh_waterstation",
+      "retained_fresh_archive",
+      "retained_fresh_courtyard",
+      "retained_fresh_equipment",
+      "retained_fresh_visitor"
+    ],
+    "modes": [
+      "branch_tree"
+    ],
+    "repeats": 2,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 1,
+    "judge_model": "gpt-5.6-sol",
+    "cap_usd": 200.0,
+    "judge_max_tokens": 1600,
+    "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted",
+    "judge_reasoning_effort": "none",
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "expected_answers": 16,
+  "completed_answers": 16,
+  "missing": [],
+  "metrics": [
+    {
+      "mode": "branch_tree",
+      "n": 16,
+      "checklist_rate": 0.47916666666666663,
+      "strength_mean": 3.5625,
+      "strawman_rate": 0.125,
+      "unsupported_fact_rate": 0.25,
+      "residual_text_mean_s": 12.430973896873184,
+      "residual_text_median_s": 12.202971554012038,
+      "residual_worker_return_mean_s": 15.226054194121389,
+      "generation_calls_mean": 16.5,
+      "prior_context_setup_calls_mean": 4.5,
+      "live_generation_calls_mean": 12,
+      "generation_cost_mean_usd": 0.014156658125,
+      "answer_words_mean": 114.25,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 4,
+      "invalid_targets": 0,
+      "revisions": 9
+    }
+  ],
+  "reference_mode": "branch_tree",
+  "paired_vs_baseline": {},
+  "paired_vs_legacy": {},
+  "component_comparisons": {},
+  "usage_including_judging": {
+    "calls": 280,
+    "reserved_upper_usd": 43.54599040000002,
+    "unresolved_calls": 0,
+    "input_tokens": 1593183,
+    "output_tokens": 63563,
+    "reported_usage_estimate_usd": 0.51841133,
+    "accounted_exposure_usd": 2.07364532
+  },
+  "request_audit": {
+    "missing_artifacts": [],
+    "truncated_calls": [],
+    "errors": [],
+    "runtime_warning_counts": [
+      {
+        "mode": "branch_tree",
+        "warning": "Skipping ungrounded or motion-only extraction: The opponent has not proven that the benefits of independent access outweigh the specific costs involved.",
+        "count": 1
+      }
+    ]
+  },
+  "limitations": [
+    "Small authored scenario set, not a standard debate benchmark",
+    "Different generator/judge models, but no human adjudication; automatic judging remains fallible",
+    "Spot checks found inconsistent constraint judgments; automated scores are provisional, not established accuracy",
+    "Zero unsupported-fact flags do not establish factual correctness",
+    "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
+    "Text-ready timing precedes post-speech tree analysis; worker-return timing is reported separately",
+    "Exact-target matching shared across arms; embedding fallback disabled",
+    "Cost uses provider-reported tokens and published rates, not a settled invoice",
+    "Composite checklist items can fail for omitted qualifications even when the answer does not contradict them.",
+    "0/16 source-bound tree answers fall back to the raw prefix; aggregate gains do not isolate tree binding from grounding feedback.",
+    "Speaker/source ownership and version consistency do not validate semantic entailment of extracted claims.",
+    "An edge records a response, not whether the issue was resolved.",
+    "Counts include historical setup and all observed chunks; repeated cases are not independent samples."
+  ],
+  "completion_audit": {
+    "worker_completion_markers": 1,
+    "pending_requests": 0,
+    "failed_requests": 0
+  },
+  "post_run_diagnostics": "retained-wide-v1_diagnostics.json"
+}
