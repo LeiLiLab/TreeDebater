@@ -1,0 +1,97 @@
+{
+  "task": "Verify condition protocol and assertion-review repairs against frozen sixth-round pipeline",
+  "status": "prepared",
+  "created_utc": "2026-10-03T21:06:16.205389+00:00",
+  "authorization": "User requested repairs; same previously authorized cumulative USD200 task budget; no increase or reset.",
+  "source_commit": "c421b09",
+  "source_digest": "020537bccb7ddffc59acb238ebb4ad0667d522de0d00615522ac27f89c6bed45",
+  "cases_file": "experiments/incremental_planning/cases_v5.json",
+  "cases_digest": "74efd27c324fdfbbd4aa9fe6f9b988c53f86fc9e30616b650d71dfcc92bae92c",
+  "run_id": "condition-repair-v1",
+  "baseline_run_id": "conditions-regression-v1",
+  "modes": [
+    "grounded_linear",
+    "grounded_tree",
+    "flat_tree",
+    "branch_tree"
+  ],
+  "cases": 8,
+  "repeats": 2,
+  "answers": 64,
+  "workers": 2,
+  "tree_limits": {
+    "max_tree_targets": 8,
+    "max_tree_context_nodes": 16
+  },
+  "model": "google.gemma-4-26b-a4b",
+  "judge_model": "gpt-5.6-sol",
+  "judge_route": "bedrock/us.openai.gpt-5.6-sol",
+  "settings": {
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "plan_max_tokens": 700,
+    "generation_max_tokens": 1600,
+    "judge_max_tokens": 1600,
+    "judge_reasoning_effort": "none",
+    "judge_temperature": "omitted; unsupported",
+    "speech_budget_seconds": 60,
+    "audio": false,
+    "embeddings": false
+  },
+  "estimate": {
+    "expected_additional_usage_usd": [
+      2,
+      5
+    ],
+    "usage_planning_upper_usd": 12,
+    "expected_requests": [
+      950,
+      1400
+    ],
+    "basis": "Prior matched 64-answer run cost $1.85554 for 973 requests. Allow longer candidate/sentence review prompts at unchanged caps and bounded judge failures.",
+    "rates_per_million": {
+      "google.gemma-4-26b-a4b": [
+        0.13,
+        0.4
+      ],
+      "gpt-5.6-sol": [
+        4.4,
+        22
+      ]
+    },
+    "checked_date": "2026-10-03",
+    "sources": [
+      "https://aws.amazon.com/bedrock/pricing/",
+      "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html"
+    ],
+    "uncertainty": "Token/rate estimate, not invoice settlement; no additional paid compute/storage provisioned."
+  },
+  "budget": {
+    "currency": "USD",
+    "cumulative_approved_cap": 200,
+    "starting_usage_estimate": 9.46234989,
+    "starting_accounted_exposure": 42.21521156,
+    "remaining_guarded_budget": 157.78478844,
+    "starting_requests": 6316,
+    "ledger": "experiments/incremental_planning/run/cost.sqlite",
+    "guard": "Every request reserves full conservative bound atomically before dispatch; successful verified receipts settle at 4x usage, errors/unknown retain bounds. Reject dispatch above cumulative cap. No automatic retry or restart.",
+    "stop": "Stop only these run workers if accounting fails or cap blocks dispatch; preserve saved answers and artifacts. No new paid compute provisioned."
+  },
+  "retry_policy": "No regenerated saved answers or replaced judgments. At most one unchanged missing-judge retry after diagnosis; exhausted judgments remain missing. No automatic HTTP retries or worker restart.",
+  "primary_comparison": "Branch new vs Branch pre-change, paired by case averaging two repeats; only cases complete in both arms.",
+  "secondary_comparisons": [
+    "Each other mode new vs its pre-change counterpart",
+    "New Branch vs new Flat and Grounded Linear",
+    "Planning rejection/fallback counts, condition and assertion review validity, qualitative draft-to-final checks"
+  ],
+  "missing_data_policy": "Both baseline repeats are judged for all eight cases. Any exhausted new judgment excludes that entire case from paired analysis; retain all saved outputs.",
+  "limitations": [
+    "Known-case regression: earlier failures informed implementation; not fresh held-out validation.",
+    "Combined protocol, extraction prompt, source fallback and feedback/revision repairs; does not isolate each component.",
+    "Only eight independent authored cases; repeat runs are not independent, intervals unadjusted for multiple comparisons.",
+    "Saved baseline model samples/judgments are reused; decoding variability and provider drift remain possible.",
+    "Text-only simulated endpoint latency excludes ASR/TTS; automatic judge flags need spot checking."
+  ],
+  "offline_preflight": "335 tests +42 subtests passed; parser replay accepts 54/64 instead of 12/64; compilation/diff pass.",
+  "judge_retries": []
+}

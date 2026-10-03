@@ -1336,3 +1336,23 @@ rejected. This is a parser counterfactual on stored responses, not new quality
 evidence. `condition-repair-parser-replay.json` preserves all failures and hashes.
 No paid calls during implementation; cumulative known usage $9.46234989, guarded
 exposure $42.21521156 under the unchanged $200 authorization.
+
+### Same-case repair verification launch
+
+Freeze inference at **c421b09** for `condition-repair-v1`: eight existing cases ×
+two repetitions × Grounded Linear/Grounded Tree/Flat/Branch = **64 answers and
+64 GPT-5.6 judgments**, two workers. Reuse all 64 sixth-round answers/judgments
+as the baseline; no historical result replacement. Gemma generation, 700-token
+plans, 1600-token helper/generation/judge caps, 0.3/0 temperatures, 60-second speech,
+8+16 selected tree caps and text-only settings remain identical.
+
+Expected additional usage **$2–5**, conservative planning upper **$12**, using
+same-day verified AWS rates: Gemma $0.13/$0.40 and GPT-5.6 $4.40/$22 per million
+input/output tokens. Same cumulative **$200** authorization, starting **6,316**
+requests, known usage **$9.46234989**, guarded exposure **$42.21521156**, zero
+pending. Atomic pre-dispatch reservations protect the shared cap; successful
+verified usage settles at 4×, unknown failures retain their full bounds. No
+automatic retries; at most one identical saved-answer judge retry after diagnosis.
+No source/case/prompt tuning during this run. Known-case regression, not fresh
+held-out evidence; compare by whole case after averaging repeats. Exact hashes,
+price sources and stop procedure are stored in `manifest_v7.json`.
