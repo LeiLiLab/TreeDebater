@@ -110,7 +110,11 @@ def summarize(run_id):
                                 ("tree_plan", "grounded_tree"),
                                 ("grounded_tree", "light_tree"),
                                 ("grounded_linear", "grounded_tree"),
-                                ("light_linear", "light_tree")):
+                                ("light_linear", "light_tree"),
+                                ("grounded_tree", "flat_tree"),
+                                ("flat_tree", "branch_tree"),
+                                ("grounded_linear", "branch_tree"),
+                                ("grounded_tree", "branch_tree")):
         paired = paired_comparison(by_mode, metadata, baseline, candidate)
         if paired:
             components[candidate + "_vs_" + baseline] = paired

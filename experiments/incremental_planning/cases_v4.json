@@ -1,0 +1,375 @@
+[
+  {
+    "id": "branch_dev_microgrid",
+    "split": "dev",
+    "kind": "cross_turn_branch_withdrawal",
+    "motion": "The town should install a community battery",
+    "side": "against",
+    "own_claim": "Energy investment needs transparent priorities",
+    "own_opening": "We should compare reliability, maintenance and who receives backup power before committing public funds.",
+    "chunks": [
+      "I accept your request for publication of the selection criteria and a maintenance budget before purchase.",
+      "I withdraw the earlier promise of backup for every home. This proposal supplies only the clinic and emergency shelter during outages.",
+      "The purchasing decision is still open. A public comparison with a smaller generator must come first; the battery is not already selected.",
+      "My remaining case is that the clinic and shelter need a shared backup plan, with the battery assessed as one option."
+    ],
+    "checks": [
+      "Recognizes that backup is restricted to the clinic and shelter, not every household",
+      "Does not claim that selection criteria or maintenance disclosure have been refused, or that the battery is already selected",
+      "Addresses an unresolved comparison, capacity or allocation issue rather than relying on the withdrawn universal-backup promise"
+    ],
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "A community battery should provide backup for every home during an outage. It could also support the clinic and emergency shelter."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Before purchase, publish selection criteria and a maintenance budget. Compare alternatives instead of assuming a battery is best."
+      }
+    ]
+  },
+  {
+    "id": "branch_dev_shuttle",
+    "split": "dev",
+    "kind": "cross_turn_exception_and_answered_attack",
+    "motion": "The district should introduce a school shuttle",
+    "side": "against",
+    "own_claim": "Transport changes must preserve access",
+    "own_opening": "Families have different mobility needs, and replacing existing transport requires a clear fallback.",
+    "chunks": [
+      "You asked how wheelchair users would board. The trial contract now requires an accessible vehicle on every scheduled run.",
+      "I also withdraw replacing the existing routes. The shuttle would be additional service for one term on two routes.",
+      "I have not answered your separate question about missed pickups; a fallback procedure still needs to be agreed.",
+      "Our proposal is therefore an accessible additional trial, with missed-pickup arrangements unresolved, rather than a replacement of existing transport."
+    ],
+    "checks": [
+      "Recognizes accessible vehicles on every run and additional rather than replacement service",
+      "Does not repeat the claim that wheelchair access has no proposed provision",
+      "Engages the explicitly unresolved missed-pickup procedure without inventing observed failures"
+    ],
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "A school shuttle could replace existing routes and simplify transport. We have not yet chosen the vehicle specification."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "How would wheelchair users board, and what happens after a missed pickup? Both questions need answers before replacing the routes."
+      }
+    ]
+  },
+  {
+    "id": "branch_fresh_carport",
+    "split": "test",
+    "kind": "cross_turn_branch_reasoning",
+    "motion": "The town should build solar carports at municipal parking lots",
+    "side": "against",
+    "own_claim": "Investment should be justified by reliable costs and a fair comparison.",
+    "own_opening": "Investment should be justified by reliable costs and a fair comparison.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "Solar carports would pay for themselves by selling power. Separately, covered spaces would shelter drivers from rain."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "You have not established an electricity sale price. Shelter is useful, but simpler roofs might supply it at lower cost."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "Then I will obtain a tariff quote before using power sales in the case. I still favor the shelter benefit."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Obtaining a quote addresses the missing-price objection only if the comparison also includes ordinary roofs and maintenance."
+      }
+    ],
+    "chunks": [
+      "I withdraw the assertion that power sales would pay for construction. No sale price or payback period is established.",
+      "I accept a comparison with ordinary roofs, including maintenance, before any construction decision. The immediate proposal is a feasibility study for two municipal lots.",
+      "The shelter benefit is a separate reason to investigate, not proof that solar panels are the best way to provide it.",
+      "The study budget and who will evaluate its assumptions are still open. There is no request to sign a construction contract now."
+    ],
+    "checks": [
+      "Recognizes a feasibility study for two lots before any construction decision, rather than an immediate construction commitment",
+      "Does not treat the withdrawn self-financing claim as disproving the independent shelter benefit, or claim that comparison with ordinary roofs has been refused",
+      "Engages an unresolved study-budget, evaluator or comparison-quality issue without asserting an unestablished sale price or payback period"
+    ]
+  },
+  {
+    "id": "branch_fresh_clinic",
+    "split": "test",
+    "kind": "cross_turn_branch_reasoning",
+    "motion": "The clinic should offer an appointment-triage portal",
+    "side": "against",
+    "own_claim": "Convenience should not leave patients without appropriate staff support.",
+    "own_opening": "Convenience should not leave patients without appropriate staff support.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "A portal could route appointment requests and reduce routine phone traffic. Everyone would eventually use it."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Mandatory use would exclude some patients. An automatic form cannot safely handle urgent symptoms."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "I will keep telephone requests and walk-ins, and a nurse would review urgent flags."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "That responds to exclusion and automatic triage, but who covers the nurse review during evenings?"
+      }
+    ],
+    "chunks": [
+      "Enrollment would be voluntary throughout a twelve-week trial. Telephone requests and walk-ins would continue.",
+      "The portal does not make clinical decisions. Urgent flags would be reviewed by a nurse, and the screen directs emergencies to existing emergency services.",
+      "You are right that evening review staffing is not yet settled. A staffing agreement must be in place before the trial opens.",
+      "My remaining claim is that organizing routine requests could reduce duplicate phone calls; I have no measured reduction to report."
+    ],
+    "checks": [
+      "Recognizes voluntary use and continued telephone or walk-in access, rather than presenting the portal as mandatory",
+      "Acknowledges nurse review instead of repeating the old claim that software alone decides urgent cases",
+      "Connects the unresolved evening staffing question to the requirement for agreement before launch, without inventing a measured reduction or observed patient harm"
+    ]
+  },
+  {
+    "id": "branch_fresh_gauges",
+    "split": "test",
+    "kind": "cross_turn_branch_reasoning",
+    "motion": "The county should pilot river-level gauges",
+    "side": "against",
+    "own_claim": "Public monitoring needs validated measurements and clear authority.",
+    "own_opening": "Public monitoring needs validated measurements and clear authority.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "Cheap gauges could predict floods automatically and warn every riverside resident. Level records could also guide drainage maintenance."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Prediction and universal warning are unsupported. Who validates the readings, and who has authority to issue a warning?"
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "County staff would decide whether to warn; the gauges would supply observations only."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Staff authority addresses who decides, but the readings still need calibration. Maintenance planning is a separate possible use."
+      }
+    ],
+    "chunks": [
+      "I retract the promise of automatic flood prediction or a warning reaching everyone. County staff, not the gauges, would decide on public warnings.",
+      "The pilot would collect level observations at two bridges for six months. These records could also inform drainage maintenance independently of warning decisions.",
+      "A calibration protocol must be approved before installation. I accept that requirement, but the responsible laboratory and calibration budget are not yet chosen.",
+      "The pilot is conditional on that approval; I am not claiming that its measurements are already validated."
+    ],
+    "checks": [
+      "Recognizes the two-bridge six-month observational pilot and county staff authority rather than automatic flood prediction",
+      "Does not dismiss the independent drainage-maintenance use merely because universal warning was withdrawn",
+      "Addresses the unresolved calibration laboratory or budget while acknowledging approval is required before installation"
+    ]
+  },
+  {
+    "id": "branch_fresh_lockers",
+    "split": "test",
+    "kind": "cross_turn_branch_reasoning",
+    "motion": "The community center should trial refrigerated pickup lockers",
+    "side": "against",
+    "own_claim": "Food access changes need dependable handling and clear responsibility.",
+    "own_opening": "Food access changes need dependable handling and clear responsibility.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "Refrigerated lockers could eliminate spoiled pickups and let recipients collect after office hours."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Eliminating spoilage is an unsupported guarantee. How would staff know a compartment lost cooling?"
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "Temperature sensors would notify center staff; I cannot guarantee no spoilage."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Sensors answer detection, not what staff should do during a power outage. After-hours collection may still have separate value."
+      }
+    ],
+    "chunks": [
+      "I withdraw the promise of eliminating spoilage. The remaining convenience claim is that people could collect after office hours.",
+      "This would be an optional twelve-week trial at one center, alongside staffed daytime pickup.",
+      "Temperature alerts would go to center staff. They are not a guarantee that food always remains safe.",
+      "An outage-response plan is required before use, but the backup power arrangement and responsibility for replacement food remain undecided."
+    ],
+    "checks": [
+      "Recognizes the optional one-center twelve-week trial and continued staffed pickup",
+      "Acknowledges temperature-alert detection rather than claiming no monitoring is proposed, and does not use the withdrawn guarantee to dismiss all convenience value",
+      "Focuses on the unresolved outage response, backup power or replacement responsibility while recognizing the plan is required before use"
+    ]
+  },
+  {
+    "id": "branch_fresh_kiosks",
+    "split": "test",
+    "kind": "long_multiple_corrections",
+    "motion": "The council should add self-service permit kiosks",
+    "side": "against",
+    "own_claim": "Public applications must preserve access and limit unnecessary data retention.",
+    "own_opening": "Public applications must preserve access and limit unnecessary data retention.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "Kiosks could speed simple applications. We could close the staffed desk and let a contractor store all application histories."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Closing the desk excludes people who need assistance. Contractor retention creates a separate privacy issue."
+      }
+    ],
+    "chunks": [
+      "I withdraw the desk closure. The staffed desk would remain, and using a kiosk would be optional.",
+      "I also withdraw contractor storage. Kiosk data would stay on council systems and normally be deleted after thirty days; legally required holds are the only exception.",
+      "The proposal is a three-month pilot of one kiosk for simple renewals, not all permit decisions.",
+      "The open issue is how applicants can verify deletion or challenge an incorrect legal hold. We have not agreed an audit or appeal procedure."
+    ],
+    "checks": [
+      "Recognizes an optional one-kiosk three-month renewals pilot with the staffed desk retained",
+      "Does not accuse the revised proposal of contractor storage or unlimited routine retention; recognizes the thirty-day rule with legal-hold exceptions",
+      "Targets the unresolved deletion audit or hold-appeal procedure rather than repeating the answered desk-closure objection"
+    ]
+  },
+  {
+    "id": "branch_fresh_harbour",
+    "split": "test",
+    "kind": "long_independent_access_branch",
+    "motion": "The harbour should trial a small passenger shuttle",
+    "side": "against",
+    "own_claim": "New transport should offer usable service without hiding reliability costs.",
+    "own_opening": "New transport should offer usable service without hiding reliability costs.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "The shuttle could run in all weather and replace the existing ferry. It could also serve a pier the ferry does not visit."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "All-weather service is not established and removing the ferry would leave passengers without a fallback. The extra pier is a distinct access benefit."
+      }
+    ],
+    "chunks": [
+      "I withdraw both all-weather operation and replacement of the ferry. The ferry would continue unchanged.",
+      "The shuttle would operate only within the harbour authority weather limits on three trial weekends, serving the additional pier.",
+      "Bookings would explain cancellation conditions before purchase, and cancelled sailings would be refunded.",
+      "A plan for passengers already at the additional pier when conditions deteriorate is still missing. It must be agreed before ticket sales begin.",
+      "Reaching that pier remains a possible benefit even though the shuttle cannot operate in every weather condition."
+    ],
+    "checks": [
+      "Recognizes weather-limited operation on three trial weekends with the ferry retained",
+      "Acknowledges cancellation disclosure and refunds instead of claiming no cancellation provision, without dismissing the independent additional-pier benefit",
+      "Addresses stranded passengers or return arrangements at the additional pier while recognizing a plan is required before ticket sales"
+    ]
+  },
+  {
+    "id": "branch_fresh_shade",
+    "split": "test",
+    "kind": "long_support_withdrawal",
+    "motion": "The district should trial temporary shade canopies",
+    "side": "against",
+    "own_claim": "Street changes need evidence of benefit and funded maintenance.",
+    "own_opening": "Street changes need evidence of benefit and funded maintenance.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "Canopies would lower summer temperatures by five degrees and give pedestrians shade on the school route."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "The five-degree estimate has no evidence. We also need wind-safety rules and a maintenance budget; shaded walking is a separate claim."
+      }
+    ],
+    "chunks": [
+      "I retract the five-degree cooling estimate. No temperature reduction has been measured.",
+      "The proposal is a three-month trial on two blocks of the school route, with temperature measurements compared against nearby uncovered blocks.",
+      "Canopies would be removed when the engineer-defined wind limit is exceeded. I accept engineering approval before installation.",
+      "The unanswered question is who pays for inspections and who checks forecasts on weekends. Those responsibilities must be allocated before installation.",
+      "Even if a large cooling effect is not found, direct shade could still be useful; that benefit should be assessed separately rather than assumed."
+    ],
+    "checks": [
+      "Recognizes the two-block three-month trial and absence of a measured temperature reduction",
+      "Acknowledges the wind-limit removal rule and approval before installation rather than alleging no wind safeguard",
+      "Challenges unresolved inspection funding or weekend responsibility without treating the withdrawn cooling estimate as disproving all direct-shade value"
+    ]
+  },
+  {
+    "id": "branch_fresh_repair_van",
+    "split": "test",
+    "kind": "long_scope_and_independent_benefit",
+    "motion": "The council should pilot a mobile repair van",
+    "side": "against",
+    "own_claim": "Repair programs must disclose real costs and preserve consumer choice.",
+    "own_opening": "Repair programs must disclose real costs and preserve consumer choice.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "A repair van would provide every repair free and keep broken equipment out of landfill. It could reach residents far from existing shops."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Free repairs require a funding source. Universal repair is implausible for dangerous equipment; reaching distant residents is a different benefit."
+      }
+    ],
+    "chunks": [
+      "I withdraw free repairs and universal coverage. Only diagnosis would be free; parts and labour would have a quoted price requiring consent before work.",
+      "The eight-week pilot would visit two neighbourhoods weekly. Residents remain free to use existing repair shops.",
+      "Gas appliances and high-voltage equipment are excluded. Staff would refer those items to appropriately qualified services.",
+      "The unresolved issues are how quotes can be challenged and who provides a warranty on completed work. Procedures for both must be published before the pilot opens.",
+      "I am claiming possible easier access to diagnosis, not guaranteed waste reduction or guaranteed affordable repairs."
+    ],
+    "checks": [
+      "Recognizes the eight-week pilot with free diagnosis only and paid work requiring advance consent",
+      "Acknowledges exclusion of gas and high-voltage equipment and does not attack universal free repairs as current",
+      "Addresses quote appeals or warranty responsibility while acknowledging procedures must precede launch, without dismissing access value solely because free repairs were withdrawn"
+    ]
+  }
+]

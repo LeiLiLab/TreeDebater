@@ -123,6 +123,11 @@ class TreeDebater(Debater):
         if self.planner.config.grounded_tree:
             from streaming.tree_grounding import tree_targets
             context["tree_targets"] = tree_targets((self.debate_tree, self.oppo_debate_tree), self.oppo_side)
+            if self.planner.config.branch_state:
+                from streaming.branch_planning import planning_material
+                context.update(planning_material(context["tree_targets"],
+                               (self.debate_tree, self.oppo_debate_tree), self.oppo_side,
+                               topology=self.planner.config.mode == "branch_tree"))
             # The structured topology includes claims, support, ancestors and responses.
             # Avoid duplicating the complete trees as unlinked prose in the same prompt.
             context.pop("our_tree")
@@ -132,7 +137,11 @@ class TreeDebater(Debater):
     def _current_planning_instructions(self, *, grounding=False):
         if self.planner.config.grounded_tree:
             self.planner.revalidate_tree(self._planning_context())
-        return self.planner.grounding_instructions() if grounding else self.planner.instructions()
+        result = self.planner.grounding_instructions() if grounding else self.planner.instructions()
+        if self.planner.config.branch_state and result:
+            from streaming.branch_planning import BRANCH_DELIVERY
+            result += BRANCH_DELIVERY
+        return result
 
     def _planning_llm(self, prompt, max_tokens):
         return self.helper_client(prompt, max_tokens=max_tokens)[0]
@@ -421,8 +430,8 @@ class TreeDebater(Debater):
             opening_thoughts[-1]["explanation"] if opening_thoughts else ("", "")
         )
 
-        # Only include tree information if debate flow tree is enabled
-        if self.use_debate_flow_tree:
+        # Keep the flat ablation free of rendered relationship information.
+        if self.use_debate_flow_tree and not (getattr(self, "planner", None) and self.planner.config.branch_state):
             tree = self.debate_tree.print_tree(include_status=True)
             oppo_tree = self.oppo_debate_tree.print_tree(include_status=True, reverse=True)
             prompt = expert_opening_prompt_2.format(
@@ -466,8 +475,9 @@ class TreeDebater(Debater):
         self.listen(history)
         max_words = math.ceil(max_time / WORDRATIO["time"])
 
-        # Only include tree information if debate flow tree is enabled
-        if self.use_debate_flow_tree:
+        # Indexed branch modes deliver their selected source/branch state through
+        # tips. Do not leak the full topology into the flat-node ablation.
+        if self.use_debate_flow_tree and not (getattr(self, "planner", None) and self.planner.config.branch_state):
             your_tree = self.debate_tree.print_tree(include_status=True)
             oppo_tree = self.oppo_debate_tree.print_tree(include_status=True, reverse=True)
             prompt = expert_rebuttal_prompt_2.format(
@@ -494,8 +504,8 @@ class TreeDebater(Debater):
         self.listen(history)
         max_words = math.ceil(max_time / WORDRATIO["time"])
 
-        # Only include tree information if debate flow tree is enabled
-        if self.use_debate_flow_tree:
+        # Branch modes supply selected context through tips, including at closing.
+        if self.use_debate_flow_tree and not (getattr(self, "planner", None) and self.planner.config.branch_state):
             your_tree = self.debate_tree.print_tree(include_status=True)
             oppo_tree = self.oppo_debate_tree.print_tree(include_status=True, reverse=True)
             prompt = expert_closing_prompt_2.format(
@@ -1299,6 +1309,11 @@ class TreeDebater(Debater):
                 correction_targets = [{"node_id": node.node_id, "claim": node.claim}
                                       for candidate in (tree, oppo_tree) for node in candidate.get_all_nodes()
                                       if node.parent is not None and node.side == statement_side]
+            relation_kwargs = {}
+            grounded_updates = bool(getattr(self, "planner", None) and self.planner.config.corrections)
+            if grounded_updates:
+                from streaming.tree_updates import target_registry
+                relation_kwargs["relation_targets"] = target_registry((tree, oppo_tree))
             claims = extract_statement(
                 self.helper_client,
                 self.motion,
@@ -1309,7 +1324,16 @@ class TreeDebater(Debater):
                 planned_actions=planned_actions if statement_side == self.side else None,
                 allow_corrections=allow_corrections,
                 correction_targets=correction_targets,
+                **relation_kwargs,
             )
+
+            if grounded_updates:
+                from streaming.tree_updates import apply_statements
+                updates = apply_statements((tree, oppo_tree), claims, statements, statement_side)
+                self.debate_thoughts.append({"stage": self.status, "side": statement_side,
+                                            "mode": "analyze_statement", "statement": statements,
+                                            "claims": claims, "tree_updates": updates})
+                return claims
 
             for x in claims:
                 if isinstance(x.get("purpose"), dict):

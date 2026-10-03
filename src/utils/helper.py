@@ -513,7 +513,7 @@ class TimeAdjuster:
 
 
 def extract_statement(llm, motion, statement, claims=None, tree=None, side=None, stage=None, planned_actions=None,
-                      allow_corrections=False, correction_targets=None):
+                      allow_corrections=False, correction_targets=None, relation_targets=None):
     if claims is not None:
         prompt = extract_statment_by_claim_prompt.format(motion=motion, statement=statement, claim=json.dumps(claims))
     elif tree is not None:
@@ -536,6 +536,10 @@ def extract_statement(llm, motion, statement, claims=None, tree=None, side=None,
             prompt += ("\nCorrection targets owned by the current speaker. For revise/retract, copy the "
                        "node_id into purpose.target_id (do not invent an ID); keep the target claim text too.\n"
                        + json.dumps(correction_targets))
+
+    if relation_targets is not None:
+        from streaming.tree_updates import RELATION_INSTRUCTIONS
+        prompt += RELATION_INSTRUCTIONS + "\n" + json.dumps(relation_targets)
 
     if tree is not None and planned_actions:
         prompt += (

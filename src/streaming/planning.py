@@ -12,7 +12,7 @@ import time
 
 MODES = ("legacy", "end_of_turn", "linear", "corrected_tree", "adaptive_linear",
          "tree_plan", "adaptive_tree", "structured_linear", "grounded_linear", "light_linear",
-         "grounded_tree", "light_tree")
+         "grounded_tree", "light_tree", "branch_tree", "flat_tree")
 
 
 @dataclass
@@ -44,7 +44,11 @@ class PlanningConfig:
 
     @property
     def grounded_tree(self):
-        return self.mode in ("grounded_tree", "light_tree")
+        return self.mode in ("grounded_tree", "light_tree", "branch_tree", "flat_tree")
+
+    @property
+    def branch_state(self):
+        return self.mode in ("branch_tree", "flat_tree")
 
     @property
     def light(self):
@@ -180,12 +184,19 @@ class IncrementalPlanner:
             if self.config.structured:
                 from .grounding import parse_state, state_prompt
                 prompt = state_prompt(material, self.chunks, self.state)
+                if self.config.branch_state:
+                    from .branch_planning import branch_prompt
+                    prompt = branch_prompt(material, self.chunks, self.state)
             raw = llm(prompt, self.config.max_plan_tokens).strip()
             if not raw:
                 raise ValueError("Preparation returned empty notes")
             if self.config.structured:
                 try:
-                    self.state = parse_state(raw, " ".join(self.chunks),
+                    if self.config.branch_state:
+                        from .branch_planning import parse_branch_state
+                        self.state = parse_branch_state(raw, " ".join(self.chunks), material)
+                    else:
+                        self.state = parse_state(raw, " ".join(self.chunks),
                                              tree_targets=material.get("tree_targets", [])
                                              if self.config.grounded_tree else None)
                     self.plan = json.dumps(self.state, ensure_ascii=False)

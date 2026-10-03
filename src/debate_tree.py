@@ -268,6 +268,7 @@ class Node:
             "argument": self.argument,
             "evidence": self.evidence,
             "source_spans": self.source_spans,
+            "relation": getattr(self, "relation", None),
             "status": self.status,
             "visit_count": self.visit_count,
             "scores": self.scores,
@@ -316,6 +317,7 @@ class Node:
         node.argument = json_info["argument"]
         node.evidence = json_info["evidence"]
         node.source_spans = list(json_info.get("source_spans", []))
+        node.relation = json_info.get("relation")
         node.status = json_info["status"]
         node.visit_count = json_info["visit_count"]
         node.scores = json_info["scores"]
@@ -753,6 +755,7 @@ class DebateTree(Tree):
             "meta_attack_list": self.meta_attack_list,
             "meta_rebuttal_list": self.meta_rebuttal_list,
             "revisions": getattr(self, "revisions", []),
+            "update_events": getattr(self, "update_events", []),
         }
         return info
 
@@ -768,6 +771,7 @@ class DebateTree(Tree):
         tree.meta_attack_list = meta_attack_list
         tree.meta_rebuttal_list = meta_rebuttal_list
         tree.revisions = json_info.get("revisions", [])
+        tree.update_events = json_info.get("update_events", [])
         return tree
 
 

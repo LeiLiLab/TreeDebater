@@ -4,7 +4,8 @@
 
 `planning.mode` selects `legacy` (default), `end_of_turn`, `linear`,
 `corrected_tree`, `adaptive_linear`, `tree_plan`, `adaptive_tree`, `structured_linear`,
-`grounded_linear`, `light_linear`, `grounded_tree`, or `light_tree` in session YAML.
+`grounded_linear`, `light_linear`, `grounded_tree`, `light_tree`, `branch_tree`, or
+`flat_tree` in session YAML.
 See [`configs/gemma-incremental.yml`](configs/gemma-incremental.yml) for an example.
 For command-line debaters, put the same `planning` mapping in the debater configuration.
 
@@ -93,6 +94,21 @@ the same bounded scheduling as `light_linear`. Source spans survive checkpoints
 and JSON serialization, including prior turns. These checks establish attribution
 and target identity, not semantic entailment. See the continually maintained
 [all-variant table](../process.md#方案总表持续维护包含所有已尝试方案) for evaluation status.
+
+Correction-enabled tree modes now apply source-checked updates by actual speaker
+and node ID. A replacement is applied once instead of retracting its target first;
+a reply to the other speaker creates a child owned by its author. Missing links
+preserve sourced claims without pretending the relation was found. Withdrawals do
+not create new active claims. Update events and source ownership survive snapshots.
+
+`branch_tree` prepares indexed target choices with server-bound quotes, a ledger of
+current source boundaries, and branch briefs linking our prior objection, the
+opponent's reply and existing responses. A response edge indicates a response was
+made; it does not certify that the issue is resolved. `flat_tree` is the matched
+ablation: it uses the same repaired extraction, indexed state and boundary ledger,
+but removes ancestry, response edges and structural ranking from planning/delivery.
+Both avoid injecting the legacy rendered tree into the final speech prompt.
+These modes are opt-in; comparative results are recorded in `process.md`.
 
 ## Run locally
 

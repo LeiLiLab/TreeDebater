@@ -49,6 +49,8 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 | Light Linear (`light_linear`) | Grounded Linear 加精确重复跳过、未完句缓冲、选择性门控 | 减少无效工作；调度的独立收益仍不确定 | 第二轮：10 × 1；第三轮：8 × 1，均 GPT-5.6；第三轮通过率 70.8%，等待 10.52s；另有旧案例单次真实 ASR/TTS 对照 |
 | Grounded Tree (`grounded_tree`) | 保留论证树；反驳绑定有效节点和节点原文，利用攻击关系与未回应目标排序；加依据核对 | 让反驳可绑定树目标；比原版更快，但提取/匹配失败仍会触发原文回退，树的独立质量收益未证实 | 第三轮：8 × 1，GPT-5.6，通过率 62.5%，等待 11.37s；9 次中间状态回退，3/8 最终回退 |
 | Light Tree (`light_tree`) | Grounded Tree 加重复跳过、未完句缓冲与选择性门控，结束时强制处理积压 | 本轮调用从 Grounded Tree 的 14.0 降至 13.25；延迟未进一步下降，质量仍受提取与条件覆盖限制 | 第三轮：8 × 1，GPT-5.6，通过率 62.5%，等待 11.96s；7 次中间状态回退，2/8 最终回退 |
+| Flat Tree (`flat_tree`) | 修复后的同一树更新与节点来源；索引式规划和限定条件账本，但规划/输出移除祖先、回应边和结构排序 | 用于隔离显式关系信息的收益；仍可从完整发言自行推断关系，仍支付建树成本 | 第四轮：实现及离线验证完成，待评测 |
+| Branch Tree (`branch_tree`) | 在 Flat Tree 的同等节点/来源基础上，使用我方质疑—对方回应的路径、已有回应和未回应分支摘要 | 让关系结构直接指导下一步反驳；响应边不代表问题已解决，额外上下文可能增加负担 | 第四轮：实现及离线验证完成，待评测 |
 
 第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
 
@@ -711,3 +713,33 @@ git diff --check
 git add process.md experiments/incremental_planning/manifest_linear_control.json experiments/incremental_planning/compare_linear_control.py experiments/incremental_planning/tree-linear-control-v1_summary.json experiments/incremental_planning/tree-vs-linear-v1_comparison.json experiments/incremental_planning/cost_audit_linear_control.json
 git commit -m "Compare original Linear against grounded tree variants"
 ```
+
+## Tree repair and branch reasoning — 2026-10-03 UTC
+
+User requested **修复树结构的对应问题，同时更好地利用树结构。grounded linear 本质是结构化，tree应该更具有优势**. Implement repairs and a direct test of explicit graph utility, without assuming that the richer representation must win. Existing USD200 cumulative authorization remains in force.
+
+### Repairs and new variants
+
+- New `src/streaming/tree_updates.py` resolves IDs against the pre-update graph and respects actual speaker ownership. A quoted replacement supersedes a simultaneous retract of the same target; a later actual withdrawal still wins. Same-text independent nodes are no longer all revised when a specific ID was given. Revisions archive dependent branches.
+- Attack/rebut creates a child owned by the actual speaker when its target belongs to the other speaker. It never silently reinforces the opposite speaker's claim. Missing/invalid relationships preserve the sourced current claim as an unlinked proposal; unmatched withdrawals create no claim. Wrong-speaker corrections are rejected. Updated extraction instructions supply all active IDs/owners and require consistent relation actions. These updates apply to correction-enabled tree modes; legacy remains available for historical ablation.
+- Relation labels, source excerpts and update events survive tree serialization. Binding validation still rejects fabricated or stale targets. Source attribution does not establish that an extracted paraphrase is semantically correct.
+- `branch_tree` / `flat_tree` use zero-based choices over verified source-bearing nodes and candidate limits; the server copies quotes and binds IDs/versions. This removes the need for the model to reproduce long IDs or source quotations. The entire candidate-boundary ledger is retained for final drafting/feedback even if the compact plan selects fewer limits. Candidate limits are verbatim source sentences selected by temporal/scope markers, not semantic truth labels. Correction history stays separate and can be superseded by later speech.
+- `branch_tree` includes ancestor paths, our latest linked objection, opponent reply, existing responses and structural response needs. Its prompt asks for a precise support/inference objection or concession plus remaining gap. `flat_tree` uses the same repairs, indexed choices, sources, boundary ledger and grounding delivery but removes explicit relation fields and ranking. Neither injects the legacy rendered tree into final speech prompts, preventing topology leakage in the flat control. Shared debate history remains available to both.
+- Two reused development cases are the old microgrid/shuttle failures. Eight new cases were authored before outputs in `cases_v4.json`: solar carports, appointment portal, river gauges, refrigerated lockers, permit kiosks, harbour shuttle, temporary shade and repair van. All have fixed prior exchanges available to every arm. Four emphasize response chains; four emphasize several independent qualifications/corrections.
+
+Offline regressions cover simultaneous/later corrections, ID-specific updates, speaker ownership, missing links, ungrounded excerpts, serialization, branch briefs, indexed choices, boundary retention, empty target sets, and absence of rendered topology in flat generation. Early offline runs caught legacy test doubles without a planner; guarded access preserves that compatibility. No paid model calls occurred during these failures.
+
+### Planned comparison and budget
+
+Five arms: original Linear, Grounded Linear, repaired Grounded Tree, Flat Tree, Branch Tree. Development: 2 old cases × 5 arms × 1 repetition = 10 answers, one worker. Held-out: **8 fresh cases × 5 arms × 2 repetitions = 80 answers**, two workers. Gemma generation/helper settings stay 0.3/0, plan cap 700, generation cap 1,600, answer budget 60 seconds. All GPT-5.6 Sol judgments use cap 1,600, reasoning none, temperature omitted. Exact/ID matching only; no audio, embedding, retrieval or extra paid compute. Every request including historical-tree setup, own-speech analysis, grading and failures is budgeted. Freeze after development before any new test outputs; bootstrap by case after averaging repetitions.
+
+Starting cumulative usage estimate **$2.88722584**, active guarded occupancy **$12.93704176**, zero pending calls. Expected additional usage **$2–$4**, planning upper **$8**. Pre-dispatch allowance: dev $20 + main $120 + bounded retries $10 = **$150**, fitting current $200 cap even before new successful usage settles. Every dispatch still checks the shared active budget under SQLite transaction. Same historical failures remain reserved. Prices rechecked at [AWS Bedrock](https://aws.amazon.com/bedrock/pricing/) and [GPT geographic model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html): Gemma $0.13/$0.40 and GPT $4.40/$22 per million input/output tokens, unchanged. Manifest: `manifest_v4.json`.
+
+```bash
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests debate-app/backend/tests -q
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id branch-dev-v1 --split dev --cases-file experiments/incremental_planning/cases_v4.json --modes linear grounded_linear grounded_tree flat_tree branch_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200 --repeats 1 > experiments/incremental_planning/run/branch-dev-v1-worker0.log 2>&1
+# After development review and source freeze, run separately for N=0 and N=1:
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id branch-heldout-v1 --split test --cases-file experiments/incremental_planning/cases_v4.json --modes linear grounded_linear grounded_tree flat_tree branch_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200 --repeats 2 --workers 2 --worker-index N > experiments/incremental_planning/run/branch-heldout-v1-workerN.log 2>&1
+```
+
+Final pre-development full suite: **254 passed, 42 subtests passed**, one existing Pydantic deprecation warning. `git diff --check` passed.

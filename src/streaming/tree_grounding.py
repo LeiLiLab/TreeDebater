@@ -34,10 +34,12 @@ def tree_targets(trees, opponent_side):
             parent = node.parent
             while parent is not None and parent.parent is not None:
                 ancestry.append({"node_id": parent.node_id, "side": parent.side,
-                                 "claim": parent.claim, "arguments": parent.argument,
+                                 "claim": parent.claim, "arguments": list(parent.argument),
                                  "sources": list(getattr(parent, "source_spans", []))})
                 parent = parent.parent
-            responses = [{"node_id": c.node_id, "claim": c.claim, "side": c.side}
+            responses = [{"node_id": c.node_id, "claim": c.claim, "side": c.side,
+                          "arguments": list(c.argument), "sources": list(c.source_spans),
+                          "relation": getattr(c, "relation", None)}
                          for c in node.children]
             item = {"node_id": node.node_id, "claim": node.claim,
                     "arguments": list(node.argument), "sources": list(node.source_spans),

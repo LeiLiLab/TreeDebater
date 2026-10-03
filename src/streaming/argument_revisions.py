@@ -19,7 +19,8 @@ def revise_claim(trees, *, target, side, action, claim, arguments, source, targe
     matches = []
     for tree in trees:
         for node in tree.get_all_nodes():
-            if node.parent is not None and node.side == side and claim_key(node.claim) == claim_key(target):
+            if (node.parent is not None and node.side == side
+                    and (node.node_id == target_id if target_id else claim_key(node.claim) == claim_key(target))):
                 matches.append((tree, node))
     applied = 0
     for tree, node in matches:
