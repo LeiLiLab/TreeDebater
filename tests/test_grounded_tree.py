@@ -65,7 +65,7 @@ def test_structure_prioritizes_unanswered_attacks_without_marking_them_true():
     assert not targets[1]['unanswered']
 
 
-def test_revised_target_and_removed_dependencies_invalidate_old_plan():
+def test_retained_historical_target_and_dependencies_invalidate_old_plan():
     tree = DebateTree('Transport', 'for')
     a = proposal(tree, 'Ban all cars.')
     tree.update_node('attack', new_claim='Ambulances need access.', new_argument=[], target=a.claim)
@@ -76,7 +76,8 @@ def test_revised_target_and_removed_dependencies_invalidate_old_plan():
     p.plan = json.dumps(p.state)
     assert revise_claim([tree], target=a.claim, side='for', action='revise', claim='Only private cars.',
                         arguments=[], source='Only private cars.') == 1
-    assert not a.children and a.source_spans == ['Only private cars.']
+    assert a.children and a.source_spans == ['Ban all cars.'] and a.position_status == 'superseded'
+    assert tree.root.children[-1].source_spans == ['Only private cars.']
     p.revalidate_tree({'tree_targets': tree_targets([tree], 'for')})
     assert not p.state and 'Ambulances need access' not in p.instructions()
     assert p.events[-1]['action'] == 'INVALID_TARGET'

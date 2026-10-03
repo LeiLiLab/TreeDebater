@@ -18,16 +18,33 @@ def planning_material(targets, trees, opponent_side, *, topology):
         for sentence in re.split(r'(?<=[.!?。])\s+', quote):
             if LIMIT_MARKERS.search(sentence) and normalize(sentence) not in {normalize(q) for q in source_limits}:
                 source_limits.append(sentence)
-    for target in sorted(targets, key=lambda n:n['node_id']):
-        for quote in target['sources']:add_quote(quote)
+    source_nodes = {}
+    for target in targets:
+        source_nodes[target['node_id']] = target
+        for ancestor in target['ancestors']:
+            if ancestor['side'] == opponent_side:
+                source_nodes[ancestor['node_id']] = ancestor
+            for reply in ancestor['responses']:
+                if reply['side'] == opponent_side:
+                    source_nodes[reply['node_id']] = reply
+        for reply in target['responses']:
+            if reply['side'] == opponent_side:
+                source_nodes[reply['node_id']] = reply
+    for node_id in sorted(source_nodes):
+        for quote in source_nodes[node_id]['sources']:add_quote(quote)
     withdrawals=[]
+    selected_ids = set(source_nodes)
     for tree in trees:
         for revision in getattr(tree,'revisions',[]):
             if revision['side'] != opponent_side:continue
+            if revision.get('replacement_id') not in selected_ids and revision['action'] != 'retract':
+                continue
             # A correction is a historical event, not a currently active claim.
             # Keep its source separate so a later reassertion can supersede it.
             withdrawals.append({'action':revision['action'],'quote':revision['source']})
-    result = {'tree_targets':targets,'position_limits':source_limits,'correction_history':withdrawals,
+    # Recent withdrawal excerpts are historical guards, not active claim nodes.
+    # Keep this bounded as well as the selected node view.
+    result = {'tree_targets':targets,'position_limits':source_limits,'correction_history':withdrawals[-6:],
               'use_topology':topology}
     if topology:
         briefs=[]
@@ -43,6 +60,7 @@ def planning_material(targets, trees, opponent_side, *, topology):
                 ] if own_objections else [],
                 'is_concession':target['concession'],
                 'our_existing_responses':[r for r in target['responses'] if r['side'] != opponent_side],
+                'omitted_response_count':target.get('omitted_response_count', 0),
                 'needs_response':target['unanswered'] and not target['concession'],
                 'interpretation':'Response presence is structural; it does not establish resolution, truth or victory.'})
         result['branch_briefs']=briefs
@@ -82,7 +100,9 @@ def branch_prompt(context, chunks, previous):
             'edge alone does not prove the earlier issue solved; assess its content. Read the OTHER '
             'replies to the same objection before alleging a safeguard is missing: a sibling concession '
             'may already grant it. A concession acknowledges a specific requirement, not completed '
-            'implementation; question the remaining execution gap rather than deny the acceptance.\n')
+            'implementation; question the remaining execution gap rather than deny the acceptance. '
+            'The view is bounded: omitted_response_count reports replies outside the context budget; '
+            'do not infer that no response exists just because a displayed list is empty.\n')
     return prompt+json.dumps({'context':context,'heard_prefix':chunks,'previous_state':previous},ensure_ascii=False)
 
 

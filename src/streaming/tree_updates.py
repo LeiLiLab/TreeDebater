@@ -2,11 +2,14 @@
 from .argument_revisions import claim_key, revise_claim
 from .tree_grounding import attach_source
 from .grounding import normalize
+from .tree_selection import is_current, selection_status
 
 
 def target_registry(trees):
     return [{"node_id": n.node_id, "side": n.side, "claim": n.claim,
-             "parent_id": n.parent.node_id if n.parent.parent is not None else None}
+             "parent_id": n.parent.node_id if n.parent.parent is not None else None,
+             "selection_status": selection_status(n),
+             "superseded_by": getattr(n, 'superseded_by', None)}
             for tree in trees for n in tree.get_all_nodes() if n.parent is not None]
 
 
@@ -20,13 +23,15 @@ def apply_statements(trees, statements, transcript, side):
     """
     own = next(t for t in trees if t.side == side)
     initial = [(t, n) for t in trees for n in t.get_all_nodes() if n.parent is not None]
+    update_order = 1 + max((getattr(n, 'update_order', 0) for _, n in initial), default=0)
     events = []
 
     def resolve(p):
         if p.get('target_id'):
             matches = [(t,n) for t,n in initial if n.node_id == p['target_id']]
         else:
-            matches = [(t,n) for t,n in initial if claim_key(n.claim) == claim_key(p.get('target',''))]
+            matches = [(t,n) for t,n in initial if is_current(n)
+                       and claim_key(n.claim) == claim_key(p.get('target',''))]
         return matches[0] if len(matches) == 1 else None
 
     def record(action, **fields):
@@ -35,6 +40,7 @@ def apply_statements(trees, statements, transcript, side):
     def propose(item, reason=None):
         node = own.update_node('propose', new_claim=item['claim'], new_argument=list(item['arguments']), target=item['claim'])
         node.relation = 'propose'
+        node.update_order = max(getattr(node, 'update_order', 0), update_order)
         attach_source(node, item['content'], transcript, side)
         if reason:
             record('UNLINKED_CLAIM', node_id=node.node_id, reason=reason)
@@ -74,8 +80,9 @@ def apply_statements(trees, statements, transcript, side):
                 corrections[node.node_id]=(rank,tree,node,item,p)
 
     for _,tree,node,item,p in sorted(corrections.values(),key=lambda x:x[0]):
-        if node not in tree.get_all_nodes():
-            if p['action']=='revise':propose(item,'ancestor correction detached target')
+        if getattr(node, 'position_status', 'current') != 'current':
+            record('INACTIVE_CORRECTION', requested=p['action'], node_id=node.node_id)
+            if p['action']=='revise':propose(item,'historical correction target')
             continue
         count=revise_claim(trees,target=node.claim,side=side,action=p['action'],claim=item['claim'],
                            arguments=item['arguments'],source=item['content'],target_id=node.node_id)
@@ -89,23 +96,26 @@ def apply_statements(trees, statements, transcript, side):
             action=p['action']
             if action=='propose':propose(item);continue
             target=resolve(p)
-            if target is None or target[1] not in target[0].get_all_nodes():
-                propose(item,'missing or removed relation target');continue
+            if target is None or not is_current(target[1]):
+                propose(item,'missing or historical relation target');continue
             tree,node=target
             if action=='reinforce' and node.side==side:
                 for arg in item['arguments']:
                     if arg not in node.argument:node.argument.append(arg)
                 attach_source(node,item['content'],transcript,side)
+                node.update_order = max(getattr(node, 'update_order', 0), update_order)
                 record('REINFORCE',node_id=node.node_id)
             elif action in ('attack','rebut','concede') and node.side!=side:
                 # Ownership determines the child speaker; root parity does not.
-                child=next((c for c in node.children if c.side==side and claim_key(c.claim)==claim_key(item['claim'])),None)
+                child=next((c for c in node.children if is_current(c) and c.side==side
+                            and claim_key(c.claim)==claim_key(item['claim'])),None)
                 if child is None:
                     child=node.add_node(new_claim=item['claim'],new_argument=list(item['arguments']),side=side)
                 else:
                     for arg in item['arguments']:
                         if arg not in child.argument:child.argument.append(arg)
                 child.relation={'rebut':'reply','attack':'attack','concede':'concede'}[action]
+                child.update_order = max(getattr(child, 'update_order', 0), update_order)
                 attach_source(child,item['content'],transcript,side)
                 if action!='concede':node.update_status('attacked')
                 child.update_status('proposed')
@@ -120,6 +130,11 @@ def apply_statements(trees, statements, transcript, side):
 
 RELATION_INSTRUCTIONS = """
 SOURCE-OWNED NODE UPDATES: The registry below lists actual node IDs and speakers.
+Historical nodes remain in storage. Only selection_status=current nodes may be
+targets for new relations or corrections. If a claim is reasserted after withdrawal,
+propose it as a new current claim; do not silently reactivate its old response path.
+Silence or changing the topic is not withdrawal. When a change in position is
+uncertain, preserve the new source as a separate claim instead of retiring the old.
 For EVERY attack/rebut/reinforce/revise/retract/concede, copy its node_id into target_id;
 choose by meaning, not paraphrased target text or tree-root parity. For propose,
 use target_id=null and target=N/A. attack/rebut connects the current speaker's new

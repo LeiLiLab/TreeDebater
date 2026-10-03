@@ -51,14 +51,16 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 | Light Tree (`light_tree`) | Grounded Tree 加重复跳过、未完句缓冲与选择性门控，结束时强制处理积压 | 本轮调用从 Grounded Tree 的 14.0 降至 13.25；延迟未进一步下降，质量仍受提取与条件覆盖限制 | 第三轮：8 × 1，GPT-5.6，通过率 62.5%，等待 11.96s；7 次中间状态回退，2/8 最终回退 |
 | Flat Tree (`flat_tree`) | 修复后的同一树更新与节点来源；索引式规划和限定条件账本，但规划/输出移除祖先、回应边和结构排序 | 隔离显式关系指导；仍可从发言推断关系、支付建树成本，索引格式仍会失败 | 第四轮 8 × 2，GPT-5.6，通过率 41.7%，等待 9.53s，最终回退 4/16 |
 | Branch Tree (`branch_tree`) | 在同一来源机制上使用质疑—回应路径、已有回应、同一质疑的其他回应与让步边 | 关系直接参与下一步反驳；上下文和成本增加，最终仍会遗漏限定条件；对 Flat 的独立增益未证实 | 第四轮 8 × 2，GPT-5.6，通过率 43.8%，等待 10.62s，最终回退 3/16；相对 Flat +2.1 个百分点，95% 区间跨零 |
+| 完整保留树 + 规则选择（现有纠错树模式的新实现） | 撤回只标记，修改新增版本；旧节点与回应链保留；生成按当前性、最近更新、回应情况选择有限子图 | 历史可追溯且不再把整个树送入生成；历史存储/抽取开销增加，有限视图仍可能遗漏相关内容，语义修正判断仍依赖模型 | 用户本次指定方向：实现与离线回归验证；尚无新模型质量/延迟结果，不能沿用第四轮分数 |
 
 第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
+各轮成绩属于当时冻结的代码。最新的“保留树 + 规则选择”修改现有纠错树模式，不增加新的模式名；以前评测采用的整条分支归档移除行为保留在历史提交中。
 
 Evaluate targeted rebuttal quality, final-condition correctness, claim coverage, unsupported assertions, end-of-turn residual latency, and total input/output tokens and cost. Include late qualifiers, reversals, withdrawals, repeated content, and split clauses. Report measured text/planning latency separately from actual audible latency; do not describe a simulated timeline as a live audio measurement. Judges see delivered answers, not private preparation traces. Keep development cases separate from final held-out comparison.
 
 ## Budget and accounting
 
-**Latest completed run:** the original Linear control is now complete. Approved cumulative cap remains **USD200**; cumulative provider-usage estimate **$2.88722584**, active guarded occupancy **$12.93704176**, available **$187.06295824**, zero pending requests. Historical pre-dispatch reservations total $276.9705208 and are not current occupancy. Successful requests settle at 4× verified usage; historical failed/unknown/audio bounds remain. The earlier USD320 proposal is withdrawn.
+**Latest completed run:** the 80-answer branch comparison is complete. Approved cumulative cap remains **USD200**; cumulative provider-usage estimate **$5.33943203**, active guarded occupancy **$23.11432252**, available **$176.88567748**, zero pending requests. Historical pre-dispatch reservations total $442.58019360 and are not current occupancy. Successful requests settle at 4× verified usage; historical failed/unknown/audio bounds remain. The current retained-tree implementation uses offline tests only and adds no experiment spend. The earlier USD320 proposal is withdrawn.
 
 - Approved cumulative cap: **USD 200.00**.
 - At creation of this log: **0 paid inference requests launched by this task; attributable experiment cost USD 0.00**. Existing unrelated proxy traffic is excluded.
@@ -863,3 +865,53 @@ PYTHONPATH=src /home/danqingwang/anaconda3/envs/debate/bin/python experiments/in
 python -m py_compile experiments/incremental_planning/diagnose_branch_run.py experiments/incremental_planning/summarize.py
 git diff --check
 ```
+
+## Retain the full tree; select nodes for generation — 2026-10-03 UTC
+
+User requested **在树上保留，但是后续用来生成的时候，利用规则只使用部分节点而不是整个树**. Implement this as a shared change to the existing correction-enabled tree modes, starting from **008ced1**. The earlier 80-answer results remain unchanged and describe their frozen inference source **5162ef8**, not this new implementation. No new paid evaluation or audio run is launched in this task.
+
+### Stored history and position changes
+
+- `retract` preserves the original node, its source/evidence and its complete response subtree, setting only `position_status=withdrawn` plus the change source. A node can still be found by its original ID in the full tree.
+- `revise` adds a new current node rather than overwriting the old claim. The old node becomes `superseded`; `supersedes` / `superseded_by` link the two IDs. Old responses keep their original parent, source, evidence and wording. A replacement does not inherit responses that were made to different wording.
+- A current-worded descendant beneath a withdrawn/superseded premise is effectively `needs_review` for generation selection. This is derived from ancestry, not a declaration that the response is false. Both stored `position_status` and derived `selection_status` are exposed in JSON; checkpoints and debug trees preserve all paths. Existing JSON without the new fields loads with current-node defaults.
+- An explicitly reasserted claim receives a current node without reviving the historical response chain. If a newly revised descendant's original parent is already historical, its new version is preserved as a sourced standalone claim rather than inventing a replacement response edge. Same-text proposals merge only with currently eligible nodes.
+- Extraction instructions distinguish actual position changes from silence, a topic change, an attack or a low score. These do not automatically retire a claim. Ambiguous new statements should be retained separately; model interpretation of implicit narrowing remains fallible. Source/owner validation does not establish semantic correctness.
+
+### Rules for the generation view
+
+`src/streaming/tree_selection.py` provides the shared, offline selector. It selects current nodes and retains the complete tree independently of selection.
+
+| Rule | Behavior |
+| --- | --- |
+| Eligibility | Exclude withdrawn, superseded and needs-review nodes from current target/context selection; grounded targets must have attributed source excerpts. |
+| Target priority | Substantive targets before concession-only targets; then recent source updates, unanswered branches and direct responses to the other speaker. Stable traversal breaks remaining ties. |
+| Context | Include each target's immediate parent first, then nearby concession siblings and replies, followed by additional connected ancestry/nearby responses if budget remains. |
+| Node budget | Default `max_tree_targets=8` and `max_tree_context_nodes=16` distinct additional nodes per view. Both are configurable positive integers; unselected nodes remain intact and can be selected later. |
+| Missing context | Record `omitted_response_count`; an empty displayed response list is not evidence that no reply exists. |
+| Qualification coverage | Branch/Flat source-boundary material also includes selected contextual concessions and replies. Correction history includes selected replacements and at most six matching historical withdrawal/revision excerpts; it is explicitly historical material. |
+| Cache safety | A stored ID remaining in the tree is insufficient: selected plans must still match an eligible selected node and its current view version. Otherwise invalidate the plan and use the heard-text fallback. |
+
+The bounded view is a node budget, not a total-token limit or a guarantee of relevance. Source excerpts and transcripts can still be long. The same selector is shared by Branch and Flat before Flat strips explicit topology; that ablation therefore measures explicit graph presentation beyond shared rule-based selection, not absence of all graph influence.
+
+Grounded/Light/Branch/Flat Tree deliver their validated selected plans, without appending the complete stored trees in opening/rebuttal/closing prompts. Older `corrected_tree`, `tree_plan` and `adaptive_tree` use bounded rendered views. The older endpoint action/battlefield helper filters both action targets and counterarguments and receives those views, closing an alternate full-tree prompt path. Optional exemplar retrieval likewise uses selected current nodes for its query and supplied tree material. Full-tree extraction and diagnostic serialization remain available to maintain history. The raw debate transcript remains authoritative source material and may contain earlier wording; it is not presented as a list of current tree targets.
+
+### Verification and scope
+
+Regressions exercise full-path retention and JSON round trips, new-version links and preserved evidence, actual later withdrawal, same-text reassertion, updates beneath historical ancestors, no implicit retirement from attacks/silence/scores, recency under the node cap, concession context under a small budget, omitted-response accounting, stale binding invalidation, grounded generation, older endpoint planning and optional retrieval. The latter paths raise if the full stored tree printer is accidentally called.
+
+The first focused check found old tests asserting physical deletion/overwrite; those expectations were updated to the user-requested behavior. The first full run also exposed incomplete AST-loaded test doubles after the new shared view helper was introduced. Their helper binding and parent links were made consistent with real nodes. No paid requests were made during these checks.
+
+The default remains `legacy`; the new shared behavior applies to the correction-enabled tree modes. This task implements retention and selection semantics, with offline regression evidence. It does not establish new quality, latency or API-cost improvements. Retaining history can increase storage and extraction context, and bounded generation views can still omit a useful node. Earlier saved results, scores, frozen manifests and cost audit files are not rewritten.
+
+Commands:
+
+```bash
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests/test_retained_tree_selection.py tests/test_tree_transactions.py tests/test_grounded_tree.py tests/test_incremental_planning.py tests/test_grounded_integration.py -q
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests debate-app/backend/tests -q
+git diff --check
+```
+
+A read-only ledger check still has **4,093 entries**, **$5.33943203** known usage and zero pending requests: no new model, judge, embedding, ASR or TTS calls. Active guarded occupancy remains **$23.11432252** within the original **$200** authorization.
+
+Final verification: **276 tests passed, 42 subtests passed**, one existing Pydantic deprecation warning; `git diff --check` passed. Full stored paths and generated selections are covered by the same suite. No external publication or deployment.

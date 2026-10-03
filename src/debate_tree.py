@@ -103,6 +103,11 @@ class Node:
         self.argument = []
         self.evidence = []
         self.source_spans = []  # verified transcript excerpts, not proof of entailment
+        self.position_status = "current"  # distinct from structural attacked/proposed status
+        self.supersedes = None
+        self.superseded_by = None
+        self.change_source = None
+        self.update_order = 0
         self.parent = parent
         self.children = []
         self.scores = None  # {"defense": x, "support": y}
@@ -260,6 +265,7 @@ class Node:
             child_node.eval_score(scorer)
 
     def get_node_info(self):
+        from streaming.tree_selection import selection_status
         info = {
             "node_id": self.node_id,
             "side": self.side,
@@ -268,6 +274,12 @@ class Node:
             "argument": self.argument,
             "evidence": self.evidence,
             "source_spans": self.source_spans,
+            "position_status": self.position_status,
+            "selection_status": selection_status(self),
+            "supersedes": self.supersedes,
+            "superseded_by": self.superseded_by,
+            "change_source": self.change_source,
+            "update_order": self.update_order,
             "relation": getattr(self, "relation", None),
             "status": self.status,
             "visit_count": self.visit_count,
@@ -317,6 +329,11 @@ class Node:
         node.argument = json_info["argument"]
         node.evidence = json_info["evidence"]
         node.source_spans = list(json_info.get("source_spans", []))
+        node.position_status = json_info.get("position_status", "current")
+        node.supersedes = json_info.get("supersedes")
+        node.superseded_by = json_info.get("superseded_by")
+        node.change_source = json_info.get("change_source")
+        node.update_order = json_info.get("update_order", 0)
         node.relation = json_info.get("relation")
         node.status = json_info["status"]
         node.visit_count = json_info["visit_count"]
@@ -656,7 +673,10 @@ class DebateTree(Tree):
                 lines.append(' ' * level * 4 + f"Level-{level} Motion: {self.motion}, Side: {self.side}\n")
             else:
                 if include_status:
-                    lines.append(' ' * level * 4 + f"Level-{level} {position} (Visit: {node.visit_count}, Status: {node.status}): {node.data}\n")
+                    from streaming.tree_selection import selection_status
+                    lifecycle = selection_status(node)
+                    version_link = f", Superseded by: {node.superseded_by}" if node.superseded_by else ""
+                    lines.append(' ' * level * 4 + f"Level-{level} {position} (Visit: {node.visit_count}, Status: {node.status}, Selection: {lifecycle}{version_link}): {node.data}\n")
                 else:
                     lines.append(' ' * level * 4 + f"Level-{level} {position}: {node.data}\n")
             for child in node.children:
@@ -696,9 +716,10 @@ class DebateTree(Tree):
             return
 
         if action == "propose":
+            from streaming.tree_selection import is_current
             claim_key = " ".join(new_claim.split()).casefold().rstrip(".!?")
             for existing in self.root.children:
-                if " ".join(existing.claim.split()).casefold().rstrip(".!?") == claim_key:
+                if is_current(existing) and " ".join(existing.claim.split()).casefold().rstrip(".!?") == claim_key:
                     arguments = [new_argument] if isinstance(new_argument, str) else (new_argument or [])
                     for argument in arguments:
                         if argument not in existing.argument:

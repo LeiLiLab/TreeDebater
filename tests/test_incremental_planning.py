@@ -104,6 +104,8 @@ def test_checkpoint_is_independent_and_new_turn_discards_old_notes():
 
 class Node:
     def __init__(self, claim, side="for", parent=None):
+        self.node_id = str(id(self))
+        self.position_status = 'current'
         self.claim, self.side, self.parent = claim, side, parent
         self.argument, self.evidence, self.children = ["old support"], ["old evidence"], []
         self.scores = {"support": 1}
@@ -116,31 +118,40 @@ class Node:
     def update_status(self, value):
         self.status = value
 
+    def add_node(self, *, new_claim, new_argument, side):
+        child = Node(new_claim, side, self)
+        child.argument, child.evidence, child.scores = list(new_argument), [], None
+        return child
+
 
 def fake_tree():
     root = Node("motion")
     def nodes(n):
         return [n] + [child for c in n.children for child in nodes(c)]
-    return SimpleNamespace(root=root, get_all_nodes=lambda: nodes(root))
+    return SimpleNamespace(root=root, side='for', get_all_nodes=lambda: nodes(root))
 
 
-def test_revision_archives_dependent_attacks_and_retraction_removes_active_target():
+def test_revision_and_retraction_retain_original_nodes_and_response_history():
     t = fake_tree()
     claim = Node("Ban all cars", parent=t.root)
     Node("Ambulances need roads", side="against", parent=claim)
     assert revise_claim([t], target="Ban all cars", side="for", action="revise",
                         claim="Limit private cars downtown", arguments=["Local congestion"],
                         source="I mean private cars downtown.") == 1
-    assert claim.children == [] and claim.evidence == [] and claim.scores is None
+    assert claim.children and claim.evidence == ['old evidence'] and claim.scores == {'support': 1}
+    assert claim.claim == 'Ban all cars' and claim.position_status == 'superseded'
+    replacement = t.root.children[-1]
+    assert replacement.claim == 'Limit private cars downtown' and replacement.supersedes == claim.node_id
     assert t.revisions[0]["before"]["children"][0]["claim"] == "Ambulances need roads"
-    assert revise_claim([t], target=claim.claim, side="against", action="retract",
+    assert revise_claim([t], target=replacement.claim, side="against", action="retract",
                         claim="withdrawn", arguments=[], source="I disagree.") == 0
-    assert revise_claim([t], target=claim.claim, side="for", action="retract",
+    assert revise_claim([t], target=replacement.claim, side="for", action="retract",
                         claim="withdrawn", arguments=[], source="I withdraw my proposal.") == 1
-    assert t.root.children == []
+    assert t.root.children == [claim, replacement] and replacement.position_status == 'withdrawn'
 
 
-@pytest.mark.parametrize("settings", [{"mode": "unknown"}, {"max_updates": 0}, {"max_wait_chunks": True}])
+@pytest.mark.parametrize("settings", [{"mode": "unknown"}, {"max_updates": 0}, {"max_wait_chunks": True},
+                                     {"max_tree_targets": True}, {"max_tree_context_nodes": 0}])
 def test_invalid_configuration(settings):
     with pytest.raises(ValueError):
         PlanningConfig(**settings)
@@ -155,6 +166,8 @@ def test_correction_id_tolerates_paraphrased_target_but_cannot_change_other_spea
                 source="Educational use is exempt.")
     assert revise_claim([t], side="against", **args) == 0
     assert revise_claim([t], side="for", **args) == 1
-    assert claim.claim == "Noneducational phone use is restricted"
+    assert claim.claim == 'Phone restrictions improve classroom focus'
+    assert t.root.children[-1].claim == "Noneducational phone use is restricted"
+    assert t.root.children[-1].supersedes == claim.node_id
     args["target_id"] = "invented-id"
     assert revise_claim([t], side="for", **args) == 0

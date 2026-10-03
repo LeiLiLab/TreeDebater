@@ -27,14 +27,17 @@ def item(quote, action, node=None, **kwargs):
     return dict(claim=quote,content=quote,arguments=[quote],purpose=[purpose],**kwargs)
 
 
-def test_retract_then_revise_same_item_preserves_replacement_and_archives_old_dependencies():
+def test_retract_then_revise_same_item_keeps_old_path_and_adds_one_replacement():
     own,other=setup_trees();old=add(own,'Backup for all homes.')
     old.add_node(new_claim='Capacity is insufficient.',new_argument=[],side='against')
     replacement=item('Backup only for the clinic.', 'retract',old)
     replacement['purpose'].append(dict(replacement['purpose'][0],action='revise'))
     events=apply_statements((own,other),[replacement],replacement['content'],'for')
-    assert old in own.get_all_nodes() and old.claim==replacement['claim'] and not old.children
-    assert old.source_spans==[replacement['content']]
+    assert old in own.get_all_nodes() and old.claim=='Backup for all homes.' and old.children
+    assert old.source_spans==['Backup for all homes.'] and old.position_status=='superseded'
+    new=own.root.children[-1]
+    assert new.claim==replacement['claim'] and new.source_spans==[replacement['content']]
+    assert new.supersedes==old.node_id and old.superseded_by==new.node_id and not new.children
     assert own.revisions[0]['before']['children']
     assert sum(e['action']=='APPLY_CORRECTION' for e in events)==1
 
@@ -44,7 +47,8 @@ def test_later_actual_withdrawal_wins_over_earlier_replacement():
     earlier=item('Only a one-month pilot.', 'revise',old)
     later=item('I withdraw even the pilot.', 'retract',old)
     apply_statements((own,other),[earlier,later],earlier['content']+' '+later['content'],'for')
-    assert old not in own.get_all_nodes()
+    assert old in own.get_all_nodes() and old.position_status=='withdrawn'
+    assert not tree_targets((own,other),'for')
 
 
 def test_id_correction_does_not_rewrite_same_text_on_an_independent_branch():

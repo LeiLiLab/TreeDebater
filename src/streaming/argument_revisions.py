@@ -1,5 +1,7 @@
-"""Explicit speaker-owned argument amendments with archived dependent subtrees."""
+"""Speaker-owned amendments retain old nodes and response paths in the tree."""
 import copy
+
+from .tree_selection import is_current
 
 
 def claim_key(text):
@@ -24,30 +26,38 @@ def revise_claim(trees, *, target, side, action, claim, arguments, source, targe
                 matches.append((tree, node))
     applied = 0
     for tree, node in matches:
-        # A parent's revision can already have detached a matched descendant.
-        if node not in tree.get_all_nodes():
+        # Repeated extraction of a change must not generate another replacement.
+        if getattr(node, "position_status", "current") != "current":
             continue
         applied += 1
         if not hasattr(tree, "revisions"):
             tree.revisions = []
-        tree.revisions.append({"action": action, "side": side, "source": source,
-                               "before": copy.deepcopy(node.get_node_info()),
-                               "replacement": claim if action == "revise" else None})
+        event = {"action": action, "side": side, "source": source,
+                 "before": copy.deepcopy(node.get_node_info()),
+                 "replacement": claim if action == "revise" else None,
+                 "replacement_id": None}
+        tree.revisions.append(event)
+        node.change_source = source
         if action == "retract":
-            node.parent.children.remove(node)
-            if node.parent.parent is not None and not node.parent.children:
-                node.parent.update_status("proposed")
+            node.position_status = "withdrawn"
         else:
-            node.claim = claim
-            node.argument = list(arguments)
-            node.evidence = []
-            if hasattr(node, "source_spans"):
-                node.source_spans = [source]
-            # Old attacks/replies depend on the old premise. Archive them above;
-            # require revalidation before reusing them against the narrower claim.
-            node.children = []
-            node.scores = None
-            node.update_status("proposed")
+            # A revised statement gets its own identity. Its old replies still
+            # refer to the original wording, so never move them to the new node.
+            parent = node.parent
+            if not is_current(parent):
+                # An earlier correction in this batch changed the old context.
+                # Preserve the newly sourced claim without inventing a new edge.
+                parent = next(t.root for t in trees if t.side == side)
+            replacement = parent.add_node(new_claim=claim, new_argument=list(arguments), side=side)
+            replacement.relation = getattr(node, "relation", None) if parent is node.parent else 'propose'
+            replacement.source_spans = [source]
+            replacement.update_order = 1 + max(getattr(n, 'update_order', 0)
+                                              for t in trees for n in t.get_all_nodes())
+            replacement.supersedes = node.node_id
+            replacement.update_status("proposed")
+            node.position_status = "superseded"
+            node.superseded_by = replacement.node_id
+            event['replacement_id'] = replacement.node_id
     return applied
 
 
@@ -61,6 +71,10 @@ the other side's claim: disagreeing with an opponent is attack/rebut, not correc
 For revise, claim is the corrected current claim and arguments contain ONLY support
 valid for that corrected claim. For retract, claim describes the withdrawn claim.
 content must quote the current speech that establishes the correction verbatim.
+Do not infer a correction from silence, topic changes, a low score, or an opponent's
+attack. A qualification need not contain the word 'withdraw', but it must actually
+change the speaker's prior position. If that meaning is uncertain, preserve the
+new statement separately instead of treating the earlier claim as abandoned.
 Do not also propose/reinforce the same replacement as a separate purpose.
 If the correction's target is unavailable, extract a grounded new claim instead.
 """

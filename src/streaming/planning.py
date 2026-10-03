@@ -22,11 +22,14 @@ class PlanningConfig:
     max_gate_tokens: int = 120
     max_updates: int = 24
     max_wait_chunks: int = 3
+    max_tree_targets: int = 8
+    max_tree_context_nodes: int = 16
 
     def __post_init__(self):
         if self.mode not in MODES:
             raise ValueError(f"Unknown planning mode: {self.mode}")
-        for key in ("max_plan_tokens", "max_gate_tokens", "max_updates", "max_wait_chunks"):
+        for key in ("max_plan_tokens", "max_gate_tokens", "max_updates", "max_wait_chunks",
+                    "max_tree_targets", "max_tree_context_nodes"):
             if type(getattr(self, key)) is not int or getattr(self, key) <= 0:
                 raise ValueError(f"{key} must be a positive integer")
 
@@ -246,7 +249,7 @@ class IncrementalPlanner:
                 "as if the opponent prohibited them.")
 
     def revalidate_tree(self, context):
-        """Do not deliver notes bound to a removed or changed tree target."""
+        """Do not deliver notes bound to an ineligible, unselected or changed target."""
         if not self.config.grounded_tree or not self.state:
             return
         targets = {n["node_id"]: n["version"] for n in context["tree_targets"]}

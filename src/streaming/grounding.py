@@ -109,7 +109,7 @@ def state_prompt(context, chunks, previous):
                               for r in previous["rebuttals"]]}
         prompt += (
             "TREE TARGET SELECTION: claims must select active nodes from context.tree_targets; "
-            "do not invent IDs or use withdrawn/archived nodes. Copy each claim quote from that node's "
+            "do not invent IDs or use withdrawn, superseded or needs-review nodes. Copy each claim quote from that node's "
             "sources. These are verified excerpts heard in this or previous turns, not proof the "
             "claim is true. Prefer unanswered targets, especially direct attacks on our claims; use "
             "ancestors and responses to explain the argumentative link, not to repeat a reply already "

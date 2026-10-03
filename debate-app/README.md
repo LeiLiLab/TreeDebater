@@ -11,7 +11,7 @@ For command-line debaters, put the same `planning` mapping in the debater config
 
 Linear policies maintain explicit notes without a debate tree. Tree policies keep the
 existing claim graph; corrected modes support speaker-owned revision/retraction and
-archive dependent attacks before invalidating them. Adaptive policies use a separate
+retain the original nodes and response paths when a position changes. Adaptive policies use a separate
 semantic WAIT/UPDATE call and force remaining input through preparation at the endpoint.
 `max_updates` limits speculative updates; endpoint draining still runs after that limit.
 All modes keep final speaking under the existing turn controller. Preparation does not
@@ -85,10 +85,10 @@ stage and speaker to read that turn, or use **Back to live** / **Follow current 
 to return to ongoing transcription. Recording and playback continue while you read
 an earlier turn, and live updates preserve your selection.
 
-The tree-centered follow-up keeps the original argument trees active. `grounded_tree`
-selects source-attributed active nodes, prioritizes unanswered branches and attacks
+The tree-centered follow-up keeps the original argument trees. `grounded_tree`
+selects source-attributed current nodes, prioritizes recent updates, unanswered branches and attacks
 on our claims, and binds each response to a stable node ID plus a branch version.
-Revisions archive dependent branches; removed or changed targets invalidate old
+Withdrawn/superseded nodes remain stored; ineligible or changed targets invalidate old
 notes. Existing feedback/revision calls check source fidelity. `light_tree` adds
 the same bounded scheduling as `light_linear`. Source spans survive checkpoints
 and JSON serialization, including prior turns. These checks establish attribution
@@ -101,6 +101,24 @@ a reply to the other speaker creates a child owned by its author. Missing links
 preserve sourced claims without pretending the relation was found. Withdrawals do
 not create new active claims. Update events and source ownership survive snapshots.
 
+Storage and generation now use different views. A withdrawal changes
+`position_status` to `withdrawn` without removing the node or its children. A revision
+adds a new node linked by `supersedes` / `superseded_by`; the old wording, evidence,
+sources and replies remain attached to the original node. Replies beneath a changed
+premise are treated as `needs_review` for selection. Silence, topic changes, an attack
+or a low score do not retire a claim. A newly sourced reassertion gets a current node
+without silently reviving the old response chain.
+
+Generation selects current targets plus nearby objections, concessions and replies.
+The defaults are `planning.max_tree_targets: 8` and
+`planning.max_tree_context_nodes: 16` distinct additional nodes per selected view.
+These positive integer settings bound tree nodes, not total prompt tokens or transcript
+length. Budget-omitted nodes stay current and can be selected on a later update.
+Displayed `omitted_response_count` prevents an omitted reply from being mistaken for
+an unanswered argument. Extraction and saved/debug trees retain the complete history;
+grounded drafting uses its selected plan and never appends the complete stored trees.
+Older corrected policies and optional exemplar retrieval also use bounded current views.
+
 `branch_tree` prepares indexed target choices with server-bound quotes, a ledger of
 current source boundaries, and branch briefs linking our prior objection, the
 opponent's reply and existing responses. Explicit concession edges and sibling
@@ -110,8 +128,11 @@ resolved. Indexed plans request typed JSON and reject invalid choices, falling b
 to the heard source text. `flat_tree` is the matched
 ablation: it uses the same repaired extraction, indexed state and boundary ledger,
 but removes ancestry, response edges and structural ranking from planning/delivery.
+It shares the rule-based candidate selection before stripping explicit topology.
 Both avoid injecting the legacy rendered tree into the final speech prompt.
-These modes are opt-in; comparative results are recorded in `process.md`.
+These modes are opt-in; comparative results are recorded in `process.md`. The retained
+tree/selection revision has offline regression coverage; earlier benchmark scores
+describe the earlier frozen implementation, not this revision.
 
 ## Run locally
 

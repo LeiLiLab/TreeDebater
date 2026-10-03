@@ -122,6 +122,8 @@ class PlanHandoffTests(unittest.TestCase):
                 )
                 scope = {'math': __import__('math'), 'WORDRATIO': {'time': 0.4},
                          f'expert_{stage}_prompt_2': '{act}'}
+                tree_context = load_function(SRC / 'ouragents.py', '_generation_tree_context', scope, cls='TreeDebater')
+                player._generation_tree_context = lambda: tree_context(player)
                 generate = load_function(SRC / 'ouragents.py', stage + '_generation', scope, cls='TreeDebater')
                 generate(player, [], 60)
                 player._analyze_statement.assert_called_once_with('AI lowers costs.', 'against', planned_actions=[plan])
@@ -151,7 +153,8 @@ class MainClaimTests(unittest.TestCase):
         attack = object()
         existing = SimpleNamespace(claim='Writing develops creativity.', argument=['Original reason'],
                                    children=[attack], status='attacked')
-        root = SimpleNamespace(children=[existing], side='for', add_node=Mock())
+        root = SimpleNamespace(children=[existing], side='for', add_node=Mock(), parent=None)
+        existing.parent = root
         tree = SimpleNamespace(root=root)
         update(tree, 'propose', new_claim='  WRITING develops  creativity ',
                new_argument=['Original reason', 'New reason'], target='Writing develops creativity')

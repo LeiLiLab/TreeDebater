@@ -203,7 +203,7 @@ def build_logic_claims(llm, motion, side, claim_pool, context="", definition="",
 ##################### Debate Flow Tree #####################
 
 
-def get_actions_from_tree(claims, tree, oppo_tree):
+def get_actions_from_tree(claims, tree, oppo_tree, *, selected_ids=None):
     actions = []
 
     if tree.max_level == 0:
@@ -230,6 +230,10 @@ def get_actions_from_tree(claims, tree, oppo_tree):
             else:
                 action = "reinforce" if (level + 1) % 2 == 1 else "rebut"
                 for node in nodes:
+                    if selected_ids is not None:
+                        if node.node_id not in selected_ids:
+                            continue
+                        action = 'reinforce' if node.side == tree.side else 'rebut'
                     actions.append(
                         {
                             "idx": len(actions),
@@ -242,6 +246,7 @@ def get_actions_from_tree(claims, tree, oppo_tree):
                             "counterarguments": [
                                 {"claim": child.claim, "arguments": list(child.argument)}
                                 for child in node.children
+                                if selected_ids is None or child.node_id in selected_ids
                             ],
                             "targeted_debate_tree": "you",
                         }
@@ -255,6 +260,10 @@ def get_actions_from_tree(claims, tree, oppo_tree):
             else:
                 action = "attack" if (level + 1) % 2 == 1 else "reinforce"
                 for node in nodes:
+                    if selected_ids is not None:
+                        if node.node_id not in selected_ids:
+                            continue
+                        action = 'attack' if node.side == oppo_tree.side else 'reinforce'
                     actions.append(
                         {
                             "idx": len(actions),
@@ -267,6 +276,7 @@ def get_actions_from_tree(claims, tree, oppo_tree):
                             "counterarguments": [
                                 {"claim": child.claim, "arguments": list(child.argument)}
                                 for child in node.children
+                                if selected_ids is None or child.node_id in selected_ids
                             ],
                             "targeted_debate_tree": "opponent",
                         }
@@ -274,6 +284,8 @@ def get_actions_from_tree(claims, tree, oppo_tree):
 
     log_llm_io(logger, phase="helper", title="Debate-Flow-Tree-Action", body=json.dumps(actions, indent=2))
 
+    if not actions:
+        return []
     df = pd.DataFrame(actions)
     df = df.drop_duplicates(subset=["target_claim"])
     actions = df.to_dict(orient="records")
@@ -281,15 +293,15 @@ def get_actions_from_tree(claims, tree, oppo_tree):
     return actions
 
 
-def get_battlefields_from_actions(llm, motion, side, claims, actions, tree, oppo_tree):
+def get_battlefields_from_actions(llm, motion, side, claims, actions, tree, oppo_tree, *, tree_views=None):
     prompt = debate_flow_tree_action_eval_prompt.format(
         motion=motion,
         side=side,
         act="SUPPORT" if side == "for" else "OPPOSE",
         claims=claims,
         actions=json.dumps(actions, indent=2),
-        tree=tree.print_tree(include_status=True),
-        oppo_tree=oppo_tree.print_tree(include_status=True, reverse=True),
+        tree=tree_views[0] if tree_views is not None else tree.print_tree(include_status=True),
+        oppo_tree=tree_views[1] if tree_views is not None else oppo_tree.print_tree(include_status=True, reverse=True),
     )
     log_llm_io(logger, phase="helper", title="Debate-Flow-Tree-Action-Eval-Prompt", body=prompt.strip(), side=side)
     eval_results, response = get_response_with_retry(
