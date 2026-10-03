@@ -253,7 +253,11 @@ class IncrementalPlanner:
         if not self.config.grounded_tree or not self.state:
             return
         targets = {n["node_id"]: n["version"] for n in context["tree_targets"]}
-        if any(targets.get(c["node_id"]) != c["target_version"] for c in self.state["claims"]):
+        stale_material = False
+        if self.config.branch_state:
+            from .branch_planning import material_version
+            stale_material = self.state.get('material_version') != material_version(context)
+        if stale_material or any(targets.get(c["node_id"]) != c["target_version"] for c in self.state["claims"]):
             self.state = {}
             self.plan = "Tree targets changed. Use the verbatim opponent prefix:\n" + " ".join(self.chunks)
             self.events.append({"turn": self.turn, "version": self.version, "action": "INVALID_TARGET"})

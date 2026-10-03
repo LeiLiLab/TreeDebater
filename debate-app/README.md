@@ -99,7 +99,11 @@ Correction-enabled tree modes now apply source-checked updates by actual speaker
 and node ID. A replacement is applied once instead of retracting its target first;
 a reply to the other speaker creates a child owned by its author. Missing links
 preserve sourced claims without pretending the relation was found. Withdrawals do
-not create new active claims. Update events and source ownership survive snapshots.
+not create new active claims. Within one speech chunk, updates follow the source
+excerpt order, including ordinary claims and corrections; model array order does
+not define recency. The latest correction per target wins; at the same quoted
+position a replacement takes precedence over withdrawal. Update events and source
+ownership survive snapshots.
 
 Storage and generation now use different views. A withdrawal changes
 `position_status` to `withdrawn` without removing the node or its children. A revision
@@ -123,7 +127,10 @@ Older corrected policies and optional exemplar retrieval also use bounded curren
 current source boundaries, and branch briefs linking our prior objection, the
 opponent's reply and existing responses. Explicit concession edges and sibling
 replies keep an already-accepted safeguard visible when planning the next objection.
-A promise remains a promise; a response edge does not certify that an issue is
+Cached Branch/Flat plans bind the complete delivered boundary ledger and correction
+history as well as their selected claim versions, so changes outside a chosen claim
+also invalidate stale notes. Verified context excerpts from prior turns remain valid
+indexed boundary choices. A promise remains a promise; a response edge does not certify that an issue is
 resolved. Indexed plans request typed JSON and reject invalid choices, falling back
 to the heard source text. `flat_tree` is the matched
 ablation: it uses the same repaired extraction, indexed state and boundary ledger,

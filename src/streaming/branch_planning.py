@@ -1,5 +1,6 @@
 """Indexed, source-bound planning with an explicit tree-topology ablation."""
 import json
+import hashlib
 import re
 
 from .grounding import normalize, parse_state
@@ -7,6 +8,15 @@ from .grounding import normalize, parse_state
 
 MOVES = ('challenge_support', 'challenge_inference', 'answer_objection', 'concede_then_distinguish')
 LIMIT_MARKERS = re.compile(r'\b(?:only|not|no|except|unless|before|after|until|during|within|remain|retain|withdraw|replace|exempt|trial|pilot|monthly|quarterly|annual|year|month|week|day|hour|must|requires?|conditional|subject to|accept|agree|concede|commit|publish)\b|\d|例外|除非|仅|不|撤回', re.I)
+
+
+def material_version(material):
+    """Bind the full delivered coverage ledger, not only selected claim paths."""
+    bound = {'targets': [(n['node_id'], n['version']) for n in material['tree_targets']],
+             'position_limits': material['position_limits'],
+             'correction_history': material['correction_history'],
+             'use_topology': material['use_topology']}
+    return hashlib.sha256(json.dumps(bound, sort_keys=True).encode()).hexdigest()[:16]
 
 
 def planning_material(targets, trees, opponent_side, *, topology):
@@ -41,10 +51,12 @@ def planning_material(targets, trees, opponent_side, *, topology):
                 continue
             # A correction is a historical event, not a currently active claim.
             # Keep its source separate so a later reassertion can supersede it.
-            withdrawals.append({'action':revision['action'],'quote':revision['source']})
+            withdrawals.append((revision.get('update_order', 0),
+                                {'action':revision['action'],'quote':revision['source']}))
     # Recent withdrawal excerpts are historical guards, not active claim nodes.
     # Keep this bounded as well as the selected node view.
-    result = {'tree_targets':targets,'position_limits':source_limits,'correction_history':withdrawals[-6:],
+    recent = [event for _, event in sorted(withdrawals, key=lambda item: item[0])][-6:]
+    result = {'tree_targets':targets,'position_limits':source_limits,'correction_history':recent,
               'use_topology':topology}
     if topology:
         briefs=[]
@@ -127,12 +139,17 @@ def parse_branch_state(raw, prefix, material):
         if not isinstance(item,dict) or set(item)!={'target','move','point','assumptions'} or item['move'] not in MOVES:
             raise ValueError('Invalid branch move')
         canonical['rebuttals'].append({k:item[k] for k in ('target','point','assumptions')})
-    state=parse_state(json.dumps(canonical),prefix,tree_targets=material['tree_targets'])
+    # Limits can be drawn from a verified contextual sibling in an earlier turn,
+    # not just the latest prefix or a primary target. Claim attribution remains
+    # restricted to its own node's sources by parse_state.
+    grounded_prefix = ' '.join([prefix, *material['position_limits']])
+    state=parse_state(json.dumps(canonical),grounded_prefix,tree_targets=material['tree_targets'])
     for item,original in zip(state['rebuttals'],data['rebuttals']):item['move']=original['move']
     # Keep the coverage ledger even if the model selects no limits. This costs no
     # extra inference and prevents a compact plan from silently deleting context.
     state['position_limits']=material['position_limits']
     state['correction_history']=material['correction_history']
+    state['material_version']=material_version(material)
     if material['use_topology']:
         selected={n['node_id'] for n in state['claims']}
         state['branch_briefs']=[b for b in material['branch_briefs'] if b['node_id'] in selected]

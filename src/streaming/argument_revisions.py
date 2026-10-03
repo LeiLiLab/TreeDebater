@@ -8,7 +8,7 @@ def claim_key(text):
     return " ".join(text.split()).casefold().rstrip(".!?")
 
 
-def revise_claim(trees, *, target, side, action, claim, arguments, source, target_id=None):
+def revise_claim(trees, *, target, side, action, claim, arguments, source, target_id=None, update_order=None):
     if action not in ("revise", "retract") or not source.strip() or not target.strip():
         return 0
     if target_id:
@@ -32,12 +32,15 @@ def revise_claim(trees, *, target, side, action, claim, arguments, source, targe
         applied += 1
         if not hasattr(tree, "revisions"):
             tree.revisions = []
-        event = {"action": action, "side": side, "source": source,
+        order = update_order if update_order is not None else 1 + max(
+            getattr(n, 'update_order', 0) for t in trees for n in t.get_all_nodes())
+        event = {"update_order": order, "action": action, "side": side, "source": source,
                  "before": copy.deepcopy(node.get_node_info()),
                  "replacement": claim if action == "revise" else None,
                  "replacement_id": None}
         tree.revisions.append(event)
         node.change_source = source
+        node.update_order = order
         if action == "retract":
             node.position_status = "withdrawn"
         else:
@@ -51,8 +54,7 @@ def revise_claim(trees, *, target, side, action, claim, arguments, source, targe
             replacement = parent.add_node(new_claim=claim, new_argument=list(arguments), side=side)
             replacement.relation = getattr(node, "relation", None) if parent is node.parent else 'propose'
             replacement.source_spans = [source]
-            replacement.update_order = 1 + max(getattr(n, 'update_order', 0)
-                                              for t in trees for n in t.get_all_nodes())
+            replacement.update_order = order
             replacement.supersedes = node.node_id
             replacement.update_status("proposed")
             node.position_status = "superseded"

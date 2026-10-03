@@ -915,3 +915,30 @@ git diff --check
 A read-only ledger check still has **4,093 entries**, **$5.33943203** known usage and zero pending requests: no new model, judge, embedding, ASR or TTS calls. Active guarded occupancy remains **$23.11432252** within the original **$200** authorization.
 
 Final verification: **276 tests passed, 42 subtests passed**, one existing Pydantic deprecation warning; `git diff --check` passed. Full stored paths and generated selections are covered by the same suite. No external publication or deployment.
+
+## Retained-tree implementation quality review — 2026-10-03 UTC
+
+User requested **检查新实现质量** after retention/selection commit **e980161**. This review exercises implementation behavior with offline counterexamples, fixes reproduced defects, and reruns the complete suite. No paid generation/judging experiment is launched; previously frozen benchmark reports do not measure this implementation.
+
+Four new regressions first failed against the retained-tree implementation (**4 failed, 18 passed**, `/tmp/retained-review-repro.log`):
+
+| Finding | Reproduced effect | Repair |
+| --- | --- | --- |
+| Earlier support executed after a later correction | A speech first repeats universal coverage and then limits it to the clinic; correction-first execution could reinsert the universal claim as current. | Resolve all references before mutation, coalesce corrections, then execute both ordinary statements and corrections in source-excerpt order. Unmatched revisions are queued too. |
+| Inconsistent recency across action types | A newer standalone approval condition loses the one-node selection slot to an earlier revision, especially when extraction array order differs from speech order. | Assign one monotonic order across all applied speech items; revision and withdrawal events retain that order. Select the latest six correction excerpts across both trees by event order. |
+| Valid prior-turn boundary quote rejected | A selected contextual sibling concession enters the server-built boundary ledger but is absent from the latest speech prefix and primary target sources; choosing its valid index fails parsing. | Permit server-verified boundary excerpts as grounding material for indexed limits; individual claim attribution remains bound to its own node sources. |
+| Stale coverage survives claim-only cache checks | A boundary on an independent branch changes from one month to two weeks while the selected principal claim's version stays unchanged; cached notes retain the old boundary. | Fingerprint the delivered target versions, boundary ledger, correction history and topology mode. Revalidate this fingerprint for Branch/Flat, including ledger-only plans with no selected claims. |
+
+Additional regressions cover Branch/Flat parity for quote acceptance and cache invalidation, unchanged-context cache reuse, same-position revise/retract conflicts in either extraction order, genuine later reassertion after withdrawal, unmatched-revision chronology, and cross-tree correction recency through serialization. The replacement wins a same-source-position conflict even when the separately extracted withdrawal appears later in the model's array; a withdrawal at an actually later speech position still wins. Earlier history, source ownership and full-tree retention remain covered by existing tests.
+
+Validation:
+
+```bash
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests/test_retained_tree_selection.py tests/test_tree_transactions.py tests/test_grounded_tree.py tests/test_incremental_planning.py tests/test_grounded_integration.py -q
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests debate-app/backend/tests -q
+git diff --check
+```
+
+The first repaired focused run passed **72 tests**. After adding the adjacent boundary cases, final full verification passed **289 tests, 42 subtests**, with one existing Pydantic deprecation warning (**23.00 s**; `/tmp/retained-review-full.log`). This adds **13 regression cases** over the previous full suite. `git diff --check` passed. README now describes source-order updates and complete coverage-cache binding.
+
+Remaining limits: interpretation of implicit narrowing still depends on extraction quality; bounded node selection can omit a relevant branch and does not bound total tokens. Source ordering uses the last normalized occurrence of each quoted excerpt, since extraction has no character offsets; indistinguishable repeated excerpts cannot establish their actual occurrence from text alone. Old serialized correction events lacking an order retain their stable legacy ordering before new ordered events. No measured improvement in answer quality, latency or cost is claimed. This review made no model/API calls and incurred no new experiment spend; existing budget records and benchmark artifacts remain untouched.

@@ -23,7 +23,7 @@ def apply_statements(trees, statements, transcript, side):
     """
     own = next(t for t in trees if t.side == side)
     initial = [(t, n) for t in trees for n in t.get_all_nodes() if n.parent is not None]
-    update_order = 1 + max((getattr(n, 'update_order', 0) for _, n in initial), default=0)
+    base_order = 1 + max((getattr(n, 'update_order', 0) for _, n in initial), default=0)
     events = []
 
     def resolve(p):
@@ -56,46 +56,54 @@ def apply_statements(trees, statements, transcript, side):
         if isinstance(purposes,dict):purposes=[purposes]
         valid.append((item,purposes))
 
+    # Resolve every relation before any mutation, then execute in speech order.
+    work = []
     corrections = {}
-    corrected_items = set()
     for index,(item,purposes) in enumerate(valid):
+        position = normalize(transcript).rfind(normalize(item['content']))
+        if not any(p['action'] in ('revise', 'retract') for p in purposes):
+            work.append((position, index, item, [(p, resolve(p)) for p in purposes], None))
         for p in purposes:
             if p['action'] not in ('revise','retract'):continue
-            corrected_items.add(index)
             target = resolve(p)
             if target is None:
                 record('UNMATCHED_CORRECTION', requested=p['action'], target=p.get('target'), target_id=p.get('target_id'))
                 # A revise explicitly supplies a current replacement. Keep it as
                 # unlinked source material, without claiming an old node matched.
-                if p['action']=='revise':propose(item, 'unmatched revision')
+                if p['action']=='revise':
+                    work.append((position, index, item, [], 'unmatched revision'))
                 continue
             tree,node=target
             if node.side != side:
                 record('REJECT_OWNER', requested=p['action'], node_id=node.node_id);continue
-            rank=(normalize(transcript).rfind(normalize(item['content'])), index, p['action']=='revise')
+            rank=(position, p['action']=='revise', index)
             previous=corrections.get(node.node_id)
             if previous:
                 record('COALESCE_CORRECTION', node_id=node.node_id)
             if previous is None or rank > previous[0]:
                 corrections[node.node_id]=(rank,tree,node,item,p)
 
-    for _,tree,node,item,p in sorted(corrections.values(),key=lambda x:x[0]):
-        if getattr(node, 'position_status', 'current') != 'current':
-            record('INACTIVE_CORRECTION', requested=p['action'], node_id=node.node_id)
-            if p['action']=='revise':propose(item,'historical correction target')
-            continue
-        count=revise_claim(trees,target=node.claim,side=side,action=p['action'],claim=item['claim'],
-                           arguments=item['arguments'],source=item['content'],target_id=node.node_id)
-        record('APPLY_CORRECTION', requested=p['action'],node_id=node.node_id,matches=count)
+    for rank,tree,node,item,p in corrections.values():
+        work.append((rank[0], rank[2], item, [(p, (tree, node))], 'correction'))
 
-    for index,(item,purposes) in enumerate(valid):
-        if index in corrected_items:continue
+    for offset, (_, _, item, purposes, kind) in enumerate(sorted(work, key=lambda x: x[:2])):
+        update_order = base_order + offset
+        if kind == 'correction':
+            p, (tree, node) = purposes[0]
+            if getattr(node, 'position_status', 'current') != 'current':
+                record('INACTIVE_CORRECTION', requested=p['action'], node_id=node.node_id)
+                if p['action']=='revise':propose(item,'historical correction target')
+                continue
+            count=revise_claim(trees,target=node.claim,side=side,action=p['action'],claim=item['claim'],
+                               arguments=item['arguments'],source=item['content'],target_id=node.node_id,
+                               update_order=update_order)
+            record('APPLY_CORRECTION', requested=p['action'],node_id=node.node_id,matches=count)
+            continue
         if not purposes:
-            propose(item,'missing relation');continue
-        for p in purposes:
+            propose(item, kind or 'missing relation');continue
+        for p, target in purposes:
             action=p['action']
             if action=='propose':propose(item);continue
-            target=resolve(p)
             if target is None or not is_current(target[1]):
                 propose(item,'missing or historical relation target');continue
             tree,node=target

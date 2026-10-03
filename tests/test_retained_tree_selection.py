@@ -250,3 +250,128 @@ def test_optional_retrieval_uses_selected_current_query_and_exemplar_nodes(monke
     assert current.claim in query and example.claim in feedback
     assert 'HISTORICAL_' not in query + feedback
     assert 'parent_id' not in query + feedback and 'relation' not in query + feedback
+
+
+@pytest.mark.parametrize('topology', [True, False])
+def test_indexed_limits_accept_verified_prior_sibling_sources_outside_current_prefix(topology):
+    ours, theirs = DebateTree('Transport', 'against'), DebateTree('Transport', 'for')
+    objection = add(ours, 'Approval is needed.')
+    reply = add(ours, 'The operator remains undecided.', objection, 'for', 'reply')
+    concession = add(ours, 'I accept approval before launch.', objection, 'for', 'concede')
+    targets = tree_targets((ours, theirs), 'for', max_targets=1, max_context_nodes=2)
+    assert [n['node_id'] for n in targets] == [reply.node_id]
+    material = planning_material(targets, (ours, theirs), 'for', topology=topology)
+    limit = material['position_limits'].index(concession.claim)
+    raw = json.dumps({'claims': [{'target': 0}], 'limits': [limit], 'rebuttals': []})
+    state = parse_branch_state(raw, reply.claim, material)
+    assert state['limits'][0]['quote'] == concession.claim
+    assert state['claims'][0]['node_id'] == reply.node_id
+
+
+@pytest.mark.parametrize('mode', ['branch_tree', 'flat_tree'])
+@pytest.mark.parametrize('select_claim', [True, False])
+def test_bound_plan_invalidates_when_coverage_changes_outside_selected_claim_path(mode, select_claim):
+    tree = DebateTree('Transport', 'for')
+    target = add(tree, 'A current principal benefit.')
+    boundary = add(tree, 'Only a one-month trial.')
+    material = planning_material(tree_targets([tree], 'for'), [tree], 'for', topology=mode == 'branch_tree')
+    index = next(i for i, n in enumerate(material['tree_targets']) if n['node_id'] == target.node_id)
+    planner = IncrementalPlanner(PlanningConfig(mode=mode))
+    planner.start('for:opening')
+    planner.chunks = [target.claim, boundary.claim]
+    planner.state = parse_branch_state(json.dumps({'claims': [{'target': index}] if select_claim else [], 'limits': [], 'rebuttals': []}),
+                                       ' '.join(planner.chunks), material)
+    planner.plan = json.dumps(planner.state)
+    planner.version = planner.plan_version = 1
+    old_version = next(n['version'] for n in material['tree_targets'] if n['node_id'] == target.node_id)
+    planner.revalidate_tree(material)
+    assert planner.state  # unchanged views retain both claim-bearing and ledger-only plans
+    amend([tree], boundary, 'revise', 'Only a two-week trial.')
+    changed = planning_material(tree_targets([tree], 'for'), [tree], 'for', topology=mode == 'branch_tree')
+    assert next(n['version'] for n in changed['tree_targets'] if n['node_id'] == target.node_id) == old_version
+    planner.revalidate_tree(changed)
+    assert not planner.state
+    assert planner.events[-1]['action'] == 'INVALID_TARGET'
+
+
+def statement(node, action, quote):
+    return {'claim': quote, 'arguments': [], 'content': quote,
+            'purpose': [{'action': action, 'target': node.claim if node else 'N/A',
+                         'target_id': node.node_id if node else None}]}
+
+
+def test_earlier_support_in_same_chunk_does_not_resurrect_a_later_superseded_position():
+    own, other = DebateTree('Transport', 'for'), DebateTree('Transport', 'against')
+    original = add(own, 'We will cover every home.')
+    earlier = statement(original, 'reinforce', 'We will cover every home.')
+    later = statement(original, 'revise', 'To clarify, coverage is limited to the clinic.')
+    apply_statements((own, other), [earlier, later], earlier['content'] + ' ' + later['content'], 'for')
+    current = tree_targets((own, other), 'for')
+    assert [n['claim'] for n in current] == [later['claim']]
+    assert original.claim == earlier['claim'] and original in own.root.children
+
+
+def test_source_order_drives_recency_across_corrections_and_new_claims():
+    own, other = DebateTree('Transport', 'for'), DebateTree('Transport', 'against')
+    first, second = add(own, 'Old first claim.'), add(own, 'Old second claim.')
+    a = statement(first, 'revise', 'Only the first site will operate.')
+    b = statement(second, 'revise', 'Only the second service is funded.')
+    last = statement(None, 'propose', 'Before launch, approval must be published.')
+    # Extraction order need not equal speech order.
+    apply_statements((own, other), [last, b, a], ' '.join(x['content'] for x in (a, b, last)), 'for')
+    selected = tree_targets((own, other), 'for', max_targets=1)
+    assert selected[0]['claim'] == last['claim']
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+def test_same_quote_replacement_wins_over_retract_across_separate_items(reverse):
+    own, other = DebateTree('Transport', 'for'), DebateTree('Transport', 'against')
+    original = add(own, 'Cover all homes.')
+    quote = 'Actually, only the clinic receives coverage.'
+    items = [statement(original, 'revise', quote), statement(original, 'retract', quote)]
+    if reverse:
+        items.reverse()
+    events = apply_statements((own, other), items, quote, 'for')
+    assert original.position_status == 'superseded'
+    assert [n['claim'] for n in tree_targets((own, other), 'for')] == [quote]
+    assert sum(e['action'] == 'APPLY_CORRECTION' for e in events) == 1
+
+
+def test_later_reassertion_survives_earlier_withdrawal_in_same_chunk():
+    own, other = DebateTree('Transport', 'for'), DebateTree('Transport', 'against')
+    original = add(own, 'Run a pilot.')
+    withdrawal = statement(original, 'retract', 'I withdraw the pilot.')
+    reassertion = statement(None, 'propose', 'After reconsideration, run a pilot.')
+    reassertion['claim'] = original.claim
+    apply_statements((own, other), [reassertion, withdrawal],
+                     withdrawal['content'] + ' ' + reassertion['content'], 'for')
+    assert original.position_status == 'withdrawn'
+    current = tree_targets((own, other), 'for')
+    assert len(current) == 1 and current[0]['node_id'] != original.node_id
+    assert current[0]['sources'] == [reassertion['content']]
+
+
+def test_unmatched_revision_does_not_jump_ahead_of_earlier_proposal():
+    own, other = DebateTree('Transport', 'for'), DebateTree('Transport', 'against')
+    earlier = statement(None, 'propose', 'Only a trial is funded.')
+    later = statement(None, 'revise', 'Approval must be published before launch.')
+    later['purpose'][0]['target_id'] = 'missing'
+    apply_statements((own, other), [later, earlier], earlier['content'] + ' ' + later['content'], 'for')
+    assert tree_targets((own, other), 'for', max_targets=1)[0]['claim'] == later['claim']
+
+
+def test_recent_correction_history_uses_speech_order_across_both_trees():
+    own, other = DebateTree('Transport', 'for'), DebateTree('Transport', 'against')
+    parent = add(other, 'An independent objection.')
+    # Older events in the second tree must not evict newer events in the first.
+    old = [add(other, f'Old claim {i}.', parent, 'for', 'reply') for i in range(6)]
+    for i, node in enumerate(old):
+        amend((own, other), node, 'retract', f'I withdraw old claim {i}.')
+    latest = add(own, 'Newest claim.')
+    amend((own, other), latest, 'retract', 'I withdraw the newest claim.')
+    material = planning_material(tree_targets((own, other), 'for'), (own, other), 'for', topology=True)
+    assert len(material['correction_history']) == 6
+    assert material['correction_history'][-1]['quote'] == 'I withdraw the newest claim.'
+    assert all(e['quote'] != 'I withdraw old claim 0.' for e in material['correction_history'])
+    restored = tuple(DebateTree.from_json(t.get_tree_info()) for t in (own, other))
+    assert planning_material(tree_targets(restored, 'for'), restored, 'for', topology=True) == material
