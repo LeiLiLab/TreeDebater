@@ -39,7 +39,7 @@ def code_digest():
     return digest.hexdigest()
 
 
-def make_player(case, mode, client):
+def make_player(case, mode, client, tree_limits=None):
     from agents import DebaterConfig
     from ouragents import TreeDebater
 
@@ -47,7 +47,7 @@ def make_player(case, mode, client):
                         use_retrieval=False, use_rehearsal_tree=False,
                         add_retrieval_feedback=False, streaming_listen=True,
                         single_pass_revision=True, max_tokens=1600,
-                        planning={"mode": mode, "max_plan_tokens": 700})
+                        planning={"mode": mode, "max_plan_tokens": 700, **(tree_limits or {})})
     p = TreeDebater(cfg, case["motion"])
     p.main_claims_content = [case["own_claim"]]
     p.main_claims = []
@@ -84,11 +84,11 @@ def make_player(case, mode, client):
     return p
 
 
-def run_case(case, mode, repeat, client):
+def run_case(case, mode, repeat, client, tree_limits=None):
     from agents import Debater
     before = client.summary(client.label)
     setup_t0 = time.perf_counter()
-    p = make_player(case, mode, client)
+    p = make_player(case, mode, client, tree_limits)
     setup_seconds = time.perf_counter() - setup_t0
     after_setup = client.summary(client.label)
     opponent_stage = case.get("stage", "opening")
@@ -210,9 +210,15 @@ def main():
     ap.add_argument("--cases-file", type=Path)
     ap.add_argument("--judge-model", choices=(MODEL, "nvidia.nemotron-super-3-120b", "gpt-5.6-sol"), default=MODEL)
     ap.add_argument("--judge-max-tokens", type=int, choices=range(1, 4097))
+    ap.add_argument("--max-tree-targets", type=int, default=8)
+    ap.add_argument("--max-tree-context-nodes", type=int, default=16)
     ap.add_argument("--cap-usd", type=float, default=200.0,
                     help="Must exactly match the already-authorized cap in the existing ledger; never raises it")
     args = ap.parse_args()
+    if args.max_tree_targets <= 0 or args.max_tree_context_nodes <= 0:
+        ap.error("Tree view limits must be positive")
+    tree_limits = {"max_tree_targets": args.max_tree_targets,
+                   "max_tree_context_nodes": args.max_tree_context_nodes}
     if not re.fullmatch(r"[a-zA-Z0-9_-]+", args.run_id):
         ap.error("run-id must contain only letters, digits, underscores and hyphens")
     if not 0 <= args.worker_index < args.workers or args.repeats < 1:
@@ -228,7 +234,7 @@ def main():
         cases = cases[:args.limit]
     run_dir = directory / "run" / args.run_id
     run_dir.mkdir(parents=True, exist_ok=True)
-    metadata = {"source_digest": code_digest(), "cases_digest": hashlib.sha256(cases_path.read_bytes()).hexdigest(),
+    metadata = {"tree_limits": tree_limits, "source_digest": code_digest(), "cases_digest": hashlib.sha256(cases_path.read_bytes()).hexdigest(),
                 "split": args.split, "case_ids": [c["id"] for c in cases], "modes": args.modes,
                 "repeats": args.repeats, "model": MODEL, "workers": args.workers,
                 "judge_model": args.judge_model,
@@ -270,7 +276,7 @@ def main():
             result = json.loads(path.read_text())
         else:
             print("START", client.label, flush=True)
-            result = run_case(case, mode, repeat, client)
+            result = run_case(case, mode, repeat, client, tree_limits)
             atomic_json(path, result)
         if "judge" not in result:
             result["judge"] = judge(case, result["answer"], client, args.judge_model,

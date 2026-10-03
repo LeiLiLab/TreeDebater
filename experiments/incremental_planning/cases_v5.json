@@ -1,0 +1,366 @@
+[
+  {
+    "id": "retained_fresh_workshop",
+    "split": "test",
+    "kind": "implicit_narrowing",
+    "motion": "The college should open its fabrication workshop to residents",
+    "side": "against",
+    "own_claim": "Public workshop access requires safe supervision and reliable funding.",
+    "own_opening": "Public workshop access requires safe supervision and reliable funding.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "The workshop could be open to all residents every evening, with access to every machine. Shared tools would let people repair belongings."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Who would supervise inexperienced users, and which department would fund consumables?"
+      }
+    ],
+    "chunks": [
+      "Residents would have access to every machine. To be precise about this proposal, access is to hand tools in one supervised Saturday session, not to powered cutting equipment.",
+      "Participation would be by reservation for adults who complete an induction. College classes keep their existing priority.",
+      "I accept publishing the supervision rota before reservations open. Funding for consumables is still unsettled.",
+      "The independent benefit is an opportunity to repair belongings with shared hand tools. That possibility does not establish how much money participants will save."
+    ],
+    "checks": [
+      "Recognizes access is limited to hand tools in a supervised Saturday session, not access to every machine each evening",
+      "Does not claim supervision disclosure was refused, or treat an unestablished savings figure as the current case",
+      "Engages the unresolved consumables funding or adequacy of supervision while acknowledging the repair opportunity"
+    ]
+  },
+  {
+    "id": "retained_fresh_parcel",
+    "split": "test",
+    "kind": "prior_concession",
+    "motion": "The village should introduce a shared parcel pickup counter",
+    "side": "against",
+    "own_claim": "A pickup counter must preserve access for people who cannot travel.",
+    "own_opening": "A pickup counter must preserve access for people who cannot travel.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "A shared counter at the village hall could simplify deliveries. Households would collect there rather than receive home delivery."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "What happens to residents unable to travel, and who is responsible for uncollected parcels?"
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "I accept continued home delivery on request for residents unable to travel, without requiring medical evidence. That access condition is part of the proposal."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "That addresses an access condition, but responsibility for uncollected parcels still needs agreement."
+      }
+    ],
+    "chunks": [
+      "The practical proposal is a six-week optional counter at the hall, with no collection fee.",
+      "Existing delivery arrangements continue for households that do not opt in. The access condition we already agreed remains in force.",
+      "A counter could reduce repeated delivery attempts for participants, but I have no measured reduction to offer.",
+      "Responsibility for uncollected parcels remains open and must be settled before the counter opens."
+    ],
+    "checks": [
+      "Recognizes the six-week optional trial without a collection fee",
+      "Acknowledges home delivery on request for residents unable to travel, rather than proposing it as a concession the opponent has refused",
+      "Engages responsibility for uncollected parcels as a pre-opening condition without inventing measured delivery savings"
+    ]
+  },
+  {
+    "id": "retained_fresh_nightgarden",
+    "split": "test",
+    "kind": "reassertion",
+    "motion": "The district should extend the community garden opening hours",
+    "side": "against",
+    "own_claim": "Evening access needs staffing and protection for neighbors.",
+    "own_opening": "Evening access needs staffing and protection for neighbors.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "The garden should remain open until ten every night. Evening access would help residents with daytime jobs."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Late noise could affect neighbors, and the staffing plan is unspecified."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "I withdraw the ten-o-clock opening proposal. Keep the current closing time while we investigate staffing."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "The independent question of access for daytime workers remains worth discussing."
+      }
+    ],
+    "chunks": [
+      "After speaking with the volunteer group, I again propose later opening, but only until eight on Fridays for a four-week trial.",
+      "No amplified sound would be allowed, and the trial depends on a named volunteer being present for each session.",
+      "I accept recording neighbor complaints and publishing them at the end of the trial; no claim of neighborhood approval has been established.",
+      "If a session has no volunteer, it closes at the existing time. Volunteer reliability remains the question to resolve."
+    ],
+    "checks": [
+      "Recognizes the current reasserted proposal is Friday opening until eight for four weeks, not the withdrawn nightly ten-o-clock proposal",
+      "Acknowledges the volunteer condition and existing-time fallback when no volunteer is available",
+      "Engages volunteer reliability or complaint review without claiming neighborhood approval or that amplified sound is permitted"
+    ]
+  },
+  {
+    "id": "retained_fresh_waterstation",
+    "split": "test",
+    "kind": "independent_branch",
+    "motion": "The market should install a public drinking-water station",
+    "side": "against",
+    "own_claim": "Public facilities need accountable maintenance and a justified budget.",
+    "own_opening": "Public facilities need accountable maintenance and a justified budget.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "A water station would eliminate plastic bottle waste at the market. It would also offer drinking water to people who bring no bottle."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "A refill station cannot eliminate all bottle waste. Who cleans it and tests the supply?"
+      }
+    ],
+    "chunks": [
+      "The waste point needs to be more modest: some visitors might refill, but no amount of waste reduction is established.",
+      "The access proposal is one station with a drinking spout at the north entrance for an eight-week trial, not a market-wide rollout.",
+      "I agree that the cleaning rota and water-testing responsibility must be published before installation.",
+      "The installation budget and who pays for replacement parts remain unresolved. The access benefit stands separately from any waste estimate."
+    ],
+    "checks": [
+      "Recognizes one station at the north entrance for an eight-week trial",
+      "Does not treat elimination of all bottle waste as still asserted or as disproving the independent drinking-water access benefit",
+      "Engages installation or replacement-parts funding without claiming cleaning and testing disclosure were refused"
+    ]
+  },
+  {
+    "id": "retained_fresh_archive",
+    "split": "test",
+    "kind": "dense_current_branches",
+    "motion": "The town should expand access to its local history archive",
+    "side": "against",
+    "own_claim": "An archive expansion needs durable staffing and clear handling rules.",
+    "own_opening": "An archive expansion needs durable staffing and clear handling rules.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "The archive would open on Saturdays. It would provide large-print finding aids. School groups could book visits. A quiet research desk would be available."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Opening hours need staffing, and school visits must not displace ordinary readers."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "Readers could request digital scans. Fragile originals would stay supervised. A catalogue terminal would be available. An oral-history listening point is another independent benefit."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Scanning needs permission checks. The terminal needs maintenance, and headphones need cleaning."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "I accept permission checks before scans are released. I accept publishing a terminal-maintenance contact. Volunteers could guide first-time visitors. A noticeboard could advertise local history events."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Those commitments answer disclosure questions. How would shifts be filled, and what can happen if a volunteer cancels?"
+      }
+    ],
+    "chunks": [
+      "Saturday opening is now a six-Saturday trial with two booked research places per session. School visits remain by separate appointment.",
+      "All the access ideas remain options, but the immediate request funds only the supervised research desk and finding aids. Scanning and the listening point need separate costings.",
+      "A named archivist must approve handling of fragile originals. Permission checks still precede release of any later scans.",
+      "Staffing the six sessions is unresolved. A canceled session must be rescheduled or refunded; funding for that guarantee has not been identified."
+    ],
+    "checks": [
+      "Recognizes the immediate six-Saturday trial with two booked research places per session",
+      "Acknowledges current funding covers the supervised research desk and finding aids, while scanning and the listening point require separate costings",
+      "Engages unresolved staffing or the reschedule/refund guarantee without claiming permission checks or fragile-item supervision were rejected"
+    ]
+  },
+  {
+    "id": "retained_fresh_courtyard",
+    "split": "test",
+    "kind": "dense_current_branches",
+    "motion": "The housing association should improve the shared courtyard",
+    "side": "against",
+    "own_claim": "Courtyard changes must preserve access and assign maintenance fairly.",
+    "own_opening": "Courtyard changes must preserve access and assign maintenance fairly.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "The courtyard could have benches, planters, a book exchange and a drinking tap. Each serves a different need."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Benches must leave the access path clear, and plants need someone responsible for watering."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "A shaded seat could help on hot days. A noticeboard could advertise meetings. A bicycle repair stand could support riders. A rain barrel could supply planters."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "The repair stand needs inspection, and stagnant stored water raises a maintenance question."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "I accept keeping the access path clear and naming a planter-waterer before planting. A chess table is another option. A small chalk area and a wildlife sign could support informal learning."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Who will pay for inspections and cleaning? Listing several attractive uses does not resolve upkeep."
+      }
+    ],
+    "chunks": [
+      "The actual funding request is for two benches and three planters for a three-month trial. The other ideas stay on a future-options list.",
+      "There will be no rain barrel in this trial. The benches must leave the agreed access path clear, and planting waits for a named waterer.",
+      "I accept a public cleaning rota before installation, but the replacement budget for damaged items has not been agreed.",
+      "The possible benefit is somewhere to sit and grow plants. I have no evidence that these changes would increase property values."
+    ],
+    "checks": [
+      "Recognizes two benches and three planters for a three-month trial, rather than immediate implementation of all listed options",
+      "Acknowledges the clear access path and named-waterer condition, and does not attack a rain barrel as part of the current trial",
+      "Engages the unresolved replacement budget without asserting property-value gains or treating the cleaning rota as refused"
+    ]
+  },
+  {
+    "id": "retained_fresh_equipment",
+    "split": "test",
+    "kind": "dense_current_branches",
+    "motion": "The recreation center should offer equipment loans",
+    "side": "against",
+    "own_claim": "Equipment loans need transparent allocation and an affordable loss policy.",
+    "own_opening": "Equipment loans need transparent allocation and an affordable loss policy.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "The center could lend footballs, rackets, walking poles and picnic blankets. Different groups would benefit from different items."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Allocation must be fair when demand exceeds supply, and damaged equipment must be checked."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "Board games could serve indoor groups. Exercise mats could help classes. A pump could support cyclists. A folding cart could help people carry supplies."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Which items would be available to begin with? The list exceeds the stated storage room."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "I accept publishing an allocation rule. Rackets would be inspected between loans. A repair kit, a stopwatch and a set of cones are additional possibilities."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Who pays for losses, and would a large deposit exclude people with little spare money?"
+      }
+    ],
+    "chunks": [
+      "The first phase lends only balls and board games for one school term, with loans lasting up to two days. All other items need a later storage decision.",
+      "I accept no cash deposit during the trial. That does not mean lost items have no replacement cost.",
+      "Borrowers would receive the published allocation rule before booking, and items would be checked when returned.",
+      "The source of the replacement fund is still undecided. Access to shared games is a reason to consider the trial, not evidence that it pays for itself."
+    ],
+    "checks": [
+      "Recognizes only balls and board games for one school term, with loans up to two days",
+      "Acknowledges the no-cash-deposit trial and published allocation rule rather than accusing the opponent of imposing a large deposit",
+      "Engages the unfunded replacement cost without treating the trial as already self-financing or attacking storage for all future items"
+    ]
+  },
+  {
+    "id": "retained_fresh_visitor",
+    "split": "test",
+    "kind": "dense_current_branches",
+    "motion": "The museum should improve visitor assistance",
+    "side": "against",
+    "own_claim": "Visitor assistance should be accessible and have a sustainable staffing plan.",
+    "own_opening": "Visitor assistance should be accessible and have a sustainable staffing plan.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "The museum could provide printed maps, a staffed welcome desk, audio directions and large-print labels. These address different visitor needs."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Audio directions do not help everyone, and welcome staffing must not remove gallery supervision."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "A tactile orientation board is another option. Visitors could borrow stools. A quiet waiting area could help groups. Translated leaflets could support more languages."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Which translations are justified by demand? Stools also need safe storage and cleaning."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "I accept retaining printed directions alongside audio. I accept keeping gallery supervision separate. A family trail, a volunteer tour and a suggestions box are additional options."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "A trial needs a limited scope, and the people providing assistance need appropriate training."
+      }
+    ],
+    "chunks": [
+      "The immediate proposal is a welcome desk and printed maps on four weekend mornings. The other ideas require later decisions.",
+      "Assistance would be optional and free. Existing gallery supervision stays at its current level, with separate volunteers at the desk.",
+      "Volunteers must complete an orientation session before serving visitors. The training provider and budget remain undecided.",
+      "This may make arrival easier for some visitors; I am not claiming an increase in ticket sales. The independent access benefit should be considered alongside the staffing cost."
+    ],
+    "checks": [
+      "Recognizes a welcome desk and printed maps on four weekend mornings, rather than an immediate rollout of every listed option",
+      "Acknowledges optional free assistance and separate desk volunteers without a reduction in gallery supervision",
+      "Engages the unresolved training provider or budget without asserting ticket-sale gains or claiming training is not required"
+    ]
+  }
+]

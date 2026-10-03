@@ -51,7 +51,7 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 | Light Tree (`light_tree`) | Grounded Tree 加重复跳过、未完句缓冲与选择性门控，结束时强制处理积压 | 本轮调用从 Grounded Tree 的 14.0 降至 13.25；延迟未进一步下降，质量仍受提取与条件覆盖限制 | 第三轮：8 × 1，GPT-5.6，通过率 62.5%，等待 11.96s；7 次中间状态回退，2/8 最终回退 |
 | Flat Tree (`flat_tree`) | 修复后的同一树更新与节点来源；索引式规划和限定条件账本，但规划/输出移除祖先、回应边和结构排序 | 隔离显式关系指导；仍可从发言推断关系、支付建树成本，索引格式仍会失败 | 第四轮 8 × 2，GPT-5.6，通过率 41.7%，等待 9.53s，最终回退 4/16 |
 | Branch Tree (`branch_tree`) | 在同一来源机制上使用质疑—回应路径、已有回应、同一质疑的其他回应与让步边 | 关系直接参与下一步反驳；上下文和成本增加，最终仍会遗漏限定条件；对 Flat 的独立增益未证实 | 第四轮 8 × 2，GPT-5.6，通过率 43.8%，等待 10.62s，最终回退 3/16；相对 Flat +2.1 个百分点，95% 区间跨零 |
-| 完整保留树 + 规则选择（现有纠错树模式的新实现） | 撤回只标记，修改新增版本；旧节点与回应链保留；生成按当前性、最近更新、回应情况选择有限子图 | 历史可追溯且不再把整个树送入生成；历史存储/抽取开销增加，有限视图仍可能遗漏相关内容，语义修正判断仍依赖模型 | 用户本次指定方向：实现与离线回归验证；尚无新模型质量/延迟结果，不能沿用第四轮分数 |
+| 完整保留树 + 规则选择（现有纠错树模式的新实现） | 撤回只标记，修改新增版本；旧节点与回应链保留；生成按当前性、最近更新、回应情况选择有限子图 | 历史可追溯且不再把整个树送入生成；历史存储/抽取开销增加，有限视图仍可能遗漏相关内容，语义修正判断仍依赖模型 | 实现/质量审查已通过 289 项测试；第五轮新案例模型评测已准备，默认 8+16 节点与放宽上限 128+256 对照；结果待完成，不能沿用第四轮分数 |
 
 第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
 各轮成绩属于当时冻结的代码。最新的“保留树 + 规则选择”修改现有纠错树模式，不增加新的模式名；以前评测采用的整条分支归档移除行为保留在历史提交中。
@@ -942,3 +942,25 @@ git diff --check
 The first repaired focused run passed **72 tests**. After adding the adjacent boundary cases, final full verification passed **289 tests, 42 subtests**, with one existing Pydantic deprecation warning (**23.00 s**; `/tmp/retained-review-full.log`). This adds **13 regression cases** over the previous full suite. `git diff --check` passed. README now describes source-order updates and complete coverage-cache binding.
 
 Remaining limits: interpretation of implicit narrowing still depends on extraction quality; bounded node selection can omit a relevant branch and does not bound total tokens. Source ordering uses the last normalized occurrence of each quoted excerpt, since extraction has no character offsets; indistinguishable repeated excerpts cannot establish their actual occurrence from text alone. Old serialized correction events lacking an order retain their stable legacy ordering before new ordered events. No measured improvement in answer quality, latency or cost is claimed. This review made no model/API calls and incurred no new experiment spend; existing budget records and benchmark artifacts remain untouched.
+
+
+## Retained-tree model evaluation prepared — 2026-10-03 UTC
+
+User requested **进行模型评测** after review commit **9899ce0**. Continue under the existing **cumulative USD200** authorization, without resetting the shared ledger. Before dispatch the read-only audit found **4,093 entries, $5.33943203 known usage, $23.11432252 active guarded exposure, $176.88567748 available, zero pending and no audit issues**.
+
+Freeze `cases_v5.json`: **8 new cases × 2 repetitions**, four implicit-narrowing/prior-concession/reassertion/independent-branch cases and four dense histories containing many independent proposals and later scope limits. All cases and three checklist items per case are authored before new outputs. No development tuning on these test outputs. Main run `retained-heldout-v1`: Grounded Linear, Grounded Tree, Flat Tree, Branch Tree (**64 answers**, 2 workers). Matched cap ablation `retained-wide-v1`: Branch Tree with **128 targets + 256 context nodes** instead of **8 + 16** (**16 answers**, 1 worker). Total **80 answers and judgments**. Wide retains the same currentness rules; it does not revive historical nodes or represent the old pre-retention implementation. Audit cap binding rather than assuming that more capacity affects every case.
+
+The benchmark harness only adds explicit CLI tree-limit options, forwards them to existing PlanningConfig and freezes them in worker metadata. Production inference code and prompts remain as reviewed. Generator/helper remains **Gemma 4 26B A4B**, judge **GPT-5.6 Sol through the existing Bedrock geographic route**, with the same 700-token planning, 1600-token generation/judge caps, temperatures 0.3/0 and 60-second answer budget. No audio, embeddings, external research or new compute rental. Every extraction, planning, drafting, feedback, revision, own-speech analysis and judge call is metered.
+
+Rates rechecked against AWS official pricing on this date: Gemma **$0.13/$0.40 per million input/output tokens**; GPT geographic short context **$4.40/$22**, including the regional premium. Estimate **$3–$6** additional usage, **$12 planning upper allowance**, using roughly 6M generator input/0.6M output tokens and 80 judgments up to 4K input/1600 output, with extra allowance for history length and failures. This is an estimate, not a second cap; the enforced cumulative ceiling remains **$200**, with atomic pre-dispatch bounds and a 4× margin on verified successful usage. Failed/unknown receipts retain full reservations. No automatic retry: at most one same-setting missing-judge retry after diagnosis, never replace a completed judgment or regenerate answers based on scores. All settings and hashes are in `manifest_v5.json`.
+
+Preflight: **43 focused tests passed**, including configuration propagation to default/wide views and budget/retention regressions; one existing Pydantic warning. The previously reviewed implementation full suite passed **289 tests, 42 subtests**. Raw answers, snapshots, judge evidence, timings, source hashes and request receipts remain in the ignored run directory; aggregate results will be committed. Frozen old reports are untouched.
+
+Launch commands (N = 0, 1 for the main run):
+
+```bash
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id retained-heldout-v1 --split test --cases-file experiments/incremental_planning/cases_v5.json --modes grounded_linear grounded_tree flat_tree branch_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200 --repeats 2 --workers 2 --worker-index N > experiments/incremental_planning/run/retained-heldout-v1-workerN.log 2>&1
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id retained-wide-v1 --split test --cases-file experiments/incremental_planning/cases_v5.json --modes branch_tree --max-tree-targets 128 --max-tree-context-nodes 256 --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200 --repeats 2 > experiments/incremental_planning/run/retained-wide-v1-worker0.log 2>&1
+```
+
+Final launch preflight: **290 tests passed, 42 subtests**, one existing Pydantic warning, **23.07 s**. Local proxy liveliness returned HTTP 200. No paid pilot is required; this run evaluates the already-reviewed implementation without prompt tuning.

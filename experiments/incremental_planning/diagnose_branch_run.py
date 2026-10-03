@@ -12,11 +12,15 @@ from debate_tree import DebateTree
 from streaming.tree_grounding import tree_targets
 from streaming.grounding import parse_state, normalize
 from streaming.branch_planning import parse_branch_state
+from streaming.tree_selection import select_nodes, is_current
 
 
 def diagnose(run_id, cases_file):
     base=ROOT/'experiments/incremental_planning';run=base/'run'/run_id
     cases={c['id']:c for c in json.loads(Path(cases_file).read_text())}
+    metadata=json.loads(next(run.glob('metadata_worker*.json')).read_text())
+    limits=metadata.get('tree_limits', {'max_tree_targets':8,'max_tree_context_nodes':16})
+    selection_limits=dict(max_targets=limits['max_tree_targets'],max_context_nodes=limits['max_tree_context_nodes'])
     results=[json.loads(p.read_text()) for p in sorted(run.glob('*__*.json'))]
     bindings=[];integrity=[];events=defaultdict(Counter);states=Counter();invalid=[];latest={}
     concessions=Counter();phase_usage=defaultdict(lambda:dict(calls=0,input_tokens=0,output_tokens=0,usage_estimate_usd=0.))
@@ -24,10 +28,17 @@ def diagnose(run_id, cases_file):
         if result['mode'] not in ('grounded_tree','light_tree','flat_tree','branch_tree'):continue
         case=cases[result['case']];before=result['before_generation'];opponent='for' if case['side']=='against' else 'against'
         trees=[DebateTree.from_json(before[k]) for k in ('our_tree','opponent_tree')]
-        active={n['node_id']:n for n in tree_targets(trees,opponent)}
+        active={n['node_id']:n for n in tree_targets(trees,opponent,**selection_limits)}
+        stored=[n for t in trees for n in t.get_all_nodes() if n.parent is not None]
+        eligible=[n for n in stored if n.side==opponent and is_current(n) and n.source_spans]
+        _, context_nodes=select_nodes(trees,opponent,**selection_limits)
         selected=before['state'].get('claims',[])
         bindings.append(dict(case=result['case'],repeat=result['repeat'],mode=result['mode'],
             active_targets=len(active),selected_claims=len(selected),
+            stored_nodes=len(stored),historical_or_dependent_nodes=sum(not is_current(n) for n in stored),
+            eligible_opponent_nodes=len(eligible),omitted_eligible_targets=len(eligible)-len(active),
+            additional_context_nodes=len(context_nodes),
+            target_cap_binding=len(eligible)>limits['max_tree_targets'],
             final_raw_prefix_fallback=not bool(before['state']),
             selected_versions_valid=all(c['node_id'] in active and c['target_version']==active[c['node_id']]['version'] for c in selected),
             selected_reply_paths=sum(bool(active[c['node_id']]['ancestors']) for c in selected if c['node_id'] in active),

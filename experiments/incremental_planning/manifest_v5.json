@@ -1,0 +1,107 @@
+{
+  "task": "Evaluate retained history with bounded generation views after implementation review",
+  "status": "prepared; frozen before first new model output",
+  "created_utc": "2026-10-03T17:32:45.109922+00:00",
+  "authorization": "Existing user-approved cumulative USD200 task budget; user now requested model evaluation. No increase or reset.",
+  "starting_commit": "9899ce0",
+  "source_digest": "6c1bc6386c8eac0c78420ccc6f2d29d4b709e9280320575a09cc3324cce6374b",
+  "cases_file": "experiments/incremental_planning/cases_v5.json",
+  "cases_digest": "74efd27c324fdfbbd4aa9fe6f9b988c53f86fc9e30616b650d71dfcc92bae92c",
+  "runs": [
+    {
+      "run_id": "retained-heldout-v1",
+      "modes": [
+        "grounded_linear",
+        "grounded_tree",
+        "flat_tree",
+        "branch_tree"
+      ],
+      "cases": 8,
+      "repeats": 2,
+      "answers": 64,
+      "workers": 2,
+      "max_tree_targets": 8,
+      "max_tree_context_nodes": 16
+    },
+    {
+      "run_id": "retained-wide-v1",
+      "modes": [
+        "branch_tree"
+      ],
+      "cases": 8,
+      "repeats": 2,
+      "answers": 16,
+      "workers": 1,
+      "max_tree_targets": 128,
+      "max_tree_context_nodes": 256
+    }
+  ],
+  "model": "google.gemma-4-26b-a4b",
+  "judge_model": "gpt-5.6-sol",
+  "judge_route": "bedrock/us.openai.gpt-5.6-sol",
+  "settings": {
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "plan_max_tokens": 700,
+    "generation_max_tokens": 1600,
+    "judge_max_tokens": 1600,
+    "judge_reasoning_effort": "none",
+    "judge_temperature": "omitted; unsupported",
+    "speech_budget_seconds": 60,
+    "audio": false,
+    "embeddings": false
+  },
+  "estimate": {
+    "expected_additional_usage_usd": [
+      3,
+      6
+    ],
+    "usage_planning_upper_usd": 12,
+    "expected_requests": [
+      1200,
+      1700
+    ],
+    "basis": "About 6M generator input / 0.6M output tokens plus 80 judgments up to 4K input / 1600 output each; uncertainty allowance for long histories, extra extraction and failures.",
+    "rates_per_million": {
+      "google.gemma-4-26b-a4b": [
+        0.13,
+        0.4
+      ],
+      "gpt-5.6-sol": [
+        4.4,
+        22
+      ]
+    },
+    "checked_date": "2026-10-03",
+    "sources": [
+      "https://aws.amazon.com/bedrock/pricing/",
+      "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html"
+    ]
+  },
+  "budget": {
+    "currency": "USD",
+    "cumulative_approved_cap": 200,
+    "starting_usage_estimate": 5.33943203,
+    "starting_accounted_exposure": 23.11432252,
+    "remaining_guarded_budget": 176.88567748,
+    "ledger": "experiments/incremental_planning/run/cost.sqlite",
+    "guard": "Every request reserves full conservative bound atomically before dispatch; successful verified receipts settle at 4x usage, errors/unknown retain bounds. Reject dispatch above cumulative cap. No automatic retry or restart.",
+    "stop": "Stop only these run workers if accounting fails or cap blocks dispatch; preserve saved answers and artifacts. No new paid compute provisioned."
+  },
+  "retry_policy": "At most one unchanged missing-judge retry after diagnosis; no regeneration or replacement of completed judgments; no automatic HTTP retries.",
+  "data_policy": "Eight new authored test cases frozen before output inspection; four natural position-change cases and four dense multi-branch cases. No development tuning on outcomes.",
+  "primary_comparisons": [
+    "Branch bounded vs Branch wide: effect of node caps within same retained-history/currentness rules",
+    "Branch vs Grounded Linear: entire tree pipeline vs structured baseline",
+    "Branch vs Flat: explicit branch presentation beyond shared selection",
+    "Grounded Tree vs Grounded Linear: source-bound tree baseline"
+  ],
+  "limitations": [
+    "Wide view keeps currentness filtering, not historical inactive nodes; it is not old pre-retention code. Audit whether 128/256 caps bind.",
+    "Different arms may extract different graphs despite temperature zero.",
+    "Authored cases, eight independent cases only; repeats are not independent.",
+    "Text-only simulated residual latency excludes ASR/TTS.",
+    "New cases do not establish a before/after quality change relative to earlier rounds."
+  ],
+  "offline_preflight": "Full suite 290 tests passed, 42 subtests; one existing Pydantic warning; 23.07s"
+}

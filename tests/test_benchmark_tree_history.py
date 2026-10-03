@@ -64,3 +64,18 @@ def test_saved_pre_generation_tree_is_not_mutated_by_own_speech_analysis(monkeyp
     assert result['before_generation']['opponent_tree']['structure']['children'][0]['argument'] == ['Initial reason']
     assert result['before_generation']['state'] == {'limits': []}
     assert len(result['after_generation']['opponent_tree']['structure']['children'][0]['argument']) == 2
+
+
+def test_evaluation_tree_limits_reach_real_planning_configuration(monkeypatch):
+    from streaming.planning import PlanningConfig
+    configs = []
+    def factory(config, motion):
+        configs.append(PlanningConfig(**config.planning))
+        return SimpleNamespace(side=config.side, use_debate_flow_tree=False, _add_message=Mock(),
+                               _analyze_statement=Mock(), simulated_audience=[],
+                               planner=SimpleNamespace(config=configs[-1]))
+    monkeypatch.setattr('ouragents.TreeDebater', factory)
+    make_player(case(), 'branch_tree', Mock())
+    make_player(case(), 'branch_tree', Mock(), {'max_tree_targets': 128, 'max_tree_context_nodes': 256})
+    assert (configs[0].max_tree_targets, configs[0].max_tree_context_nodes) == (8, 16)
+    assert (configs[1].max_tree_targets, configs[1].max_tree_context_nodes) == (128, 256)
