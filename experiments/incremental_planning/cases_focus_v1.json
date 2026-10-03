@@ -1,0 +1,433 @@
+[
+  {
+    "id": "focus_bus_display",
+    "split": "test",
+    "kind": "simple_single_turn",
+    "motion": "The town should install an electronic timetable display at the bus shelter",
+    "side": "against",
+    "own_claim": "Passenger information is useful, but a new display needs a clear maintenance commitment.",
+    "own_opening": "Passenger information is useful, but a new display needs a clear maintenance commitment.",
+    "stage": "opening",
+    "prior_history": [],
+    "chunks": [
+      "I propose one timetable display at the central bus shelter, operating from seven in the morning until seven in the evening.",
+      "The printed timetable would remain alongside it. The display would show scheduled departures, not live vehicle positions.",
+      "The installation grant is available, but responsibility for paying future electricity and repairs has not been assigned."
+    ],
+    "checks": [
+      "Recognizes one display at the central shelter with seven-to-seven operating hours",
+      "Acknowledges that the printed timetable remains and does not describe the proposal as providing live vehicle tracking",
+      "Engages the unassigned ongoing electricity or repair responsibility without treating the installation grant as absent or all maintenance as already funded"
+    ]
+  },
+  {
+    "id": "focus_room_booking",
+    "split": "test",
+    "kind": "simple_single_turn",
+    "motion": "The college should let student clubs reserve classrooms in the evening",
+    "side": "for",
+    "own_claim": "Evening classroom reservations could give student clubs a useful place to meet.",
+    "own_opening": "Evening classroom reservations could give student clubs a useful place to meet.",
+    "stage": "opening",
+    "prior_history": [],
+    "chunks": [
+      "I oppose unrestricted evening access, but would permit a four-week trial on Tuesdays from six until eight in two ground-floor classrooms.",
+      "A named staff contact must be on duty. If that contact is unavailable, the rooms stay closed; clubs would not be charged a room fee.",
+      "Who funds the staff contact is still undecided. I am not claiming that student clubs have already damaged any room."
+    ],
+    "checks": [
+      "Recognizes that the opponent permits a four-week Tuesday six-to-eight trial in two ground-floor rooms, rather than opposing all access",
+      "Acknowledges the named staff contact requirement and closure fallback rather than accusing the opponent of allowing unsupervised access",
+      "Engages the unresolved staff funding without inventing prior damage or a proposed room fee"
+    ]
+  },
+  {
+    "id": "focus_seed_swap",
+    "split": "test",
+    "kind": "simple_single_turn",
+    "motion": "The residents association should hold a seed exchange",
+    "side": "against",
+    "own_claim": "A seed exchange needs a manageable scope and someone responsible for unused stock.",
+    "own_opening": "A seed exchange needs a manageable scope and someone responsible for unused stock.",
+    "stage": "opening",
+    "prior_history": [],
+    "chunks": [
+      "The proposal is one Sunday morning exchange of unopened commercial herb-seed packets at the association office.",
+      "Participation is free, and packets without a printed expiry date would not be accepted. This proposal includes no seedlings or garden chemicals.",
+      "A volunteer has offered to check the labels. Storage and disposal of packets left at the end still need an agreed plan."
+    ],
+    "checks": [
+      "Recognizes one Sunday morning exchange restricted to unopened commercial herb-seed packets",
+      "Acknowledges free participation and the printed-expiry requirement without treating seedlings or chemicals as included",
+      "Engages the unresolved leftover-stock plan without claiming no label checker has been offered or asserting that these packets are known to be unsafe"
+    ]
+  },
+  {
+    "id": "focus_lecture_recordings",
+    "split": "test",
+    "kind": "position_revision",
+    "motion": "The department should make lecture audio available to enrolled students",
+    "side": "for",
+    "own_claim": "Lecture audio could help enrolled students revisit difficult material while respecting consent.",
+    "own_opening": "Lecture audio could help enrolled students revisit difficult material while respecting consent.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "against",
+        "stage": "opening",
+        "content": "I oppose all lecture recording because lecturers and students should control their spoken contributions."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "Could a limited class-only recording with consent protect that control while allowing students to revisit explanations?"
+      }
+    ],
+    "chunks": [
+      "I withdraw my blanket objection. I would allow lecturer-approved audio in the enrolled class portal for seven days after each lecture.",
+      "Recording would pause during student questions, and lecturers could decline without having to give a reason.",
+      "No public uploads are included. The unresolved issue is who checks consent and removes files when the seven days expire.",
+      "Revisiting an explanation may be useful; I have no evidence that recording necessarily reduces attendance."
+    ],
+    "checks": [
+      "Recognizes the replacement position permits lecturer-approved class-portal audio for seven days, rather than maintaining a blanket ban",
+      "Acknowledges pausing during student questions and the lecturer right to decline, and does not treat public uploads as allowed",
+      "Engages consent administration or timely deletion without attributing an established attendance decline to the opponent"
+    ]
+  },
+  {
+    "id": "focus_riverside_stall",
+    "split": "test",
+    "kind": "position_revision",
+    "motion": "The council should permit a refreshments stall beside the river path",
+    "side": "against",
+    "own_claim": "Any riverside trading needs to preserve path access and provide a practical waste plan.",
+    "own_opening": "Any riverside trading needs to preserve path access and provide a practical waste plan.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "A permanent riverside kiosk could sell food and drinks throughout the week."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "A permanent structure could obstruct the path. Who would manage food preparation and waste?"
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "I accept that the permanent structure should not proceed while these questions remain open."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "Refreshments for walkers could still be considered separately from a permanent building."
+      }
+    ],
+    "chunks": [
+      "The earlier permanent kiosk is withdrawn. I now propose a movable drinks-only stall on two Saturday afternoons, with no cooking or groundworks.",
+      "The stall must leave a two-metre clear path and will not operate during a flood warning.",
+      "The operator accepts taking all waste away after each afternoon. The council has not yet assigned someone to verify that cleanup.",
+      "The trial could offer refreshments to walkers, but I am making no claim about increased tourism revenue."
+    ],
+    "checks": [
+      "Recognizes a movable drinks-only stall for two Saturday afternoons, replacing the permanent kiosk and excluding cooking or groundworks",
+      "Acknowledges the two-metre clear path and no-operation flood-warning condition",
+      "Engages cleanup verification without claiming waste removal was refused or inventing tourism revenue"
+    ]
+  },
+  {
+    "id": "focus_remote_ballots",
+    "split": "test",
+    "kind": "position_revision",
+    "motion": "The association should allow members to vote remotely",
+    "side": "for",
+    "own_claim": "Remote voting could include members unable to attend, provided the voting rules remain clear.",
+    "own_opening": "Remote voting could include members unable to attend, provided the voting rules remain clear.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "against",
+        "stage": "opening",
+        "content": "I oppose allowing any remote vote because the association needs confidence in voter identity."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "Members who cannot attend still have a stake in the election. Could we separate identity checking from recording the vote?"
+      }
+    ],
+    "chunks": [
+      "My earlier opposition to all remote votes is withdrawn. For the next committee election only, I would permit remote voting by existing members whose membership is verified before voting.",
+      "Each member gets one ballot, whether voting at the meeting or remotely; there is no extra remote-voting fee.",
+      "Verification must not expose how a member votes. The specific method for separating identity checks from secret ballots is still undecided.",
+      "I accept that this could help members who cannot attend. I have not established that remote voting has caused fraud in this association."
+    ],
+    "checks": [
+      "Recognizes permission for verified existing members to vote remotely in the next committee election, rather than continued opposition to all remote votes",
+      "Acknowledges one ballot per member across both channels and the requirement to preserve ballot secrecy",
+      "Engages the undecided identity/secrecy method without inventing a remote-voting fee or established association fraud"
+    ]
+  },
+  {
+    "id": "focus_day_lockers",
+    "split": "test",
+    "kind": "prior_concession",
+    "motion": "The library should provide temporary storage lockers",
+    "side": "against",
+    "own_claim": "Lockers need an accessible opening process and a clear policy for keys and left-behind items.",
+    "own_opening": "Lockers need an accessible opening process and a clear policy for keys and left-behind items.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "Library lockers could give visitors somewhere to leave bags while using the reading rooms."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "How would visitors who cannot operate the locks gain access, and would they have to leave a large deposit?"
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "I accept staff assistance on request for visitors unable to operate a lock. That will be a condition of any trial."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "That addresses lock operation. Replacement costs and the end-of-day handling of belongings still need a plan."
+      }
+    ],
+    "chunks": [
+      "The current proposal is six lockers during library opening hours for a five-week trial, with no overnight storage.",
+      "The assistance arrangement we already agreed remains part of the proposal. Use of a locker would be free, with no cash key deposit.",
+      "Users must empty lockers by closing time. Responsibility for lost-key replacement costs is still undecided.",
+      "I accept publishing an unclaimed-item procedure before the trial begins, but no reduction in theft has been measured."
+    ],
+    "checks": [
+      "Recognizes six lockers for five weeks, usable only during library opening hours without overnight storage",
+      "Acknowledges staff assistance on request for users unable to operate a lock, and the free no-cash-deposit terms",
+      "Engages lost-key replacement responsibility without claiming the unclaimed-item procedure was refused or inventing measured theft reductions"
+    ]
+  },
+  {
+    "id": "focus_hybrid_meetings",
+    "split": "test",
+    "kind": "prior_concession",
+    "motion": "The tenants association should offer a remote way to attend its monthly meetings",
+    "side": "for",
+    "own_claim": "Remote attendance could let tenants participate when they cannot get to the meeting room.",
+    "own_opening": "Remote attendance could let tenants participate when they cannot get to the meeting room.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "against",
+        "stage": "opening",
+        "content": "I am concerned that a remote connection could disrupt speaking turns and compromise privacy."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "Would a text channel for requesting a speaking turn, with no recording of the meeting, address those concerns?"
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "I accept the text request channel and a rule that the meeting will not be recorded. A person still needs to monitor that channel."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "The remaining question is who will monitor remote participation alongside the chair."
+      }
+    ],
+    "chunks": [
+      "I would permit an optional remote audio connection for the next three monthly meetings, with the in-person meeting continuing as usual.",
+      "The participation and privacy arrangements already agreed remain in force. No participant would be required to switch on a camera.",
+      "Someone must monitor remote requests to speak, but the volunteer rota for that task is not yet filled.",
+      "I accept publishing connection instructions a week before each meeting. I have no evidence that remote attendees are less committed than those in the room."
+    ],
+    "checks": [
+      "Recognizes the opponent permits optional remote audio at the next three monthly meetings while retaining in-person attendance",
+      "Acknowledges the previously accepted text channel for requests to speak and the no-recording rule, without demanding mandatory cameras",
+      "Engages the unfilled remote-participation rota without treating advance connection instructions as refused or inventing lower attendee commitment"
+    ]
+  },
+  {
+    "id": "focus_translated_notices",
+    "split": "test",
+    "kind": "prior_concession",
+    "motion": "The council should translate its neighborhood notices",
+    "side": "against",
+    "own_claim": "Translated notices need an explicit review process and sustainable publication costs.",
+    "own_opening": "Translated notices need an explicit review process and sustainable publication costs.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "Translated notices could make council instructions accessible to more residents."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "How would the council catch a translation that reverses an instruction or gives the wrong collection date?"
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "I accept having a named fluent reviewer check each translated notice before publication. Machine output alone would not be sufficient."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "That establishes a review requirement, but the appointment and payment of reviewers still need a plan."
+      }
+    ],
+    "chunks": [
+      "The immediate proposal covers four monthly waste-collection notices in two additional languages. Other council documents are outside this trial.",
+      "The original English notice remains available, and all versions would be free. The review arrangement we already agreed still applies.",
+      "Translations could make instructions easier to access, but I have no measured effect on recycling rates.",
+      "Funding for the named reviewers remains unassigned. The notices should not be issued in translation before those reviewers are appointed."
+    ],
+    "checks": [
+      "Recognizes four monthly waste-collection notices in two additional languages, rather than translation of all council documents",
+      "Acknowledges a named fluent reviewer checking each translated notice before publication, with the original English retained",
+      "Engages reviewer appointment or funding as a prepublication issue without treating free access as a fee or inventing recycling improvements"
+    ]
+  },
+  {
+    "id": "focus_food_hub",
+    "split": "test",
+    "kind": "multiple_issues",
+    "motion": "The neighborhood center should create a food-sharing hub",
+    "side": "against",
+    "own_claim": "A food-sharing hub needs clear handling responsibilities and a workable operating budget.",
+    "own_opening": "A food-sharing hub needs clear handling responsibilities and a workable operating budget.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "for",
+        "stage": "opening",
+        "content": "The center could host a pantry, a community fridge, a cooked-food event and a recipe exchange."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "These involve different handling tasks. Which services would actually start, and who would run them?"
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "A delivery round, a growers table and a cooking lesson are other possible uses. I accept that current funding cannot cover every option."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "The initial request needs a precise scope. Each actual session also needs cleaning and supervision."
+      }
+    ],
+    "chunks": [
+      "The immediate request is two Saturday collection sessions for sealed shelf-stable food packets. Refrigeration and cooked meals are future options, not part of this request.",
+      "Packets must be within their printed expiry date. Collection is free, and no household income documents are required.",
+      "I accept keeping cleaning records after each session and publishing a summary at the end of the trial.",
+      "A named coordinator must supervise each session. We have not identified who will pay that coordinator.",
+      "The hub may provide useful supplies to some households; it does not establish a measured reduction in household hunger."
+    ],
+    "checks": [
+      "Recognizes two Saturday sessions limited to sealed shelf-stable packets, excluding immediate refrigeration or cooked meals",
+      "Acknowledges the expiry-date check and free collection without income documentation",
+      "Engages the coordinator funding or supervision without claiming cleaning is deferred until the trial ends or inventing measured hunger reductions"
+    ]
+  },
+  {
+    "id": "focus_school_news",
+    "split": "test",
+    "kind": "multiple_issues",
+    "motion": "The school should publish a digital newsletter for families",
+    "side": "for",
+    "own_claim": "A digital newsletter could make school information easier for families to obtain.",
+    "own_opening": "A digital newsletter could make school information easier for families to obtain.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "against",
+        "stage": "opening",
+        "content": "A school communication platform could include a newsletter, student photos, polls, public comments and advertising. I object to treating all those features as one harmless package."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "Could we evaluate a simple newsletter separately from photos, polls or public comments?"
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "A calendar, event reminders and club listings are also possible. No item should publish a student home address or private contact details."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "Agreed on protecting private details. We still need to decide the initial scope and who checks each issue."
+      }
+    ],
+    "chunks": [
+      "I would allow a text-only newsletter for two issues over one month. Student photographs, public comments and advertising would not be included.",
+      "Families could choose a printed copy at no charge instead. They would not have to install an app or create an online account.",
+      "A named editor must check items before release. The privacy rules we discussed remain necessary, but I am not claiming a privacy incident has already occurred.",
+      "The editor workload and funding are unsettled. Easier access to dates and notices is a possible benefit even though no improvement in academic results is established."
+    ],
+    "checks": [
+      "Recognizes the opponent allows a text-only two-issue one-month trial, excluding photographs, public comments and advertising",
+      "Acknowledges the free printed alternative without requiring an app or account",
+      "Engages editor workload or funding while acknowledging possible access benefits, without inventing an existing privacy breach or academic gains"
+    ]
+  },
+  {
+    "id": "focus_sports_field",
+    "split": "test",
+    "kind": "multiple_issues",
+    "motion": "The school should allow community groups to use its playing field",
+    "side": "for",
+    "own_claim": "Community field access could provide useful recreation while preserving school priority.",
+    "own_opening": "Community field access could provide useful recreation while preserving school priority.",
+    "stage": "rebuttal",
+    "prior_history": [
+      {
+        "side": "against",
+        "stage": "opening",
+        "content": "Possible uses include evening football, weekend tournaments, walking groups and fitness classes. I oppose opening the field without distinguishing these activities."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "A limited walking session could be considered independently of tournaments and evening floodlights."
+      },
+      {
+        "side": "against",
+        "stage": "rebuttal",
+        "content": "A running circuit, a charity fair and a holiday camp are other suggestions. School activities must keep priority over community use."
+      },
+      {
+        "side": "for",
+        "stage": "rebuttal",
+        "content": "Agreed on school priority. Who would decide whether the surface can support the specific activity on the day?"
+      }
+    ],
+    "chunks": [
+      "My objection is to unrestricted access. I would permit prebooked adult walking groups on three Wednesday afternoons from four to six.",
+      "School activities keep priority, no floodlights would be used, and any booking is canceled if the groundkeeper closes the field because of surface conditions.",
+      "There would be no booking fee during this trial. I accept that a sign-in contact would be published before reservations open.",
+      "Who pays for extra ground inspections is still undecided. A walking opportunity is a possible benefit, not proof that injuries or maintenance costs will fall."
+    ],
+    "checks": [
+      "Recognizes permission for prebooked adult walking groups on three Wednesdays from four to six, rather than opposition to every community use",
+      "Acknowledges school priority, no floodlights and groundkeeper closure overriding a booking",
+      "Engages the inspection funding without inventing a booking fee, refused sign-in disclosure or proven injury/maintenance savings"
+    ]
+  }
+]

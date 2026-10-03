@@ -57,6 +57,8 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 
 | 条件协议与事实审查修复（现有模式改进） | 统一六种规划限定类型；未分类原文进入候选；无关豁免需证据；既有反馈逐句审查事实前提 | 生成调用仍 904 次，token 和等待增加；条件漏查与语义误判仍在，自动评审存在漏报 | 第七轮 64/64；Grounded Tree 计划拒绝 52→5、最终回退 15→2；树模式错误标记下降，Branch 覆盖下降，不能认定整体质量稳定提升 |
 
+| Flat / Linear / Legacy 集中对照 | 当前三个完整流程，同一模型与评审；12 个全新案例、正反各半、每种重复两次 | 同时比较质量、延迟、调用与费用；包含纠错和审查差异，不能只归因于树结构 | 已冻结 72 回答配置；预期新增 $2–5，原累计 $200 预算内，待运行 |
+
 第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
 各轮成绩属于当时冻结的代码。最新的“保留树 + 规则选择”修改现有纠错树模式，不增加新的模式名；以前评测采用的整条分支归档移除行为保留在历史提交中。
 
@@ -1492,4 +1494,59 @@ PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/pyth
 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/summarize.py condition-repair-v1
 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/compare_conditions.py --baseline conditions-regression-v1 --candidate condition-repair-v1 --baseline-manifest manifest_v6.json --candidate-manifest manifest_v7.json
 PYTHONPATH=src /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/reconcile_budget.py --output experiments/incremental_planning/cost_audit_v7.json
+```
+
+## 2026-10-03 — focused Flat / Linear / Legacy comparison launch
+
+User requested **集中比较 Flat Tree，Linear, Legacy**. Compare the current `flat_tree`,
+original free-text `linear` and `legacy` pipelines, with no Grounded Linear/Branch
+arms. Fresh **12 cases ×3 methods ×2 repetitions =72 answers/judgments**, two
+workers. Three cases each: simple single-turn arguments, position revision, prior
+concession, multiple issues; **six assigned-for and six assigned-against**. All
+36 composite rubric items are written before any new model output. This avoids
+reusing the same cases that led to selecting Flat, while remaining a small authored
+benchmark rather than a representative debate evaluation. No tuning during this run.
+
+Cases: `cases_focus_v1.json`, SHA-256
+`45f5c1db68e958eb7060a92b4ed650c2375ed86694e8141434d97c3cddeec2db`.
+Inference unchanged at **c421b09**, digest
+`020537bccb7ddffc59acb238ebb4ad0667d522de0d00615522ac27f89c6bed45`.
+Run `flat-linear-legacy-v1`; manifest `manifest_focus_v1.json`. Original Linear
+uses incremental free-text preparation without a tree or grounded review. Legacy
+updates its original argument tree during input and prepares battlefields at the
+endpoint; it has no correction-enabled state or early rebuttal plan. It retains
+shared current engine fixes and is not a checkout of an old commit. Flat uses
+current correction/source/condition review with an 8+16 bounded flat view.
+
+All use Gemma generation, helper temperature 0/main 0.3, 700-token early plan cap
+where applicable, 1600-token helper/generation/judge caps, GPT-5.6 judge with
+reasoning none, one feedback/revision pass, 60-second speech budget, the same fixed
+history and causal chunk schedule. No retrieval, embeddings or audio. Exact-string
+relation matching is shared and may particularly affect Legacy. This is an
+end-to-end policy comparison: correction, grounding and revision also differ, so
+results cannot isolate the effect of a flat tree alone.
+
+Primary: Flat versus Linear and Flat versus Legacy condition coverage, paired by
+case after averaging repeats. Secondary: strength, error flags, simulated text
+latency, full generation calls/tokens/cost including historical setup; Linear versus
+Legacy, descriptive case kinds/sides and Flat fallback audit. No pooling with old
+case scores or replacement of old outputs. Missing-judge retry policy unchanged:
+one identical retry after diagnosis, no answer regeneration or enlarged cap.
+
+Expected additional usage **$2–5**, conservative planning upper **$12**, approximately
+750–1100 requests. Same-day AWS official pricing rechecked: Gemma $0.13/$0.40 and
+GPT-5.6 $4.40/$22 per million input/output tokens. Starting **7,289 requests**,
+**$11.22637681 known usage**, **$51.13737684 guarded occupancy**, **$148.86262316
+headroom** under the previously approved cumulative **$200** cap. Atomic
+pre-dispatch reservations remain active across both workers and all attempts;
+unknown failures retain full bounds. No paid compute is provisioned.
+
+Preflight: **41 relevant offline tests pass**, one existing Pydantic warning.
+Inference already passed 335 tests +42 subtests and remains unchanged. Case schema,
+unique IDs/motions, side/history ordering and report compilation checked; no pending
+requests before launch. The pre-existing user edit joining the scheme-table rows
+is preserved.
+
+```bash
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id flat-linear-legacy-v1 --split test --cases-file experiments/incremental_planning/cases_focus_v1.json --modes flat_tree linear legacy --repeats 2 --workers 2 --worker-index N --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200
 ```

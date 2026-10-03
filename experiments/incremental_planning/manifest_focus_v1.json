@@ -1,0 +1,120 @@
+{
+  "task": "Focused complete-pipeline comparison of Flat Tree, original Linear and Legacy on twelve fresh cases",
+  "status": "prepared",
+  "created_utc": "2026-10-03T22:18:15.413535+00:00",
+  "authorization": "User explicitly requested concentrating on Flat Tree, Linear and Legacy; continue the existing user-approved cumulative USD200 task budget without increase or reset.",
+  "source_commit": "c421b09",
+  "source_digest": "020537bccb7ddffc59acb238ebb4ad0667d522de0d00615522ac27f89c6bed45",
+  "reporting_head": "dae480c",
+  "cases_file": "experiments/incremental_planning/cases_focus_v1.json",
+  "cases_digest": "45f5c1db68e958eb7060a92b4ed650c2375ed86694e8141434d97c3cddeec2db",
+  "run_id": "flat-linear-legacy-v1",
+  "modes": [
+    "flat_tree",
+    "linear",
+    "legacy"
+  ],
+  "cases": 12,
+  "repeats": 2,
+  "answers": 72,
+  "workers": 2,
+  "tree_limits": {
+    "max_tree_targets": 8,
+    "max_tree_context_nodes": 16
+  },
+  "model": "google.gemma-4-26b-a4b",
+  "judge_model": "gpt-5.6-sol",
+  "judge_route": "bedrock/us.openai.gpt-5.6-sol",
+  "settings": {
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "plan_max_tokens": 700,
+    "generation_max_tokens": 1600,
+    "judge_max_tokens": 1600,
+    "judge_reasoning_effort": "none",
+    "judge_temperature": "omitted; unsupported",
+    "speech_budget_seconds": 60,
+    "audio": false,
+    "embeddings": false
+  },
+  "case_design": {
+    "simple_single_turn": 3,
+    "position_revision": 3,
+    "prior_concession": 3,
+    "multiple_issues": 3,
+    "assigned_for": 6,
+    "assigned_against": 6,
+    "checks_per_answer": 3,
+    "total_input_chunks": 46,
+    "total_prior_speeches": 32,
+    "authored_before_any_new_model_output": true
+  },
+  "mode_definitions": {
+    "flat_tree": "Current corrected source-bearing tree plus bounded flat indexed plan and existing-call condition/assertion review; no explicit topology in plan/delivery.",
+    "linear": "Original free-text incremental notes; no argument tree, no grounded review.",
+    "legacy": "Original incremental argument tree and endpoint battlefield preparation; no correction-enabled state or early rebuttal plan. Uses shared current fixes/defaults, not a checkout of the historical repository."
+  },
+  "estimate": {
+    "expected_additional_usage_usd": [
+      2,
+      5
+    ],
+    "usage_planning_upper_usd": 12,
+    "expected_requests": [
+      750,
+      1100
+    ],
+    "basis": "72 fresh generations/judgments, approximately 800 generation calls; allow up to 8M generator input/0.6M output and 72 judgments at <=4K input/1600 output, plus diagnosed bounded failures. No paid compute provisioned.",
+    "rates_per_million": {
+      "google.gemma-4-26b-a4b": [
+        0.13,
+        0.4
+      ],
+      "gpt-5.6-sol": [
+        4.4,
+        22
+      ]
+    },
+    "checked_date": "2026-10-03",
+    "sources": [
+      "https://aws.amazon.com/bedrock/pricing/",
+      "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html"
+    ],
+    "uncertainty": "Rates/tokens and conservative failure accrual, not an invoice; no additional paid compute/storage provisioned."
+  },
+  "budget": {
+    "currency": "USD",
+    "cumulative_approved_cap": 200,
+    "starting_requests": 7289,
+    "starting_usage_estimate": 11.22637681,
+    "starting_accounted_exposure": 51.13737684,
+    "remaining_guarded_budget": 148.86262316,
+    "ledger": "experiments/incremental_planning/run/cost.sqlite",
+    "guard": "Every request reserves full conservative bound atomically before dispatch; successful verified receipts settle at 4x usage, errors/unknown retain bounds. Reject dispatch above cumulative cap. No automatic retry or restart.",
+    "stop": "Stop only these run workers if accounting fails or cap blocks dispatch; preserve saved answers and artifacts. No new paid compute provisioned."
+  },
+  "retry_policy": "No regenerated saved answers or replaced judgments. At most one unchanged missing-judge retry after diagnosis; exhausted judgments remain missing. No automatic HTTP retries or worker restart.",
+  "judge_retries": [],
+  "primary_comparisons": [
+    "flat_tree vs linear: case-paired condition coverage",
+    "flat_tree vs legacy: case-paired condition coverage"
+  ],
+  "secondary_comparisons": [
+    "Rebuttal strength, strawman and unsupported-fact flags",
+    "Text-ready latency, total generation tokens/cost/calls including setup",
+    "Linear vs Legacy; descriptive case-kind and assigned-side groups",
+    "Flat valid-plan and raw-prefix fallback counts; inspect delivered answers"
+  ],
+  "missing_data_policy": "At most one unchanged missing-judge retry after diagnosis. Exclude an entire case from paired judgment comparisons when either arm lacks a repeat. Retain all generated answers; report generation time/cost on all answers.",
+  "limitations": [
+    "Fresh authored cases, not a standard or representative debate benchmark; twelve independent cases, two model samples each.",
+    "Methods differ in correction, planning, grounding and revision as well as tree use; compares complete pipelines, not isolated tree topology.",
+    "Flat was selected using previous cases; new case outputs remain untouched during this frozen verification. Do not compare absolute scores directly to earlier case sets.",
+    "Six assigned-for and six assigned-against cases; three cases per kind are too few for reliable subgroup rankings.",
+    "All arms use exact target matching and no embedding fallback; this may particularly affect legacy relation attachment.",
+    "All arms receive identical fixed history/evidence, model, token caps and one feedback/revision pass, but their prompts and number of preparatory calls intentionally differ.",
+    "Automatic judging may miss semantic errors or apply composite checks inconsistently; preserve judgments and report spot checks separately.",
+    "Text-only simulated endpoint latency excludes ASR/TTS; pricing and usage remain provisional."
+  ],
+  "offline_preflight": "Unchanged inference source previously passed 335 tests +42 subtests; focused policy/history/feedback/budget suite now passes 41 tests. Cases validated for unique IDs/motions, side/history consistency and predefined three-check rubric; report compilation passes."
+}
