@@ -39,18 +39,18 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 | --- | --- | --- | --- |
 | Legacy (`legacy`) | 边听边维护原始论证树，结束后规划并生成反驳 | 保留论证关系；缺少显式撤回修正和提前反驳笔记 | 第一轮：12 案例 × 2 次，Gemma 评分 |
 | End-of-turn (`end_of_turn`) | 收集完整发言后集中分析树和生成反驳 | 减少重复分析；工作集中在端点后 | 第一轮：12 × 2，Gemma 评分 |
-| Linear (`linear`) | 不用论证树，每段输入更新自由文本反驳笔记 | 简单、较低开销；限定条件和假设容易混淆 | 第一轮 12 × 2；第二轮 10 × 1；第三轮补充 8 × 1（后两轮 GPT-5.6），本轮通过率 58.3%，等待 13.64s |
+| Linear (`linear`) | 不用论证树，每段输入更新自由文本反驳笔记 | 简单、较低开销；限定条件和假设容易混淆 | 第一轮 12 × 2；第二轮 10 × 1；第三轮补充 8 × 1，通过率 58.3%；第四轮 8 × 2，通过率 35.4%，等待 13.10s（后面三轮 GPT-5.6） |
 | Corrected Tree (`corrected_tree`) | 树支持说话者自己的修改/撤回，归档失效分支 | 修正旧目标；仍在端点后规划反驳 | 第一轮：12 × 2，Gemma 评分 |
 | Adaptive Linear (`adaptive_linear`) | Linear 加模型门控，决定更新或等待 | 可跳过重复工作；门控本身增加调用与延迟 | 第一轮：12 × 2，Gemma 评分 |
 | Tree Plan (`tree_plan`) | 可纠错论证树驱动流式反驳笔记 | 同时组织论证关系和提前准备；树与笔记维护较贵 | 第一轮：12 × 2，Gemma 评分；第三轮：8 × 1，GPT-5.6，通过率 50.0%，模拟文本等待 17.28s |
 | Adaptive Tree (`adaptive_tree`) | Tree Plan 加模型门控，按需更新树和笔记 | 尝试减少更新；流程更复杂且有门控开销 | 第一轮：12 × 2，Gemma 评分 |
 | Structured Linear (`structured_linear`) | 将当前观点、原文引用、范围/例外和反驳假设分开保存 | 可检查来源；结构合法不保证语义正确，本轮通过率下降 | 第二轮：10 × 1，GPT-5.6 评分；另有旧案例开发诊断 |
-| Grounded Linear (`grounded_linear`) | 结构化状态加针对目标、例外和事实依据的反馈/修订 | 不新增反馈调用；减少无依据断言，但整体质量收益未证实 | 第二轮：10 × 1；第三轮：8 × 1，均 GPT-5.6；第三轮通过率 66.7%，等待 9.87s |
+| Grounded Linear (`grounded_linear`) | 结构化状态加针对目标、例外和事实依据的反馈/修订 | 不新增反馈调用；减少无依据断言，但条件覆盖与语义可靠性仍有限 | 第二轮 10 × 1；第三轮 8 × 1，通过率 66.7%；第四轮 8 × 2，通过率 39.6%，等待 8.79s，均 GPT-5.6 |
 | Light Linear (`light_linear`) | Grounded Linear 加精确重复跳过、未完句缓冲、选择性门控 | 减少无效工作；调度的独立收益仍不确定 | 第二轮：10 × 1；第三轮：8 × 1，均 GPT-5.6；第三轮通过率 70.8%，等待 10.52s；另有旧案例单次真实 ASR/TTS 对照 |
-| Grounded Tree (`grounded_tree`) | 保留论证树；反驳绑定有效节点和节点原文，利用攻击关系与未回应目标排序；加依据核对 | 让反驳可绑定树目标；比原版更快，但提取/匹配失败仍会触发原文回退，树的独立质量收益未证实 | 第三轮：8 × 1，GPT-5.6，通过率 62.5%，等待 11.37s；9 次中间状态回退，3/8 最终回退 |
+| Grounded Tree (`grounded_tree`) | 反驳绑定有效节点与原文，利用攻击关系和未回应目标排序；第四轮修复冲突更新、节点归属和回应关系 | 修复后绑定更可靠；仍付出建树成本，提取正确性和最终条件覆盖不由绑定保证 | 第三轮 8 × 1，通过率 62.5%，最终回退 3/8；第四轮 8 × 2，通过率 47.9%，等待 10.20s，最终回退 1/16，均 GPT-5.6；不同案例不能作修复前后质量比较 |
 | Light Tree (`light_tree`) | Grounded Tree 加重复跳过、未完句缓冲与选择性门控，结束时强制处理积压 | 本轮调用从 Grounded Tree 的 14.0 降至 13.25；延迟未进一步下降，质量仍受提取与条件覆盖限制 | 第三轮：8 × 1，GPT-5.6，通过率 62.5%，等待 11.96s；7 次中间状态回退，2/8 最终回退 |
-| Flat Tree (`flat_tree`) | 修复后的同一树更新与节点来源；索引式规划和限定条件账本，但规划/输出移除祖先、回应边和结构排序 | 用于隔离显式关系信息的收益；仍可从完整发言自行推断关系，仍支付建树成本 | 第四轮：实现及离线验证完成，待评测 |
-| Branch Tree (`branch_tree`) | 在 Flat Tree 的同等节点/来源基础上，使用我方质疑—对方回应的路径、已有回应和未回应分支摘要 | 让关系结构直接指导下一步反驳；响应边不代表问题已解决，额外上下文可能增加负担 | 第四轮：实现及离线验证完成，待评测 |
+| Flat Tree (`flat_tree`) | 修复后的同一树更新与节点来源；索引式规划和限定条件账本，但规划/输出移除祖先、回应边和结构排序 | 隔离显式关系指导；仍可从发言推断关系、支付建树成本，索引格式仍会失败 | 第四轮 8 × 2，GPT-5.6，通过率 41.7%，等待 9.53s，最终回退 4/16 |
+| Branch Tree (`branch_tree`) | 在同一来源机制上使用质疑—回应路径、已有回应、同一质疑的其他回应与让步边 | 关系直接参与下一步反驳；上下文和成本增加，最终仍会遗漏限定条件；对 Flat 的独立增益未证实 | 第四轮 8 × 2，GPT-5.6，通过率 43.8%，等待 10.62s，最终回退 3/16；相对 Flat +2.1 个百分点，95% 区间跨零 |
 
 第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
 
@@ -776,3 +776,90 @@ Six answers completed under source **5162ef8**. All six have valid final bound t
 Dev checklist/mean simulated text seconds: Grounded Tree 100% / 11.38s; Flat Tree 100% / 9.14s; Branch Tree 83.3% / 9.13s. These reused two-case diagnostics test mechanisms, not superiority; they do not justify assuming branch guidance improves scores. All original records remain. V2 cost: 90 requests, 311,223 input / 20,182 output tokens, usage estimate **$0.12025266**; no failed requests. Cumulative usage estimate now **$3.19981485**, active guarded occupancy **$14.18739780**, no pending requests.
 
 The 80-answer new-case run now freezes inference at **5162ef8**, including the concession and JSON-schema refinements. `manifest_v4.json` stores the exact source/data hashes. No further inference/prompt/case edits during this run. A separate documentation/report commit records the freeze; inference source hash remains identical. Both workers use the prepared commands above, with five modes, two repetitions, two workers and uniform GPT-5.6 judging.
+
+### Held-out transient judge failure and bounded continuation
+
+At 53 completed judgments, worker 0 received HTTP 503 from GPT judging for `branch_fresh_lockers/grounded_linear/1` (request **3754**). The generated answer was already saved. Preserve the failed request/artifact and its full reservation. Restart only worker 0 with the identical command, source/data hashes, model, prompt and 1,600-token judge cap, appending its log. The runner reuses all saved answers and completed judgments, attempts the missing judgment once, then continues unstarted work. Worker 1 keeps running. This is the single same-setting retry permitted by the predeclared policy; there is no regeneration, score replacement or enlarged output cap.
+
+### Fourth-round completed results and interpretation
+
+**80/80 answers and judgments complete**, eight new authored cases × five arms × two repetitions. Original worker 0 exited 1 on the recorded judge 503; its identical-config continuation and worker 1 both exited 0. Retry request **3783** succeeded. Two completion markers, zero pending requests, no missing artifacts and no truncated requests. Inference source **5162ef8**, digest `212ef57d9d73dcf549916b3d31c5a42be4e378667df2599f499057bccc38fbd7`, and cases digest match the pre-run freeze exactly. Only reporting/documentation changed while the run was active. No held-out-based inference tuning or answer regeneration.
+
+| Mode | Checklist pass rate | Strength / 5 | Strawman flag | Unsupported-fact flag | Simulated text wait | Generation calls | Generation usage USD/answer |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Original Linear | 35.4% | 2.75 | 56.3% | 87.5% | 13.10s | 7.375 | $0.004202 |
+| Grounded Linear | 39.6% | 3.38 | 25.0% | 18.8% | 8.79s | 7.375 | $0.003723 |
+| Repaired Grounded Tree | **47.9%** | 3.50 | 18.8% | 25.0% | 10.20s | 15.75 | $0.009628 |
+| Flat Tree | 41.7% | 3.50 | 0.0% | 25.0% | 9.53s | 15.75 | $0.009049 |
+| Branch Tree | 43.8% | 3.19 | 12.5% | 37.5% | 10.62s | 15.75 | $0.011946 |
+
+Checklist rates average three compound checks per answer, not whole-answer success. Flags are automatic judgments, not verified factual-error rates. These cases differ from earlier rounds: compare arms within this round, not the absolute scores against old cases. Mean answer lengths in table order: **133.00 / 112.06 / 113.56 / 122.06 / 116.31 words**. Shorter output contributes to latency; these are complete-pipeline comparisons. Each tree arm includes three prior-context extraction calls per answer and 12.75 live calls. Tree text-ready timing precedes own-speech analysis; mean worker-return waits are **12.75 / 12.28 / 13.25s** for Grounded / Flat / Branch Tree. Linear worker-return and text-ready waits are effectively identical. All times are measured requests on a simulated input schedule, excluding ASR/TTS and playback.
+
+Paired intervals use **10,000 case-bootstrap resamples after averaging the two repetitions within each of eight cases**. They are unadjusted descriptive intervals and do not account for model-judge error or multiple comparisons. A numerical lower bound near `2e-17` is reported as zero.
+
+| Candidate − baseline | Checklist difference, percentage points (95% interval) | Text wait difference (95% interval) |
+| --- | ---: | ---: |
+| Repaired Grounded Tree − Original Linear | +12.5 [0.0, +22.9] | −2.90s [−4.68, −1.04] |
+| Branch Tree − Original Linear | +8.3 [−8.3, +25.0] | −2.48s [−4.54, −0.49] |
+| Repaired Grounded Tree − Grounded Linear | +8.3 [−2.1, +20.8] | +1.41s [−0.29, +3.11] |
+| Branch Tree − Grounded Linear | +4.2 [−12.5, +20.8] | +1.82s [−0.03, +3.31] |
+| **Branch Tree − Flat Tree** | **+2.1 [−12.5, +16.7]** | **+1.09s [−0.52, +2.80]** |
+| Branch Tree − Repaired Grounded Tree | −4.2 [−16.7, +8.3] | +0.41s [−1.30, +2.44] |
+
+**Interpretation:** repairs make the intended tree mechanism operational, and repaired Grounded Tree has the highest checklist mean here. Its advantage over Grounded Linear is still uncertain. Explicit branch guidance does not show a reliable gain over the flat ablation; its mean strength is lower and generation usage is **32% higher** than Flat Tree. The broader tree method costs roughly 2.6× (Grounded Tree) or 3.2× (Branch Tree) Grounded Linear per generated answer, excluding judges. There is no basis for declaring that more explicit topology is automatically better or for changing the production default. The implementation remains available as the tree-centered research method and the Linear/Flat controls remain available.
+
+Descriptive four-case subgroups reinforce the limitation. On cross-turn cases, Grounded Linear, Grounded Tree and Flat Tree each score 58.3%, Branch Tree 50.0%, original Linear 37.5%. On the four longer cases, Grounded Tree and Branch Tree score 37.5%, Flat 25.0%, Grounded Linear 20.8%, original Linear 33.3%. These subgroups are small and were not independent tests; the cross-turn subgroup does not demonstrate the anticipated branch advantage.
+
+### Mechanism audit and failure diagnosis
+
+| Tree arm | Valid final bound states | Rejected intermediate snapshots | Final raw-prefix fallbacks | Recorded concession edges | Selected claims with ancestor paths |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Repaired Grounded Tree | 15/16 | 2/70 | 1/16 | 8 | 27 |
+| Flat Tree | 12/16 | 12/70 | 4/16 | 6 | 12 |
+| Branch Tree | 13/16 | 11/70 | 3/16 | 8 | 21 |
+
+All **40 nonempty final tree states** have valid active target IDs and matching versions in both their deep-copied generation snapshots and immutable planning-request artifacts. All 48 saved graphs pass speaker/source ownership checks; zero runtime `INVALID_TARGET` events. Counts of paths in the Flat graph are an audit of its internal extraction, not evidence that topology was supplied to its planner. Branch and Flat run independent model extractions: their realized graphs can differ even with identical extraction settings, so this is an end-to-end explicit-guidance ablation, not a controlled intervention on one fixed graph.
+
+The updates record Grounded/Flat/Branch correction applications **23 / 22 / 23**, response links **92 / 97 / 95**, and unlinked sourced claims **9 / 9 / 7**. Wrong relationship ownership was rejected **5 / 5 / 3** times, and wrong correction ownership **1 / 1 / 0** times. Simultaneous correction coalescing occurred once in Flat and once in Branch. These events include prior history and all chunks; they are not independent case counts. Successful identity/source checks do not validate the extracted paraphrase or prove every intended relationship was recovered.
+
+The remaining failures are concrete:
+
+- Grounded Tree rejects two plans: one duplicated/unavailable node selection and one quotation not attributed to its selected node. Grounded Linear rejects 12/70 plans, including ten source quotations absent from the heard prefix and two invalid rebuttal indexes.
+- Flat Tree's primary parser failures are nine oversized lists (all nine emit **three rebuttals despite the cap of two**), two wrong rebuttal indexes and one source-limit index. Branch Tree has five oversized-list failures, two target-index failures, two source-limit-index failures, one rebuttal-index failure and one invalid top-level schema. All five oversized-list cases contain more than two rebuttals, and one also contains more than three claims. Typed JSON is requested through the helper but is not a guarantee of provider-enforced constrained decoding. No parser relaxation, truncation salvage, larger token cap or replacement answer was used.
+- Branch Tree's planning inputs total **607,098 tokens**, versus **312,953** for Flat and **353,477** for Grounded Tree, over 70 planning requests each. The redundant ancestor/response material increases context substantially without demonstrated quality gain. Corresponding planning usage estimates are $0.083908 / $0.045447 / $0.056097. All per-phase usage is preserved in the diagnostics report.
+- Source-bound plans do not guarantee complete delivery. A condition can survive in source/history or limits yet disappear from the final answer. The full candidate-boundary ledger also depends on source-bearing active nodes; it is not a semantic coverage proof, and corrected conditions may remain only in separate correction history.
+
+### Direct answer and branch spot checks
+
+These are diagnostic reading of saved outputs, not an independent human adjudication or revised scores. Original GPT judgments remain unchanged.
+
+- **Gauges, Branch Tree repeat 1:** the selected branch briefs include the original measurement-validity objection, the reply preserving county authority, and a sibling **concession** requiring calibration approval before installation. The final answer acknowledges the approval prerequisite, questions the unresolved laboratory/budget and treats drainage maintenance as a separate possible use. This is a visible example of the intended branch mechanism. It still omits two-bridge/six-month scope and county control in the final answer, failing the first compound check.
+- **Clinic, Branch Tree repeat 0:** a valid branch state supplies a sibling reply preserving traditional access and professional review. The final answer acknowledges the pre-launch staffing agreement but omits voluntary use, telephone/walk-in access and explicit nurse review. Grounded Tree repeat 0 includes nurse review and the staffing prerequisite, but also omits voluntary/traditional access. These are chiefly qualification omissions; valid topology alone does not ensure coverage.
+- **Repair van, Branch Tree repeat 1:** the answer acknowledges excluded equipment and that quote-appeal/warranty procedures must precede launch, but omits free diagnosis versus paid work with advance consent. Its demand for upfront cost disclosure can therefore sound like the already-granted safeguard is missing; the automatic judge flags a strawman. The original price/consent correction is retained in correction history but absent from the compact active boundary ledger in this instance.
+- **Harbour, Grounded Tree repeat 0:** the answer recognizes refunds and separately discusses the additional-pier benefit, yet omits the continuing ferry, three trial weekends and plan-before-ticket-sales requirement. Again, an unresolved issue is identified but its scope and prerequisite are incompletely delivered.
+
+The next research priorities suggested by these retained failures are compact, nonduplicated branch context; reliable bounded structured output; and a source-based coverage check that carries relevant corrections through the final answer. They are recorded for a subsequent experiment, not tuned and rescored on these held-out cases. More elaborate scheduling has not been added.
+
+### Final cost and verification
+
+| Component | Requests / ledger entries | Usage estimate USD | Active guarded occupancy USD |
+| --- | ---: | ---: | ---: |
+| Branch development v1 | 122 | 0.19233635 | 0.76934540 |
+| Branch development v2 | 90 | 0.12025266 | 0.48101064 |
+| Fresh five-arm comparison | 1,073 | 2.13961718 | 8.92692472 |
+| **This repair/branch task total** | **1,285** | **2.45220619** | **10.17728076** |
+| **All work cumulative** | **4,093** | **5.33943203** | **23.11432252** |
+
+Main-run known usage: **4,020,627 input / 312,991 output tokens**; generation $0.61677278 and judging $1.52284440. Unknown usage for failed request 3754 is not reported as zero billing: its full **$0.368456** reservation remains charged to the guard. The five earlier failures and original $0.50 audio bundle also retain their full reservations. All 4,093 ledger artifacts were audited with **zero issues and zero pending calls**; actual active occupancy equals the read-only audit calculation. No settlement rewrite was needed. Remaining guarded headroom **$176.88567748** under the unchanged **$200** cap. Historical reservation sum **$442.58019360** is not current budget use. Token/rate usage estimates are not a settled provider invoice.
+
+Inference code is unchanged from the full **256 tests passed, 42 subtests passed** run, with one existing Pydantic deprecation warning. Final reporting changes passed Python compilation, diagnostics assertions and `git diff --check`. No additional model/audio batch, default-mode change, proxy change, push or deployment.
+
+Artifacts: `branch-heldout-v1_summary.json`, `branch-heldout-v1_diagnostics.json`, `cost_audit_v4.json`, `manifest_v4.json`; original development reports and all raw request/answer artifacts remain retained. Final commands:
+
+```bash
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/diagnose_branch_run.py branch-heldout-v1
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/summarize.py branch-heldout-v1
+PYTHONPATH=src /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/reconcile_budget.py --output experiments/incremental_planning/cost_audit_v4.json
+python -m py_compile experiments/incremental_planning/diagnose_branch_run.py experiments/incremental_planning/summarize.py
+git diff --check
+```

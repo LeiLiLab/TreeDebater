@@ -103,8 +103,11 @@ not create new active claims. Update events and source ownership survive snapsho
 
 `branch_tree` prepares indexed target choices with server-bound quotes, a ledger of
 current source boundaries, and branch briefs linking our prior objection, the
-opponent's reply and existing responses. A response edge indicates a response was
-made; it does not certify that the issue is resolved. `flat_tree` is the matched
+opponent's reply and existing responses. Explicit concession edges and sibling
+replies keep an already-accepted safeguard visible when planning the next objection.
+A promise remains a promise; a response edge does not certify that an issue is
+resolved. Indexed plans request typed JSON and reject invalid choices, falling back
+to the heard source text. `flat_tree` is the matched
 ablation: it uses the same repaired extraction, indexed state and boundary ledger,
 but removes ancestry, response edges and structural ranking from planning/delivery.
 Both avoid injecting the legacy rendered tree into the final speech prompt.

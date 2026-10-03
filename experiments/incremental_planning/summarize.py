@@ -196,7 +196,7 @@ def summarize(run_id):
         summary["post_run_diagnostics"] = str(diagnostics_path.relative_to(ROOT))
         summary["limitations"].extend([
             "Composite checklist items can fail for omitted qualifications even when the answer does not contradict them.",
-            f"{fallback_count}/{len(bindings)} grounded/light-tree answers fall back to the raw prefix; aggregate gains do not isolate tree binding from grounding feedback."])
+            f"{fallback_count}/{len(bindings)} source-bound tree answers fall back to the raw prefix; aggregate gains do not isolate tree binding from grounding feedback."])
         summary["limitations"].extend(diagnostics["limitations"])
     (ROOT / f"{run_id}_summary.json").write_text(json.dumps(summary, indent=2))
     print(f"{run_id}: {len(observed)}/{len(expected)} answers")

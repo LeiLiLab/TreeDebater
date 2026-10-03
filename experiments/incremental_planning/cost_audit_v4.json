@@ -1,0 +1,129 @@
+{
+  "created_utc": "2026-10-03T08:22:39.508832+00:00",
+  "cap_usd": 200.0,
+  "entries": 4093,
+  "original_calls_sha256": "d30666561ff5cc3a95d0e1d4cc675a70a0b7c7753f1db832bfbc9e764b1f997f",
+  "artifacts_manifest_sha256": "274b33428af883095bfa17bd3abc42a51613cad074d576721caa5103ab211752",
+  "artifacts_checked": 4093,
+  "model_totals": {
+    "google.gemma-4-26b-a4b": {
+      "entries": 3876,
+      "input_tokens": 11706956,
+      "output_tokens": 1134223,
+      "usage_estimate_usd": 1.9755934800000032,
+      "original_reservations_usd": 370.5014520000002
+    },
+    "nvidia.nemotron-super-3-120b": {
+      "entries": 10,
+      "input_tokens": 6856,
+      "output_tokens": 2731,
+      "usage_estimate_usd": 0.0028035499999999997,
+      "original_reservations_usd": 0.640252
+    },
+    "gpt-5.6-sol": {
+      "entries": 206,
+      "input_tokens": 157600,
+      "output_tokens": 119410,
+      "usage_estimate_usd": 3.320459999999999,
+      "original_reservations_usd": 70.9384896
+    },
+    "bounded-audio-bundle": {
+      "entries": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "usage_estimate_usd": 0.04057500000000001,
+      "original_reservations_usd": 0.5
+    }
+  },
+  "original_reservations_usd": 442.58019360000037,
+  "usage_estimate_usd": 5.339432030000002,
+  "candidate_successful_text_settlements": 4086,
+  "retained_full_reservations": [
+    {
+      "id": 1848,
+      "label": "v2-gpt-calibration/acknowledged_but_criticized",
+      "state": "error",
+      "reservation_usd": 0.273944,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 1849,
+      "label": "v2-gpt-parameter-check",
+      "state": "error",
+      "reservation_usd": 0.17070240000000003,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 1895,
+      "label": "grounded-heldout-v1/fresh_repair/linear/0",
+      "state": "error",
+      "reservation_usd": 0.2865104,
+      "known_usage_estimate_usd": 0.0207152
+    },
+    {
+      "id": 1962,
+      "label": "grounded-heldout-v1/fresh_lighting/linear/0",
+      "state": "error",
+      "reservation_usd": 0.2836944,
+      "known_usage_estimate_usd": 0.0206976
+    },
+    {
+      "id": 1982,
+      "label": "grounded-heldout-v1/fresh_evening_access/structured_linear/0",
+      "state": "error",
+      "reservation_usd": 0.2840288,
+      "known_usage_estimate_usd": 0.0206976
+    },
+    {
+      "id": 2151,
+      "label": "grounded-audio-v1/external-audio",
+      "state": "ok",
+      "reservation_usd": 0.5,
+      "known_usage_estimate_usd": 0.04057500000000001
+    },
+    {
+      "id": 3754,
+      "label": "branch-heldout-v1/branch_fresh_lockers/grounded_linear/1",
+      "state": "error",
+      "reservation_usd": 0.368456,
+      "known_usage_estimate_usd": null
+    }
+  ],
+  "settlement_margin": 4,
+  "proposed_accounted_exposure_usd": 23.11432252000003,
+  "proposed_available_budget_usd": 176.88567747999997,
+  "external_audio_http_calls": 20,
+  "unknown_usage_request_ids": [
+    1848,
+    1849,
+    3754
+  ],
+  "pending": 0,
+  "issues": [],
+  "applied": false,
+  "verified_text_rates_per_million": {
+    "google.gemma-4-26b-a4b": [
+      0.13,
+      0.4
+    ],
+    "nvidia.nemotron-super-3-120b": [
+      0.15,
+      0.65
+    ],
+    "gpt-5.6-sol": [
+      4.4,
+      22.0
+    ]
+  },
+  "pricing_sources": [
+    "https://aws.amazon.com/bedrock/pricing/",
+    "https://docs.aws.amazon.com/en_en/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html",
+    "https://developers.openai.com/api/docs/models/tts-1",
+    "https://developers.openai.com/api/docs/models/whisper-1"
+  ],
+  "policy": "4x verified cost for successful text responses; all failed/unknown/audio requests retain full original reservations. Originals are never rewritten.",
+  "limitations": [
+    "Usage estimates are not settled invoices; no provider billing statement was available.",
+    "Request logs cannot independently rule out unreported upstream retries; 4x accrual is a conservative allowance, not a proof of a billing upper bound."
+  ]
+}

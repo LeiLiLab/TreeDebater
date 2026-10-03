@@ -1,6 +1,6 @@
 {
   "task": "Repair speaker-owned tree updates and exploit live argument branches; matched topology ablation",
-  "status": "development complete; held-out launching",
+  "status": "complete; 80/80 held-out answers judged and audited",
   "authorization": "User requested tree repairs and better tree use; existing cumulative USD200 task budget continues. No increase.",
   "starting_commit": "3af8dbd",
   "modes": [
@@ -47,7 +47,19 @@
     "source_digest": "212ef57d9d73dcf549916b3d31c5a42be4e378667df2599f499057bccc38fbd7",
     "source_commit": "5162ef8",
     "starting_usage_estimate_usd": 3.19981485,
-    "starting_accounted_exposure_usd": 14.187397800000001
+    "starting_accounted_exposure_usd": 14.187397800000001,
+    "completed_answers": 80,
+    "requests": 1073,
+    "reported_usage_estimate_usd": 2.139617180000002,
+    "accounted_exposure_usd": 8.926924719999999,
+    "freeze_documentation_commit": "ad456be",
+    "summary": "branch-heldout-v1_summary.json",
+    "diagnostics": "branch-heldout-v1_diagnostics.json",
+    "completion_audit": {
+      "worker_completion_markers": 2,
+      "pending_requests": 0,
+      "failed_requests": 1
+    }
   },
   "retry_allowance_usd": 10,
   "additional_expected_usage_usd_range": [
@@ -127,5 +139,35 @@
     "requests": 90,
     "reported_usage_estimate_usd": 0.12025266,
     "source_commit": "5162ef8"
-  }
+  },
+  "freeze_verified_after_completion": {
+    "source_unchanged": true,
+    "cases_unchanged": true,
+    "source_digest": "212ef57d9d73dcf549916b3d31c5a42be4e378667df2599f499057bccc38fbd7"
+  },
+  "judge_retry": {
+    "failed_request_id": 3754,
+    "retry_request_id": 3783,
+    "reason": "HTTP 503 Service Unavailable",
+    "label": "branch-heldout-v1/branch_fresh_lockers/grounded_linear/1",
+    "same_answer_prompt_model_settings": true,
+    "original_output_cap": 1600,
+    "retry_output_cap": 1600,
+    "failed_reservation_retained_usd": 0.368456,
+    "result": "success; no further retry"
+  },
+  "final_audit": {
+    "file": "cost_audit_v4.json",
+    "ledger_entries": 4093,
+    "usage_estimate_usd": 5.339432030000002,
+    "actual_accounted_exposure_usd": 23.11432252000003,
+    "remaining_guarded_budget_usd": 176.88567747999997,
+    "pending": 0,
+    "issues": [],
+    "this_task_usage_estimate_usd": 2.452206190000002,
+    "tree_integrity_issues": [],
+    "final_tree_bound_answers": 40,
+    "total_tree_answers": 48
+  },
+  "conclusion": "Repaired Grounded Tree has the highest checklist mean, but its paired interval versus Grounded Linear crosses zero. Branch Tree versus Flat Tree: +2.1 percentage points, 95% case-bootstrap interval [-12.5,+16.7]; independent topology benefit not established."
 }

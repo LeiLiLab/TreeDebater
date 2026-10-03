@@ -19,6 +19,7 @@ def diagnose(run_id, cases_file):
     cases={c['id']:c for c in json.loads(Path(cases_file).read_text())}
     results=[json.loads(p.read_text()) for p in sorted(run.glob('*__*.json'))]
     bindings=[];integrity=[];events=defaultdict(Counter);states=Counter();invalid=[];latest={}
+    concessions=Counter();phase_usage=defaultdict(lambda:dict(calls=0,input_tokens=0,output_tokens=0,usage_estimate_usd=0.))
     for result in results:
         if result['mode'] not in ('grounded_tree','light_tree','flat_tree','branch_tree'):continue
         case=cases[result['case']];before=result['before_generation'];opponent='for' if case['side']=='against' else 'against'
@@ -45,10 +46,18 @@ def diagnose(run_id, cases_file):
                         if normalize(quote) not in normalize(' '.join(heard[node.side])):
                             integrity.append(dict(case=result['case'],mode=result['mode'],issue='source not in speaker history',node_id=node.node_id))
             events[result['mode']].update(e['action'] for e in getattr(tree,'update_events',[]))
+            concessions[result['mode']]+=sum(e.get('relation')=='concede' for e in getattr(tree,'update_events',[]))
     db=sqlite3.connect(f'file:{base/"run/cost.sqlite"}?mode=ro',uri=True)
-    for request_id,label in db.execute('select id,label from calls order by id'):
+    for request_id,label,input_tokens,output_tokens,cost in db.execute('select id,label,input_tokens,output_tokens,estimated_usd from calls order by id'):
         if not label.startswith(run_id+'/'):continue
         artifact=json.loads((base/'run'/f'call_{request_id:06}.json').read_text())
+        contents=[m['content'] for m in artifact['request']['messages'] if isinstance(m.get('content'),str)]
+        mode=label.split('/')[2]
+        if artifact['request']['model']=='gpt-5.6-sol':phase='judging'
+        elif any(s.startswith(('Prepare a compact JSON snapshot','Prepare compact JSON rebuttal choices','Prepare concise private rebuttal notes')) for s in contents):phase='planning'
+        elif any('Return JSON matching this schema:' in s and ('"title": "LinkedStatementsResponse"' in s or '"title": "StatementsResponse"' in s) for s in contents):phase='tree_extraction'
+        else:phase='draft_feedback_revision_or_other'
+        usage=phase_usage[mode,phase];usage['calls']+=1;usage['input_tokens']+=input_tokens or 0;usage['output_tokens']+=output_tokens or 0;usage['usage_estimate_usd']+=cost or 0
         prompts=[m['content'] for m in artifact['request']['messages'] if isinstance(m.get('content'),str)
                  and m['content'].startswith(('Prepare a compact JSON snapshot','Prepare compact JSON rebuttal choices'))]
         if not prompts:continue
@@ -71,10 +80,12 @@ def diagnose(run_id, cases_file):
         by_mode.append(dict(mode=mode,answers=len(selected),with_bound_targets=sum(b['selected_claims']>0 for b in selected),
             final_raw_fallbacks=sum(b['final_raw_prefix_fallback'] for b in selected),
             graph_update_events=dict(events[mode]),structured_snapshots=states[mode],
+            concession_edges=concessions[mode],
             rejected_snapshots=sum(i['label'].split('/')[2]==mode for i in invalid),
             selected_reply_paths=sum(b['selected_reply_paths'] for b in selected)))
     report=dict(run_id=run_id,metrics=by_mode,final_binding_checks=bindings,integrity_issues=integrity,
         structured_snapshot_counts=dict(states),invalid_snapshots=invalid,paid_requests=0,
+        usage_by_phase=[dict(mode=m,phase=p,**u) for (m,p),u in sorted(phase_usage.items())],
         limitations=['Speaker/source ownership and version consistency do not validate semantic entailment of extracted claims.',
                      'An edge records a response, not whether the issue was resolved.',
                      'Counts include historical setup and all observed chunks; repeated cases are not independent samples.'])
