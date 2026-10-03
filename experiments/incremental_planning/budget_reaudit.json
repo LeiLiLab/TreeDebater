@@ -1,0 +1,125 @@
+{
+  "created_utc": "2026-10-03T03:10:38.812857+00:00",
+  "cap_usd": 200.0,
+  "entries": 2162,
+  "original_calls_sha256": "0a72c271991019cd66236d208af05ab1496d401b9c1e8f7e0afc0b5dfa43a045",
+  "artifacts_manifest_sha256": "8ca0f52e9ac3dda0dcc727c570e1682c761cee0f4fdf31e7e9910a9bb89902d4",
+  "artifacts_checked": 2162,
+  "model_totals": {
+    "google.gemma-4-26b-a4b": {
+      "entries": 2100,
+      "input_tokens": 5346495,
+      "output_tokens": 670641,
+      "usage_estimate_usd": 0.9633007500000003,
+      "original_reservations_usd": 184.2824560000001
+    },
+    "nvidia.nemotron-super-3-120b": {
+      "entries": 10,
+      "input_tokens": 6856,
+      "output_tokens": 2731,
+      "usage_estimate_usd": 0.0028035499999999997,
+      "original_reservations_usd": 0.640252
+    },
+    "gpt-5.6-sol": {
+      "entries": 51,
+      "input_tokens": 33419,
+      "output_tokens": 24874,
+      "usage_estimate_usd": 0.6942716,
+      "original_reservations_usd": 14.438248000000005
+    },
+    "bounded-audio-bundle": {
+      "entries": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "usage_estimate_usd": 0.04057500000000001,
+      "original_reservations_usd": 0.5
+    }
+  },
+  "original_reservations_usd": 199.86095600000002,
+  "usage_estimate_usd": 1.7009509000000003,
+  "candidate_successful_text_settlements": 2156,
+  "retained_full_reservations": [
+    {
+      "id": 1848,
+      "label": "v2-gpt-calibration/acknowledged_but_criticized",
+      "state": "error",
+      "reservation_usd": 0.273944,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 1849,
+      "label": "v2-gpt-parameter-check",
+      "state": "error",
+      "reservation_usd": 0.17070240000000003,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 1895,
+      "label": "grounded-heldout-v1/fresh_repair/linear/0",
+      "state": "error",
+      "reservation_usd": 0.2865104,
+      "known_usage_estimate_usd": 0.0207152
+    },
+    {
+      "id": 1962,
+      "label": "grounded-heldout-v1/fresh_lighting/linear/0",
+      "state": "error",
+      "reservation_usd": 0.2836944,
+      "known_usage_estimate_usd": 0.0206976
+    },
+    {
+      "id": 1982,
+      "label": "grounded-heldout-v1/fresh_evening_access/structured_linear/0",
+      "state": "error",
+      "reservation_usd": 0.2840288,
+      "known_usage_estimate_usd": 0.0206976
+    },
+    {
+      "id": 2151,
+      "label": "grounded-audio-v1/external-audio",
+      "state": "ok",
+      "reservation_usd": 0.5,
+      "known_usage_estimate_usd": 0.04057500000000001
+    }
+  ],
+  "settlement_margin": 4,
+  "proposed_accounted_exposure_usd": 8.191942000000008,
+  "proposed_available_budget_usd": 191.808058,
+  "external_audio_http_calls": 20,
+  "unknown_usage_request_ids": [
+    1848,
+    1849
+  ],
+  "pending": 0,
+  "issues": [],
+  "applied": true,
+  "policy": "4x verified cost for successful text responses; all failed/unknown/audio requests retain full original reservations. Originals are never rewritten.",
+  "limitations": [
+    "Usage estimates are not settled invoices; no provider billing statement was available.",
+    "Request logs cannot independently rule out unreported upstream retries; 4x accrual is a conservative allowance, not a proof of a billing upper bound."
+  ],
+  "new_settlements": 2156,
+  "original_calls_unchanged": true,
+  "original_artifacts_unchanged": true,
+  "actual_accounted_exposure_usd": 8.191942000000001,
+  "verified_text_rates_per_million": {
+    "google.gemma-4-26b-a4b": [
+      0.13,
+      0.4
+    ],
+    "nvidia.nemotron-super-3-120b": [
+      0.15,
+      0.65
+    ],
+    "gpt-5.6-sol": [
+      4.4,
+      22
+    ]
+  },
+  "pricing_sources": [
+    "https://aws.amazon.com/bedrock/pricing/",
+    "https://docs.aws.amazon.com/en_en/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html",
+    "https://developers.openai.com/api/docs/models/tts-1",
+    "https://developers.openai.com/api/docs/models/whisper-1"
+  ]
+}

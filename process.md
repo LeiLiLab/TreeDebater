@@ -47,14 +47,16 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 | Structured Linear (`structured_linear`) | 将当前观点、原文引用、范围/例外和反驳假设分开保存 | 可检查来源；结构合法不保证语义正确，本轮通过率下降 | 第二轮：10 × 1，GPT-5.6 评分；另有旧案例开发诊断 |
 | Grounded Linear (`grounded_linear`) | 结构化状态加针对目标、例外和事实依据的反馈/修订 | 不新增反馈调用；减少无依据断言，但整体质量收益未证实 | 第二轮：10 × 1，GPT-5.6 评分 |
 | Light Linear (`light_linear`) | Grounded Linear 加精确重复跳过、未完句缓冲、选择性门控 | 减少无效工作；调度的独立收益仍不确定 | 第二轮：10 × 1，GPT-5.6 评分；单次真实 ASR/TTS 对照 |
-| Grounded Tree (`grounded_tree`) | 保留论证树；反驳绑定有效节点和节点原文，利用攻击关系与未回应目标排序；加依据核对 | 强化树对反驳的直接作用；增加提取、维护和绑定校验成本，仍依赖语义提取正确性 | 第三轮：已实现并通过离线验证，付费评测待预算确认 |
-| Light Tree (`light_tree`) | Grounded Tree 加重复跳过、未完句缓冲与选择性门控，结束时强制处理积压 | 尝试减少树与计划的无效更新；不能假定树的成本或质量已改善 | 第三轮：已实现并通过离线验证，付费评测待预算确认 |
+| Grounded Tree (`grounded_tree`) | 保留论证树；反驳绑定有效节点和节点原文，利用攻击关系与未回应目标排序；加依据核对 | 强化树对反驳的直接作用；增加提取、维护和绑定校验成本，仍依赖语义提取正确性 | 第三轮：已实现并通过离线验证，预算重新审计通过，付费评测待运行 |
+| Light Tree (`light_tree`) | Grounded Tree 加重复跳过、未完句缓冲与选择性门控，结束时强制处理积压 | 尝试减少树与计划的无效更新；不能假定树的成本或质量已改善 | 第三轮：已实现并通过离线验证，预算重新审计通过，付费评测待运行 |
 
 第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
 
 Evaluate targeted rebuttal quality, final-condition correctness, claim coverage, unsupported assertions, end-of-turn residual latency, and total input/output tokens and cost. Include late qualifiers, reversals, withdrawals, repeated content, and split clauses. Report measured text/planning latency separately from actual audible latency; do not describe a simulated timeline as a live audio measurement. Judges see delivered answers, not private preparation traces. Keep development cases separate from final held-out comparison.
 
 ## Budget and accounting
+
+**Latest audit:** the USD200 cap remains unchanged. Historical pre-dispatch reservations total $199.860956, but successful requests have now been reconciled through an append-only audit: current conservative budget occupancy is **$8.191942**, leaving **$191.808058**. This supersedes the earlier proposal to raise the cap to USD320. Details are in “Budget re-audit” below.
 
 - Approved cumulative cap: **USD 200.00**.
 - At creation of this log: **0 paid inference requests launched by this task; attributable experiment cost USD 0.00**. Existing unrelated proxy traffic is excluded.
@@ -460,12 +462,12 @@ Paired comparisons: Tree Plan → Grounded Tree; Grounded Tree → Light Tree; G
 Prepared launch commands (not yet executed):
 
 ```bash
-PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id tree-grounded-dev-v1 --split dev --cases-file experiments/incremental_planning/cases_v3.json --modes tree_plan grounded_linear light_linear grounded_tree light_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 320 --repeats 1 > experiments/incremental_planning/run/tree-grounded-dev-v1-worker0.log 2>&1
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id tree-grounded-dev-v1 --split dev --cases-file experiments/incremental_planning/cases_v3.json --modes tree_plan grounded_linear light_linear grounded_tree light_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200 --repeats 1 > experiments/incremental_planning/run/tree-grounded-dev-v1-worker0.log 2>&1
 # After development verification and a source freeze, run worker 0 and worker 1:
-PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id tree-grounded-heldout-v1 --split test --cases-file experiments/incremental_planning/cases_v3.json --modes tree_plan grounded_linear light_linear grounded_tree light_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 320 --repeats 1 --workers 2 --worker-index 0 > experiments/incremental_planning/run/tree-grounded-heldout-v1-worker0.log 2>&1
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id tree-grounded-heldout-v1 --split test --cases-file experiments/incremental_planning/cases_v3.json --modes tree_plan grounded_linear light_linear grounded_tree light_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200 --repeats 1 --workers 2 --worker-index 0 > experiments/incremental_planning/run/tree-grounded-heldout-v1-worker0.log 2>&1
 ```
 
-### Budget amendment required before paid launch
+### Earlier budget amendment request — superseded by the re-audit below
 
 Read-only ledger audit remains **2,162 entries, $1.70095090 estimated usage, $199.86095600 retained reservations, zero pending**, against the approved **$200 cumulative cap**. Remaining reservation headroom is **$0.139044**. A single properly reserved GPT judge call at the prepared 1600-token cap cannot fit; launching a partially generated batch would be unhelpful. No new paid request has been dispatched.
 
@@ -489,3 +491,59 @@ git commit -m "Add source-bound tree planning and document all experiment varian
 ```
 
 Current paid status: **not launched**, zero new ledger entries, existing cap unchanged at $200. No paid workers or retries are active. User's existing untracked files are preserved.
+
+## Budget re-audit — 2026-10-02 (America/New_York)
+
+User requested **重新审计** after questioning the $199.86 reservation total. The earlier request to increase the cumulative cap to $320 was caused by my overconservative accounting design: every completed request continued occupying its entire pre-dispatch bound even after its usage was known. That increase request is **withdrawn**. This audit keeps the approved cap at **$200**, does not erase previous spending, and does not launch any model experiment.
+
+### Evidence and independently recomputed costs
+
+Audited all **2,162 ledger entries against all 2,162 original artifacts**. Checked label/reservation identity, requested/returned model, provider token counters and their sum, stored rates where present, recorded cost, duplicate provider response IDs, and the 20 calls inside the audio bundle. No missing artifacts, duplicate response IDs, ledger/usage discrepancies or price discrepancies were found. There are **zero pending calls**.
+
+| Component | Ledger entries | Reported/derived usage estimate USD | Historical pre-dispatch reservations USD |
+| --- | ---: | ---: | ---: |
+| Gemma 4 26B A4B | 2,100 | 0.96330075 | 184.28245600 |
+| Nemotron 3 Super | 10 | 0.00280355 | 0.64025200 |
+| GPT-5.6 Sol | 51 | 0.69427160 | 14.43824800 |
+| Audio bundle: 17 TTS + 3 Whisper HTTP calls | 1 | 0.04057500 | 0.50000000 |
+| **Total** | **2,162** | **1.70095090** | **199.86095600** |
+
+Prices were rechecked against [AWS Bedrock pricing](https://aws.amazon.com/bedrock/pricing/), the [GPT-5.6 geographic model card](https://docs.aws.amazon.com/en_en/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html), [OpenAI TTS-1 pricing](https://developers.openai.com/api/docs/models/tts-1), and [Whisper pricing](https://developers.openai.com/api/docs/models/whisper-1). Model rates remain Gemma $0.13/$0.40, Nemotron $0.15/$0.65, GPT $4.40/$22 per million input/output tokens; TTS $15/M characters and Whisper $0.006/minute. The existing proxy's selected model routes were checked without exposing credentials; no proxy settings were changed.
+
+Two HTTP400 records (1848, 1849) have **unknown usage**, retaining **$0.44464640** in full. Three empty-completion errors (1895, 1962, 1982) have known usage totaling $0.06211040 but also retain their full combined **$0.85423360** reservation. The successful audio bundle retains its full **$0.50** because its accounting uses character/duration estimates rather than token-usage receipts. Unknown/failed costs are not assumed to be zero. The $1.70095090 usage figure is an estimate supported by available records, not a settled provider invoice. No billing statement was available to independently confirm upstream retries; a cost multiplier is a conservative allowance, not proof of an absolute billing bound.
+
+### Corrected active budget accounting
+
+Successful, nonempty text responses with matching model/rates, valid usage and consistent ledger/artifact evidence can now be settled at **4 × their verified reported cost**. This retains a margin while releasing unused worst-case headroom. Pending/error/unknown-usage requests keep their full original reservation; audio bundles also remain fully reserved. Every new request still reserves the original 4x byte/output-based bound *before* dispatch under a SQLite write transaction. Text and audio admission checks use the same active-occupancy calculation.
+
+| Budget component | USD |
+| --- | ---: |
+| 2,156 successful text requests: $1.59826550 × 4 | 6.39306200 |
+| All five failed requests: full original bounds | 1.29888000 |
+| Audio bundle: full original bound | 0.50000000 |
+| **Current conservative budget occupancy** | **8.19194200** |
+| **Remaining within the unchanged $200 cap** | **191.80805800** |
+
+The original `calls` table and all request artifacts are unchanged, verified by hashes before/after. A SQLite backup was taken before applying the audit at `run/cost-before-success-reconciliation.sqlite`. Added **2,156 append-only settlement records**, each containing its original reservation, reconciled charge, basis and artifact SHA-256; updates/deletes of settlements are blocked. Re-running reconciliation is idempotent. Historical `reserved_upper_usd` remains available as an audit total; **`accounted_exposure_usd` is the amount used for current admission**. Thus neither the original $199.86 total nor the $1.70 usage estimate is presented as the current guarded balance.
+
+Implementation: `src/streaming/experiment_accounting.py`, client/audio admission integration, and `experiments/incremental_planning/reconcile_budget.py`. The latter performs a read-only dry run by default; `--apply` requires a clean audit with no pending work, takes the backup and appends evidence-linked settlements without modifying the cap. Full report: `experiments/incremental_planning/budget_reaudit.json`.
+
+The prepared tree experiment allowance of $115 plus current occupancy is **$123.191942**, below $200 even before future successful requests are reconciled. `manifest_v3.json` and prepared commands now use the original $200 cap. The historical $320 proposal remains documented above as superseded; no budget increase is needed. No new paid inference was performed during this audit.
+
+Validation: **233 tests passed, 42 subtests passed**, one existing Pydantic warning. Regression coverage includes reconciliation across restarts, preservation of pending/failed reservations, invalid or missing usage, cross-client admission while a request is pending, repeated settlement, immutable original records, tampered artifacts, old-ledger migration, audio sharing the same ledger, and unchanged cap enforcement.
+
+Audit/verification commands:
+
+```bash
+PYTHONPATH=src /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/reconcile_budget.py --output experiments/incremental_planning/run/budget_reaudit_dryrun.json
+PYTHONPATH=src /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/reconcile_budget.py --apply --output experiments/incremental_planning/budget_reaudit.json
+PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests debate-app/backend/tests -q
+git diff --check
+```
+
+Re-running bulk reconciliation appended **zero** additional settlements and reproduced $8.191942 occupancy, confirming idempotence. Final hash checks again confirmed every original call row and artifact unchanged; all five error reservations and the audio bundle remain intact. `git diff --check` passed. No paid request was dispatched during the audit.
+
+```bash
+git add process.md src/streaming/experiment_client.py src/streaming/experiment_accounting.py tests/test_experiment_budget.py tests/test_experiment_reconciliation.py experiments/incremental_planning/audio_probe.py experiments/incremental_planning/reconcile_budget.py experiments/incremental_planning/budget_reaudit.json experiments/incremental_planning/manifest_v3.json
+git commit -m "Reconcile verified usage without increasing the experiment budget"
+```

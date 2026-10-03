@@ -24,6 +24,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "debate-app/backend"))
 from streaming.experiment_client import BudgetedClient, BudgetExceeded
+from streaming.experiment_accounting import accounted_exposure, initialize_accounting
 from scripts.benchmark_incremental_planning import make_player, atomic_json, code_digest
 
 
@@ -44,10 +45,11 @@ class AudioGuard(httpx.BaseTransport):
         self.db = sqlite3.connect(self.directory / "cost.sqlite", timeout=30, check_same_thread=False)
         self.inner = inner or httpx.HTTPTransport(retries=0)
         self.failed = False
+        initialize_accounting(self.db)
         self.db.execute("BEGIN IMMEDIATE")
         try:
             cap = self.db.execute("SELECT cap FROM budget WHERE id=1").fetchone()[0]
-            used = self.db.execute("SELECT coalesce(sum(reserved),0) FROM calls").fetchone()[0]
+            used = accounted_exposure(self.db)
             if cap != 200 or used + allowance > cap:
                 raise BudgetExceeded("No room for the audio sub-budget")
             self.request_id = self.db.execute(

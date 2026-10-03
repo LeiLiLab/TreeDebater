@@ -1,8 +1,8 @@
 """OpenAI-compatible experiment client with durable pre-dispatch cost reservations.
 
-No automatic HTTP retries. Each attempted request permanently consumes a conservative
-reservation, even after a crash/timeout. Reported-token estimates are tracked separately.
-This deliberately overcounts the cap rather than assuming failed work was free.
+No automatic HTTP retries. Reserve before dispatch; after a successful response,
+reconcile verified usage at a 4x cost margin. Failures/unknown usage keep their full
+reservation. Original reservations and append-only settlements remain auditable.
 """
 from __future__ import annotations
 
@@ -14,10 +14,11 @@ import sqlite3
 import time
 from urllib.request import Request, urlopen
 
+from .experiment_accounting import (MODEL_RATES, accounted_exposure, initialize_accounting,
+                                    reconcile_success)
+
 
 MODEL = "google.gemma-4-26b-a4b"
-MODEL_RATES = {MODEL: (0.13, 0.40), "nvidia.nemotron-super-3-120b": (0.15, 0.65),
-               "gpt-5.6-sol": (4.40, 22.00)}  # Bedrock geographic inference, short context
 
 
 class BudgetExceeded(RuntimeError):
@@ -39,13 +40,17 @@ class BudgetedClient:
         self.db.commit()
         if self.db.execute("SELECT cap FROM budget WHERE id=1").fetchone()[0] != cap:
             raise ValueError("Cannot silently change an existing experiment budget")
+        initialize_accounting(self.db)
 
     def summary(self, label=None):
         where, args = (" WHERE label=?", (label,)) if label is not None else ("", ())
         row = self.db.execute("""SELECT count(*), coalesce(sum(reserved),0),
             coalesce(sum(estimated_usd),0), sum(CASE WHEN state!='ok' THEN 1 ELSE 0 END),
-            coalesce(sum(input_tokens),0), coalesce(sum(output_tokens),0) FROM calls""" + where, args).fetchone()
+                    coalesce(sum(input_tokens),0), coalesce(sum(output_tokens),0) FROM calls""" + where, args).fetchone()
+        exposure = accounted_exposure(self.db, label)
         return dict(calls=row[0], reserved_upper_usd=row[1], reported_usage_estimate_usd=row[2],
+                    # reserved_upper_usd is the historical sum, not current budget occupancy.
+                    accounted_exposure_usd=exposure,
                     uncertain_calls=row[3] or 0, input_tokens=row[4], output_tokens=row[5],
                     cap_usd=self.db.execute("SELECT cap FROM budget WHERE id=1").fetchone()[0])
 
@@ -72,7 +77,7 @@ class BudgetedClient:
                            + max_tokens * max(1, output_rate)) / 1_000_000
         self.db.execute("BEGIN IMMEDIATE")
         try:
-            used = self.db.execute("SELECT coalesce(sum(reserved),0) FROM calls").fetchone()[0]
+            used = accounted_exposure(self.db)
             cap = self.db.execute("SELECT cap FROM budget WHERE id=1").fetchone()[0]
             if used + reservation > cap:
                 raise BudgetExceeded(f"No dispatch: {used:.4f} + {reservation:.4f} exceeds ${cap:.2f}")
@@ -99,7 +104,8 @@ class BudgetedClient:
             input_tokens = usage.get("prompt_tokens")
             output_tokens = usage.get("completion_tokens")
             estimate = None
-            if type(input_tokens) is int and type(output_tokens) is int:
+            if (type(input_tokens) is int and type(output_tokens) is int
+                    and input_tokens >= 0 and output_tokens >= 0):
                 input_rate, output_rate = MODEL_RATES[model]
                 estimate = (input_tokens * input_rate + output_tokens * output_rate) / 1_000_000
             content = result["choices"][0]["message"].get("content")
@@ -124,6 +130,8 @@ class BudgetedClient:
             artifact["seconds"] = time.perf_counter()-t0
             path = self.directory / f"call_{request_id:06}.json"
             path.write_text(json.dumps(artifact, ensure_ascii=False, indent=2))
+            if "error" not in artifact and estimate is not None:
+                reconcile_success(self.db, request_id, path)
 
     def text(self, prompt, max_tokens=700):
         return self.complete([{"role": "user", "content": prompt}], max_tokens=max_tokens)

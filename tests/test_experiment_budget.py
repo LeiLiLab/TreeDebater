@@ -22,10 +22,12 @@ def test_reserve_before_dispatch_and_cap_survives_restart(tmp_path, monkeypatch)
     assert client.text("Hi", 10) == "OK"
     assert client.summary()["reported_usage_estimate_usd"] > 0
     reloaded = BudgetedClient(tmp_path, cap=0.04)
+    assert reloaded.text("Hi", 10) == "OK"  # completed usage releases unused headroom
+    assert reloaded.summary()["accounted_exposure_usd"] < reloaded.summary()["reserved_upper_usd"]
     with pytest.raises(BudgetExceeded):
-        reloaded.text("Hi", 10)
-    assert http.call_count == 1
-    assert reloaded.summary()["calls"] == 1
+        reloaded.text("Hi", 4096)  # this request's own bound cannot fit
+    assert http.call_count == 2
+    assert reloaded.summary()["calls"] == 2
     with pytest.raises(ValueError):
         BudgetedClient(tmp_path, cap=200)
 
@@ -44,12 +46,17 @@ def test_failed_requests_remain_reserved_and_do_not_retry(tmp_path, monkeypatch)
 
 
 def test_concurrent_clients_share_one_limit(tmp_path, monkeypatch):
-    monkeypatch.setattr("streaming.experiment_client.urlopen", Mock(return_value=response()))
     one = BudgetedClient(tmp_path, cap=0.04)
     two = BudgetedClient(tmp_path, cap=0.04)
+    def during_first_request(*args, **kwargs):
+        # A second connection sees the first request's committed pending reservation.
+        with pytest.raises(BudgetExceeded):
+            two.text("Hi", 10)
+        return response()
+    http = Mock(side_effect=during_first_request)
+    monkeypatch.setattr("streaming.experiment_client.urlopen", http)
     one.text("Hi", 10)
-    with pytest.raises(BudgetExceeded):
-        two.text("Hi", 10)
+    assert http.call_count == 1
 
 
 def test_usage_is_attributed_to_its_job_under_shared_ledger(tmp_path, monkeypatch):
