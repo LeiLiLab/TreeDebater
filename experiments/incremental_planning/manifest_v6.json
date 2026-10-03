@@ -1,0 +1,96 @@
+{
+  "task": "Evaluate claim condition extraction and existing-call condition review against the pre-change pipeline",
+  "status": "prepared for launch",
+  "created_utc": "2026-10-03T20:12:36.902155+00:00",
+  "authorization": "User requested checking quality improvement; continue existing user-approved cumulative USD200 task budget, no increase/reset.",
+  "source_commit": "d0cc148",
+  "source_digest": "c464d172d48443b5a5c91ac9fa70c7b6f52a33548e9ea12f7493966e0aebf1af",
+  "cases_file": "experiments/incremental_planning/cases_v5.json",
+  "cases_digest": "74efd27c324fdfbbd4aa9fe6f9b988c53f86fc9e30616b650d71dfcc92bae92c",
+  "run_id": "conditions-regression-v1",
+  "baseline_run_id": "retained-heldout-v1",
+  "modes": [
+    "grounded_linear",
+    "grounded_tree",
+    "flat_tree",
+    "branch_tree"
+  ],
+  "cases": 8,
+  "repeats": 2,
+  "answers": 64,
+  "workers": 2,
+  "tree_limits": {
+    "max_tree_targets": 8,
+    "max_tree_context_nodes": 16
+  },
+  "model": "google.gemma-4-26b-a4b",
+  "judge_model": "gpt-5.6-sol",
+  "judge_route": "bedrock/us.openai.gpt-5.6-sol",
+  "settings": {
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "plan_max_tokens": 700,
+    "generation_max_tokens": 1600,
+    "judge_max_tokens": 1600,
+    "judge_reasoning_effort": "none",
+    "judge_temperature": "omitted; unsupported",
+    "speech_budget_seconds": 60,
+    "audio": false,
+    "embeddings": false
+  },
+  "estimate": {
+    "expected_additional_usage_usd": [
+      2,
+      5
+    ],
+    "usage_planning_upper_usd": 12,
+    "expected_requests": [
+      950,
+      1400
+    ],
+    "basis": "Previous matched four-arm 64-answer run cost $1.74897 over 970 requests. Allow larger extraction/audit prompts and feedback, roughly 7M generator input/0.5M output and 64 judgments of <=4K input/1600 output plus bounded failures.",
+    "rates_per_million": {
+      "google.gemma-4-26b-a4b": [
+        0.13,
+        0.4
+      ],
+      "gpt-5.6-sol": [
+        4.4,
+        22
+      ]
+    },
+    "checked_date": "2026-10-03",
+    "sources": [
+      "https://aws.amazon.com/bedrock/pricing/",
+      "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html"
+    ],
+    "uncertainty": "Token/rate estimate, not invoice settlement; no additional paid compute/storage provisioned."
+  },
+  "budget": {
+    "currency": "USD",
+    "cumulative_approved_cap": 200,
+    "starting_usage_estimate": 7.60681331,
+    "starting_accounted_exposure": 32.94019004,
+    "remaining_guarded_budget": 167.05980996,
+    "starting_requests": 5343,
+    "ledger": "experiments/incremental_planning/run/cost.sqlite",
+    "guard": "Every request reserves full conservative bound atomically before dispatch; successful verified receipts settle at 4x usage, errors/unknown retain bounds. Reject dispatch above cumulative cap. No automatic retry or restart.",
+    "stop": "Stop only these run workers if accounting fails or cap blocks dispatch; preserve saved answers and artifacts. No new paid compute provisioned."
+  },
+  "retry_policy": "No regenerated saved answers or replaced judgments. At most one unchanged missing-judge retry after diagnosis; exhausted judgments remain missing. No automatic HTTP retries or worker restart.",
+  "primary_comparison": "Branch new vs Branch pre-change, paired by case averaging two repeats; only cases complete in both arms.",
+  "secondary_comparisons": [
+    "Each other mode new vs its pre-change counterpart",
+    "New Branch vs new Flat and Grounded Linear",
+    "Condition extraction recall, audit validity and repairs in draft-to-final progression"
+  ],
+  "missing_data_policy": "Baseline Branch courtyard repeat1 has exhausted missing judgment; do not retry/replace. Use seven complete cases for Branch before/after plus descriptive all-judged scores and sensitivity if needed.",
+  "limitations": [
+    "Known-case regression: earlier failures informed implementation; not fresh held-out validation.",
+    "Changes combine extraction, state propagation and feedback/revision; before/after does not isolate each component.",
+    "Only eight independent authored cases; repeat runs are not independent, intervals unadjusted for multiple comparisons.",
+    "Saved baseline model samples/judgments are reused; decoding variability and provider drift remain possible.",
+    "Text-only simulated endpoint latency excludes ASR/TTS; automatic judge flags need spot checking."
+  ],
+  "offline_preflight": "314 tests +42 subtests passed on unchanged d0cc148 source; compile/diff checks pass. Zero pending budget calls before launch."
+}

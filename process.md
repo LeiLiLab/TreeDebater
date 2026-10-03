@@ -1130,3 +1130,40 @@ Cumulative accounting remains **5,343 requests**, **$7.60681331 known usage**,
 **$32.94019004 guarded exposure** against the approved **$200** cap, **zero pending**.
 The retained-tree evaluation's 80 answers/79 judgments and frozen reports are
 unchanged; no historical diagnostics were regenerated against the new code.
+
+
+## Condition-retention quality regression — launch plan (2026-10-03)
+
+User requested checking whether the two completed changes improve quality. Freeze
+`d0cc148` inference source; reuse the unchanged eight `cases_v5.json` cases, prior
+speeches and checklist. This is a known-case regression, not a new held-out test.
+Run `conditions-regression-v1`: Grounded Linear, Grounded Tree, Flat and Branch,
+each eight cases × two repeats = **64 new answers and judgments**, two workers.
+Compare each mode to frozen `retained-heldout-v1`; primary comparison is Branch
+before/after. Average repeats by case for paired bootstrap intervals. Baseline
+Branch courtyard repeat 1 remains unavailable after its exhausted HTTP 503 retry;
+exclude that entire case from the primary paired comparison without altering it.
+
+Keep Gemma 4 26B A4B generation, main/helper temperatures 0.3/0, 700-token plans,
+1600-token generation and GPT-5.6 judgments, reasoning none, 60-second speech budget,
+8 target +16 context nodes, and no ASR/TTS/search/embedding calls. Judge sees only
+speeches and delivered answers, with the identical checklist prompt. Audit actual
+condition extraction, structured audience feedback, draft-to-final changes, final
+fallbacks, unsupported assertions and copied opponent text. Do not modify inference
+or rubrics during the frozen run, or regenerate an answer to improve its score.
+
+Estimate **$2–$5 additional known usage**, **$12 conservative planning estimate**,
+roughly 950–1,400 requests including bounded failures. Verified AWS Standard rates
+per million input/output tokens: Gemma **$0.13/$0.40**, GPT-5.6 Geo CRIS short context
+**$4.40/$22** ([Bedrock pricing](https://aws.amazon.com/bedrock/pricing/),
+[GPT-5.6 pricing](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html)).
+Estimates are provisional, not provider billing. No new paid compute provisioned.
+The existing approved **$200 cumulative hard cap** and durable per-request guard
+remain active: starting **5,343 requests**, **$7.60681331 known usage**,
+**$32.94019004 conservative occupancy**, **$167.05980996 headroom**, zero pending.
+Every request reserves before dispatch; successes settle with 4× margin and errors
+retain their bounds. No automatic retries/restarts; at most one unchanged failed
+judge retry after diagnosis. Stop these workers on budget/accounting failure.
+
+Manifest: `experiments/incremental_planning/manifest_v6.json`. Preflight: unchanged
+source already passed **314 tests +42 subtests**, compilation and diff checks.
