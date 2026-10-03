@@ -768,3 +768,11 @@ PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/pyth
 PYTHONPATH=src:debate-app/backend HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python -m pytest tests debate-app/backend/tests -q
 PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id branch-dev-v2 --split dev --cases-file experiments/incremental_planning/cases_v4.json --modes grounded_tree flat_tree branch_tree --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200 --repeats 1 > experiments/incremental_planning/run/branch-dev-v2-worker0.log 2>&1
 ```
+
+### Development v2 complete; held-out source frozen
+
+Six answers completed under source **5162ef8**. All six have valid final bound targets and matching request-time versions; source/ownership audit reports zero integrity issues. Grounded Tree and Flat Tree each had 0/8 invalid planning snapshots. Branch Tree had 2/8: one 700-token truncation (request 2983) and one invalid target index; strict fallback applied at those intermediate updates, and later normal updates restored final bindings. No retry or larger cap was used. Keep this limitation observable.
+
+Dev checklist/mean simulated text seconds: Grounded Tree 100% / 11.38s; Flat Tree 100% / 9.14s; Branch Tree 83.3% / 9.13s. These reused two-case diagnostics test mechanisms, not superiority; they do not justify assuming branch guidance improves scores. All original records remain. V2 cost: 90 requests, 311,223 input / 20,182 output tokens, usage estimate **$0.12025266**; no failed requests. Cumulative usage estimate now **$3.19981485**, active guarded occupancy **$14.18739780**, no pending requests.
+
+The 80-answer new-case run now freezes inference at **5162ef8**, including the concession and JSON-schema refinements. `manifest_v4.json` stores the exact source/data hashes. No further inference/prompt/case edits during this run. A separate documentation/report commit records the freeze; inference source hash remains identical. Both workers use the prepared commands above, with five modes, two repetitions, two workers and uniform GPT-5.6 judging.

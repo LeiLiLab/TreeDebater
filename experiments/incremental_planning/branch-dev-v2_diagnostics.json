@@ -1,0 +1,150 @@
+{
+  "run_id": "branch-dev-v2",
+  "metrics": [
+    {
+      "mode": "branch_tree",
+      "answers": 2,
+      "with_bound_targets": 2,
+      "final_raw_fallbacks": 0,
+      "graph_update_events": {
+        "REINFORCE": 3,
+        "LINK_RESPONSE": 7,
+        "COALESCE_CORRECTION": 1,
+        "APPLY_CORRECTION": 2
+      },
+      "structured_snapshots": 8,
+      "rejected_snapshots": 2,
+      "selected_reply_paths": 2
+    },
+    {
+      "mode": "flat_tree",
+      "answers": 2,
+      "with_bound_targets": 2,
+      "final_raw_fallbacks": 0,
+      "graph_update_events": {
+        "REINFORCE": 3,
+        "LINK_RESPONSE": 7,
+        "COALESCE_CORRECTION": 1,
+        "APPLY_CORRECTION": 3
+      },
+      "structured_snapshots": 8,
+      "rejected_snapshots": 0,
+      "selected_reply_paths": 2
+    },
+    {
+      "mode": "grounded_tree",
+      "answers": 2,
+      "with_bound_targets": 2,
+      "final_raw_fallbacks": 0,
+      "graph_update_events": {
+        "REINFORCE": 3,
+        "LINK_RESPONSE": 6,
+        "COALESCE_CORRECTION": 1,
+        "APPLY_CORRECTION": 2
+      },
+      "structured_snapshots": 8,
+      "rejected_snapshots": 0,
+      "selected_reply_paths": 1
+    }
+  ],
+  "final_binding_checks": [
+    {
+      "case": "branch_dev_microgrid",
+      "repeat": 0,
+      "mode": "branch_tree",
+      "active_targets": 3,
+      "selected_claims": 2,
+      "final_raw_prefix_fallback": false,
+      "selected_versions_valid": true,
+      "selected_reply_paths": 1,
+      "retained_position_limits": 3,
+      "request_versions_valid": true
+    },
+    {
+      "case": "branch_dev_microgrid",
+      "repeat": 0,
+      "mode": "flat_tree",
+      "active_targets": 3,
+      "selected_claims": 2,
+      "final_raw_prefix_fallback": false,
+      "selected_versions_valid": true,
+      "selected_reply_paths": 1,
+      "retained_position_limits": 2,
+      "request_versions_valid": true
+    },
+    {
+      "case": "branch_dev_microgrid",
+      "repeat": 0,
+      "mode": "grounded_tree",
+      "active_targets": 3,
+      "selected_claims": 2,
+      "final_raw_prefix_fallback": false,
+      "selected_versions_valid": true,
+      "selected_reply_paths": 1,
+      "retained_position_limits": 0,
+      "request_versions_valid": true
+    },
+    {
+      "case": "branch_dev_shuttle",
+      "repeat": 0,
+      "mode": "branch_tree",
+      "active_targets": 2,
+      "selected_claims": 1,
+      "final_raw_prefix_fallback": false,
+      "selected_versions_valid": true,
+      "selected_reply_paths": 1,
+      "retained_position_limits": 1,
+      "request_versions_valid": true
+    },
+    {
+      "case": "branch_dev_shuttle",
+      "repeat": 0,
+      "mode": "flat_tree",
+      "active_targets": 2,
+      "selected_claims": 2,
+      "final_raw_prefix_fallback": false,
+      "selected_versions_valid": true,
+      "selected_reply_paths": 1,
+      "retained_position_limits": 2,
+      "request_versions_valid": true
+    },
+    {
+      "case": "branch_dev_shuttle",
+      "repeat": 0,
+      "mode": "grounded_tree",
+      "active_targets": 2,
+      "selected_claims": 1,
+      "final_raw_prefix_fallback": false,
+      "selected_versions_valid": true,
+      "selected_reply_paths": 0,
+      "retained_position_limits": 0,
+      "request_versions_valid": true
+    }
+  ],
+  "integrity_issues": [],
+  "structured_snapshot_counts": {
+    "grounded_tree": 8,
+    "flat_tree": 8,
+    "branch_tree": 8
+  },
+  "invalid_snapshots": [
+    {
+      "id": 2983,
+      "label": "branch-dev-v2/branch_dev_microgrid/branch_tree/0",
+      "reason": "Unterminated string starting at: line 1 column 2874 (char 2873)",
+      "supplied_targets": 3
+    },
+    {
+      "id": 2996,
+      "label": "branch-dev-v2/branch_dev_shuttle/branch_tree/0",
+      "reason": "Invalid indexed tree target",
+      "supplied_targets": 0
+    }
+  ],
+  "paid_requests": 0,
+  "limitations": [
+    "Speaker/source ownership and version consistency do not validate semantic entailment of extracted claims.",
+    "An edge records a response, not whether the issue was resolved.",
+    "Counts include historical setup and all observed chunks; repeated cases are not independent samples."
+  ]
+}

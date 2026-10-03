@@ -1,6 +1,6 @@
 {
   "task": "Repair speaker-owned tree updates and exploit live argument branches; matched topology ablation",
-  "status": "development v1 complete; concession/schema refinement validated offline; development v2 launching",
+  "status": "development complete; held-out launching",
   "authorization": "User requested tree repairs and better tree use; existing cumulative USD200 task budget continues. No increase.",
   "starting_commit": "3af8dbd",
   "modes": [
@@ -43,7 +43,11 @@
       1.8,
       3.5
     ],
-    "predispatch_allowance_usd": 120
+    "predispatch_allowance_usd": 120,
+    "source_digest": "212ef57d9d73dcf549916b3d31c5a42be4e378667df2599f499057bccc38fbd7",
+    "source_commit": "5162ef8",
+    "starting_usage_estimate_usd": 3.19981485,
+    "starting_accounted_exposure_usd": 14.187397800000001
   },
   "retry_allowance_usd": 10,
   "additional_expected_usage_usd_range": [
@@ -118,6 +122,10 @@
       0.25
     ],
     "allowance": "within original development USD20 allowance",
-    "reason": "Explicit concession edges and sibling replies; JSON schema for indexed plans after strict parser correctly rejected extra fields/prose in dev1"
+    "reason": "Explicit concession edges and sibling replies; JSON schema for indexed plans after strict parser correctly rejected extra fields/prose in dev1",
+    "completed_answers": 6,
+    "requests": 90,
+    "reported_usage_estimate_usd": 0.12025266,
+    "source_commit": "5162ef8"
   }
 }

@@ -1,0 +1,285 @@
+{
+  "run_id": "branch-dev-v2",
+  "metadata": {
+    "source_digest": "212ef57d9d73dcf549916b3d31c5a42be4e378667df2599f499057bccc38fbd7",
+    "cases_digest": "1c6141a2331dcf2cc2ff37fbac03821d7a7b5d287bb2e872217a0964a145d2bc",
+    "split": "dev",
+    "case_ids": [
+      "branch_dev_microgrid",
+      "branch_dev_shuttle"
+    ],
+    "modes": [
+      "grounded_tree",
+      "flat_tree",
+      "branch_tree"
+    ],
+    "repeats": 1,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 1,
+    "judge_model": "gpt-5.6-sol",
+    "cap_usd": 200.0,
+    "judge_max_tokens": 1600,
+    "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted",
+    "judge_reasoning_effort": "none",
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "expected_answers": 6,
+  "completed_answers": 6,
+  "missing": [],
+  "metrics": [
+    {
+      "mode": "grounded_tree",
+      "n": 2,
+      "checklist_rate": 1,
+      "strength_mean": 4.5,
+      "strawman_rate": 0.5,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 11.384504068031674,
+      "residual_text_median_s": 11.384504068031674,
+      "residual_worker_return_mean_s": 13.566485367511632,
+      "generation_calls_mean": 14,
+      "prior_context_setup_calls_mean": 2,
+      "live_generation_calls_mean": 12,
+      "generation_cost_mean_usd": 0.007498020000000001,
+      "answer_words_mean": 107,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 0,
+      "invalid_targets": 0,
+      "revisions": 2
+    },
+    {
+      "mode": "flat_tree",
+      "n": 2,
+      "checklist_rate": 1,
+      "strength_mean": 4.5,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 9.142878885992104,
+      "residual_text_median_s": 9.142878885992104,
+      "residual_worker_return_mean_s": 12.279352229466895,
+      "generation_calls_mean": 14,
+      "prior_context_setup_calls_mean": 2,
+      "live_generation_calls_mean": 12,
+      "generation_cost_mean_usd": 0.00736089,
+      "answer_words_mean": 108.5,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 0,
+      "invalid_targets": 0,
+      "revisions": 3
+    },
+    {
+      "mode": "branch_tree",
+      "n": 2,
+      "checklist_rate": 0.8333333333333333,
+      "strength_mean": 4,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0,
+      "residual_text_mean_s": 9.131986174499616,
+      "residual_text_median_s": 9.131986174499616,
+      "residual_worker_return_mean_s": 12.755780325998785,
+      "generation_calls_mean": 14,
+      "prior_context_setup_calls_mean": 2,
+      "live_generation_calls_mean": 12,
+      "generation_cost_mean_usd": 0.008624220000000002,
+      "answer_words_mean": 108.5,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 2,
+      "invalid_targets": 0,
+      "revisions": 2
+    }
+  ],
+  "reference_mode": "grounded_tree",
+  "paired_vs_baseline": {
+    "flat_tree": {
+      "baseline": "grounded_tree",
+      "candidate": "flat_tree",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "branch_dev_microgrid",
+          "quality_diff": 0,
+          "latency_diff_s": -0.9222056170110591
+        },
+        {
+          "case": "branch_dev_shuttle",
+          "quality_diff": 0,
+          "latency_diff_s": -3.561044747068081
+        }
+      ],
+      "quality_diff_mean": 0,
+      "quality_diff_95ci": [
+        0,
+        0
+      ],
+      "latency_diff_mean_s": -2.24162518203957,
+      "latency_diff_95ci_s": [
+        -3.561044747068081,
+        -0.9222056170110591
+      ]
+    },
+    "branch_tree": {
+      "baseline": "grounded_tree",
+      "candidate": "branch_tree",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "branch_dev_microgrid",
+          "quality_diff": 0,
+          "latency_diff_s": -1.2792023979709484
+        },
+        {
+          "case": "branch_dev_shuttle",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -3.225833389093168
+        }
+      ],
+      "quality_diff_mean": -0.16666666666666669,
+      "quality_diff_95ci": [
+        -0.33333333333333337,
+        0
+      ],
+      "latency_diff_mean_s": -2.2525178935320582,
+      "latency_diff_95ci_s": [
+        -3.225833389093168,
+        -1.2792023979709484
+      ]
+    }
+  },
+  "paired_vs_legacy": {},
+  "component_comparisons": {
+    "flat_tree_vs_grounded_tree": {
+      "baseline": "grounded_tree",
+      "candidate": "flat_tree",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "branch_dev_microgrid",
+          "quality_diff": 0,
+          "latency_diff_s": -0.9222056170110591
+        },
+        {
+          "case": "branch_dev_shuttle",
+          "quality_diff": 0,
+          "latency_diff_s": -3.561044747068081
+        }
+      ],
+      "quality_diff_mean": 0,
+      "quality_diff_95ci": [
+        0,
+        0
+      ],
+      "latency_diff_mean_s": -2.24162518203957,
+      "latency_diff_95ci_s": [
+        -3.561044747068081,
+        -0.9222056170110591
+      ]
+    },
+    "branch_tree_vs_flat_tree": {
+      "baseline": "flat_tree",
+      "candidate": "branch_tree",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "branch_dev_microgrid",
+          "quality_diff": 0,
+          "latency_diff_s": -0.3569967809598893
+        },
+        {
+          "case": "branch_dev_shuttle",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": 0.33521135797491297
+        }
+      ],
+      "quality_diff_mean": -0.16666666666666669,
+      "quality_diff_95ci": [
+        -0.33333333333333337,
+        0
+      ],
+      "latency_diff_mean_s": -0.01089271149248816,
+      "latency_diff_95ci_s": [
+        -0.3569967809598893,
+        0.33521135797491297
+      ]
+    },
+    "branch_tree_vs_grounded_tree": {
+      "baseline": "grounded_tree",
+      "candidate": "branch_tree",
+      "case_count": 2,
+      "case_differences": [
+        {
+          "case": "branch_dev_microgrid",
+          "quality_diff": 0,
+          "latency_diff_s": -1.2792023979709484
+        },
+        {
+          "case": "branch_dev_shuttle",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -3.225833389093168
+        }
+      ],
+      "quality_diff_mean": -0.16666666666666669,
+      "quality_diff_95ci": [
+        -0.33333333333333337,
+        0
+      ],
+      "latency_diff_mean_s": -2.2525178935320582,
+      "latency_diff_95ci_s": [
+        -3.225833389093168,
+        -1.2792023979709484
+      ]
+    }
+  },
+  "usage_including_judging": {
+    "calls": 90,
+    "reserved_upper_usd": 11.022700000000002,
+    "unresolved_calls": 0,
+    "input_tokens": 311223,
+    "output_tokens": 20182,
+    "reported_usage_estimate_usd": 0.12025266,
+    "accounted_exposure_usd": 0.48101064
+  },
+  "request_audit": {
+    "missing_artifacts": [],
+    "truncated_calls": [
+      {
+        "id": 2983,
+        "label": "branch-dev-v2/branch_dev_microgrid/branch_tree/0",
+        "max_tokens": 700
+      }
+    ],
+    "errors": [],
+    "runtime_warning_counts": []
+  },
+  "limitations": [
+    "Small authored scenario set, not a standard debate benchmark",
+    "Different generator/judge models, but no human adjudication; automatic judging remains fallible",
+    "Spot checks found inconsistent constraint judgments; automated scores are provisional, not established accuracy",
+    "Zero unsupported-fact flags do not establish factual correctness",
+    "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
+    "Text-ready timing precedes post-speech tree analysis; worker-return timing is reported separately",
+    "Exact-target matching shared across arms; embedding fallback disabled",
+    "Cost uses provider-reported tokens and published rates, not a settled invoice",
+    "Composite checklist items can fail for omitted qualifications even when the answer does not contradict them.",
+    "0/6 grounded/light-tree answers fall back to the raw prefix; aggregate gains do not isolate tree binding from grounding feedback.",
+    "Speaker/source ownership and version consistency do not validate semantic entailment of extracted claims.",
+    "An edge records a response, not whether the issue was resolved.",
+    "Counts include historical setup and all observed chunks; repeated cases are not independent samples."
+  ],
+  "completion_audit": {
+    "worker_completion_markers": 1,
+    "pending_requests": 0,
+    "failed_requests": 0
+  },
+  "post_run_diagnostics": "branch-dev-v2_diagnostics.json"
+}
