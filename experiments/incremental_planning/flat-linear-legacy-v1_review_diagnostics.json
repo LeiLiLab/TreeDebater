@@ -1,0 +1,4438 @@
+{
+  "run_id": "flat-linear-legacy-v1",
+  "source_digest": "020537bccb7ddffc59acb238ebb4ad0667d522de0d00615522ac27f89c6bed45",
+  "metrics": [
+    {
+      "mode": "flat_tree",
+      "reviews": 24,
+      "format_valid": 24,
+      "truncated": 0,
+      "conditions": 181,
+      "typed_conditions": 117,
+      "source_candidates": 56,
+      "missing_condition_rows": 51,
+      "raw_not_applicable": 26,
+      "draft_sentences": 201,
+      "missing_sentence_rows": 0,
+      "invalid_ids": 2,
+      "statuses": {
+        "unchecked": 80,
+        "preserved": 58,
+        "missing": 42,
+        "not_applicable": 1
+      },
+      "assertion_statuses": {
+        "unchecked": 30,
+        "supported": 42,
+        "unsupported": 66,
+        "conditional": 59,
+        "nonfactual": 4
+      },
+      "invalid_sentence_ids": 1
+    },
+    {
+      "mode": "linear",
+      "reviews": 0,
+      "format_valid": 0,
+      "truncated": 0,
+      "conditions": 0,
+      "typed_conditions": 0,
+      "source_candidates": 0,
+      "missing_condition_rows": 0,
+      "raw_not_applicable": 0,
+      "draft_sentences": 0,
+      "missing_sentence_rows": 0,
+      "invalid_ids": 0,
+      "statuses": {},
+      "assertion_statuses": {},
+      "invalid_sentence_ids": 0
+    },
+    {
+      "mode": "legacy",
+      "reviews": 0,
+      "format_valid": 0,
+      "truncated": 0,
+      "conditions": 0,
+      "typed_conditions": 0,
+      "source_candidates": 0,
+      "missing_condition_rows": 0,
+      "raw_not_applicable": 0,
+      "draft_sentences": 0,
+      "missing_sentence_rows": 0,
+      "invalid_ids": 0,
+      "statuses": {},
+      "assertion_statuses": {},
+      "invalid_sentence_ids": 0
+    }
+  ],
+  "reviews": [
+    {
+      "id": 7330,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/1",
+      "mode": "flat_tree",
+      "raw_condition_rows": 4,
+      "missing_condition_rows": 4,
+      "raw_not_applicable": 1,
+      "source_candidates": 3,
+      "draft_sentences": 9,
+      "missing_sentence_rows": 0,
+      "condition_count": 8,
+      "typed_conditions": 5,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 2,
+        "supported": 2,
+        "unsupported": 3,
+        "conditional": 2
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's points regarding funding and the lack of measurable benefits.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, my opponent admits that funding for reviewers remains unassigned and that no reviewers are appointed.",
+          "status": "supported",
+          "source_quote": "Funding for the named reviewers remains unassigned. The notices should not be issued in translation before those reviewers are appointed.",
+          "reason": "Matches the opponent's verbatim admission.",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "This is a major logical error.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Labeling an opponent's position a 'logical error' is a rhetorical value judgment, not a factual claim.",
+          "fix": "Remove or rephrase as a critique of the proposal's readiness."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "You cannot claim a trial is ready to proceed when the essential people required to prevent errors have no budget and no roles.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Asserts the opponent 'claims a trial is ready', but the opponent actually stated notices should not be issued until reviewers are appointed.",
+          "fix": "You cannot ensure a safe trial if the essential people required to prevent errors lack a budget and roles."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "A trial without a funded safety net is just a recipe for misinformation.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts an inevitable outcome (misinformation) from a hypothetical lack of funding.",
+          "fix": "A trial without a funded safety net risks the accuracy of the information provided."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "Second, while I acknowledge the goal of accessibility, my opponent admits there is no measured effect on recycling rates.",
+          "status": "supported",
+          "source_quote": "I have no measured effect on recycling rates.",
+          "reason": "Matches the opponent's verbatim admission.",
+          "fix": ""
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "We are proposing to spend time and unassigned resources on a project with no proven outcome.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Turns the unverified hypothesis of 'no proven outcome' into a definitive statement.",
+          "fix": "We are proposing to use unassigned resources on a project with no measured effect on recycling rates."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "Without a budget for accuracy or evidence of actual benefit, this trial is an irresponsible use of council resources.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "The term 'irresponsible' is a rhetorical value judgment.",
+          "fix": "Without a budget for accuracy or evidence of benefit, this trial's viability is questionable."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "Therefore, I oppose this motion.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        }
+      ],
+      "status_counts": {
+        "unchecked": 5,
+        "preserved": 2,
+        "missing": 1
+      },
+      "checks": [
+        {
+          "constraint_id": "eb8a036431e5a985",
+          "kind": "precondition",
+          "quote": "The review arrangement we already agreed still applies",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Unsubstantiated irrelevance or condition belongs to a planned target.",
+          "fix": "Preserve the qualifier unless a different independent proposal is established."
+        },
+        {
+          "constraint_id": "8b321dd8417886af",
+          "kind": "precondition",
+          "quote": "The notices should not be issued in translation before those reviewers are appointed",
+          "status": "preserved",
+          "draft_quote": "funding for reviewers remains unassigned and that no reviewers are appointed",
+          "reason": "Directly addresses the opponent's admission regarding funding and appointment status.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "b676bd68e41763fe",
+          "kind": "scope",
+          "quote": "covers four monthly waste-collection notices in two additional languages",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft fails to acknowledge the trial is limited to only four notices.",
+          "fix": "Acknowledge the limited scope of the four-notice trial before criticizing the lack of funding."
+        },
+        {
+          "constraint_id": "cc1086dd13c7cac8",
+          "kind": "exception",
+          "quote": "Other council documents are outside this trial",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "1c210117bfc539c2",
+          "kind": "precondition",
+          "quote": "having a named fluent reviewer check each translated notice before publication",
+          "status": "preserved",
+          "draft_quote": "essential people required to prevent errors",
+          "reason": "Targets the requirement for named fluent reviewers.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-6e5f55ee89728c43",
+          "kind": "source_candidate",
+          "quote": "Translated notices could make council instructions accessible to more residents.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-5c9dc190741d05b1",
+          "kind": "source_candidate",
+          "quote": "Translations could make instructions easier to access, but I have no measured effect on recycling rates.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-1419b3e9c1ca42c1",
+          "kind": "source_candidate",
+          "quote": "Translations could make instructions easier to access, but I have no measured effect on recycling rates.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    },
+    {
+      "id": 7356,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/1",
+      "mode": "flat_tree",
+      "raw_condition_rows": 7,
+      "missing_condition_rows": 2,
+      "raw_not_applicable": 0,
+      "source_candidates": 2,
+      "draft_sentences": 8,
+      "missing_sentence_rows": 0,
+      "condition_count": 9,
+      "typed_conditions": 7,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "conditional": 5,
+        "unsupported": 2,
+        "supported": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "While I acknowledge the opponent's specific trial limits, including the six-locker cap and free usage, significant issues remain.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Acknowledging limits is a concession, not a factual claim",
+          "fix": "While I acknowledge the opponent's specific trial limits, including the six-locker cap and free usage, significant issues remain."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, providing bag storage does not solve the logistical burden.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Logistical burden is a hypothetical risk, not an established fact",
+          "fix": "First, providing bag storage could increase the logistical burden."
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "Even with staff assistance, the library must still manage key replacements and security risks, which creates unaddressed work for our team.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts unverified inevitability of work and security risks",
+          "fix": "Even with staff assistance, the library may still have to manage key replacements and security risks, potentially creating unaddressed work for our team."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "Second, the opponent suggests that publishing an unclaimed-item procedure is a solution.",
+          "status": "supported",
+          "source_quote": "I accept publishing an unclaimed-item procedure before the trial begins",
+          "reason": "Accurately reflects opponent's concession",
+          "fix": ""
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "However, this is a reactive measure that fails to address the core problem.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "The effectiveness of the measure is a matter of debate/hypothesis",
+          "fix": "However, this reactive measure may fail to address the core problem."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "A procedure does not remove the library's liability or the labor required to manage, store, and secure items left behind.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Liability and labor impacts are potential consequences, not established facts",
+          "fix": "A procedure does not necessarily remove the library's liability or the labor required to manage, store, and secure items left behind."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Simply having a rule for lost items does not mitigate the operational costs or the security concerns we have raised.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Mitigation of costs/concerns is a hypothetical outcome",
+          "fix": "Simply having a rule for lost items might not mitigate the operational costs or the security concerns we have raised."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "Therefore, the trial remains fundamentally flawed and unsupported.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Conclusion of 'fundamentally flawed' is a value judgment/unsupported assertion",
+          "fix": "Therefore, the trial's impact on operations remains uncertain."
+        }
+      ],
+      "status_counts": {
+        "preserved": 2,
+        "missing": 5,
+        "unchecked": 2
+      },
+      "checks": [
+        {
+          "constraint_id": "6edf1f32c65b2540",
+          "kind": "scope",
+          "quote": "Use of a locker would be free",
+          "status": "preserved",
+          "draft_quote": "free usage",
+          "reason": "Matches 'Use of a locker would be free'",
+          "fix": ""
+        },
+        {
+          "constraint_id": "69617857b14b6140",
+          "kind": "scope",
+          "quote": "six lockers",
+          "status": "preserved",
+          "draft_quote": "six-locker cap",
+          "reason": "Matches 'six lockers'",
+          "fix": ""
+        },
+        {
+          "constraint_id": "5c0a548339f79c81",
+          "kind": "timing",
+          "quote": "during library opening hours",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Omitted 'during library opening hours' qualifier",
+          "fix": "including the six-locker cap, free usage during opening hours,"
+        },
+        {
+          "constraint_id": "651887bd58faafe4",
+          "kind": "timing",
+          "quote": "for a five-week trial",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Omitted 'five-week trial' timeline",
+          "fix": "for the five-week trial,"
+        },
+        {
+          "constraint_id": "f2027a47af06bc4b",
+          "kind": "exception",
+          "quote": "no overnight storage",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Omitted 'no overnight storage' constraint",
+          "fix": "and the no-overnight-storage limit,"
+        },
+        {
+          "constraint_id": "56f573c9eaf1cbe6",
+          "kind": "timing",
+          "quote": "empty lockers by closing time",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Omitted 'empty lockers by closing time' requirement",
+          "fix": "and the requirement to empty lockers by closing time,"
+        },
+        {
+          "constraint_id": "62ea44e022055fcc",
+          "kind": "precondition",
+          "quote": "Responsibility for lost-key replacement costs is still undecided",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Omitted undecided status of lost-key replacement costs",
+          "fix": "and the undecided costs for lost keys,"
+        },
+        {
+          "constraint_id": "source-f71c0f9b09193dce",
+          "kind": "source_candidate",
+          "quote": "Library lockers could give visitors somewhere to leave bags while using the reading rooms.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-9a4f18d3f5c3c0dc",
+          "kind": "source_candidate",
+          "quote": "I accept publishing an unclaimed-item procedure before the trial begins, but no reduction in theft has been measured.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    },
+    {
+      "id": 7442,
+      "label": "flat-linear-legacy-v1/focus_bus_display/flat_tree/1",
+      "mode": "flat_tree",
+      "raw_condition_rows": 1,
+      "missing_condition_rows": 0,
+      "raw_not_applicable": 0,
+      "source_candidates": 0,
+      "draft_sentences": 9,
+      "missing_sentence_rows": 0,
+      "condition_count": 1,
+      "typed_conditions": 1,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 2,
+        "supported": 2,
+        "conditional": 3,
+        "unsupported": 2
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's claims regarding the display's utility and the missing financial responsibilities.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, my opponent argues that showing only scheduled departures makes the display useful.",
+          "status": "supported",
+          "source_quote": "The display would show scheduled departures, not live vehicle positions.",
+          "reason": "Accurately reflects opponent's scope.",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "However, this is flawed logic.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Value judgment on logic.",
+          "fix": ""
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "Even a display showing static schedules requires functional hardware, electricity, and regular updates to be helpful.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "If the screen breaks or the data is wrong, it becomes useless clutter.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Predicts a possible harm as inevitable.",
+          "fix": "If the screen breaks or the data is wrong, it could become useless clutter."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "Second, the opponent admits that no one has been assigned to pay for electricity or future repairs.",
+          "status": "supported",
+          "source_quote": "responsibility for paying future electricity and repairs has not been assigned.",
+          "reason": "Directly quotes opponent's admission.",
+          "fix": ""
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Installing expensive technology without a budget for its upkeep is irresponsible.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Value judgment/unverified causal link.",
+          "fix": ""
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "We cannot accept a grant for installation if it leaves the town with a mounting, unassigned debt.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Assumes the grant creates a 'mounting debt' which is an unverified outcome.",
+          "fix": "We cannot accept a grant for installation if it leaves the town with unassigned costs for upkeep."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "Instead of this risky electronic display, we should invest in high-quality, weather-proof printed timetables that are cheap and easy to maintain.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Introduces unverified qualities (weather-proof, cheap) for the alternative.",
+          "fix": "Instead of this electronic display, we should invest in printed timetables that are easier to maintain."
+        }
+      ],
+      "status_counts": {
+        "preserved": 1
+      },
+      "checks": [
+        {
+          "constraint_id": "49d0717c883156c7",
+          "kind": "scope",
+          "quote": "show scheduled departures, not live vehicle positions",
+          "status": "preserved",
+          "draft_quote": "showing only scheduled departures",
+          "reason": "Draft acknowledges the scope limitation of the display.",
+          "fix": ""
+        }
+      ]
+    },
+    {
+      "id": 7531,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/flat_tree/0",
+      "mode": "flat_tree",
+      "raw_condition_rows": 6,
+      "missing_condition_rows": 0,
+      "raw_not_applicable": 2,
+      "source_candidates": 1,
+      "draft_sentences": 9,
+      "missing_sentence_rows": 0,
+      "condition_count": 6,
+      "typed_conditions": 5,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 2,
+        "conditional": 3,
+        "unsupported": 3,
+        "supported": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's logistical gaps and the risks of their proposed management structure.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, regarding the volunteer checking labels, relying on a single person is a major flaw.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Whether a single volunteer is a 'major flaw' is a value judgment/opinion",
+          "fix": "First, regarding the volunteer checking labels, relying on a single person may pose a risk to oversight."
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "Even with expiry dates, a volunteer cannot guarantee the quality or contents of every commercial packet.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Cannot guarantee quality is a possibility, not an established fact of this specific proposal",
+          "fix": "Even with expiry dates, a volunteer might not be able to verify the quality or contents of every commercial packet."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "This creates a false sense of security.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Causal link between volunteer presence and 'false sense of security' is an unverified hypothesis",
+          "fix": ""
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, the opponent admits that storage and disposal plans are not yet agreed upon.",
+          "status": "supported",
+          "source_quote": "Storage and disposal of packets left at the end still need an agreed plan",
+          "reason": "Matches verbatim opponent admission",
+          "fix": ""
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "You cannot propose an event while simultaneously admitting the most critical part\u2014what happens to the leftovers\u2014is missing.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts 'most critical part' is a subjective value judgment",
+          "fix": "The proposal lacks a plan for what happens to leftovers, which is a significant logistical gap."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "This is circular reasoning; you are proposing a solution that hasn't actually solved the problem of waste.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Labeling the proposal 'circular reasoning' is a rhetorical attack, not a factual description",
+          "fix": ""
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "Instead of this disorganized exchange, the association should simply host a digital seed-sharing forum.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "This avoids physical clutter and the need for uncertain volunteer oversight.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Claims a digital forum 'avoids' clutter, which is a likely outcome but not a guaranteed fact",
+          "fix": "This could avoid physical clutter and reduce the need for uncertain volunteer oversight."
+        }
+      ],
+      "status_counts": {
+        "unchecked": 2,
+        "preserved": 4
+      },
+      "checks": [
+        {
+          "constraint_id": "ed5505c6b447d957",
+          "kind": "precondition",
+          "quote": "Participation is free",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "9f53bb1ac90bc6b2",
+          "kind": "precondition",
+          "quote": "packets without a printed expiry date would not be accepted",
+          "status": "preserved",
+          "draft_quote": "Even with expiry dates",
+          "reason": "Acknowledges the expiry date requirement",
+          "fix": ""
+        },
+        {
+          "constraint_id": "508fe4f0d34ddd01",
+          "kind": "scope",
+          "quote": "includes no seedlings or garden chemicals",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "89dcc2f6667421d7",
+          "kind": "precondition",
+          "quote": "packets without a printed expiry date would not be accepted",
+          "status": "preserved",
+          "draft_quote": "Even with expiry dates",
+          "reason": "Acknowledges the expiry date requirement",
+          "fix": ""
+        },
+        {
+          "constraint_id": "b9c53541636e8636",
+          "kind": "precondition",
+          "quote": "Storage and disposal of packets left at the end still need an agreed plan",
+          "status": "preserved",
+          "draft_quote": "the opponent admits that storage and disposal plans are not yet agreed upon",
+          "reason": "Directly targets the unagreed plan",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-4449a0adbc18a4cb",
+          "kind": "source_candidate",
+          "quote": "A volunteer has offered to check the labels.",
+          "status": "preserved",
+          "draft_quote": "regarding the volunteer checking labels",
+          "reason": "Directly targets the volunteer offer",
+          "fix": ""
+        }
+      ]
+    },
+    {
+      "id": 7560,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/1",
+      "mode": "flat_tree",
+      "raw_condition_rows": 5,
+      "missing_condition_rows": 9,
+      "raw_not_applicable": 1,
+      "source_candidates": 5,
+      "draft_sentences": 10,
+      "missing_sentence_rows": 0,
+      "condition_count": 14,
+      "typed_conditions": 5,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unsupported": 7,
+        "conditional": 1,
+        "unchecked": 1,
+        "supported": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's concerns regarding feature bundling, the printed alternative, and the necessity of academic proof.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Omits the unsettled funding/workload constraint",
+          "fix": "I will address the opponent's concerns regarding feature bundling, the printed alternative, and the necessity of academic proof."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, while my opponent fears a \"package\" of risky features, we can simply use a restricted, text-only version.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Implementation depends on the opponent's specific constraints",
+          "fix": "we could use a restricted, text-only version."
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "This separates the newsletter from advertising or comments, making it safe.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Safety is a value judgment, not a proven fact",
+          "fix": "This separates the newsletter from advertising or comments."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "Second, regarding printed copies, providing them doesn't make digital newsletters unnecessary.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Digital access is the fastest, most efficient way to reach families, while print serves as a secondary backup.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Speed and efficiency are unverified claims",
+          "fix": "Digital access can provide a faster way to reach families, while print serves as a secondary backup."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "Finally, my opponent claims benefits are minor because academic results aren't improved.",
+          "status": "supported",
+          "source_quote": "Easier access to dates and notices is a possible benefit even though no improvement in academic results is established.",
+          "reason": "Matches opponent's admission of benefit",
+          "fix": ""
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "This is a logical error.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Labeling a position a 'logical error' is rhetorical, not a factual rebuttal",
+          "fix": ""
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "A school's job is also communication and community.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Subjective value judgment",
+          "fix": ""
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "Easier access to dates and notices is a massive, practical win for busy families.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts a subjective benefit as a 'massive win'",
+          "fix": "Easier access to dates and notices is a practical benefit for busy families."
+        },
+        {
+          "sentence": 9,
+          "draft_quote": "We support a digital newsletter because efficiency and connection matter.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Value judgment",
+          "fix": ""
+        }
+      ],
+      "status_counts": {
+        "missing": 2,
+        "preserved": 2,
+        "unchecked": 9,
+        "not_applicable": 1
+      },
+      "checks": [
+        {
+          "constraint_id": "f2c9cbbc978e014a",
+          "kind": "concession",
+          "quote": "The privacy rules we discussed remain necessary",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Does not explicitly acknowledge the necessary privacy rules/safeguards",
+          "fix": "While respecting the necessary privacy rules and editor oversight,"
+        },
+        {
+          "constraint_id": "71057f5fd0e29fa9",
+          "kind": "scope",
+          "quote": "text-only newsletter",
+          "status": "preserved",
+          "draft_quote": "we can simply use a restricted, text-only version",
+          "reason": "Matches opponent's allowed scope",
+          "fix": ""
+        },
+        {
+          "constraint_id": "9a7745ff5b808020",
+          "kind": "timing",
+          "quote": "two issues over one month",
+          "status": "missing",
+          "draft_quote": "we can simply use a restricted, text-only version",
+          "reason": "Fails to acknowledge the two-issue-per-month limit",
+          "fix": "we can use a restricted, text-only version limited to two issues per month"
+        },
+        {
+          "constraint_id": "3ad7d1837545bba7",
+          "kind": "exception",
+          "quote": "Student photographs, public comments and advertising would not be included",
+          "status": "preserved",
+          "draft_quote": "separates the newsletter from advertising or comments",
+          "reason": "Matches opponent's exceptions",
+          "fix": ""
+        },
+        {
+          "constraint_id": "9d485941906fdf0f",
+          "kind": "precondition",
+          "quote": "No item should publish a student home address or private contact details.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-e6026f82dfd6cdbe",
+          "kind": "source_candidate",
+          "quote": "A calendar, event reminders and club listings are also possible.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-4a5ef6241c168028",
+          "kind": "source_candidate",
+          "quote": "The editor workload and funding are unsettled.",
+          "status": "not_applicable",
+          "draft_quote": "I will address the opponent's concerns regarding feature bundling, the printed alternative, and the necessity of academic proof.",
+          "reason": "Draft ignores the unsettled funding/workload issue",
+          "fix": "I will address the opponent's concerns regarding feature bundling, the printed alternative, and the necessity of academic proof, while noting that funding and workload remain to be settled."
+        },
+        {
+          "constraint_id": "source-5b1adae7ed80e202",
+          "kind": "source_candidate",
+          "quote": "A school communication platform could include a newsletter, student photos, polls, public comments and advertising. I object to treating all those features as one harmless package.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-d58a7e4c4d8b2dea",
+          "kind": "source_candidate",
+          "quote": "Easier access to dates and notices is a possible benefit even though no improvement in academic results is established.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-1070e7871dc3a2f3",
+          "kind": "source_candidate",
+          "quote": "Families could choose a printed copy at no charge instead. They would not have to install an app or create an online account.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "limit-900f4c480b4adb24",
+          "kind": "scope",
+          "quote": "A school communication platform could include a newsletter, student photos, polls, public comments and advertising.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "limit-bb41048595dd1953",
+          "kind": "scope",
+          "quote": "I object to treating all those features as one harmless package.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "limit-5d41189436889caf",
+          "kind": "scope",
+          "quote": "Families could choose a printed copy at no charge instead.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "limit-6adceec9d826ab51",
+          "kind": "scope",
+          "quote": "They would not have to install an app or create an online account.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    },
+    {
+      "id": 7586,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/1",
+      "mode": "flat_tree",
+      "raw_condition_rows": 3,
+      "missing_condition_rows": 6,
+      "raw_not_applicable": 0,
+      "source_candidates": 3,
+      "draft_sentences": 9,
+      "missing_sentence_rows": 0,
+      "condition_count": 9,
+      "typed_conditions": 4,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 2,
+        "conditional": 3,
+        "unsupported": 3,
+        "supported": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's concerns regarding monitoring and the proposed trial period.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, while I acknowledge that the privacy and turn-taking issues are resolved by our agreed text channel, the lack of a filled volunteer rota is merely a temporary logistical hurdle.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "It is not a valid reason to deny remote access to tenants.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Asserts a value judgment on what is a 'valid reason'",
+          "fix": "It is not a reason we must accept to deny remote access to tenants."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "We can simply find volunteers to fill those roles.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts the ability to find volunteers as a fact",
+          "fix": "We could seek volunteers to fill those roles."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, the opponent suggests a limited three-month trial.",
+          "status": "supported",
+          "source_quote": "I would permit an optional remote audio connection for the next three monthly meetings",
+          "reason": "Matches opponent's proposal",
+          "fix": ""
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "This is an arbitrary restriction.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Subjective characterization of the opponent's proposal",
+          "fix": "This restriction limits the scope of the trial."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "A trial should be used to refine a permanent solution, not to delay the fundamental right of all tenants to participate.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts a 'fundamental right' not present in the debate data",
+          "fix": "A trial should be used to refine a permanent solution, rather than delaying broader participation."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "We should not let a small, temporary staffing issue prevent us from building a more inclusive association.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Connects staffing to inclusivity as a causal certainty",
+          "fix": "We should not let a temporary staffing issue prevent us from potentially building a more inclusive association."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "Let's solve the rota issue and commit to long-term remote access for everyone.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Asserts a future commitment as a current directive",
+          "fix": "Let's solve the rota issue to enable long-term remote access."
+        }
+      ],
+      "status_counts": {
+        "unchecked": 6,
+        "preserved": 2,
+        "missing": 1
+      },
+      "checks": [
+        {
+          "constraint_id": "3cd4be79982d7778",
+          "kind": "timing",
+          "quote": "a week before each meeting",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "37481f6f85780b05",
+          "kind": "precondition",
+          "quote": "the volunteer rota for that task is not yet filled",
+          "status": "preserved",
+          "draft_quote": "the lack of a filled volunteer rota",
+          "reason": "Correctly identifies the staffing precondition",
+          "fix": ""
+        },
+        {
+          "constraint_id": "198f990e17d8850e",
+          "kind": "timing",
+          "quote": "for the next three monthly meetings",
+          "status": "preserved",
+          "draft_quote": "the opponent suggests a limited three-month trial",
+          "reason": "Correctly identifies the trial duration",
+          "fix": ""
+        },
+        {
+          "constraint_id": "ff50e1fc093c53a5",
+          "kind": "exception",
+          "quote": "with the in-person meeting continuing as usual",
+          "status": "missing",
+          "draft_quote": "the proposed trial period",
+          "reason": "Fails to acknowledge that the trial includes in-person meetings continuing as usual",
+          "fix": "the proposed trial period, which maintains in-person meetings as usual"
+        },
+        {
+          "constraint_id": "source-45f1c76f21b9ae69",
+          "kind": "source_candidate",
+          "quote": "The participation and privacy arrangements already agreed remain in force. No participant would be required to switch on a camera.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-bc96fa8ac1a59967",
+          "kind": "source_candidate",
+          "quote": "I have no evidence that remote attendees are less committed than those in the room.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-29956ff33d192c32",
+          "kind": "source_candidate",
+          "quote": "I am concerned that a remote connection could disrupt speaking turns and compromise privacy.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "limit-ae9f3a76de557f21",
+          "kind": "scope",
+          "quote": "The participation and privacy arrangements already agreed remain in force.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "limit-9d3bf0c9411d6fc7",
+          "kind": "scope",
+          "quote": "No participant would be required to switch on a camera.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    },
+    {
+      "id": 7596,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/0",
+      "mode": "flat_tree",
+      "raw_condition_rows": 8,
+      "missing_condition_rows": 0,
+      "raw_not_applicable": 2,
+      "source_candidates": 3,
+      "draft_sentences": 8,
+      "missing_sentence_rows": 0,
+      "condition_count": 8,
+      "typed_conditions": 5,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 2,
+        "supported": 1,
+        "unsupported": 2,
+        "conditional": 3
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the remaining concerns regarding waste management and path safety.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, my opponent suggests the operator will take waste away, but admits the council has no way to verify this.",
+          "status": "supported",
+          "source_quote": "The operator accepts taking all waste away after each afternoon. The council has not yet assigned someone to verify that cleanup.",
+          "reason": "matches opponent's admission",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "This is a logical flaw; a promise without oversight is not a plan.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "labels a lack of oversight as a 'logical flaw' rather than a risk",
+          "fix": "This lack of oversight creates a risk: a promise without verification is difficult to enforce."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "Without a designated inspector, we risk littering the riverbank, which defeats the purpose of a clean environment.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "asserts inevitable littering",
+          "fix": "Without a designated inspector, there is a risk of littering the riverbank."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, while I acknowledge the stall is now movable and smaller, a two-metre clearance is still insufficient.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "On a busy riverside path, a stall creates a bottleneck, forcing walkers into the mud or water to pass.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "asserts inevitable bottleneck and mud/water contact",
+          "fix": "On a busy riverside path, a stall could create a bottleneck, potentially forcing walkers into the mud or water."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Even without cooking, the presence of a crowd and equipment disrupts the natural peace.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "asserts inevitable disruption of peace",
+          "fix": "Even without cooking, the presence of a crowd and equipment may disrupt the natural peace."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "Therefore, even this limited trial poses unacceptable risks to our path and our environment.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "concludes 'unacceptable risks' without defining the threshold of acceptability",
+          "fix": "Therefore, this limited trial could pose significant risks to our path and our environment."
+        }
+      ],
+      "status_counts": {
+        "preserved": 6,
+        "unchecked": 2
+      },
+      "checks": [
+        {
+          "constraint_id": "b87e7e9ca0492aca",
+          "kind": "scope",
+          "quote": "drinks-only stall",
+          "status": "preserved",
+          "draft_quote": "the stall is now movable and smaller",
+          "reason": "acknowledges change in scope",
+          "fix": ""
+        },
+        {
+          "constraint_id": "f99fa83390ee25df",
+          "kind": "timing",
+          "quote": "on two Saturday afternoons",
+          "status": "preserved",
+          "draft_quote": "the stall is now movable and smaller",
+          "reason": "acknowledges change in timing/scope",
+          "fix": ""
+        },
+        {
+          "constraint_id": "27cfd35b3521434b",
+          "kind": "exception",
+          "quote": "no cooking",
+          "status": "preserved",
+          "draft_quote": "Even without cooking",
+          "reason": "acknowledges exception",
+          "fix": ""
+        },
+        {
+          "constraint_id": "c980dd613dcff471",
+          "kind": "scope",
+          "quote": "must leave a two-metre clear path",
+          "status": "preserved",
+          "draft_quote": "a two-metre clearance is still insufficient",
+          "reason": "directly challenges the specific constraint",
+          "fix": ""
+        },
+        {
+          "constraint_id": "f7a7d830926aece5",
+          "kind": "exception",
+          "quote": "will not operate during a flood warning",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Unsubstantiated irrelevance or condition belongs to a planned target.",
+          "fix": "Preserve the qualifier unless a different independent proposal is established."
+        },
+        {
+          "constraint_id": "source-de3293dc1bbea70a",
+          "kind": "source_candidate",
+          "quote": "The trial could offer refreshments to walkers, but I am making no claim about increased tourism revenue.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Unsubstantiated irrelevance or condition belongs to a planned target.",
+          "fix": "Preserve the qualifier unless a different independent proposal is established."
+        },
+        {
+          "constraint_id": "source-57a43fbe929a9727",
+          "kind": "source_candidate",
+          "quote": "The council has not yet assigned someone to verify that cleanup.",
+          "status": "preserved",
+          "draft_quote": "admits the council has no way to verify this",
+          "reason": "targets the lack of verification",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-529596fdbf39ecd1",
+          "kind": "source_candidate",
+          "quote": "The operator accepts taking all waste away after each afternoon.",
+          "status": "preserved",
+          "draft_quote": "the operator will take waste away",
+          "reason": "targets the operator's commitment",
+          "fix": ""
+        }
+      ]
+    },
+    {
+      "id": 7658,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/0",
+      "mode": "flat_tree",
+      "raw_condition_rows": 5,
+      "missing_condition_rows": 2,
+      "raw_not_applicable": 0,
+      "source_candidates": 4,
+      "draft_sentences": 9,
+      "missing_sentence_rows": 0,
+      "condition_count": 7,
+      "typed_conditions": 3,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 2,
+        "supported": 2,
+        "conditional": 4,
+        "unsupported": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address my opponent's remaining concerns regarding implementation and security.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, my opponent notes that the method for separating identity from the ballot is undecided.",
+          "status": "supported",
+          "source_quote": "The specific method for separating identity checks from secret ballots is still undecided.",
+          "reason": "Matches opponent claim.",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "However, not having a final plan today does not mean a secure system is impossible.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Discusses possibility of a system, not existence.",
+          "fix": ""
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "We can develop digital authentication protocols that verify a member before they cast their secret vote.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Hypothesizes a potential technical solution.",
+          "fix": "We could develop digital authentication protocols..."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, my opponent's logic suggests that identity confidence requires in-person presence.",
+          "status": "supported",
+          "source_quote": "I oppose allowing any remote vote because the association needs confidence in voter identity.",
+          "reason": "Correctly identifies the opponent's underlying premise.",
+          "fix": ""
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "This is a flawed assumption.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Evaluates the opponent's logic.",
+          "fix": ""
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "We can verify who a person is through secure login credentials without ever linking that identity to their specific choice.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Hypothesizes a technical capability.",
+          "fix": "We could verify identity through secure login credentials..."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "By separating the \"who\" from the \"what,\" we protect both integrity and privacy.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts a causal outcome (protecting integrity/privacy) as an inevitable fact of the proposed method.",
+          "fix": "By separating the 'who' from the 'what,' we aim to protect both integrity and privacy."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "Therefore, we should support remote voting to ensure every member has a voice, regardless of their location.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        }
+      ],
+      "status_counts": {
+        "missing": 3,
+        "unchecked": 2,
+        "preserved": 2
+      },
+      "checks": [
+        {
+          "constraint_id": "b26d31f60847eb10",
+          "kind": "timing",
+          "quote": "For the next committee election only",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft fails to acknowledge the opponent's concession that remote voting is limited to the next election and existing members.",
+          "fix": "Acknowledge that while the opponent permits remote voting for existing members in the next election only, implementation concerns remain."
+        },
+        {
+          "constraint_id": "14131ff19b21cc6b",
+          "kind": "scope",
+          "quote": "existing members",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft fails to acknowledge the scope is limited to existing members.",
+          "fix": "Include 'existing members' in the opening acknowledgment."
+        },
+        {
+          "constraint_id": "d10a5f96d3705e42",
+          "kind": "precondition",
+          "quote": "membership is verified before voting",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft fails to acknowledge the precondition of membership verification.",
+          "fix": "Include 'verified membership' in the opening acknowledgment."
+        },
+        {
+          "constraint_id": "source-b928b8ebdcf9acf5",
+          "kind": "source_candidate",
+          "quote": "I have not established that remote voting has caused fraud in this association.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-c93e6d25f3722c1f",
+          "kind": "source_candidate",
+          "quote": "The specific method for separating identity checks from secret ballots is still undecided.",
+          "status": "preserved",
+          "draft_quote": "my opponent notes that the method for separating identity from the ballot is undecided.",
+          "reason": "Directly addresses the undecided method claim.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-bb4fe61a072fd2ce",
+          "kind": "source_candidate",
+          "quote": "I oppose allowing any remote vote because the association needs confidence in voter identity.",
+          "status": "preserved",
+          "draft_quote": "my opponent's logic suggests that identity confidence requires in-person presence.",
+          "reason": "Directly addresses the inference regarding identity confidence.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-1a89c3988749f65e",
+          "kind": "source_candidate",
+          "quote": "I accept that this could help members who cannot attend.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    },
+    {
+      "id": 7695,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/0",
+      "mode": "flat_tree",
+      "raw_condition_rows": 6,
+      "missing_condition_rows": 4,
+      "raw_not_applicable": 0,
+      "source_candidates": 4,
+      "draft_sentences": 8,
+      "missing_sentence_rows": 0,
+      "condition_count": 9,
+      "typed_conditions": 5,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 1,
+      "assertion_status_counts": {
+        "unchecked": 1,
+        "supported": 2,
+        "unsupported": 4,
+        "nonfactual": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's claims regarding the trial's scope and impact.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, my opponent admits they have not identified who will pay the coordinator.",
+          "status": "supported",
+          "source_quote": "We have not identified who will pay that coordinator.",
+          "reason": "Direct quote from opponent.",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "While they claim this is a small, limited trial, a project cannot function without a clear budget for supervision.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Assumes the trial is 'small' or 'limited' which is not in the source.",
+          "fix": "While they claim this is a limited trial..."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "Without a paid coordinator, the responsibility falls on volunteers, creating an unstable and unreliable service.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Turns a possible risk (unpaid coordinator) into an inevitable outcome (unstable service).",
+          "fix": "Without a paid coordinator, the service may become unstable if it relies solely on volunteers."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, my opponent concedes that this hub does not actually reduce household hunger.",
+          "status": "supported",
+          "source_quote": "it does not establish a measured reduction in household hunger.",
+          "reason": "Directly matches opponent's concession.",
+          "fix": ""
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "They argue that providing \"useful supplies\" justifies the effort, but this is a logical error.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Assigns a 'logical error' motive/intent to the opponent.",
+          "fix": "They argue that providing 'useful supplies' justifies the effort, even without hunger metrics."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "If the primary goal of a food hub is to fight hunger, then a program that fails to measure or achieve that goal is a waste of community resources.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts a value judgment (waste of resources) as a factual consequence.",
+          "fix": "If the primary goal is to fight hunger, a program that fails to measure that goal may not be the most efficient use of resources."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "We should invest in proven solutions instead.",
+          "status": "nonfactual",
+          "source_quote": "",
+          "reason": "Pure value judgment/recommendation.",
+          "fix": ""
+        }
+      ],
+      "status_counts": {
+        "unchecked": 5,
+        "missing": 4
+      },
+      "checks": [
+        {
+          "constraint_id": "16ba8068ea91638d",
+          "kind": "concession",
+          "quote": "current funding cannot cover every option",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "4a9af4b3d36cb3b5",
+          "kind": "scope",
+          "quote": "two Saturday collection sessions for sealed shelf-stable food packets",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft fails to acknowledge the specific scope (two Saturday sessions, shelf-stable packets only) before attacking the budget.",
+          "fix": "Acknowledge the request is limited to two Saturday sessions for shelf-stable packets, but..."
+        },
+        {
+          "constraint_id": "d790679985bd3e22",
+          "kind": "exception",
+          "quote": "Refrigeration and cooked meals are future options, not part of this request",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft ignores the exclusion of refrigeration/cooked meals in the current scope.",
+          "fix": "While refrigeration and cooked meals are excluded from this specific request..."
+        },
+        {
+          "constraint_id": "9ac3ba582287230f",
+          "kind": "precondition",
+          "quote": "Packets must be within their printed expiry date",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft does not acknowledge the expiry date precondition.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "23afb8e7d512419f",
+          "kind": "precondition",
+          "quote": "keeping cleaning records after each session and publishing a summary at the end of the trial",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft does not acknowledge the commitment to cleaning records and summaries.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-2586252c1e8d5f71",
+          "kind": "source_candidate",
+          "quote": "The center could host a pantry, a community fridge, a cooked-food event and a recipe exchange.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-dfdd276f08feee6d",
+          "kind": "source_candidate",
+          "quote": "A delivery round, a growers table and a cooking lesson are other possible uses.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-4990e094f832fc38",
+          "kind": "source_candidate",
+          "quote": "The hub may provide useful supplies to some households; it does not establish a measured reduction in household hunger.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-e730bf0fafc7bb20",
+          "kind": "source_candidate",
+          "quote": "A named coordinator must supervise each session. We have not identified who will pay that coordinator.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    },
+    {
+      "id": 7713,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/0",
+      "mode": "flat_tree",
+      "raw_condition_rows": 3,
+      "missing_condition_rows": 4,
+      "raw_not_applicable": 0,
+      "source_candidates": 4,
+      "draft_sentences": 8,
+      "missing_sentence_rows": 0,
+      "condition_count": 7,
+      "typed_conditions": 3,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "supported": 3,
+        "unsupported": 3,
+        "conditional": 1,
+        "nonfactual": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "First, I will address the opponent's concerns regarding file management and consent.",
+          "status": "supported",
+          "source_quote": "The unresolved issue is who checks consent and removes files when the seven days expire.",
+          "reason": "Correctly identifies the opponent's stated concern.",
+          "fix": ""
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "While they worry about who removes files after seven days, this is a simple technical task.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts a technical task is 'simple' without evidence.",
+          "fix": "While they worry about who removes files after seven days, automation could potentially handle deletions."
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "We can use automated system settings to delete files automatically, ensuring privacy without extra work.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts automation 'ensures privacy without extra work' as a fact.",
+          "fix": "Automated system settings could delete files to help manage the timeline."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "This solves the administrative hurdle they raised.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Claims the administrative hurdle is 'solved' based on an unverified hypothesis.",
+          "fix": "This could address the administrative hurdle they raised."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, I will reinforce our position regarding the utility of recordings.",
+          "status": "supported",
+          "source_quote": "I have no evidence that recording necessarily reduces attendance.",
+          "reason": "Correctly identifies the opponent's stance on evidence.",
+          "fix": ""
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "My opponent claims they have no evidence that recording reduces attendance, but a lack of evidence for a negative effect is not proof that the policy is useless.",
+          "status": "supported",
+          "source_quote": "Revisiting an explanation may be useful; I have no evidence that recording necessarily reduces attendance.",
+          "reason": "Accurately reflects the opponent's concession and lack of evidence.",
+          "fix": ""
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Even if attendance stays the same, the benefit of revisiting difficult explanations remains immense for student success.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Assumes benefit is 'immense' for student success without proof.",
+          "fix": "Even if attendance stays the same, revisiting explanations could be a significant benefit for learning."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "We should support tools that help learning, rather than waiting for perfect data to act.",
+          "status": "nonfactual",
+          "source_quote": "",
+          "reason": "Value judgment/imperative.",
+          "fix": ""
+        }
+      ],
+      "status_counts": {
+        "missing": 2,
+        "preserved": 1,
+        "unchecked": 4
+      },
+      "checks": [
+        {
+          "constraint_id": "5017a0033579f8c9",
+          "kind": "precondition",
+          "quote": "lecturer-approved",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft ignores the 'lecturer-approved' requirement when proposing automation.",
+          "fix": "Address how automation respects lecturer approval/consent."
+        },
+        {
+          "constraint_id": "20bf50857632a0a3",
+          "kind": "scope",
+          "quote": "in the enrolled class portal",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft ignores the 'enrolled class portal' scope constraint.",
+          "fix": "Specify automation occurs within the portal."
+        },
+        {
+          "constraint_id": "3c7ad27fd0094d1b",
+          "kind": "timing",
+          "quote": "for seven days after each lecture",
+          "status": "preserved",
+          "draft_quote": "removes files after seven days",
+          "reason": "Directly addresses the timing constraint.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-914b17302a98da99",
+          "kind": "source_candidate",
+          "quote": "The unresolved issue is who checks consent and removes files when the seven days expire.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-be5c4fd65bb3cb2c",
+          "kind": "source_candidate",
+          "quote": "I oppose all lecture recording because lecturers and students should control their spoken contributions.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-65027eb2fc9086e4",
+          "kind": "source_candidate",
+          "quote": "Recording would pause during student questions, and lecturers could decline without having to give a reason.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-ae18d1e9668b0d06",
+          "kind": "source_candidate",
+          "quote": "Revisiting an explanation may be useful; I have no evidence that recording necessarily reduces attendance.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    },
+    {
+      "id": 7732,
+      "label": "flat-linear-legacy-v1/focus_room_booking/flat_tree/0",
+      "mode": "flat_tree",
+      "raw_condition_rows": 5,
+      "missing_condition_rows": 1,
+      "raw_not_applicable": 0,
+      "source_candidates": 0,
+      "draft_sentences": 8,
+      "missing_sentence_rows": 0,
+      "condition_count": 6,
+      "typed_conditions": 6,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "conditional": 1,
+        "supported": 1,
+        "unsupported": 6
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's proposed trial, which is far too limited to be useful.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Utility is a value judgment",
+          "fix": "I will address the opponent's proposed trial, which may be too limited to be useful."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "My opponent suggests a four-week trial, but only on Tuesdays from six to eight in two specific rooms.",
+          "status": "supported",
+          "source_quote": "four-week trial on Tuesdays from six until eight in two ground-floor classrooms",
+          "reason": "Matches opponent's scope and timing",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "While I acknowledge the desire for caution, this plan is logically flawed.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Logical flaw is an unverified conclusion",
+          "fix": "While I acknowledge the desire for caution, this plan may be insufficient."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "A trial that only covers two hours on a single weekday cannot possibly represent the diverse needs of all student clubs.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Cannot assert impossibility of representation",
+          "fix": "A trial that only covers two hours on a single weekday might not represent the diverse needs of all student clubs."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Most clubs meet on different days or require more time for larger events.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Club meeting patterns are unverified premises",
+          "fix": "Many clubs meet on different days or require more time for larger events."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "By making the scope this narrow, the trial fails to provide any real data on whether evening access actually works.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Causal link between scope and data quality is an unverified hypothesis",
+          "fix": "By making the scope this narrow, the trial may fail to provide representative data on whether evening access works."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Instead of this ineffective test, we should implement a broader, more representative pilot program that truly reflects student life.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Prescriptive value judgment",
+          "fix": "Instead of this limited test, we should consider a broader pilot program that reflects student life."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "This ensures our final policy is based on real evidence.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Unverified causal outcome",
+          "fix": "This could ensure our final policy is based on more comprehensive evidence."
+        }
+      ],
+      "status_counts": {
+        "unchecked": 1,
+        "preserved": 2,
+        "missing": 3
+      },
+      "checks": [
+        {
+          "constraint_id": "f6984674783f2bc6",
+          "kind": "scope",
+          "quote": "unrestricted evening access",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "62f2de5e0fd28230",
+          "kind": "timing",
+          "quote": "four-week trial on Tuesdays from six until eight",
+          "status": "preserved",
+          "draft_quote": "four-week trial, but only on Tuesdays from six to eight",
+          "reason": "Matches timing constraint",
+          "fix": ""
+        },
+        {
+          "constraint_id": "e6fe528152b9b0ef",
+          "kind": "scope",
+          "quote": "two ground-floor classrooms",
+          "status": "preserved",
+          "draft_quote": "in two specific rooms",
+          "reason": "Matches scope constraint",
+          "fix": ""
+        },
+        {
+          "constraint_id": "a9acf325d38ecd1d",
+          "kind": "precondition",
+          "quote": "A named staff contact must be on duty",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Does not acknowledge staff contact requirement",
+          "fix": "Acknowledge the staff contact requirement while noting the trial's narrow scope."
+        },
+        {
+          "constraint_id": "657c28cce14e06e6",
+          "kind": "exception",
+          "quote": "If that contact is unavailable, the rooms stay closed",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Does not acknowledge room closure exception",
+          "fix": "Acknowledge the closure exception while noting the trial's narrow scope."
+        },
+        {
+          "constraint_id": "068f023dfd762d0b",
+          "kind": "exception",
+          "quote": "clubs would not be charged a room fee",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Does not acknowledge no-fee exception",
+          "fix": "Acknowledge the fee waiver while noting the trial's narrow scope."
+        }
+      ]
+    },
+    {
+      "id": 7760,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/0",
+      "mode": "flat_tree",
+      "raw_condition_rows": 4,
+      "missing_condition_rows": 2,
+      "raw_not_applicable": 0,
+      "source_candidates": 3,
+      "draft_sentences": 8,
+      "missing_sentence_rows": 0,
+      "condition_count": 5,
+      "typed_conditions": 2,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 1,
+      "assertion_status_counts": {
+        "supported": 2,
+        "unchecked": 1,
+        "nonfactual": 1,
+        "conditional": 2,
+        "unsupported": 2
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the remaining concern regarding the monitoring of remote requests.",
+          "status": "supported",
+          "source_quote": "Someone must monitor remote requests to speak, but the volunteer rota for that task is not yet filled.",
+          "reason": "Correctly identifies the remaining staffing issue",
+          "fix": ""
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "My opponent has kindly accepted our privacy rules, the audio-only format, and the advance publication of instructions.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "This is great progress.",
+          "status": "nonfactual",
+          "source_quote": "",
+          "reason": "Subjective value judgment",
+          "fix": ""
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "However, they mention that the volunteer rota for monitoring the text channel is not yet filled.",
+          "status": "supported",
+          "source_quote": "Someone must monitor remote requests to speak, but the volunteer rota for that task is not yet filled.",
+          "reason": "Direct quote from opponent",
+          "fix": ""
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "While I acknowledge this gap, it is merely a temporary administrative task, not a reason to deny remote access.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Assumes the gap is merely administrative without proof",
+          "fix": "While I acknowledge this gap, it could be treated as a temporary administrative task rather than a reason to deny remote access."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "Instead of abandoning the idea, we should simply assign specific roles for this three-month trial period.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Proposes a solution as a definitive next step",
+          "fix": "Instead of abandoning the idea, we could assign specific roles for this three-month trial period."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Filling a rota is a manageable step for any association.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Generalization about all associations",
+          "fix": "Filling a rota is a manageable task."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "By treating this as a small, solvable task rather than a structural failure, we can finally ensure every tenant has a voice, regardless of their physical location.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Causal leap from task completion to universal voice",
+          "fix": "By addressing this task, we can work toward ensuring every tenant has a voice, regardless of their physical location."
+        }
+      ],
+      "status_counts": {
+        "preserved": 3,
+        "unchecked": 2
+      },
+      "checks": [
+        {
+          "constraint_id": "9e9ee6b72ab0fcc0",
+          "kind": "timing",
+          "quote": "for the next three monthly meetings",
+          "status": "preserved",
+          "draft_quote": "three-month trial period",
+          "reason": "Matches the three-month scope",
+          "fix": ""
+        },
+        {
+          "constraint_id": "7b155db6290f396b",
+          "kind": "precondition",
+          "quote": "No participant would be required to switch on a camera.",
+          "status": "preserved",
+          "draft_quote": "audio-only format",
+          "reason": "Matches the 'no camera' precondition",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-790985728bf1e339",
+          "kind": "source_candidate",
+          "quote": "I have no evidence that remote attendees are less committed than those in the room.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-69509519e0665596",
+          "kind": "source_candidate",
+          "quote": "Someone must monitor remote requests to speak, but the volunteer rota for that task is not yet filled.",
+          "status": "preserved",
+          "draft_quote": "volunteer rota for monitoring the text channel is not yet filled",
+          "reason": "Directly addresses the unstaffed monitoring claim",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-46c39044688c4b6b",
+          "kind": "source_candidate",
+          "quote": "I accept publishing connection instructions a week before each meeting.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    },
+    {
+      "id": 7780,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/flat_tree/1",
+      "mode": "flat_tree",
+      "raw_condition_rows": 6,
+      "missing_condition_rows": 0,
+      "raw_not_applicable": 0,
+      "source_candidates": 0,
+      "draft_sentences": 9,
+      "missing_sentence_rows": 0,
+      "condition_count": 6,
+      "typed_conditions": 6,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "supported": 2,
+        "unsupported": 1,
+        "conditional": 5,
+        "unchecked": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's claims regarding the event's scope and the management of leftover materials.",
+          "status": "supported",
+          "source_quote": "The proposal is one Sunday morning exchange of unopened commercial herb-seed packets at the association office.",
+          "reason": "Accurately identifies target",
+          "fix": ""
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, while the opponent limits this to one Sunday morning with unopened packets, this does not solve our main problem.",
+          "status": "supported",
+          "source_quote": "one Sunday morning exchange of unopened commercial herb-seed packets",
+          "reason": "Matches opponent's scope",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "A one-time event still creates a mess.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts 'creates a mess' as an inevitable fact",
+          "fix": "could create a mess"
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "If people leave packets behind, the association is stuck with the responsibility of storage and disposal.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Assumes people will leave packets behind",
+          "fix": "If people leave packets behind, the association may be responsible for storage and disposal."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "This creates an ongoing administrative burden that a single morning cannot fix.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Causal link between leftover stock and 'ongoing' burden is unverified",
+          "fix": "This could create an administrative burden that a single morning does not resolve."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "Second, relying on one volunteer to check labels is risky.",
+          "status": "conditional",
+          "source_quote": "A volunteer has offered to check the labels.",
+          "reason": "Turns a hypothetical risk into a certainty",
+          "fix": "Relying on a single volunteer to check labels carries the risk of error."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "If they miss an expired packet, the association faces liability.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Asserts liability as an inevitable outcome",
+          "fix": "If an expired packet is missed, the association could face liability."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "Simply narrowing the scope doesn't remove the work required to manage the aftermath.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "Therefore, the proposal remains an impractical burden for our residents' association.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Conclusion is a value judgment based on hypothetical burdens",
+          "fix": "Therefore, the proposal may present an impractical burden for our residents' association."
+        }
+      ],
+      "status_counts": {
+        "preserved": 2,
+        "missing": 4
+      },
+      "checks": [
+        {
+          "constraint_id": "5f5e12630da4c3ac",
+          "kind": "timing",
+          "quote": "one Sunday morning",
+          "status": "preserved",
+          "draft_quote": "one Sunday morning",
+          "reason": "Matches timing constraint",
+          "fix": ""
+        },
+        {
+          "constraint_id": "b76ca240d3cf22e9",
+          "kind": "scope",
+          "quote": "unopened commercial herb-seed packets",
+          "status": "preserved",
+          "draft_quote": "unopened packets",
+          "reason": "Matches scope constraint",
+          "fix": ""
+        },
+        {
+          "constraint_id": "4151ef6e3476ccd7",
+          "kind": "scope",
+          "quote": "at the association office",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Does not acknowledge the location constraint",
+          "fix": "include 'at the association office'"
+        },
+        {
+          "constraint_id": "84fea97931323142",
+          "kind": "precondition",
+          "quote": "Participation is free",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Does not acknowledge free participation",
+          "fix": "include 'free participation'"
+        },
+        {
+          "constraint_id": "f74ec334aa41aedd",
+          "kind": "precondition",
+          "quote": "packets without a printed expiry date would not be accepted",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Does not acknowledge the expiry date requirement",
+          "fix": "include 'the requirement for printed expiry dates'"
+        },
+        {
+          "constraint_id": "6aafaa4bb4a46876",
+          "kind": "scope",
+          "quote": "includes no seedlings or garden chemicals",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Does not acknowledge the exclusion of seedlings/chemicals",
+          "fix": "include 'the exclusion of seedlings and chemicals'"
+        }
+      ]
+    },
+    {
+      "id": 7839,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/0",
+      "mode": "flat_tree",
+      "raw_condition_rows": 11,
+      "missing_condition_rows": 0,
+      "raw_not_applicable": 7,
+      "source_candidates": 3,
+      "draft_sentences": 8,
+      "missing_sentence_rows": 0,
+      "condition_count": 11,
+      "typed_conditions": 8,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 1,
+        "supported": 2,
+        "conditional": 2,
+        "unsupported": 3
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's concerns regarding activity types and maintenance costs.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, my opponent argues that we must strictly distinguish activities to prevent damage.",
+          "status": "supported",
+          "source_quote": "I oppose opening the field without distinguishing these activities.",
+          "reason": "Matches opponent's stated objection",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "However, the proposed safeguard\u2014allowing the groundkeeper to cancel bookings based on surface conditions\u2014already manages this risk effectively.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Asserts the safeguard 'manages this risk effectively' which is an unverified hypothesis",
+          "fix": "However, the proposed safeguard\u2014allowing the groundkeeper to cancel bookings based on surface conditions\u2014could manage this risk by preventing high-impact use when the surface is vulnerable."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "This ensures the field remains safe without needing complex, restrictive categories.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Claims this 'ensures' safety, turning a possible mitigation into an established fact",
+          "fix": "This may help maintain field safety without needing complex, restrictive categories."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, while I acknowledge the concern that walking doesn't guarantee lower costs, the undecided issue of inspection fees is simply a procedural detail.",
+          "status": "supported",
+          "source_quote": "A walking opportunity is a possible benefit, not proof that injuries or maintenance costs will fall.",
+          "reason": "Matches opponent's concession/claim",
+          "fix": ""
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "We can resolve who pays through the trial's administrative framework.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Claims we 'can resolve' it, which is a prediction of future administrative success",
+          "fix": "The question of who pays could potentially be resolved through the trial's administrative framework."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Using a trial to find these answers is much better than denying the community any access at all.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Value judgment ('much better') is not a factual assertion but rhetorical polish",
+          "fix": ""
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "We should move forward with the trial to gather real data rather than letting minor administrative questions stop a clear community benefit.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Value judgment ('clear community benefit') is not grounded in the provided data",
+          "fix": "We should move forward with the trial to gather real data rather than letting administrative questions delay the evaluation of community access."
+        }
+      ],
+      "status_counts": {
+        "unchecked": 7,
+        "preserved": 4
+      },
+      "checks": [
+        {
+          "constraint_id": "0575b0fc78d5e1c3",
+          "kind": "scope",
+          "quote": "School activities keep priority",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "af0140c0d67db0db",
+          "kind": "exception",
+          "quote": "no floodlights would be used",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "31a08aa5d314a1cc",
+          "kind": "precondition",
+          "quote": "any booking is canceled if the groundkeeper closes the field because of surface conditions",
+          "status": "preserved",
+          "draft_quote": "allowing the groundkeeper to cancel bookings based on surface conditions",
+          "reason": "Directly used to counter the need for activity distinction",
+          "fix": ""
+        },
+        {
+          "constraint_id": "6ebed707b160d045",
+          "kind": "timing",
+          "quote": "during this trial",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "7b14974054697ece",
+          "kind": "precondition",
+          "quote": "a sign-in contact would be published before reservations open",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "670ce83c5d01f9b0",
+          "kind": "precondition",
+          "quote": "without distinguishing these activities",
+          "status": "preserved",
+          "draft_quote": "must strictly distinguish activities",
+          "reason": "Identifies the opponent's core objection",
+          "fix": ""
+        },
+        {
+          "constraint_id": "ea4612718466c18b",
+          "kind": "scope",
+          "quote": "prebooked adult walking groups",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "cac9eb6d20b4d85d",
+          "kind": "timing",
+          "quote": "three Wednesday afternoons from four to six",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-a84c278ee8f6f341",
+          "kind": "source_candidate",
+          "quote": "School activities must keep priority over community use.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-67e66ff7b61b0013",
+          "kind": "source_candidate",
+          "quote": "Who pays for extra ground inspections is still undecided.",
+          "status": "preserved",
+          "draft_quote": "the undecided issue of inspection fees",
+          "reason": "Directly addresses the opponent's unaddressed cost point",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-f7e6502faf41db9d",
+          "kind": "source_candidate",
+          "quote": "A walking opportunity is a possible benefit, not proof that injuries or maintenance costs will fall.",
+          "status": "preserved",
+          "draft_quote": "walking doesn't guarantee lower costs",
+          "reason": "Directly addresses the opponent's claim about maintenance costs",
+          "fix": ""
+        }
+      ]
+    },
+    {
+      "id": 7864,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/0",
+      "mode": "flat_tree",
+      "raw_condition_rows": 5,
+      "missing_condition_rows": 2,
+      "raw_not_applicable": 0,
+      "source_candidates": 2,
+      "draft_sentences": 7,
+      "missing_sentence_rows": 0,
+      "condition_count": 7,
+      "typed_conditions": 5,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 1,
+        "supported": 2,
+        "conditional": 1,
+        "unsupported": 2,
+        "nonfactual": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's claims regarding cost-effectiveness and the practical necessity of reviewers.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, while I acknowledge the opponent now agrees that fluent reviewers are necessary for accuracy, this admission actually strengthens my position.",
+          "status": "supported",
+          "source_quote": "I accept having a named fluent reviewer check each translated notice before publication.",
+          "reason": "Matches opponent's concession.",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "By admitting that unassigned funding and unappointed reviewers are required before any notice is issued, the opponent confirms that this proposal is currently an unfunded mandate with no logistical plan.",
+          "status": "conditional",
+          "source_quote": "Funding for the named reviewers remains unassigned.",
+          "reason": "Turns an unassigned cost into a definitive 'unfunded mandate'.",
+          "fix": "By admitting that unassigned funding and unappointed reviewers are required before any notice is issued, the opponent confirms the proposal lacks a completed logistical plan."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "You cannot claim a project is cost-effective while simultaneously admitting the primary costs remain unassigned.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts a logical impossibility (claiming cost-effectiveness while costs are unassigned) which is a rhetorical value judgment.",
+          "fix": "The claim of cost-effectiveness is premature while the primary costs remain unassigned."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, the opponent admits there is no measured effect on recycling rates.",
+          "status": "supported",
+          "source_quote": "I have no measured effect on recycling rates.",
+          "reason": "Matches opponent's statement.",
+          "fix": ""
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "Without proven benefits or a budget, this trial is an unnecessary expense.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts a causal link between lack of proven benefit and being an 'unnecessary expense'.",
+          "fix": "Without proven benefits or a budget, this trial may become an unnecessary expense."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Therefore, we must oppose this motion.",
+          "status": "nonfactual",
+          "source_quote": "",
+          "reason": "Purely rhetorical conclusion.",
+          "fix": ""
+        }
+      ],
+      "status_counts": {
+        "missing": 3,
+        "preserved": 2,
+        "unchecked": 2
+      },
+      "checks": [
+        {
+          "constraint_id": "6292b7baa6dca5e5",
+          "kind": "scope",
+          "quote": "covers four monthly waste-collection notices in two additional languages",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft ignores the trial's limited scope (four notices, two languages).",
+          "fix": ""
+        },
+        {
+          "constraint_id": "c8840499a5fa4127",
+          "kind": "exception",
+          "quote": "Other council documents are outside this trial",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft ignores that other documents are excluded from the trial.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "6ba2d151fb189f66",
+          "kind": "precondition",
+          "quote": "The notices should not be issued in translation before those reviewers are appointed",
+          "status": "preserved",
+          "draft_quote": "unappointed reviewers are required before any notice is issued",
+          "reason": "Correctly identifies the precondition.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "a721517da53ecc53",
+          "kind": "exception",
+          "quote": "The original English notice remains available",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft fails to acknowledge the English notice remains available as a fallback.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "e7752e04ccb62af9",
+          "kind": "precondition",
+          "quote": "having a named fluent reviewer check each translated notice before publication",
+          "status": "preserved",
+          "draft_quote": "fluent reviewers are necessary for accuracy",
+          "reason": "Correctly identifies the opponent's concession.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-1f0a0f7d09bc0013",
+          "kind": "source_candidate",
+          "quote": "Translated notices could make council instructions accessible to more residents.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-4ff057ff0d8e6128",
+          "kind": "source_candidate",
+          "quote": "Translations could make instructions easier to access, but I have no measured effect on recycling rates.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    },
+    {
+      "id": 7927,
+      "label": "flat-linear-legacy-v1/focus_bus_display/flat_tree/0",
+      "mode": "flat_tree",
+      "raw_condition_rows": 2,
+      "missing_condition_rows": 0,
+      "raw_not_applicable": 0,
+      "source_candidates": 0,
+      "draft_sentences": 10,
+      "missing_sentence_rows": 0,
+      "condition_count": 2,
+      "typed_conditions": 2,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 2,
+        "supported": 3,
+        "unsupported": 4,
+        "conditional": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's points regarding financial responsibility and the utility of the display.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, regarding the budget, the opponent admits that no one is responsible for electricity or repairs.",
+          "status": "supported",
+          "source_quote": "responsibility for paying future electricity and repairs has not been assigned.",
+          "reason": "Matches opponent's admission of unassigned responsibility.",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "While an installation grant covers the start, it does not cover the long-term costs.",
+          "status": "supported",
+          "source_quote": "The installation grant is available, but responsibility for paying future electricity and repairs has not been assigned.",
+          "reason": "Matches the distinction between the grant and future costs.",
+          "fix": ""
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "This is a massive logical error.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Labeling an opponent's premise a 'logical error' is a rhetorical judgment, not a factual assertion.",
+          "fix": "This creates a gap in long-term planning."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Without a maintenance plan, this display will quickly become a broken, dark eyesore.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts an inevitable outcome (becoming a broken eyesore) without proof.",
+          "fix": "Without a maintenance plan, the display risks falling into disrepair."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "We cannot approve a project that creates a permanent financial burden without a solution.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "The 'permanent financial burden' is a possible consequence of unassigned costs.",
+          "fix": "We cannot approve a project that may create a permanent financial burden without a solution."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Second, the opponent suggests that showing only scheduled times is useful.",
+          "status": "supported",
+          "source_quote": "The display would show scheduled departures, not live vehicle positions.",
+          "reason": "Accurately reflects the opponent's stated scope.",
+          "fix": ""
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "While scheduled data is better than nothing, it lacks the \"live\" accuracy passengers actually need.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts a subjective passenger need as a universal fact.",
+          "fix": "While scheduled data is better than nothing, it lacks the 'live' accuracy many passengers require."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "For a town to invest money, we need real value, not just a digital version of a paper sheet.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Subjective value judgment on 'real value'.",
+          "fix": "The town should ensure the investment provides significant utility beyond a digital version of a paper sheet."
+        },
+        {
+          "sentence": 9,
+          "draft_quote": "Therefore, I oppose this motion.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        }
+      ],
+      "status_counts": {
+        "preserved": 2
+      },
+      "checks": [
+        {
+          "constraint_id": "fcfc1d99714906bb",
+          "kind": "precondition",
+          "quote": "responsibility for paying future electricity and repairs has not been assigned",
+          "status": "preserved",
+          "draft_quote": "the opponent admits that no one is responsible for electricity or repairs",
+          "reason": "Directly addresses the unassigned responsibility for costs.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "0d34e210df8a88bf",
+          "kind": "scope",
+          "quote": "show scheduled departures, not live vehicle positions",
+          "status": "preserved",
+          "draft_quote": "the opponent suggests that showing only scheduled times is useful",
+          "reason": "Addresses the scope limitation of scheduled vs live data.",
+          "fix": ""
+        }
+      ]
+    },
+    {
+      "id": 7952,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/1",
+      "mode": "flat_tree",
+      "raw_condition_rows": 9,
+      "missing_condition_rows": 0,
+      "raw_not_applicable": 5,
+      "source_candidates": 2,
+      "draft_sentences": 9,
+      "missing_sentence_rows": 0,
+      "condition_count": 9,
+      "typed_conditions": 7,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 3,
+        "supported": 1,
+        "unsupported": 3,
+        "conditional": 2
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address two major concerns regarding the new proposal.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, my opponent claims the operator will take waste away, but admits the council has no way to verify this.",
+          "status": "supported",
+          "source_quote": "The operator accepts taking all waste away after each afternoon. The council has not yet assigned someone to verify that cleanup.",
+          "reason": "Matches opponent's admission of no verification",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "A promise without oversight is a logical fallacy; without a designated inspector, we are simply hoping for the best.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Labels a lack of oversight as a 'logical fallacy'",
+          "fix": "Without a designated inspector, the effectiveness of the waste plan remains unverified."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "This risks littering our beautiful riverbank.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Asserts inevitable harm (littering) from a lack of oversight",
+          "fix": "This could lead to littering on our riverbank."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, while a two-metre path is promised, this significantly narrows the space for walkers to pass each other safely.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts narrowing is significant/unsafe without data",
+          "fix": "Second, while a two-metre path is promised, we must consider if this provides enough space for walkers to pass each other safely."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "As we have discussed, preserving easy access is vital.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "A movable stall still creates a bottleneck and a potential tripping hazard.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Asserts inevitable bottleneck/hazard",
+          "fix": "A movable stall could create a bottleneck or a potential tripping hazard."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "Because this plan lacks both accountability for cleanliness and guaranteed safety for pedestrians, it remains an unacceptable risk to our community.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Concludes 'unacceptable risk' based on unverified hazards",
+          "fix": "Because this plan lacks both accountability for cleanliness and guaranteed safety for pedestrians, it presents unresolved risks to our community."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "Therefore, I continue to oppose this motion.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        }
+      ],
+      "status_counts": {
+        "preserved": 4,
+        "unchecked": 5
+      },
+      "checks": [
+        {
+          "constraint_id": "320fb26f3c13aef5",
+          "kind": "scope",
+          "quote": "leave a two-metre clear path",
+          "status": "preserved",
+          "draft_quote": "while a two-metre path is promised",
+          "reason": "Acknowledges path width constraint",
+          "fix": ""
+        },
+        {
+          "constraint_id": "b0a43d1e7c495d62",
+          "kind": "precondition",
+          "quote": "will not operate during a flood warning",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Unsubstantiated irrelevance or condition belongs to a planned target.",
+          "fix": "Preserve the qualifier unless a different independent proposal is established."
+        },
+        {
+          "constraint_id": "f4bc06419e42106e",
+          "kind": "scope",
+          "quote": "drinks-only",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Unsubstantiated irrelevance or condition belongs to a planned target.",
+          "fix": "Preserve the qualifier unless a different independent proposal is established."
+        },
+        {
+          "constraint_id": "e456f8fc7ebe035e",
+          "kind": "timing",
+          "quote": "on two Saturday afternoons",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Unsubstantiated irrelevance or condition belongs to a planned target.",
+          "fix": "Preserve the qualifier unless a different independent proposal is established."
+        },
+        {
+          "constraint_id": "bb24e680f5a2b2d7",
+          "kind": "exception",
+          "quote": "no cooking",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Unsubstantiated irrelevance or condition belongs to a planned target.",
+          "fix": "Preserve the qualifier unless a different independent proposal is established."
+        },
+        {
+          "constraint_id": "a910535083620297",
+          "kind": "scope",
+          "quote": "leave a two-metre clear path",
+          "status": "preserved",
+          "draft_quote": "while a two-metre path is promised",
+          "reason": "Acknowledges path width constraint",
+          "fix": ""
+        },
+        {
+          "constraint_id": "85cdd7bcf5c26e3d",
+          "kind": "precondition",
+          "quote": "will not operate during a flood warning",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Unsubstantiated irrelevance or condition belongs to a planned target.",
+          "fix": "Preserve the qualifier unless a different independent proposal is established."
+        },
+        {
+          "constraint_id": "source-77ae2151ada8da8c",
+          "kind": "source_candidate",
+          "quote": "The council has not yet assigned someone to verify that cleanup.",
+          "status": "preserved",
+          "draft_quote": "admits the council has no way to verify this",
+          "reason": "Targets the lack of assigned verification",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-1bb4131d7228b87e",
+          "kind": "source_candidate",
+          "quote": "The operator accepts taking all waste away after each afternoon.",
+          "status": "preserved",
+          "draft_quote": "the operator will take waste away",
+          "reason": "Acknowledges operator commitment",
+          "fix": ""
+        }
+      ]
+    },
+    {
+      "id": 7970,
+      "label": "flat-linear-legacy-v1/focus_room_booking/flat_tree/1",
+      "mode": "flat_tree",
+      "raw_condition_rows": 4,
+      "missing_condition_rows": 0,
+      "raw_not_applicable": 1,
+      "source_candidates": 0,
+      "draft_sentences": 7,
+      "missing_sentence_rows": 0,
+      "condition_count": 4,
+      "typed_conditions": 4,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "conditional": 3,
+        "supported": 1,
+        "unsupported": 3
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's proposed trial, which is far too limited to be useful.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Utility is a subjective value judgment.",
+          "fix": "I will address the opponent's proposed trial, which may be too limited to be useful."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "My opponent suggests a four-week trial, restricted to just two rooms on Tuesday evenings, requiring a staff member to be present.",
+          "status": "supported",
+          "source_quote": "four-week trial on Tuesdays from six until eight in two ground-floor classrooms. A named staff contact must be on duty.",
+          "reason": "Accurately summarizes opponent's constraints.",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "While I acknowledge the desire for caution, this plan is logically flawed.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Logical flaw is an interpretation, not a fact.",
+          "fix": "While I acknowledge the desire for caution, this plan may be insufficient."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "A trial that only covers two hours once a week cannot possibly show how the college would handle broader, daily club activities.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts an impossibility ('cannot possibly') regarding data collection.",
+          "fix": "A trial that only covers two hours once a week might not show how the college would handle broader, daily club activities."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "It fails to test real-world logistics, such as security or cleaning, across different nights or larger groups.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts an inevitable failure to test logistics without evidence.",
+          "fix": "It may fail to test real-world logistics, such as security or cleaning, across different nights or larger groups."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "Instead of this tiny experiment, we should implement a flexible reservation system.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Proposed alternative is a preference.",
+          "fix": "Instead of this tiny experiment, we could implement a flexible reservation system."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "This allows us to monitor actual usage and impact across the whole campus, providing the real data needed to support student clubs effectively.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts a causal certainty about monitoring and data quality.",
+          "fix": "This could allow us to monitor actual usage and impact across the whole campus, potentially providing the data needed to support student clubs effectively."
+        }
+      ],
+      "status_counts": {
+        "unchecked": 1,
+        "preserved": 3
+      },
+      "checks": [
+        {
+          "constraint_id": "c34c9621540b871c",
+          "kind": "scope",
+          "quote": "unrestricted evening access",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Unsubstantiated irrelevance or condition belongs to a planned target.",
+          "fix": "Preserve the qualifier unless a different independent proposal is established."
+        },
+        {
+          "constraint_id": "b383042fca8b119d",
+          "kind": "timing",
+          "quote": "four-week trial on Tuesdays from six until eight",
+          "status": "preserved",
+          "draft_quote": "four-week trial, restricted to just two rooms on Tuesday evenings",
+          "reason": "Matches timing constraints.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "506613665d9f4daa",
+          "kind": "scope",
+          "quote": "two ground-floor classrooms",
+          "status": "preserved",
+          "draft_quote": "restricted to just two rooms",
+          "reason": "Matches scope constraints.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "ee571490b65d36ad",
+          "kind": "precondition",
+          "quote": "A named staff contact must be on duty",
+          "status": "preserved",
+          "draft_quote": "requiring a staff member to be present",
+          "reason": "Matches precondition constraint.",
+          "fix": ""
+        }
+      ]
+    },
+    {
+      "id": 8034,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/0",
+      "mode": "flat_tree",
+      "raw_condition_rows": 8,
+      "missing_condition_rows": 3,
+      "raw_not_applicable": 0,
+      "source_candidates": 5,
+      "draft_sentences": 9,
+      "missing_sentence_rows": 0,
+      "condition_count": 11,
+      "typed_conditions": 4,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 2,
+        "supported": 2,
+        "conditional": 4,
+        "unsupported": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's logic regarding academic results and their concerns about bundled features.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, my opponent argues that a newsletter is only useful if it improves academic results.",
+          "status": "supported",
+          "source_quote": "Easier access to dates and notices is a possible benefit even though no improvement in academic results is established.",
+          "reason": "Accurately reflects opponent's premise",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "This is a logical error.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Logical classification is an interpretation",
+          "fix": ""
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "Better communication and higher grades are two different goals.",
+          "status": "supported",
+          "source_quote": "Easier access to dates and notices is a possible benefit even though no improvement in academic results is established.",
+          "reason": "Distinguishes communication from grades",
+          "fix": ""
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "A parent knowing a deadline is a success in itself, regardless of a test score.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Subjective value judgment",
+          "fix": ""
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "Second, while I acknowledge the need for privacy, the opponent's fear of \"bundled\" risks is solved by our proposal.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Claims the risk is 'solved', but ignores unsettled workload/funding/editor requirements",
+          "fix": "While the text-only format mitigates bundled feature risks, implementation must still account for editor oversight and funding."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "By using a text-only format and excluding photos or ads, we strip away the very features they find dangerous.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "We can provide essential information safely.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Safety is a possible outcome, not a guaranteed fact",
+          "fix": "This approach aims to provide essential information safely."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "Therefore, a digital newsletter remains a practical, low-risk tool for keeping families informed and connected.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Conclusion based on conditional premises",
+          "fix": ""
+        }
+      ],
+      "status_counts": {
+        "preserved": 4,
+        "missing": 4,
+        "unchecked": 3
+      },
+      "checks": [
+        {
+          "constraint_id": "3526d79b252b91dc",
+          "kind": "precondition",
+          "quote": "No item should publish a student home address or private contact details.",
+          "status": "preserved",
+          "draft_quote": "while I acknowledge the need for privacy",
+          "reason": "Acknowledges privacy concerns",
+          "fix": ""
+        },
+        {
+          "constraint_id": "888f400e705eb629",
+          "kind": "scope",
+          "quote": "text-only newsletter",
+          "status": "preserved",
+          "draft_quote": "By using a text-only format",
+          "reason": "Uses the text-only scope",
+          "fix": ""
+        },
+        {
+          "constraint_id": "a6806c54a1e09cbc",
+          "kind": "timing",
+          "quote": "two issues over one month",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Does not mention the two-issue monthly limit",
+          "fix": "Include the two-issue monthly frequency constraint"
+        },
+        {
+          "constraint_id": "13d56ebb70322431",
+          "kind": "exception",
+          "quote": "Student photographs, public comments and advertising would not be included",
+          "status": "preserved",
+          "draft_quote": "excluding photos or ads",
+          "reason": "Addresses the specific exceptions",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-82df560656e3823a",
+          "kind": "source_candidate",
+          "quote": "Easier access to dates and notices is a possible benefit even though no improvement in academic results is established.",
+          "status": "preserved",
+          "draft_quote": "my opponent argues that a newsletter is only useful if it improves academic results",
+          "reason": "Targets the academic results claim",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-6481b97f15e78e10",
+          "kind": "source_candidate",
+          "quote": "A named editor must check items before release.",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Ignores the requirement for a named editor",
+          "fix": "Address how a named editor ensures safety"
+        },
+        {
+          "constraint_id": "source-1835f63c50fb1252",
+          "kind": "source_candidate",
+          "quote": "The editor workload and funding are unsettled.",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Ignores unsettled workload and funding",
+          "fix": "Address the feasibility of implementation"
+        },
+        {
+          "constraint_id": "source-6dfaedc7b93b3487",
+          "kind": "source_candidate",
+          "quote": "Families could choose a printed copy at no charge instead. They would not have to install an app or create an online account.",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Ignores the printed copy fallback",
+          "fix": "Address the printed copy option"
+        },
+        {
+          "constraint_id": "source-6c33244a7e8db321",
+          "kind": "source_candidate",
+          "quote": "The privacy rules we discussed remain necessary, but I am not claiming a privacy incident has already occurred.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "limit-5d41189436889caf",
+          "kind": "scope",
+          "quote": "Families could choose a printed copy at no charge instead.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "limit-6adceec9d826ab51",
+          "kind": "scope",
+          "quote": "They would not have to install an app or create an online account.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    },
+    {
+      "id": 8040,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/1",
+      "mode": "flat_tree",
+      "raw_condition_rows": 6,
+      "missing_condition_rows": 3,
+      "raw_not_applicable": 3,
+      "source_candidates": 3,
+      "draft_sentences": 7,
+      "missing_sentence_rows": 0,
+      "condition_count": 9,
+      "typed_conditions": 6,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 1,
+        "supported": 3,
+        "unsupported": 2,
+        "conditional": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's claims regarding the pilot's scope and impact.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, while I acknowledge the opponent has limited the request to two Saturday sessions for shelf-stable food, this does not solve the underlying problem.",
+          "status": "supported",
+          "source_quote": "The immediate request is two Saturday collection sessions for sealed shelf-stable food packets.",
+          "reason": "Accurately summarizes scope",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "They admit they have not identified who will pay the required coordinator.",
+          "status": "supported",
+          "source_quote": "We have not identified who will pay that coordinator.",
+          "reason": "Directly quotes opponent admission",
+          "fix": ""
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "A plan without a budget for supervision is not a plan; it is an unfunded liability for the center.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts 'unfunded liability' as an inevitable fact rather than a risk",
+          "fix": "A plan without a budget for supervision risks becoming an unfunded liability for the center."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, the opponent admits this hub will not provide a measured reduction in hunger.",
+          "status": "supported",
+          "source_quote": "it does not establish a measured reduction in household hunger.",
+          "reason": "Matches opponent admission",
+          "fix": ""
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "If the goal is to help the community, why start a project that lacks both financial stability and a way to prove it actually works?",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Assumes 'help the community' is the sole goal and links it to stability/proof",
+          "fix": "If the goal is to help the community, why start a project that may lack financial stability or a way to prove it works?"
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "We should not waste resources on a trial that offers no clear benefit or sustainable future.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts 'no clear benefit' as a fact; opponent claims it may provide 'useful supplies'",
+          "fix": "We should not waste resources on a trial that may offer no clear benefit or sustainable future."
+        }
+      ],
+      "status_counts": {
+        "unchecked": 6,
+        "preserved": 3
+      },
+      "checks": [
+        {
+          "constraint_id": "e87b01a9a36e8aaf",
+          "kind": "exception",
+          "quote": "Refrigeration and cooked meals are future options, not part of this request",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Unsubstantiated irrelevance or condition belongs to a planned target.",
+          "fix": "Preserve the qualifier unless a different independent proposal is established."
+        },
+        {
+          "constraint_id": "6f404b2c0c28f42c",
+          "kind": "scope",
+          "quote": "two Saturday collection sessions for sealed shelf-stable food packets",
+          "status": "preserved",
+          "draft_quote": "limited the request to two Saturday sessions for shelf-stable food",
+          "reason": "Matches scope",
+          "fix": ""
+        },
+        {
+          "constraint_id": "6fb272318891d7db",
+          "kind": "scope",
+          "quote": "Packets must be within their printed expiry date",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "10ac874eefbea61d",
+          "kind": "precondition",
+          "quote": "Collection is free",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Unsubstantiated irrelevance or condition belongs to a planned target.",
+          "fix": "Preserve the qualifier unless a different independent proposal is established."
+        },
+        {
+          "constraint_id": "daa2b27b1c93d3ba",
+          "kind": "precondition",
+          "quote": "no household income documents are required",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Unsubstantiated irrelevance or condition belongs to a planned target.",
+          "fix": "Preserve the qualifier unless a different independent proposal is established."
+        },
+        {
+          "constraint_id": "8b4b5a5bd33322b4",
+          "kind": "concession",
+          "quote": "current funding cannot cover every option",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-f80594159e5884f6",
+          "kind": "source_candidate",
+          "quote": "The hub may provide useful supplies to some households; it does not establish a measured reduction in household hunger.",
+          "status": "preserved",
+          "draft_quote": "the opponent admits this hub will not provide a measured reduction in hunger.",
+          "reason": "Matches impact claim",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-6c2758bdeffeb717",
+          "kind": "source_candidate",
+          "quote": "I accept keeping cleaning records after each session and publishing a summary at the end of the trial.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-cb3b5d9d2f3bf9b1",
+          "kind": "source_candidate",
+          "quote": "A named coordinator must supervise each session. We have not identified who will pay that coordinator.",
+          "status": "preserved",
+          "draft_quote": "They admit they have not identified who will pay the required coordinator.",
+          "reason": "Matches coordinator funding gap",
+          "fix": ""
+        }
+      ]
+    },
+    {
+      "id": 8061,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/1",
+      "mode": "flat_tree",
+      "raw_condition_rows": 4,
+      "missing_condition_rows": 2,
+      "raw_not_applicable": 0,
+      "source_candidates": 2,
+      "draft_sentences": 6,
+      "missing_sentence_rows": 0,
+      "condition_count": 6,
+      "typed_conditions": 4,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "supported": 1,
+        "conditional": 4,
+        "unsupported": 1
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will first address the opponent's remaining concern regarding the administration of file expiration and consent.",
+          "status": "supported",
+          "source_quote": "The unresolved issue is who checks consent and removes files when the seven days expire.",
+          "reason": "Correctly identifies the opponent's target.",
+          "fix": ""
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "While my opponent argues that the lack of a clear person to check consent and remove files is a major problem, this is merely a technical hurdle, not a reason to deny students this resource.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Characterizing a concern as 'merely a technical hurdle' is a value judgment, not a fact.",
+          "fix": "While my opponent argues that the lack of a clear person to check consent and remove files is a major problem, this could be addressed as a technical implementation rather than a policy flaw."
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "We can solve this through simple, automated administrative protocols within the class portal.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Assumes automated protocols can solve the problem without evidence.",
+          "fix": "This could be managed through automated administrative protocols within the class portal."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "For example, the system can be programmed to automatically delete any audio file exactly seven days after the lecture ends.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Hypothetical system capability.",
+          "fix": "For example, the system could be programmed to automatically delete any audio file exactly seven days after the lecture ends."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "This removes the need for constant manual checking and ensures privacy is protected by design.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Assumes automation removes the need for manual checking and guarantees privacy.",
+          "fix": "Such automation would reduce the need for constant manual checking to help ensure privacy."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "Therefore, what my opponent calls an \"unresolved issue\" is actually a manageable implementation task that does not outweigh the clear academic benefits of providing lecture audio.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts 'clear academic benefits' which are not established in the provided data.",
+          "fix": "Therefore, the implementation of automated expiration could address the opponent's concern while allowing students to revisit explanations."
+        }
+      ],
+      "status_counts": {
+        "missing": 1,
+        "preserved": 3,
+        "unchecked": 2
+      },
+      "checks": [
+        {
+          "constraint_id": "fc37bb9a7eaaf440",
+          "kind": "precondition",
+          "quote": "lecturer-approved",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Does not acknowledge the requirement for lecturer approval.",
+          "fix": "Acknowledge that recordings remain lecturer-approved."
+        },
+        {
+          "constraint_id": "5821bef6542444e0",
+          "kind": "scope",
+          "quote": "in the enrolled class portal",
+          "status": "preserved",
+          "draft_quote": "within the class portal",
+          "reason": "Matches scope.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "a25e1bc5d3800255",
+          "kind": "timing",
+          "quote": "for seven days after each lecture",
+          "status": "preserved",
+          "draft_quote": "seven days after the lecture ends",
+          "reason": "Matches timing.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "9a57af12402d5b00",
+          "kind": "timing",
+          "quote": "when the seven days expire",
+          "status": "preserved",
+          "draft_quote": "administration of file expiration and consent",
+          "reason": "Directly targets the opponent's concern.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-5c48277c552f18ec",
+          "kind": "source_candidate",
+          "quote": "I have no evidence that recording necessarily reduces attendance.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-0ec3dd199d7d1d77",
+          "kind": "source_candidate",
+          "quote": "Revisiting an explanation may be useful; I have no evidence that recording necessarily reduces attendance.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    },
+    {
+      "id": 8115,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/0",
+      "mode": "flat_tree",
+      "raw_condition_rows": 9,
+      "missing_condition_rows": 0,
+      "raw_not_applicable": 0,
+      "source_candidates": 1,
+      "draft_sentences": 9,
+      "missing_sentence_rows": 0,
+      "condition_count": 9,
+      "typed_conditions": 8,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 3,
+        "conditional": 2,
+        "supported": 2,
+        "unsupported": 2
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the gaps in the opponent's proposal regarding staff workload, financial liability, and security.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, while the opponent offers staff assistance for operating locks, this is a narrow fix.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "Helping a visitor turn a key does not solve the massive logistical burden of managing belongings left behind or handling lost items.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Assumes 'massive' burden is an inevitable outcome.",
+          "fix": "Helping a visitor turn a key may not address the logistical burden of managing belongings left behind or handling lost items."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "Second, the opponent admits that responsibility for lost-key replacement costs is still undecided.",
+          "status": "supported",
+          "source_quote": "Responsibility for lost-key replacement costs is still undecided.",
+          "reason": "Matches opponent's verbatim admission.",
+          "fix": ""
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Providing physical help does not create a financial policy.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "We cannot start a trial without knowing who pays for these costs.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Asserts a necessity as a fact.",
+          "fix": "Can a trial proceed effectively without knowing who bears these costs?"
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Finally, the opponent suggests an unclaimed-item procedure, but admits there is no evidence this reduces theft.",
+          "status": "supported",
+          "source_quote": "I accept publishing an unclaimed-item procedure before the trial begins, but no reduction in theft has been measured.",
+          "reason": "Matches opponent's verbatim admission.",
+          "fix": ""
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "A procedure without proven security is just more paperwork.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Subjective value judgment ('just more paperwork').",
+          "fix": "A procedure without proven security may not effectively mitigate theft."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "This trial remains an unmanaged risk to library resources and staff time.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts unverified risk as an established fact.",
+          "fix": "This trial could pose unmanaged risks to library resources and staff time."
+        }
+      ],
+      "status_counts": {
+        "missing": 6,
+        "preserved": 3
+      },
+      "checks": [
+        {
+          "constraint_id": "1428c02a9d9f3cad",
+          "kind": "timing",
+          "quote": "by closing time",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft fails to acknowledge the trial's time limits (5 weeks, opening hours, no overnight) or the requirement to empty lockers by closing time.",
+          "fix": "Acknowledge the five-week trial during opening hours and the requirement to empty lockers by closing time before addressing gaps."
+        },
+        {
+          "constraint_id": "79978bed8c654e63",
+          "kind": "precondition",
+          "quote": "publishing an unclaimed-item procedure before the trial begins",
+          "status": "preserved",
+          "draft_quote": "the opponent suggests an unclaimed-item procedure",
+          "reason": "Correctly identifies the opponent's commitment.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "8d9ce24c66f93cd1",
+          "kind": "scope",
+          "quote": "six lockers",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft ignores the specific scope of six lockers.",
+          "fix": "Mention the limited scope of six lockers."
+        },
+        {
+          "constraint_id": "e5f325569ac9d28b",
+          "kind": "timing",
+          "quote": "during library opening hours",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft ignores the timing constraint of library opening hours.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "fbf7883eca31107a",
+          "kind": "timing",
+          "quote": "for a five-week trial",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft ignores the five-week trial duration.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "86702fac2f80c4a3",
+          "kind": "exception",
+          "quote": "no overnight storage",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft ignores the 'no overnight storage' exception.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "8a5483bfd17c634c",
+          "kind": "precondition",
+          "quote": "staff assistance on request",
+          "status": "preserved",
+          "draft_quote": "the opponent offers staff assistance for operating locks",
+          "reason": "Correctly identifies the opponent's commitment.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "5c01e38dd9d496fc",
+          "kind": "precondition",
+          "quote": "Responsibility for lost-key replacement costs is still undecided",
+          "status": "preserved",
+          "draft_quote": "responsibility for lost-key replacement costs is still undecided",
+          "reason": "Correctly identifies the opponent's admission.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-8f85ee4ec1aa53b2",
+          "kind": "source_candidate",
+          "quote": "Use of a locker would be free, with no cash key deposit.",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft ignores the 'no cash key deposit' condition.",
+          "fix": ""
+        }
+      ]
+    },
+    {
+      "id": 8116,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/1",
+      "mode": "flat_tree",
+      "raw_condition_rows": 4,
+      "missing_condition_rows": 3,
+      "raw_not_applicable": 0,
+      "source_candidates": 3,
+      "draft_sentences": 8,
+      "missing_sentence_rows": 0,
+      "condition_count": 7,
+      "typed_conditions": 4,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "supported": 3,
+        "conditional": 3,
+        "unsupported": 2
+      },
+      "invalid_sentence_ids": 0,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address my opponent's remaining concerns regarding the technical implementation of remote voting.",
+          "status": "supported",
+          "source_quote": "The specific method for separating identity checks from secret ballots is still undecided.",
+          "reason": "Directly addresses the remaining technical gap.",
+          "fix": ""
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, my opponent admits that the method for separating identity from secret ballots is undecided.",
+          "status": "supported",
+          "source_quote": "The specific method for separating identity checks from secret ballots is still undecided.",
+          "reason": "Accurately reflects opponent's admission.",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "However, an undecided method is not a reason to deny remote voting; it is simply a task to complete.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "An undecided method is a logical gap, not a proven reason for a ban.",
+          "fix": "However, an undecided method does not necessitate a ban; it requires the development of a secure protocol."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "We should develop a secure protocol rather than settling for a temporary ban.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Assumes the opponent is proposing a 'temporary ban' when they actually proposed a limited permission.",
+          "fix": "We should develop a secure protocol for the next election rather than delaying implementation."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, while they suggest verifying membership first, they haven't explained how to keep the actual vote secret.",
+          "status": "supported",
+          "source_quote": "Verification must not expose how a member votes.",
+          "reason": "Correctly identifies the opponent's requirement for secrecy.",
+          "fix": ""
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "We can solve this by using independent verification steps.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Asserts a solution is possible without proof.",
+          "fix": "We could solve this by using independent verification steps."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "A lack of a current plan does not mean a solution is impossible.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Logical inference, not a factual claim.",
+          "fix": ""
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "We must move past these technical hurdles to ensure all members can participate fully and fairly.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Generic rhetorical conclusion with no empirical basis in the text.",
+          "fix": ""
+        }
+      ],
+      "status_counts": {
+        "missing": 3,
+        "preserved": 1,
+        "unchecked": 3
+      },
+      "checks": [
+        {
+          "constraint_id": "dc80df337bc079d5",
+          "kind": "concession",
+          "quote": "this could help members who cannot attend",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft fails to acknowledge the opponent's concession that remote voting helps those unable to attend.",
+          "fix": "Acknowledge that remote voting helps members unable to attend, then address the technical implementation."
+        },
+        {
+          "constraint_id": "d134dfca617a8799",
+          "kind": "timing",
+          "quote": "For the next committee election only",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft ignores the opponent's specific scope of permitting it for the next committee election only.",
+          "fix": "Address the implementation within the scope of the next committee election."
+        },
+        {
+          "constraint_id": "0e9023828241c6e7",
+          "kind": "scope",
+          "quote": "existing members",
+          "status": "missing",
+          "draft_quote": "",
+          "reason": "Draft ignores the restriction to existing members.",
+          "fix": "Address the implementation for existing members."
+        },
+        {
+          "constraint_id": "84983678eb9a0924",
+          "kind": "precondition",
+          "quote": "membership is verified before voting",
+          "status": "preserved",
+          "draft_quote": "while they suggest verifying membership first",
+          "reason": "Correctly identifies the precondition.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-e250dfdcdc39e096",
+          "kind": "source_candidate",
+          "quote": "The specific method for separating identity checks from secret ballots is still undecided.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-327be74a0f22271e",
+          "kind": "source_candidate",
+          "quote": "I have not established that remote voting has caused fraud in this association.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-a6530736d52aa0d3",
+          "kind": "source_candidate",
+          "quote": "I oppose allowing any remote vote because the association needs confidence in voter identity.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    },
+    {
+      "id": 8136,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/1",
+      "mode": "flat_tree",
+      "raw_condition_rows": 7,
+      "missing_condition_rows": 4,
+      "raw_not_applicable": 4,
+      "source_candidates": 3,
+      "draft_sentences": 9,
+      "missing_sentence_rows": 0,
+      "condition_count": 11,
+      "typed_conditions": 8,
+      "format_valid": true,
+      "truncated": false,
+      "invalid_ids": 0,
+      "assertion_status_counts": {
+        "unchecked": 1,
+        "unsupported": 4,
+        "conditional": 3,
+        "supported": 1
+      },
+      "invalid_sentence_ids": 1,
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's restrictive proposal and the unresolved financial concerns.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, while I acknowledge the safety of walking groups, limiting access to just three hours a week is far too narrow.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Safety of walking groups is an unverified assumption, not an opponent claim",
+          "fix": "First, while the walking group proposal is limited,"
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "This tiny window fails to serve the actual community needs we are discussing.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Whether a window is 'too narrow' is a value judgment",
+          "fix": ""
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "A trial must be meaningful to be useful.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Community needs are not defined in the data",
+          "fix": "This window may not sufficiently serve community needs."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, the opponent admits that who pays for extra inspections is still undecided.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Definition of 'meaningful' is subjective",
+          "fix": ""
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "You cannot start a trial while leaving the most important costs a mystery.",
+          "status": "supported",
+          "source_quote": "Who pays for extra ground inspections is still undecided.",
+          "reason": "Directly quotes opponent's admission",
+          "fix": ""
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Without a clear budget for maintenance, the school faces unfair risks.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts a causal necessity (cannot start) not found in data",
+          "fix": "Starting a trial without deciding these costs creates uncertainty."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "We must move beyond these tiny, uncertain steps.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Risk is a possible outcome, not an established fact",
+          "fix": "Without a clear budget, the school could face maintenance risks."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "Instead, let's establish a clear, funded plan for broader community use that protects the school while truly serving the public.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Rhetorical flourish/value judgment",
+          "fix": ""
+        }
+      ],
+      "status_counts": {
+        "unchecked": 11
+      },
+      "checks": [
+        {
+          "constraint_id": "38ef54697cb3bfcb",
+          "kind": "precondition",
+          "quote": "without distinguishing these activities",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "6346262a48af25b8",
+          "kind": "precondition",
+          "quote": "School activities keep priority",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "dace43261bcbf606",
+          "kind": "exception",
+          "quote": "no floodlights would be used",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "6c7251764879dfdc",
+          "kind": "exception",
+          "quote": "any booking is canceled if the groundkeeper closes the field because of surface conditions",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "0ab54263ed9d1f8f",
+          "kind": "precondition",
+          "quote": "before reservations open",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "781048a4bd7eaa5a",
+          "kind": "timing",
+          "quote": "during this trial",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "bb7217b468427c1c",
+          "kind": "scope",
+          "quote": "prebooked adult walking groups",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "d9713722cb542e6b",
+          "kind": "timing",
+          "quote": "on three Wednesday afternoons from four to six",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-3c57bc369b04ef71",
+          "kind": "source_candidate",
+          "quote": "A walking opportunity is a possible benefit, not proof that injuries or maintenance costs will fall.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-86e1a7df0d6474a6",
+          "kind": "source_candidate",
+          "quote": "School activities must keep priority over community use.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-74f0beda27d206c6",
+          "kind": "source_candidate",
+          "quote": "Who pays for extra ground inspections is still undecided.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ]
+    }
+  ],
+  "revisions": [
+    {
+      "id": 7334,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/1",
+      "conditions": 8,
+      "condition_ids": [
+        "eb8a036431e5a985",
+        "8b321dd8417886af",
+        "b676bd68e41763fe",
+        "cc1086dd13c7cac8",
+        "1c210117bfc539c2",
+        "source-6e5f55ee89728c43",
+        "source-5c9dc190741d05b1",
+        "source-1419b3e9c1ca42c1"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7358,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/1",
+      "conditions": 9,
+      "condition_ids": [
+        "6edf1f32c65b2540",
+        "69617857b14b6140",
+        "5c0a548339f79c81",
+        "651887bd58faafe4",
+        "f2027a47af06bc4b",
+        "56f573c9eaf1cbe6",
+        "62ea44e022055fcc",
+        "source-f71c0f9b09193dce",
+        "source-9a4f18d3f5c3c0dc"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7443,
+      "label": "flat-linear-legacy-v1/focus_bus_display/flat_tree/1",
+      "conditions": 1,
+      "condition_ids": [
+        "49d0717c883156c7"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7534,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/flat_tree/0",
+      "conditions": 6,
+      "condition_ids": [
+        "ed5505c6b447d957",
+        "9f53bb1ac90bc6b2",
+        "508fe4f0d34ddd01",
+        "89dcc2f6667421d7",
+        "b9c53541636e8636",
+        "source-4449a0adbc18a4cb"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7563,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/1",
+      "conditions": 14,
+      "condition_ids": [
+        "f2c9cbbc978e014a",
+        "71057f5fd0e29fa9",
+        "9a7745ff5b808020",
+        "3ad7d1837545bba7",
+        "9d485941906fdf0f",
+        "source-e6026f82dfd6cdbe",
+        "source-4a5ef6241c168028",
+        "source-5b1adae7ed80e202",
+        "source-d58a7e4c4d8b2dea",
+        "source-1070e7871dc3a2f3",
+        "limit-900f4c480b4adb24",
+        "limit-bb41048595dd1953",
+        "limit-5d41189436889caf",
+        "limit-6adceec9d826ab51"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7590,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/1",
+      "conditions": 9,
+      "condition_ids": [
+        "3cd4be79982d7778",
+        "37481f6f85780b05",
+        "198f990e17d8850e",
+        "ff50e1fc093c53a5",
+        "source-45f1c76f21b9ae69",
+        "source-bc96fa8ac1a59967",
+        "source-29956ff33d192c32",
+        "limit-ae9f3a76de557f21",
+        "limit-9d3bf0c9411d6fc7"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7599,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/0",
+      "conditions": 8,
+      "condition_ids": [
+        "b87e7e9ca0492aca",
+        "f99fa83390ee25df",
+        "27cfd35b3521434b",
+        "c980dd613dcff471",
+        "f7a7d830926aece5",
+        "source-de3293dc1bbea70a",
+        "source-57a43fbe929a9727",
+        "source-529596fdbf39ecd1"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7663,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/0",
+      "conditions": 7,
+      "condition_ids": [
+        "b26d31f60847eb10",
+        "14131ff19b21cc6b",
+        "d10a5f96d3705e42",
+        "source-b928b8ebdcf9acf5",
+        "source-c93e6d25f3722c1f",
+        "source-bb4fe61a072fd2ce",
+        "source-1a89c3988749f65e"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7697,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/0",
+      "conditions": 9,
+      "condition_ids": [
+        "16ba8068ea91638d",
+        "4a9af4b3d36cb3b5",
+        "d790679985bd3e22",
+        "9ac3ba582287230f",
+        "23afb8e7d512419f",
+        "source-2586252c1e8d5f71",
+        "source-dfdd276f08feee6d",
+        "source-4990e094f832fc38",
+        "source-e730bf0fafc7bb20"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7716,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/0",
+      "conditions": 7,
+      "condition_ids": [
+        "5017a0033579f8c9",
+        "20bf50857632a0a3",
+        "3c7ad27fd0094d1b",
+        "source-914b17302a98da99",
+        "source-be5c4fd65bb3cb2c",
+        "source-65027eb2fc9086e4",
+        "source-ae18d1e9668b0d06"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7735,
+      "label": "flat-linear-legacy-v1/focus_room_booking/flat_tree/0",
+      "conditions": 6,
+      "condition_ids": [
+        "f6984674783f2bc6",
+        "62f2de5e0fd28230",
+        "e6fe528152b9b0ef",
+        "a9acf325d38ecd1d",
+        "657c28cce14e06e6",
+        "068f023dfd762d0b"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7762,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/0",
+      "conditions": 5,
+      "condition_ids": [
+        "9e9ee6b72ab0fcc0",
+        "7b155db6290f396b",
+        "source-790985728bf1e339",
+        "source-69509519e0665596",
+        "source-46c39044688c4b6b"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7783,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/flat_tree/1",
+      "conditions": 6,
+      "condition_ids": [
+        "5f5e12630da4c3ac",
+        "b76ca240d3cf22e9",
+        "4151ef6e3476ccd7",
+        "84fea97931323142",
+        "f74ec334aa41aedd",
+        "6aafaa4bb4a46876"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7842,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/0",
+      "conditions": 11,
+      "condition_ids": [
+        "0575b0fc78d5e1c3",
+        "af0140c0d67db0db",
+        "31a08aa5d314a1cc",
+        "6ebed707b160d045",
+        "7b14974054697ece",
+        "670ce83c5d01f9b0",
+        "ea4612718466c18b",
+        "cac9eb6d20b4d85d",
+        "source-a84c278ee8f6f341",
+        "source-67e66ff7b61b0013",
+        "source-f7e6502faf41db9d"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7866,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/0",
+      "conditions": 7,
+      "condition_ids": [
+        "6292b7baa6dca5e5",
+        "c8840499a5fa4127",
+        "6ba2d151fb189f66",
+        "a721517da53ecc53",
+        "e7752e04ccb62af9",
+        "source-1f0a0f7d09bc0013",
+        "source-4ff057ff0d8e6128"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7930,
+      "label": "flat-linear-legacy-v1/focus_bus_display/flat_tree/0",
+      "conditions": 2,
+      "condition_ids": [
+        "fcfc1d99714906bb",
+        "0d34e210df8a88bf"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7956,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/1",
+      "conditions": 9,
+      "condition_ids": [
+        "320fb26f3c13aef5",
+        "b0a43d1e7c495d62",
+        "f4bc06419e42106e",
+        "e456f8fc7ebe035e",
+        "bb24e680f5a2b2d7",
+        "a910535083620297",
+        "85cdd7bcf5c26e3d",
+        "source-77ae2151ada8da8c",
+        "source-1bb4131d7228b87e"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 7972,
+      "label": "flat-linear-legacy-v1/focus_room_booking/flat_tree/1",
+      "conditions": 4,
+      "condition_ids": [
+        "c34c9621540b871c",
+        "b383042fca8b119d",
+        "506613665d9f4daa",
+        "ee571490b65d36ad"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 8036,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/0",
+      "conditions": 11,
+      "condition_ids": [
+        "3526d79b252b91dc",
+        "888f400e705eb629",
+        "a6806c54a1e09cbc",
+        "13d56ebb70322431",
+        "source-82df560656e3823a",
+        "source-6481b97f15e78e10",
+        "source-1835f63c50fb1252",
+        "source-6dfaedc7b93b3487",
+        "source-6c33244a7e8db321",
+        "limit-5d41189436889caf",
+        "limit-6adceec9d826ab51"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 8042,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/1",
+      "conditions": 9,
+      "condition_ids": [
+        "e87b01a9a36e8aaf",
+        "6f404b2c0c28f42c",
+        "6fb272318891d7db",
+        "10ac874eefbea61d",
+        "daa2b27b1c93d3ba",
+        "8b4b5a5bd33322b4",
+        "source-f80594159e5884f6",
+        "source-6c2758bdeffeb717",
+        "source-cb3b5d9d2f3bf9b1"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 8064,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/1",
+      "conditions": 6,
+      "condition_ids": [
+        "fc37bb9a7eaaf440",
+        "5821bef6542444e0",
+        "a25e1bc5d3800255",
+        "9a57af12402d5b00",
+        "source-5c48277c552f18ec",
+        "source-0ec3dd199d7d1d77"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 8117,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/1",
+      "conditions": 7,
+      "condition_ids": [
+        "dc80df337bc079d5",
+        "d134dfca617a8799",
+        "0e9023828241c6e7",
+        "84983678eb9a0924",
+        "source-e250dfdcdc39e096",
+        "source-327be74a0f22271e",
+        "source-a6530736d52aa0d3"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 8118,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/0",
+      "conditions": 9,
+      "condition_ids": [
+        "1428c02a9d9f3cad",
+        "79978bed8c654e63",
+        "8d9ce24c66f93cd1",
+        "e5f325569ac9d28b",
+        "fbf7883eca31107a",
+        "86702fac2f80c4a3",
+        "8a5483bfd17c634c",
+        "5c01e38dd9d496fc",
+        "source-8f85ee4ec1aa53b2"
+      ],
+      "truncated": false
+    },
+    {
+      "id": 8137,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/1",
+      "conditions": 11,
+      "condition_ids": [
+        "38ef54697cb3bfcb",
+        "6346262a48af25b8",
+        "dace43261bcbf606",
+        "6c7251764879dfdc",
+        "0ab54263ed9d1f8f",
+        "781048a4bd7eaa5a",
+        "bb7217b468427c1c",
+        "d9713722cb542e6b",
+        "source-3c57bc369b04ef71",
+        "source-86e1a7df0d6474a6",
+        "source-74f0beda27d206c6"
+      ],
+      "truncated": false
+    }
+  ],
+  "paid_requests": 0,
+  "limitations": [
+    "Validation establishes row identity and verbatim draft/source evidence only; semantic statuses remain unverified model judgments.",
+    "Condition counts measure extracted material, not recall against independently annotated ground truth.",
+    "No claim that final text fixed a flagged condition without inspecting its final answer."
+  ]
+}

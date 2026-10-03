@@ -1,0 +1,509 @@
+{
+  "run_id": "flat-linear-legacy-v1",
+  "metadata": {
+    "tree_limits": {
+      "max_tree_targets": 8,
+      "max_tree_context_nodes": 16
+    },
+    "source_digest": "020537bccb7ddffc59acb238ebb4ad0667d522de0d00615522ac27f89c6bed45",
+    "cases_digest": "45f5c1db68e958eb7060a92b4ed650c2375ed86694e8141434d97c3cddeec2db",
+    "split": "test",
+    "case_ids": [
+      "focus_bus_display",
+      "focus_room_booking",
+      "focus_seed_swap",
+      "focus_lecture_recordings",
+      "focus_riverside_stall",
+      "focus_remote_ballots",
+      "focus_day_lockers",
+      "focus_hybrid_meetings",
+      "focus_translated_notices",
+      "focus_food_hub",
+      "focus_school_news",
+      "focus_sports_field"
+    ],
+    "modes": [
+      "flat_tree",
+      "linear",
+      "legacy"
+    ],
+    "repeats": 2,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 2,
+    "judge_model": "gpt-5.6-sol",
+    "cap_usd": 200.0,
+    "judge_max_tokens": 1600,
+    "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted",
+    "judge_reasoning_effort": "none",
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "expected_answers": 72,
+  "completed_answers": 71,
+  "missing": [
+    [
+      "focus_food_hub",
+      "linear",
+      0
+    ]
+  ],
+  "metrics": [
+    {
+      "mode": "flat_tree",
+      "n": 24,
+      "checklist_rate": 0.5138888888888888,
+      "strength_mean": 3.6666666666666665,
+      "strawman_rate": 0.08333333333333333,
+      "unsupported_fact_rate": 0.25,
+      "residual_text_mean_s": 13.99152644023095,
+      "residual_text_median_s": 14.07755648238463,
+      "residual_worker_return_mean_s": 16.616926722484344,
+      "generation_calls_mean": 14.333333333333334,
+      "prior_context_setup_calls_mean": 2.6666666666666665,
+      "live_generation_calls_mean": 11.666666666666666,
+      "generation_cost_mean_usd": 0.010858632083333333,
+      "answer_words_mean": 114,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 20,
+      "invalid_targets": 0,
+      "revisions": 13
+    },
+    {
+      "mode": "linear",
+      "n": 23,
+      "checklist_rate": 0.3043478260869565,
+      "strength_mean": 2.782608695652174,
+      "strawman_rate": 0.5217391304347826,
+      "unsupported_fact_rate": 0.9130434782608695,
+      "residual_text_mean_s": 13.453463711793555,
+      "residual_text_median_s": 12.700246073014569,
+      "residual_worker_return_mean_s": 13.453497147131914,
+      "generation_calls_mean": 6.782608695652174,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 6.782608695652174,
+      "generation_cost_mean_usd": 0.003883201739130435,
+      "answer_words_mean": 132.95652173913044,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 0,
+      "invalid_targets": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "legacy",
+      "n": 24,
+      "checklist_rate": 0.2777777777777778,
+      "strength_mean": 2.625,
+      "strawman_rate": 0.75,
+      "unsupported_fact_rate": 1,
+      "residual_text_mean_s": 27.017413670873793,
+      "residual_text_median_s": 14.521098431490827,
+      "residual_worker_return_mean_s": 29.902415443500406,
+      "generation_calls_mean": 11.75,
+      "prior_context_setup_calls_mean": 2.6666666666666665,
+      "live_generation_calls_mean": 9.083333333333334,
+      "generation_cost_mean_usd": 0.005626135,
+      "answer_words_mean": 133.45833333333334,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 0,
+      "invalid_targets": 0,
+      "revisions": 0
+    }
+  ],
+  "reference_mode": "legacy",
+  "paired_vs_baseline": {
+    "flat_tree": {
+      "baseline": "legacy",
+      "candidate": "flat_tree",
+      "case_count": 12,
+      "case_differences": [
+        {
+          "case": "focus_bus_display",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.6853289940045215
+        },
+        {
+          "case": "focus_room_booking",
+          "quality_diff": 0.5,
+          "latency_diff_s": -0.3931101739872247
+        },
+        {
+          "case": "focus_seed_swap",
+          "quality_diff": 0.5,
+          "latency_diff_s": -0.7102418970316648
+        },
+        {
+          "case": "focus_lecture_recordings",
+          "quality_diff": 0.49999999999999994,
+          "latency_diff_s": -3.4091339514998253
+        },
+        {
+          "case": "focus_riverside_stall",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": -97.62051935950876
+        },
+        {
+          "case": "focus_remote_ballots",
+          "quality_diff": 0.6666666666666666,
+          "latency_diff_s": 0.6615757364779711
+        },
+        {
+          "case": "focus_day_lockers",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": 0.2303726299724076
+        },
+        {
+          "case": "focus_hybrid_meetings",
+          "quality_diff": 0.0,
+          "latency_diff_s": 2.527411964983912
+        },
+        {
+          "case": "focus_translated_notices",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": -1.5913564035436139
+        },
+        {
+          "case": "focus_food_hub",
+          "quality_diff": 0.0,
+          "latency_diff_s": -49.74310740314895
+        },
+        {
+          "case": "focus_school_news",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.648241340444656
+        },
+        {
+          "case": "focus_sports_field",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": -2.928967575979186
+        }
+      ],
+      "quality_diff_mean": 0.2361111111111111,
+      "quality_diff_95ci": [
+        0.11111111111111112,
+        0.375
+      ],
+      "latency_diff_mean_s": -13.025887230642843,
+      "latency_diff_95ci_s": [
+        -32.73495836963654,
+        -0.5625029576185625
+      ]
+    },
+    "linear": {
+      "baseline": "legacy",
+      "candidate": "linear",
+      "case_count": 11,
+      "case_differences": [
+        {
+          "case": "focus_bus_display",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": -1.4715165664965753
+        },
+        {
+          "case": "focus_room_booking",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.3192160384787712
+        },
+        {
+          "case": "focus_seed_swap",
+          "quality_diff": 0.16666666666666666,
+          "latency_diff_s": -4.735260292480234
+        },
+        {
+          "case": "focus_lecture_recordings",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 0.6126847815176006
+        },
+        {
+          "case": "focus_riverside_stall",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": -101.83717623652774
+        },
+        {
+          "case": "focus_remote_ballots",
+          "quality_diff": 0.16666666666666666,
+          "latency_diff_s": 7.135314479528461
+        },
+        {
+          "case": "focus_day_lockers",
+          "quality_diff": -0.16666666666666666,
+          "latency_diff_s": 1.1443302670086268
+        },
+        {
+          "case": "focus_hybrid_meetings",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.962931589980144
+        },
+        {
+          "case": "focus_translated_notices",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.6421472895017359
+        },
+        {
+          "case": "focus_school_news",
+          "quality_diff": -0.3333333333333333,
+          "latency_diff_s": -3.1827892254805192
+        },
+        {
+          "case": "focus_sports_field",
+          "quality_diff": -0.16666666666666666,
+          "latency_diff_s": -3.1155015844851732
+        }
+      ],
+      "quality_diff_mean": 0.030303030303030307,
+      "quality_diff_95ci": [
+        -0.07575757575757576,
+        0.13636363636363635
+      ],
+      "latency_diff_mean_s": -9.94310993594329,
+      "latency_diff_95ci_s": [
+        -28.99072849154155,
+        0.7048943210155069
+      ]
+    }
+  },
+  "paired_vs_legacy": {
+    "flat_tree": {
+      "baseline": "legacy",
+      "candidate": "flat_tree",
+      "case_count": 12,
+      "case_differences": [
+        {
+          "case": "focus_bus_display",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.6853289940045215
+        },
+        {
+          "case": "focus_room_booking",
+          "quality_diff": 0.5,
+          "latency_diff_s": -0.3931101739872247
+        },
+        {
+          "case": "focus_seed_swap",
+          "quality_diff": 0.5,
+          "latency_diff_s": -0.7102418970316648
+        },
+        {
+          "case": "focus_lecture_recordings",
+          "quality_diff": 0.49999999999999994,
+          "latency_diff_s": -3.4091339514998253
+        },
+        {
+          "case": "focus_riverside_stall",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": -97.62051935950876
+        },
+        {
+          "case": "focus_remote_ballots",
+          "quality_diff": 0.6666666666666666,
+          "latency_diff_s": 0.6615757364779711
+        },
+        {
+          "case": "focus_day_lockers",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": 0.2303726299724076
+        },
+        {
+          "case": "focus_hybrid_meetings",
+          "quality_diff": 0.0,
+          "latency_diff_s": 2.527411964983912
+        },
+        {
+          "case": "focus_translated_notices",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": -1.5913564035436139
+        },
+        {
+          "case": "focus_food_hub",
+          "quality_diff": 0.0,
+          "latency_diff_s": -49.74310740314895
+        },
+        {
+          "case": "focus_school_news",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.648241340444656
+        },
+        {
+          "case": "focus_sports_field",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": -2.928967575979186
+        }
+      ],
+      "quality_diff_mean": 0.2361111111111111,
+      "quality_diff_95ci": [
+        0.11111111111111112,
+        0.375
+      ],
+      "latency_diff_mean_s": -13.025887230642843,
+      "latency_diff_95ci_s": [
+        -32.73495836963654,
+        -0.5625029576185625
+      ]
+    },
+    "linear": {
+      "baseline": "legacy",
+      "candidate": "linear",
+      "case_count": 11,
+      "case_differences": [
+        {
+          "case": "focus_bus_display",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": -1.4715165664965753
+        },
+        {
+          "case": "focus_room_booking",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.3192160384787712
+        },
+        {
+          "case": "focus_seed_swap",
+          "quality_diff": 0.16666666666666666,
+          "latency_diff_s": -4.735260292480234
+        },
+        {
+          "case": "focus_lecture_recordings",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 0.6126847815176006
+        },
+        {
+          "case": "focus_riverside_stall",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": -101.83717623652774
+        },
+        {
+          "case": "focus_remote_ballots",
+          "quality_diff": 0.16666666666666666,
+          "latency_diff_s": 7.135314479528461
+        },
+        {
+          "case": "focus_day_lockers",
+          "quality_diff": -0.16666666666666666,
+          "latency_diff_s": 1.1443302670086268
+        },
+        {
+          "case": "focus_hybrid_meetings",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.962931589980144
+        },
+        {
+          "case": "focus_translated_notices",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.6421472895017359
+        },
+        {
+          "case": "focus_school_news",
+          "quality_diff": -0.3333333333333333,
+          "latency_diff_s": -3.1827892254805192
+        },
+        {
+          "case": "focus_sports_field",
+          "quality_diff": -0.16666666666666666,
+          "latency_diff_s": -3.1155015844851732
+        }
+      ],
+      "quality_diff_mean": 0.030303030303030307,
+      "quality_diff_95ci": [
+        -0.07575757575757576,
+        0.13636363636363635
+      ],
+      "latency_diff_mean_s": -9.94310993594329,
+      "latency_diff_95ci_s": [
+        -28.99072849154155,
+        0.7048943210155069
+      ]
+    }
+  },
+  "component_comparisons": {},
+  "usage_including_judging": {
+    "calls": 864,
+    "reserved_upper_usd": 112.34397040000016,
+    "unresolved_calls": 3,
+    "input_tokens": 3098472,
+    "output_tokens": 282514,
+    "reported_usage_estimate_usd": 1.761077919999999,
+    "accounted_exposure_usd": 8.163337279999993
+  },
+  "request_audit": {
+    "missing_artifacts": [],
+    "truncated_calls": [],
+    "errors": [
+      {
+        "id": 7900,
+        "label": "flat-linear-legacy-v1/focus_food_hub/linear/0",
+        "error": "HTTPError: HTTP Error 503: Service Unavailable"
+      },
+      {
+        "id": 7916,
+        "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+        "error": "HTTPError: HTTP Error 503: Service Unavailable"
+      },
+      {
+        "id": 7917,
+        "label": "flat-linear-legacy-v1/focus_food_hub/linear/0",
+        "error": "HTTPError: HTTP Error 503: Service Unavailable"
+      }
+    ],
+    "runtime_warning_counts": [
+      {
+        "mode": "flat_tree",
+        "warning": "Skipping ungrounded or motion-only extraction: The proposal's cost-effectiveness is premature due to unassigned funding and lack of a logistical plan.",
+        "count": 1
+      },
+      {
+        "mode": "flat_tree",
+        "warning": "Skipping ungrounded or motion-only extraction: The seed exchange will consist of a single Sunday morning exchange of unopened commercial herb-seed packets at the association office.",
+        "count": 1
+      },
+      {
+        "mode": "legacy",
+        "warning": "Cannot find the matched node for action: attack",
+        "count": 1
+      },
+      {
+        "mode": "legacy",
+        "warning": "Cannot find the matched node for action: reinforce",
+        "count": 24
+      },
+      {
+        "mode": "legacy",
+        "warning": "Error 2 validation errors for BattlefieldResponse",
+        "count": 3
+      },
+      {
+        "mode": "legacy",
+        "warning": "Error 3 validation errors for BattlefieldResponse",
+        "count": 6
+      }
+    ]
+  },
+  "limitations": [
+    "Small authored scenario set, not a standard debate benchmark",
+    "Different generator/judge models, but no human adjudication; automatic judging remains fallible",
+    "Spot checks found inconsistent constraint judgments; automated scores are provisional, not established accuracy",
+    "Zero unsupported-fact flags do not establish factual correctness",
+    "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
+    "Text-ready timing precedes post-speech tree analysis; worker-return timing is reported separately",
+    "Exact-target matching shared across arms; embedding fallback disabled",
+    "Cost uses provider-reported tokens and published rates, not a settled invoice",
+    "Composite checklist items can fail for omitted qualifications even when the answer does not contradict them.",
+    "8/24 source-bound tree answers fall back to the raw prefix; aggregate gains do not isolate tree binding from grounding feedback.",
+    "Speaker/source ownership and version consistency do not validate semantic entailment of extracted claims.",
+    "An edge records a response, not whether the issue was resolved.",
+    "Counts include historical setup and all observed chunks; repeated cases are not independent samples."
+  ],
+  "completion_audit": {
+    "worker_completion_markers": 1,
+    "pending_requests": 0,
+    "failed_requests": 3
+  },
+  "post_run_diagnostics": "flat-linear-legacy-v1_diagnostics.json"
+}

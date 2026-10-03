@@ -34,6 +34,16 @@ def compare(run_id='flat-linear-legacy-v1', manifest_name='manifest_focus_v1.jso
     pairs = {f'{candidate}_vs_{baseline}': {
         metric: paired(by_mode[baseline],by_mode[candidate],metadata,fn) for metric,fn in METRICS.items()
     } for baseline,candidate in PAIRS}
+    bounds={}
+    for mode,rs in by_mode.items():
+        observed=sum(checklist(r) for r in rs if 'judge' in r)
+        missing=sum('judge' not in r for r in rs)
+        bounds[mode]=dict(missing=missing,mean_bounds=[observed/len(rs),(observed+missing)/len(rs)])
+    missing_sensitivity=dict(mode_bounds=bounds,pair_difference_bounds={
+        f'{candidate}_vs_{baseline}': [bounds[candidate]['mean_bounds'][0]-bounds[baseline]['mean_bounds'][1],
+                                      bounds[candidate]['mean_bounds'][1]-bounds[baseline]['mean_bounds'][0]]
+        for baseline,candidate in PAIRS},
+        interpretation='Unknown scores range from zero to one; logical all-generated bounds, not imputed verdicts or confidence intervals.')
     metrics=[];groups=[]
     for mode,rs in by_mode.items():
         judged=[r for r in rs if 'judge' in r]
@@ -57,6 +67,13 @@ def compare(run_id='flat-linear-legacy-v1', manifest_name='manifest_focus_v1.jso
                     checklist_rate=mean(map(checklist,subset)) if subset else None,
                     strength_mean=mean(r['judge']['rebuttal_strength'] for r in subset) if subset else None,
                     unsupported_fact_rate=mean(int(r['judge']['unsupported_facts']) for r in subset) if subset else None))
+    common_cases=[case for case in metadata['case_ids'] if all(
+        sum(r['case']==case and 'judge' in r for r in rs)==metadata['repeats'] for rs in by_mode.values())]
+    common_metrics=[]
+    for mode,rs in by_mode.items():
+        subset=[r for r in rs if r['case'] in common_cases]
+        common_metrics.append(dict(mode=mode,case_count=len(common_cases),answers=len(subset),
+            **{k:mean(fn(r) for r in subset) if subset else None for k,fn in METRICS.items()}))
     flat=by_mode['flat_tree'];binding_groups=[]
     for valid in (True,False):
         subset=[r for r in flat if bool(r['before_generation']['state'])==valid and 'judge' in r]
@@ -65,8 +82,11 @@ def compare(run_id='flat-linear-legacy-v1', manifest_name='manifest_focus_v1.jso
             interpretation='Post-generation descriptive subset; selection prevents a causal comparison.'))
     report=dict(run_id=run_id,metadata=metadata,primary_comparisons=['flat_tree_vs_linear','flat_tree_vs_legacy'],
         metrics=metrics,paired_comparisons=pairs,descriptive_subgroups=groups,flat_binding_subgroups=binding_groups,
-        missing_judgments=summary['missing'],usage_including_judging=summary['usage_including_judging'],
-        completion_audit=summary['completion_audit'],paid_requests=0,limitations=manifest['limitations']+[
+        common_complete_cases=common_cases,common_case_metrics=common_metrics,
+        missing_judgments=summary['missing'],missing_sensitivity=missing_sensitivity,usage_including_judging=summary['usage_including_judging'],
+        completion_audit={**summary['completion_audit'],
+            'finished_with_missing_judgment_markers':len(list((ROOT/'run'/run_id).glob('finished_worker*.json'))),
+            'generated_answers':len(rows),'judged_answers':sum('judge' in r for r in rows)},paid_requests=0,limitations=manifest['limitations']+[
             'Pairs average repeats within a case and exclude an entire case with any missing judgment; descriptive timing/cost uses all generated answers.',
             'Error flags are automated judgments with known false positives/negatives; zero flags does not establish zero errors.',
             'Subgroups and Flat valid-plan/fallback splits are descriptive, small and selected; no causal isolation.',

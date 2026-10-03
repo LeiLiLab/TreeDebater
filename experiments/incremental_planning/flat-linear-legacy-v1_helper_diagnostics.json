@@ -1,0 +1,4193 @@
+{
+  "run_id": "flat-linear-legacy-v1",
+  "source_digest": "020537bccb7ddffc59acb238ebb4ad0667d522de0d00615522ac27f89c6bed45",
+  "metrics": [
+    {
+      "mode": "flat_tree",
+      "answers": 24,
+      "helper_requests": 180,
+      "schema_failures": 0,
+      "battlefield_requests": 0,
+      "battlefield_schema_failures": 0,
+      "identical_request_recovery_groups": 0,
+      "exhausted_recovery_groups": 0,
+      "mean_text_seconds": 13.99152644023095,
+      "median_text_seconds": 14.07755648238463,
+      "p90_text_seconds_nearest_rank": 17.413294072030112,
+      "max_text_seconds": 18.786735638976097,
+      "mean_text_seconds_minus_known_battlefield_wait": 13.99152644023095,
+      "per_answer_wait_accounting": [
+        {
+          "case": "focus_lecture_recordings",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 11.963844481972046,
+          "text_seconds_minus_known_battlefield_wait": 11.963844481972046
+        },
+        {
+          "case": "focus_translated_notices",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 15.943148968974128,
+          "text_seconds_minus_known_battlefield_wait": 15.943148968974128
+        },
+        {
+          "case": "focus_day_lockers",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 12.379117931996007,
+          "text_seconds_minus_known_battlefield_wait": 12.379117931996007
+        },
+        {
+          "case": "focus_bus_display",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 14.292802679003216,
+          "text_seconds_minus_known_battlefield_wait": 14.292802679003216
+        },
+        {
+          "case": "focus_bus_display",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 8.92341863794718,
+          "text_seconds_minus_known_battlefield_wait": 8.92341863794718
+        },
+        {
+          "case": "focus_school_news",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 17.413294072030112,
+          "text_seconds_minus_known_battlefield_wait": 17.413294072030112
+        },
+        {
+          "case": "focus_food_hub",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 13.862310285766043,
+          "text_seconds_minus_known_battlefield_wait": 13.862310285766043
+        },
+        {
+          "case": "focus_room_booking",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 13.733968619024381,
+          "text_seconds_minus_known_battlefield_wait": 13.733968619024381
+        },
+        {
+          "case": "focus_day_lockers",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 16.91832087392686,
+          "text_seconds_minus_known_battlefield_wait": 16.91832087392686
+        },
+        {
+          "case": "focus_seed_swap",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 15.515219096967485,
+          "text_seconds_minus_known_battlefield_wait": 15.515219096967485
+        },
+        {
+          "case": "focus_school_news",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 11.697053624026012,
+          "text_seconds_minus_known_battlefield_wait": 11.697053624026012
+        },
+        {
+          "case": "focus_hybrid_meetings",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 11.533901752030943,
+          "text_seconds_minus_known_battlefield_wait": 11.533901752030943
+        },
+        {
+          "case": "focus_hybrid_meetings",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 18.786735638976097,
+          "text_seconds_minus_known_battlefield_wait": 18.786735638976097
+        },
+        {
+          "case": "focus_riverside_stall",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 15.34567794506438,
+          "text_seconds_minus_known_battlefield_wait": 15.34567794506438
+        },
+        {
+          "case": "focus_remote_ballots",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 14.33988630399108,
+          "text_seconds_minus_known_battlefield_wait": 14.33988630399108
+        },
+        {
+          "case": "focus_seed_swap",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 15.963485654967371,
+          "text_seconds_minus_known_battlefield_wait": 15.963485654967371
+        },
+        {
+          "case": "focus_food_hub",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 18.133784239937086,
+          "text_seconds_minus_known_battlefield_wait": 18.133784239937086
+        },
+        {
+          "case": "focus_sports_field",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 16.765013662050478,
+          "text_seconds_minus_known_battlefield_wait": 16.765013662050478
+        },
+        {
+          "case": "focus_translated_notices",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 9.996284384978935,
+          "text_seconds_minus_known_battlefield_wait": 9.996284384978935
+        },
+        {
+          "case": "focus_riverside_stall",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 12.442614181956742,
+          "text_seconds_minus_known_battlefield_wait": 12.442614181956742
+        },
+        {
+          "case": "focus_room_booking",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 12.118778814037796,
+          "text_seconds_minus_known_battlefield_wait": 12.118778814037796
+        },
+        {
+          "case": "focus_lecture_recordings",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 8.974816655972973,
+          "text_seconds_minus_known_battlefield_wait": 8.974816655972973
+        },
+        {
+          "case": "focus_remote_ballots",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 13.408878113958053,
+          "text_seconds_minus_known_battlefield_wait": 13.408878113958053
+        },
+        {
+          "case": "focus_sports_field",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 15.344277945987415,
+          "text_seconds_minus_known_battlefield_wait": 15.344277945987415
+        }
+      ]
+    },
+    {
+      "mode": "linear",
+      "answers": 24,
+      "helper_requests": 0,
+      "schema_failures": 0,
+      "battlefield_requests": 0,
+      "battlefield_schema_failures": 0,
+      "identical_request_recovery_groups": 0,
+      "exhausted_recovery_groups": 0,
+      "mean_text_seconds": 13.548813516259543,
+      "median_text_seconds": 12.78809305554023,
+      "p90_text_seconds_nearest_rank": 18.382883784011938,
+      "max_text_seconds": 25.096224712964613,
+      "mean_text_seconds_minus_known_battlefield_wait": 13.548813516259543,
+      "per_answer_wait_accounting": [
+        {
+          "case": "focus_seed_swap",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 10.72842188802315,
+          "text_seconds_minus_known_battlefield_wait": 10.72842188802315
+        },
+        {
+          "case": "focus_day_lockers",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 11.244876182987355,
+          "text_seconds_minus_known_battlefield_wait": 11.244876182987355
+        },
+        {
+          "case": "focus_bus_display",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 8.77499975997489,
+          "text_seconds_minus_known_battlefield_wait": 8.77499975997489
+        },
+        {
+          "case": "focus_school_news",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 10.87307711597532,
+          "text_seconds_minus_known_battlefield_wait": 10.87307711597532
+        },
+        {
+          "case": "focus_food_hub",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 11.24246519303415,
+          "text_seconds_minus_known_battlefield_wait": 11.24246519303415
+        },
+        {
+          "case": "focus_sports_field",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 18.382883784011938,
+          "text_seconds_minus_known_battlefield_wait": 18.382883784011938
+        },
+        {
+          "case": "focus_seed_swap",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 12.700246073014569,
+          "text_seconds_minus_known_battlefield_wait": 12.700246073014569
+        },
+        {
+          "case": "focus_remote_ballots",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 15.600017191085499,
+          "text_seconds_minus_known_battlefield_wait": 15.600017191085499
+        },
+        {
+          "case": "focus_day_lockers",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 19.88047789700795,
+          "text_seconds_minus_known_battlefield_wait": 19.88047789700795
+        },
+        {
+          "case": "focus_room_booking",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 11.124595666013192,
+          "text_seconds_minus_known_battlefield_wait": 11.124595666013192
+        },
+        {
+          "case": "focus_room_booking",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 12.875940038065892,
+          "text_seconds_minus_known_battlefield_wait": 12.875940038065892
+        },
+        {
+          "case": "focus_translated_notices",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 12.38889293500688,
+          "text_seconds_minus_known_battlefield_wait": 12.38889293500688
+        },
+        {
+          "case": "focus_bus_display",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 14.868846411991399,
+          "text_seconds_minus_known_battlefield_wait": 14.868846411991399
+        },
+        {
+          "case": "focus_hybrid_meetings",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 9.56387515401002,
+          "text_seconds_minus_known_battlefield_wait": 9.56387515401002
+        },
+        {
+          "case": "focus_hybrid_meetings",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 11.776075127068907,
+          "text_seconds_minus_known_battlefield_wait": 11.776075127068907
+        },
+        {
+          "case": "focus_school_news",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 15.168174810009077,
+          "text_seconds_minus_known_battlefield_wait": 15.168174810009077
+        },
+        {
+          "case": "focus_riverside_stall",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 10.300852668995503,
+          "text_seconds_minus_known_battlefield_wait": 10.300852668995503
+        },
+        {
+          "case": "focus_lecture_recordings",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 14.380151298013516,
+          "text_seconds_minus_known_battlefield_wait": 14.380151298013516
+        },
+        {
+          "case": "focus_remote_ballots",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 25.096224712964613,
+          "text_seconds_minus_known_battlefield_wait": 25.096224712964613
+        },
+        {
+          "case": "focus_lecture_recordings",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 14.602147305966355,
+          "text_seconds_minus_known_battlefield_wait": 14.602147305966355
+        },
+        {
+          "case": "focus_translated_notices",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 15.44895864702994,
+          "text_seconds_minus_known_battlefield_wait": 15.44895864702994
+        },
+        {
+          "case": "focus_food_hub",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 15.741859018977266,
+          "text_seconds_minus_known_battlefield_wait": 15.741859018977266
+        },
+        {
+          "case": "focus_sports_field",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 13.353339807013981,
+          "text_seconds_minus_known_battlefield_wait": 13.353339807013981
+        },
+        {
+          "case": "focus_riverside_stall",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 9.054125703987665,
+          "text_seconds_minus_known_battlefield_wait": 9.054125703987665
+        }
+      ]
+    },
+    {
+      "mode": "legacy",
+      "answers": 24,
+      "helper_requests": 210,
+      "schema_failures": 9,
+      "battlefield_requests": 30,
+      "battlefield_schema_failures": 9,
+      "identical_request_recovery_groups": 3,
+      "exhausted_recovery_groups": 3,
+      "mean_text_seconds": 27.017413670873793,
+      "median_text_seconds": 14.521098431490827,
+      "p90_text_seconds_nearest_rank": 109.03928949200781,
+      "max_text_seconds": 113.99004135403084,
+      "mean_text_seconds_minus_known_battlefield_wait": 15.767413670873793,
+      "per_answer_wait_accounting": [
+        {
+          "case": "focus_food_hub",
+          "repeat": 0,
+          "battlefield_schema_failures": 3,
+          "known_battlefield_wait_seconds": 90,
+          "observed_text_seconds": 113.8168786400347,
+          "text_seconds_minus_known_battlefield_wait": 23.8168786400347
+        },
+        {
+          "case": "focus_school_news",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 15.397217722958885,
+          "text_seconds_minus_known_battlefield_wait": 15.397217722958885
+        },
+        {
+          "case": "focus_sports_field",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 19.947053885029163,
+          "text_seconds_minus_known_battlefield_wait": 19.947053885029163
+        },
+        {
+          "case": "focus_room_booking",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 14.924871492024977,
+          "text_seconds_minus_known_battlefield_wait": 14.924871492024977
+        },
+        {
+          "case": "focus_food_hub",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 17.66543069196632,
+          "text_seconds_minus_known_battlefield_wait": 17.66543069196632
+        },
+        {
+          "case": "focus_day_lockers",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 14.572881022002548,
+          "text_seconds_minus_known_battlefield_wait": 14.572881022002548
+        },
+        {
+          "case": "focus_bus_display",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 13.152867230935954,
+          "text_seconds_minus_known_battlefield_wait": 13.152867230935954
+        },
+        {
+          "case": "focus_riverside_stall",
+          "repeat": 0,
+          "battlefield_schema_failures": 3,
+          "known_battlefield_wait_seconds": 90,
+          "observed_text_seconds": 113.99004135403084,
+          "text_seconds_minus_known_battlefield_wait": 23.990041354030836
+        },
+        {
+          "case": "focus_bus_display",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 13.434012074023485,
+          "text_seconds_minus_known_battlefield_wait": 13.434012074023485
+        },
+        {
+          "case": "focus_seed_swap",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 13.455817464971915,
+          "text_seconds_minus_known_battlefield_wait": 13.455817464971915
+        },
+        {
+          "case": "focus_remote_ballots",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 11.956297104014084,
+          "text_seconds_minus_known_battlefield_wait": 11.956297104014084
+        },
+        {
+          "case": "focus_school_news",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 17.00961265398655,
+          "text_seconds_minus_known_battlefield_wait": 17.00961265398655
+        },
+        {
+          "case": "focus_remote_ballots",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 14.469315840979107,
+          "text_seconds_minus_known_battlefield_wait": 14.469315840979107
+        },
+        {
+          "case": "focus_riverside_stall",
+          "repeat": 1,
+          "battlefield_schema_failures": 3,
+          "known_battlefield_wait_seconds": 90,
+          "observed_text_seconds": 109.03928949200781,
+          "text_seconds_minus_known_battlefield_wait": 19.03928949200781
+        },
+        {
+          "case": "focus_translated_notices",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 11.88229380804114,
+          "text_seconds_minus_known_battlefield_wait": 11.88229380804114
+        },
+        {
+          "case": "focus_sports_field",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 18.020172874967102,
+          "text_seconds_minus_known_battlefield_wait": 18.020172874967102
+        },
+        {
+          "case": "focus_room_booking",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 11.71409628901165,
+          "text_seconds_minus_known_battlefield_wait": 11.71409628901165
+        },
+        {
+          "case": "focus_day_lockers",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 14.263812523975503,
+          "text_seconds_minus_known_battlefield_wait": 14.263812523975503
+        },
+        {
+          "case": "focus_hybrid_meetings",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 13.650748782034498,
+          "text_seconds_minus_known_battlefield_wait": 13.650748782034498
+        },
+        {
+          "case": "focus_seed_swap",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 19.44337108102627,
+          "text_seconds_minus_known_battlefield_wait": 19.44337108102627
+        },
+        {
+          "case": "focus_hybrid_meetings",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 11.615064679004718,
+          "text_seconds_minus_known_battlefield_wait": 11.615064679004718
+        },
+        {
+          "case": "focus_translated_notices",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 17.23985235299915,
+          "text_seconds_minus_known_battlefield_wait": 17.23985235299915
+        },
+        {
+          "case": "focus_lecture_recordings",
+          "repeat": 1,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 13.82438781997189,
+          "text_seconds_minus_known_battlefield_wait": 13.82438781997189
+        },
+        {
+          "case": "focus_lecture_recordings",
+          "repeat": 0,
+          "battlefield_schema_failures": 0,
+          "known_battlefield_wait_seconds": 0,
+          "observed_text_seconds": 13.93254122097278,
+          "text_seconds_minus_known_battlefield_wait": 13.93254122097278
+        }
+      ]
+    }
+  ],
+  "helper_checks": [
+    {
+      "id": 7306,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7307,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7308,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7309,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7310,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7311,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7312,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7313,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7314,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7315,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7316,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7317,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7318,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7319,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7321,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7325,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7327,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7332,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7335,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7337,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7339,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7340,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7342,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7343,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7346,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7349,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7352,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7360,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7362,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7363,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7364,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7365,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7366,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7367,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7368,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7369,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7370,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7371,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7372,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7373,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7374,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7375,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7376,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": false,
+      "error": "3 validation errors for BattlefieldResponse\nresponse.0.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A movable drin...quired for its setup.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.1.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A movable drin...quired for its setup.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.2.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A permanent ki...freshments to walkers']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type",
+      "truncated": false
+    },
+    {
+      "id": 7377,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7378,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7379,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7380,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7384,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7386,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7387,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7388,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": false,
+      "error": "3 validation errors for BattlefieldResponse\nresponse.0.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A movable drin...quired for its setup.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.1.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A movable drin...quired for its setup.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.2.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A permanent ki...freshments to walkers']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type",
+      "truncated": false
+    },
+    {
+      "id": 7389,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7390,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7391,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7392,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7393,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7394,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7395,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7399,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7401,
+      "label": "flat-linear-legacy-v1/focus_bus_display/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7402,
+      "label": "flat-linear-legacy-v1/focus_bus_display/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7403,
+      "label": "flat-linear-legacy-v1/focus_bus_display/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7404,
+      "label": "flat-linear-legacy-v1/focus_bus_display/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7405,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": false,
+      "error": "3 validation errors for BattlefieldResponse\nresponse.0.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A movable drin...quired for its setup.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.1.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A movable drin...quired for its setup.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.2.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A permanent ki...freshments to walkers']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type",
+      "truncated": false
+    },
+    {
+      "id": 7409,
+      "label": "flat-linear-legacy-v1/focus_bus_display/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7411,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7412,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7413,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7414,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7415,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7416,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7417,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7418,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7419,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": false,
+      "error": "2 validation errors for BattlefieldResponse\nresponse.0.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A movable drin...groundworks involved.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.1.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A permanent ki...ks on a weekly basis.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type",
+      "truncated": false
+    },
+    {
+      "id": 7423,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7425,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7426,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7427,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7428,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7431,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": false,
+      "error": "2 validation errors for BattlefieldResponse\nresponse.0.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A movable drin...groundworks involved.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.1.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A permanent ki...ks on a weekly basis.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type",
+      "truncated": false
+    },
+    {
+      "id": 7433,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7435,
+      "label": "flat-linear-legacy-v1/focus_bus_display/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7437,
+      "label": "flat-linear-legacy-v1/focus_bus_display/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7439,
+      "label": "flat-linear-legacy-v1/focus_bus_display/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7444,
+      "label": "flat-linear-legacy-v1/focus_bus_display/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7446,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": false,
+      "error": "2 validation errors for BattlefieldResponse\nresponse.0.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A movable drin...groundworks involved.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.1.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A permanent ki...ks on a weekly basis.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type",
+      "truncated": false
+    },
+    {
+      "id": 7447,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7448,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7449,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7450,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7451,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7452,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7453,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7457,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7459,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7460,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7463,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7464,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7465,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7466,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7467,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7468,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7470,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7471,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7476,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7477,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7479,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7480,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7481,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7482,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7483,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7484,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7485,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7486,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7488,
+      "label": "flat-linear-legacy-v1/focus_room_booking/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7490,
+      "label": "flat-linear-legacy-v1/focus_room_booking/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7491,
+      "label": "flat-linear-legacy-v1/focus_room_booking/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7492,
+      "label": "flat-linear-legacy-v1/focus_room_booking/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7496,
+      "label": "flat-linear-legacy-v1/focus_sports_field/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7499,
+      "label": "flat-linear-legacy-v1/focus_room_booking/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7516,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7518,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7520,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7521,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7522,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7523,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7525,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7526,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7528,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7529,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7530,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7532,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7536,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7539,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7541,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7542,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7543,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7544,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7546,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7549,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7552,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7555,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7564,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7566,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7567,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7568,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7569,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7570,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7572,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7574,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7575,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7576,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7578,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7579,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7580,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7581,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7585,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7588,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7591,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7592,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7601,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7621,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7623,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7626,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7628,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7629,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7630,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7631,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7632,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7633,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7641,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7644,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7645,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7646,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7650,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7652,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7654,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7657,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7659,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7660,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7661,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7662,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7664,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7665,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7666,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7667,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7668,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7669,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": false,
+      "error": "3 validation errors for BattlefieldResponse\nresponse.0.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': \"The hub's impa...ase in hunger levels.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.1.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': \"The hub's impa...ase in hunger levels.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.2.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A food-sharing...wo sessions per week.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type",
+      "truncated": false
+    },
+    {
+      "id": 7679,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": false,
+      "error": "3 validation errors for BattlefieldResponse\nresponse.0.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': \"The hub's impa...ase in hunger levels.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.1.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': \"The hub's impa...ase in hunger levels.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.2.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A food-sharing...wo sessions per week.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type",
+      "truncated": false
+    },
+    {
+      "id": 7680,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7681,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7682,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7683,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7684,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7686,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7688,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7690,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7692,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7696,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": false,
+      "error": "3 validation errors for BattlefieldResponse\nresponse.0.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': \"The hub's impa...ase in hunger levels.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.1.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': \"The hub's impa...ase in hunger levels.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type\nresponse.2.counterarguments.0\n  Input should be a valid string [type=string_type, input_value={'claim': 'A food-sharing...wo sessions per week.']}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type",
+      "truncated": false
+    },
+    {
+      "id": 7698,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7700,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7701,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7702,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7704,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7706,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7708,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7715,
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7717,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7721,
+      "label": "flat-linear-legacy-v1/focus_room_booking/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7724,
+      "label": "flat-linear-legacy-v1/focus_room_booking/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7727,
+      "label": "flat-linear-legacy-v1/focus_room_booking/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7736,
+      "label": "flat-linear-legacy-v1/focus_room_booking/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7738,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7739,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7740,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7741,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7742,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7743,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7745,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7746,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7747,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7750,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7752,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7754,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7757,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7764,
+      "label": "flat-linear-legacy-v1/focus_hybrid_meetings/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7770,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7773,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7776,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7784,
+      "label": "flat-linear-legacy-v1/focus_seed_swap/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7793,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7794,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7795,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7797,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7798,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7800,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7801,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7802,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7805,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7811,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7818,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7821,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7822,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7823,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7824,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7826,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7828,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7829,
+      "label": "flat-linear-legacy-v1/focus_room_booking/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7831,
+      "label": "flat-linear-legacy-v1/focus_room_booking/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7832,
+      "label": "flat-linear-legacy-v1/focus_room_booking/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7833,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7834,
+      "label": "flat-linear-legacy-v1/focus_room_booking/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7841,
+      "label": "flat-linear-legacy-v1/focus_room_booking/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7843,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7846,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7847,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7848,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7849,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7851,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7854,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7857,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7859,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7867,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7903,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7904,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7905,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7906,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7907,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7908,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7909,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7910,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7911,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7915,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7918,
+      "label": "flat-linear-legacy-v1/focus_bus_display/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7921,
+      "label": "flat-linear-legacy-v1/focus_bus_display/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7923,
+      "label": "flat-linear-legacy-v1/focus_bus_display/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7931,
+      "label": "flat-linear-legacy-v1/focus_bus_display/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7935,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7937,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7938,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7939,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7940,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7943,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7946,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7948,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7957,
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7961,
+      "label": "flat-linear-legacy-v1/focus_room_booking/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7963,
+      "label": "flat-linear-legacy-v1/focus_room_booking/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7967,
+      "label": "flat-linear-legacy-v1/focus_room_booking/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7971,
+      "label": "flat-linear-legacy-v1/focus_bus_display/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7973,
+      "label": "flat-linear-legacy-v1/focus_bus_display/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7974,
+      "label": "flat-linear-legacy-v1/focus_room_booking/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7975,
+      "label": "flat-linear-legacy-v1/focus_bus_display/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7976,
+      "label": "flat-linear-legacy-v1/focus_bus_display/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7980,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7981,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7982,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7984,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7985,
+      "label": "flat-linear-legacy-v1/focus_bus_display/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7986,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7987,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7988,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7989,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7991,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7993,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7994,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7996,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7997,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7998,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 7999,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8000,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8002,
+      "label": "flat-linear-legacy-v1/focus_school_news/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8006,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8009,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8010,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8011,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8012,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8013,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8014,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8015,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8016,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8018,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8019,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8020,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8023,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8024,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8027,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8028,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8031,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8035,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8038,
+      "label": "flat-linear-legacy-v1/focus_school_news/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8043,
+      "label": "flat-linear-legacy-v1/focus_food_hub/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8046,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8047,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8049,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8051,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8054,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8058,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8065,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8067,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8068,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8069,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8070,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8071,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8072,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8073,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8074,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8075,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8076,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8077,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/1",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8079,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8081,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8082,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8085,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/1",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8089,
+      "label": "flat-linear-legacy-v1/focus_lecture_recordings/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8091,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8092,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8093,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8094,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8095,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8096,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8098,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8099,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8100,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8103,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8104,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8107,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8108,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8110,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8119,
+      "label": "flat-linear-legacy-v1/focus_remote_ballots/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8121,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/flat_tree/0",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8123,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8124,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8125,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8126,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8127,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8129,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8131,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8133,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8138,
+      "label": "flat-linear-legacy-v1/focus_sports_field/flat_tree/1",
+      "mode": "flat_tree",
+      "schema": "LinkedStatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8140,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8141,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8142,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8143,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8144,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8145,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8146,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8147,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8148,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/0",
+      "mode": "legacy",
+      "schema": "BattlefieldResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    },
+    {
+      "id": 8152,
+      "label": "flat-linear-legacy-v1/focus_day_lockers/legacy/0",
+      "mode": "legacy",
+      "schema": "StatementsResponse",
+      "schema_valid": true,
+      "error": "",
+      "truncated": false
+    }
+  ],
+  "recovery_groups": [
+    {
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/0",
+      "schema": "BattlefieldResponse",
+      "request_sha256": "62c260e8591fa875ea78e736590c9a09a5f0e80b85ec8f733a948c9a8d310211",
+      "request_ids": [
+        7376,
+        7388,
+        7405
+      ],
+      "attempts": 3,
+      "success": false,
+      "invalid_attempts": 3
+    },
+    {
+      "label": "flat-linear-legacy-v1/focus_riverside_stall/legacy/1",
+      "schema": "BattlefieldResponse",
+      "request_sha256": "634559eb99291eb8673d9d0b68aa3046647673759ce8dab40acacbdec7762ecd",
+      "request_ids": [
+        7419,
+        7431,
+        7446
+      ],
+      "attempts": 3,
+      "success": false,
+      "invalid_attempts": 3
+    },
+    {
+      "label": "flat-linear-legacy-v1/focus_food_hub/legacy/0",
+      "schema": "BattlefieldResponse",
+      "request_sha256": "d5a566a5ac90e7aca52b18e41873727f05b6ebfd1c1e6b83361efe0dda7ac979",
+      "request_ids": [
+        7669,
+        7679,
+        7696
+      ],
+      "attempts": 3,
+      "success": false,
+      "invalid_attempts": 3
+    }
+  ],
+  "paid_requests": 0,
+  "limitations": [
+    "Original pipeline behavior is unchanged: helper error recovery allows three attempts and sleeps 30 seconds after each failure, including the final exhausted attempt.",
+    "Primary latency is observed simulated text-ready latency with all waits included. Subtracted-wait figures are arithmetic sensitivity checks, not a rerun or evidence of a fixed pipeline.",
+    "Only battlefield sleeps are subtracted because their endpoint placement is known; extraction work and all model calls remain included.",
+    "Schema validation does not establish semantic correctness. Existing exact-string legacy matching can also fail without invalidating JSON."
+  ]
+}

@@ -37,9 +37,9 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 
 | 方案 | 特点 | 主要取舍 | 尝试与验证状态 |
 | --- | --- | --- | --- |
-| Legacy (`legacy`) | 边听边维护原始论证树，结束后规划并生成反驳 | 保留论证关系；缺少显式撤回修正和提前反驳笔记 | 第一轮：12 案例 × 2 次，Gemma 评分 |
+| Legacy (`legacy`) | 边听边维护原始论证树，结束后规划并生成反驳 | 保留论证关系；缺少显式撤回修正和提前反驳笔记 | 第一轮：12 案例 × 2 次，Gemma 评分  集中对照新 12 案例 ×2：24/24 评分，全量覆盖 27.8%、强度 2.63；均值等待 27.02s（含格式重试），中位数 14.52s。 |
 | End-of-turn (`end_of_turn`) | 收集完整发言后集中分析树和生成反驳 | 减少重复分析；工作集中在端点后 | 第一轮：12 × 2，Gemma 评分 |
-| Linear (`linear`) | 不用论证树，每段输入更新自由文本反驳笔记 | 简单、较低开销；限定条件和假设容易混淆 | 第一轮 12 × 2；第二轮 10 × 1；第三轮补充 8 × 1，通过率 58.3%；第四轮 8 × 2，通过率 35.4%，等待 13.10s（后面三轮 GPT-5.6） |
+| Linear (`linear`) | 不用论证树，每段输入更新自由文本反驳笔记 | 简单、较低开销；限定条件和假设容易混淆 | 第一轮 12 × 2；第二轮 10 × 1；第三轮补充 8 × 1，通过率 58.3%；第四轮 8 × 2，通过率 35.4%，等待 13.10s（后面三轮 GPT-5.6）  集中对照：23/24 评分（1 条 503 耗尽），全量可评分覆盖 30.4%；24 回答平均等待 13.55s，生成 $0.003920/答。 |
 | Corrected Tree (`corrected_tree`) | 树支持说话者自己的修改/撤回，归档失效分支 | 修正旧目标；仍在端点后规划反驳 | 第一轮：12 × 2，Gemma 评分 |
 | Adaptive Linear (`adaptive_linear`) | Linear 加模型门控，决定更新或等待 | 可跳过重复工作；门控本身增加调用与延迟 | 第一轮：12 × 2，Gemma 评分 |
 | Tree Plan (`tree_plan`) | 可纠错论证树驱动流式反驳笔记 | 同时组织论证关系和提前准备；树与笔记维护较贵 | 第一轮：12 × 2，Gemma 评分；第三轮：8 × 1，GPT-5.6，通过率 50.0%，模拟文本等待 17.28s |
@@ -49,15 +49,14 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 | Light Linear (`light_linear`) | Grounded Linear 加精确重复跳过、未完句缓冲、选择性门控 | 减少无效工作；调度的独立收益仍不确定 | 第二轮：10 × 1；第三轮：8 × 1，均 GPT-5.6；第三轮通过率 70.8%，等待 10.52s；另有旧案例单次真实 ASR/TTS 对照 |
 | Grounded Tree (`grounded_tree`) | 反驳绑定有效节点与原文，利用攻击关系和未回应目标排序；第四轮修复冲突更新、节点归属和回应关系 | 修复后绑定更可靠；仍付出建树成本，提取正确性和最终条件覆盖不由绑定保证 | 第三轮 8 × 1，通过率 62.5%，最终回退 3/8；第四轮 8 × 2，通过率 47.9%，等待 10.20s，最终回退 1/16，均 GPT-5.6；不同案例不能作修复前后质量比较；第五轮：16/16 评分，43.8%，13.19s；第六轮：43.8%→52.1%，但最终回退 15/16；新旧条件类型冲突需修复。  第七轮修复：58.3%，最终回退 2/16；无依据事实标记 75.0%→18.8%。 |
 | Light Tree (`light_tree`) | Grounded Tree 加重复跳过、未完句缓冲与选择性门控，结束时强制处理积压 | 本轮调用从 Grounded Tree 的 14.0 降至 13.25；延迟未进一步下降，质量仍受提取与条件覆盖限制 | 第三轮：8 × 1，GPT-5.6，通过率 62.5%，等待 11.96s；7 次中间状态回退，2/8 最终回退 |
-| Flat Tree (`flat_tree`) | 修复后的同一树更新与节点来源；索引式规划和限定条件账本，但规划/输出移除祖先、回应边和结构排序 | 隔离显式关系指导；仍可从发言推断关系、支付建树成本，索引格式仍会失败 | 第四轮 8 × 2，GPT-5.6，通过率 41.7%，等待 9.53s，最终回退 4/16；第五轮：16/16 评分，56.3%，10.96s；第六轮：56.3%→66.7%，最终回退 7/16；错误标记增加。  第七轮：75.0%，回退 6/16；无依据事实标记 43.8%→12.5%。 |
+| Flat Tree (`flat_tree`) | 修复后的同一树更新与节点来源；索引式规划和限定条件账本，但规划/输出移除祖先、回应边和结构排序 | 隔离显式关系指导；仍可从发言推断关系、支付建树成本，索引格式仍会失败 | 第四轮 8 × 2，GPT-5.6，通过率 41.7%，等待 9.53s，最终回退 4/16；第五轮：16/16 评分，56.3%，10.96s；第六轮：56.3%→66.7%，最终回退 7/16；错误标记增加。  第七轮：75.0%，回退 6/16；无依据事实标记 43.8%→12.5%。  集中对照全新案例：24/24，覆盖 51.4%、强度 3.67、等待 13.99s；优于原始 Linear/Legacy，但含审查差异，回退 8/24。 |
 | Branch Tree (`branch_tree`) | 在同一来源机制上使用质疑—回应路径、已有回应、同一质疑的其他回应与让步边 | 关系直接参与下一步反驳；上下文和成本增加，最终仍会遗漏限定条件；对 Flat 的独立增益未证实 | 第四轮 8 × 2，GPT-5.6，通过率 43.8%，等待 10.62s，最终回退 3/16；相对 Flat +2.1 个百分点，95% 区间跨零；第五轮：15/16 评分（1 条 503 耗尽重试），55.6%，12.43s；与线性基线的完整案例区间跨零；第六轮完整 7 案例配对：57.1%→64.3%，差值 95% 区间 [-11.9,+23.8] 个百分点；整体质量未可靠提高。  第七轮：62.5%→58.3%，回退 2/16；无依据事实标记 56.3%→0%，但抽查仍有漏报。 |
 | 完整保留树 + 规则选择（现有纠错树模式的新实现） | 撤回只标记，修改新增版本；旧节点与回应链保留；生成按当前性、最近更新、回应情况选择有限子图 | 来源/版本审计通过；限定条件列表和最终回答仍会遗漏信息，节点上限不等于 token 上限 | 第五轮 8 个新案例 × 2 次 × 5 配置：80 回答、79 评分；成功绑定树的 Branch 子集覆盖率 47.2%，整体优势未确立 |
 | Branch 宽视图（同一模式的参数消融） | 相同保留历史和当前性规则，节点上限从 8+16 放宽到 128+256，仍最多规划 3 个主张 | 本轮未截断当前视图；并非旧代码或无限长度生成，另行抽取的图存在差异 | 第五轮：16/16 评分，47.9%，12.43s；默认 Branch 的完整案例均分较高，但不足以归因于节点裁剪 |
 | 主张条件提取 + 条件保留检查（现有模式改进） | 提取范围/时间/例外/前提/让步与原文归属；既有反馈逐条检查，最终修订读取当前条件 | 生成侧调用 904→904；输入输出变长；提取漏项、误判无关和无依据断言仍在，Grounded Tree 类型兼容出现回归 | 第六轮 64 回答/64 评分；三个树模式清单均分上升，但所有前后差值区间跨零，不能认定整体质量稳定提升 |
 
 | 条件协议与事实审查修复（现有模式改进） | 统一六种规划限定类型；未分类原文进入候选；无关豁免需证据；既有反馈逐句审查事实前提 | 生成调用仍 904 次，token 和等待增加；条件漏查与语义误判仍在，自动评审存在漏报 | 第七轮 64/64；Grounded Tree 计划拒绝 52→5、最终回退 15→2；树模式错误标记下降，Branch 覆盖下降，不能认定整体质量稳定提升 |
-
-| Flat / Linear / Legacy 集中对照 | 当前三个完整流程，同一模型与评审；12 个全新案例、正反各半、每种重复两次 | 同时比较质量、延迟、调用与费用；包含纠错和审查差异，不能只归因于树结构 | 已冻结 72 回答配置；预期新增 $2–5，原累计 $200 预算内，待运行 |
+| Flat / Linear / Legacy 集中对照 | 当前三个完整流程，同一模型与评审；12 个全新案例、正反各半、每种重复两次 | Flat 更好保留条件且减少错误标记，生成费用约 Linear 2.77 倍；纠错与审查也不同，不能单独归因于树 | 72 回答/71 评分；共同 11 案例覆盖 53.0% /30.3% /27.3%；Flat 对 Linear +22.7pp [10.6,34.8]，对 Legacy 全12案例 +23.6pp [11.1,37.5] |
 
 第一轮、第二轮的不同评分模型和案例不能直接混合排名。最新方向以论证树为主方法，Linear 用于消融比较；后续评分统一 GPT-5.6。
 各轮成绩属于当时冻结的代码。最新的“保留树 + 规则选择”修改现有纠错树模式，不增加新的模式名；以前评测采用的整条分支归档移除行为保留在历史提交中。
@@ -66,7 +65,7 @@ Evaluate targeted rebuttal quality, final-condition correctness, claim coverage,
 
 ## Budget and accounting
 
-**Latest completed evaluation:** condition-repair regression finished with **64 answers and 64 judgments**, compared with all 64 frozen sixth-round results. Grounded Tree final fallback improves **15/16→2/16**. Tree-mode error flags fall, but Branch condition coverage **62.5%→58.3%**, all before/after coverage intervals include zero, and spot checks find semantic errors missed by the judge. New known usage **$1.76402692**; five failed HTTP 503 requests retain **$1.86605760** in unknown-usage bounds, each single identical retry succeeded. Cumulative **7,289 requests**, **$11.22637681 known usage**, **$51.13737684 guarded occupancy**, **$148.86262316 headroom** under the unchanged **$200** cap; zero pending. Historical reservation sum **$915.25454880** is not current occupancy. Earlier frozen reports remain unchanged.
+**Latest completed evaluation:** focused Flat / original Linear / Legacy comparison on **12 fresh cases ×2 repeats ×3 methods**: **72 generated answers, 71 judgments**. One Linear judgment exhausted its sole HTTP503 retry; no third attempt. On the common 11 complete cases, condition coverage is **53.0% /30.3% /27.3%**. Flat improves over Linear by **22.7 pp [10.6,34.8]**, with higher strength and fewer automated error flags, but costs about 2.77× per generated answer and has 8/24 final plan fallbacks. Legacy latency includes three exhausted schema-recovery episodes. New known usage **$1.76107792**, unknown bounds **$1.11902560**. Cumulative **8,153 requests**, **$12.98745473 known usage**, **$59.30071412 guarded occupancy**, **$140.69928588 headroom** under unchanged **$200** cap, zero pending. All historical outputs retained.
 
 - Approved cumulative cap: **USD 200.00**.
 - At creation of this log: **0 paid inference requests launched by this task; attributable experiment cost USD 0.00**. Existing unrelated proxy traffic is excluded.
@@ -1549,4 +1548,224 @@ is preserved.
 
 ```bash
 PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id flat-linear-legacy-v1 --split test --cases-file experiments/incremental_planning/cases_focus_v1.json --modes flat_tree linear legacy --repeats 2 --workers 2 --worker-index N --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200
+```
+
+Runtime clarification: Legacy battlefield generation has produced objects where its
+schema expects string counterarguments. The **unchanged** `get_response_with_retry`
+helper permits **three total attempts**, waiting **30 seconds after a parsing/schema
+error**. This application-level recovery existed in the frozen source before launch;
+it is distinct from the budgeted HTTP client's disabled automatic retries and the
+single manual missing-judge retry. All helper attempts remain budgeted and their
+waits count in measured latency. The manifest now states this distinction explicitly;
+no code or retry setting was changed. Report these schema failures separately when
+interpreting Legacy latency.
+
+## 2026-10-03 — focused Flat / Linear / Legacy results
+
+**72/72 answers generated, 71/72 judged.** Both workers exited. Worker 0 has an
+all-judged completion marker; worker 1 has an explicit finished marker preserving
+one unavailable judgment (`focus_food_hub/linear/0`). Its first request **7900**
+and sole identical retry **7917** both returned HTTP503. No third attempt, score
+imputation or answer regeneration. Legacy `focus_translated_notices/legacy/1`
+request **7916** failed once and its identical retry **7919** succeeded. The
+remaining-job wrapper uses the same frozen functions, hashes, job partition and
+budget; it skips only the exhausted judgment.
+
+Inference and cases match their launch hashes exactly. Twelve new cases, six
+assigned-for and six assigned-against, two repetitions. All source, model, caps,
+temperatures, evidence and judge prompts are frozen. This is a comparison of
+**complete current pipelines**, including Flat's correction and grounded revision,
+not an isolation of tree representation. Legacy means the current `legacy` mode
+with shared fixes and exact matching, not a historical source checkout.
+
+### Common-case quality comparison
+
+The following table uses the **11 cases complete in all three methods**, averaging
+two repetitions per case (**22 answers per method**). It excludes the entire
+food-hub case, including its available repeat, equally from these quality means.
+
+| Method | Condition coverage | Strength /5 | Strawman flag | Unsupported-fact flag |
+| --- | --- | --- | --- | --- |
+| **Flat Tree** | **53.0%** | **3.64** | **9.1%** | **27.3%** |
+| Original Linear | 30.3% | 2.77 | 50.0% | 90.9% |
+| Legacy | 27.3% | 2.64 | 72.7% | 100.0% |
+
+Flags are fallible model judgments, not independently adjudicated factual-error
+rates. Flat still has six flagged unsupported answers in this common subset.
+Its current safeguards do not establish truth or completeness.
+
+The predeclared pairwise comparisons use every case complete in the **two** methods
+being compared (11 cases for pairs involving Linear; all 12 for Flat vs Legacy):
+
+| Comparison, candidate minus baseline | Coverage difference, pp [95% interval] | Strength difference [95% interval] | Case wins/ties/losses on coverage |
+| --- | --- | --- | --- |
+| Flat vs Linear, N=11 | **+22.7 [10.6,34.8]** | **+0.86 [0.68,1.05]** | 8 /2 /1 |
+| Flat vs Legacy, N=12 | **+23.6 [11.1,37.5]** | **+1.04 [0.75,1.29]** | 8 /4 /0 |
+| Linear vs Legacy, N=11 | +3.0 [−7.6,13.6] | +0.14 [−0.14,0.41] | 5 /3 /3 |
+
+Bootstrap by case after averaging repetitions; 10,000 bootstrap draws, intervals
+unadjusted for multiple comparisons. On this small fresh set, evidence favors the
+current Flat pipeline over both controls. Linear's quality advantage over Legacy
+is not established. Flat's only coverage loss to Linear is the bus-display case.
+
+All-available descriptive coverage is Flat **37/72 checks =51.4%** (24 judged
+answers), Linear **21/69 =30.4%** (23), Legacy **20/72 =27.8%** (24). If the missing
+Linear answer scored anywhere from zero to all checks, its full-24-answer mean
+would lie in **[29.2%,33.3%]**, and Flat's descriptive advantage in
+**[18.1,22.2] pp**. These are logical missing-score bounds, not confidence intervals
+or substituted verdicts. The generic summary's Linear timing uses its 23 judged
+answers; use the focused comparison report for timing/cost over all 24.
+
+The earlier Flat **75%** came from different, repeatedly used cases. The new
+**51.4%** is not a measured before/after regression; neither source nor settings
+were tuned on these new outputs.
+
+### Latency, calls and generation cost
+
+These descriptive values use **all 24 generated answers per method**, including
+the unscored Linear answer. Setup is charged to cost/call totals. Text-ready wait
+uses the same simulated arrival schedule, excludes ASR/TTS and grading, and ends
+before post-speech tree analysis. Different answer lengths also affect timing.
+
+| Method | Mean text wait | Median | P90, nearest rank | Max | Generation calls/answer, setup included | Setup calls/answer | Generation cost/answer | Mean words |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Flat | 13.99s | 14.08s | 17.41s | 18.79s | 14.33 | 2.67 | $0.010859 | 114.00 |
+| Linear | 13.55s | 12.79s | 18.38s | 25.10s | 6.83 | 0 | $0.003920 | 132.83 |
+| Legacy | 27.02s | 14.52s | 109.04s | 113.99s | 11.75 | 2.67 | $0.005626 | 133.46 |
+
+Flat vs Linear paired wait difference is **+0.26s [−1.71,+2.10]** on 11 complete
+cases: no reliable latency difference. Flat generation costs **2.77× Linear** and
+**1.93× Legacy** on all generated answers; more preparation remains costly even
+when its work overlaps the opponent's speech. Mean input/output tokens per answer:
+Flat **71,995/3,748**, Linear **21,244/2,895**, Legacy **33,376/3,218**. Mean complete
+worker return, including own-speech analysis: **16.62/13.55/29.90s**, respectively.
+
+Legacy's large mean is substantially explained by its unchanged helper recovery:
+three answers (both riverside-stall repeats and food-hub repeat 0) exhaust three
+`BattlefieldResponse` attempts each. All **nine** failures put objects where
+`counterarguments` expects strings, and each failure waits **30 seconds**, including
+the last attempt. These three episodes contribute **270 seconds total**, or
+**11.25s per Legacy answer**, plus the model-call durations already included.
+All repeated request objects are identical. No output is truncated.
+
+Purely subtracting those known endpoint waits changes Legacy's mean from
+**27.02s to 15.77s**. This is arithmetic sensitivity, not a rerun of repaired Legacy
+and not a new quality score. It retains all retry model calls, other overhead and
+original outputs. Do not attribute the full 13.03s Flat–Legacy observed difference
+to tree representation or normal model inference speed. The actual primary result
+retains all waits. No helper/schema setting was changed during the experiment.
+
+### Case types and implementation diagnostics
+
+Descriptive condition coverage by case type, Flat /Linear /Legacy:
+
+| Type | Independent cases | Coverage |
+| --- | --- | --- |
+| Simple single-turn | 3 | 55.6% /33.3% /22.2% |
+| Position revision | 3 | 66.7% /44.4% /22.2% |
+| Prior concession | 3 | 44.4% /27.8% /33.3% |
+| Multiple issues | 3 | 38.9% /13.3% /33.3% |
+
+Each cell normally has six answers; Linear multiple-issues has five judged answers.
+These small subgroups are descriptive, not independent significance tests. Flat
+coverage is 55.6% when assigned-for and 47.2% when assigned-against; no claim that
+side causes this difference. Dense multiple-issue coverage remains weak.
+
+Flat rejects **20/92 planning snapshots**: 11 invalid lists, nine invalid rebuttal
+indices. **8/24 final plans fall back**, with 16 valid bound plans. Descriptive
+coverage is **52.1% with valid plans versus 50.0% with fallback**; these selected
+subsets have different cases and cannot establish causality or equivalence. The
+whole-pipeline gain cannot be attributed solely to successful tree binding.
+Selected source/owner/version/material audits find zero issues. Two extracted
+constraints are rejected; two extraction warnings identify unsupported/motion-only
+claims. Legacy logs **25 unmatched relation targets** (24 reinforce, one attack),
+an additional limitation of this exact-matching baseline.
+
+All Flat tree-extraction helper outputs pass their schema; the plan rejections above
+are separate indexed-plan validation failures. Flat has **24 structured reviews and
+24 revisions**, all valid JSON and all fresh checklist IDs carried through. Its
+181 condition/candidate entries include 117 typed and 56 unclassified sources;
+51 raw condition rows are omitted, and local validation leaves **80 unchecked,
+58 preserved, 42 missing, one not applicable**, rejecting two unknown IDs. All
+201 draft sentences receive a raw assertion row, but 30 remain unchecked; one
+invalid sentence ID is rejected. Original Linear and Legacy use their generic
+feedback, so they do not have these structured condition/assertion arrays.
+
+### Preselected output inspection and interpretation
+
+Before reading the selected answer texts/verdicts, select one case per type, two
+assigned-for and two assigned-against, all three methods at repeat 0: bus display,
+lecture recordings, day lockers and school newsletter. All **12 outputs**, source
+speeches, checks, judgments and observations are preserved in
+`flat-linear-legacy-v1_spot_checks.json`. This is not exhaustive human adjudication;
+no verdict is rewritten.
+
+- **Bus display:** all three score 1/3. Flat uses conditional risk language while
+  Linear/Legacy assert the display will quickly break. All omit important scope,
+  hours or the retained printed timetable. Better factual framing does not imply
+  full condition coverage. Flat loses this case on the two-repeat average.
+- **Lecture recordings:** Flat scores 3/3, preserving lecturer approval, class-only
+  portal, seven days and pauses for questions; automation is a possibility rather
+  than a claim of existing capability. Linear/Legacy both score 1/3 and assert easy
+  administrative solutions without supplied support. Legacy also recasts the
+  limited permission as denying students access. **Flat's answer uses raw fallback**
+  here, so this example highlights the complete grounded revision path rather than
+  proving that a parsed flat plan caused the improvement.
+- **Day lockers:** Flat/Linear/Legacy score 2/3, 1/3, 2/3. Flat keeps six lockers,
+  five weeks, opening hours, no overnight storage, assistance and no deposit, but
+  still omits free use. Linear invents compelled unpaid warehouse work; Legacy adds
+  unsupported claims about management burdens and broken-lock responsibility.
+- **School newsletter:** Flat/Linear/Legacy score 1/3, 0/3, 1/3. Flat still falsely
+  attributes the claim that absent academic gains invalidate communication benefits
+  and changes a two-issue one-month trial into two issues per month. It omits public
+  comment exclusion and no-app/no-account access terms. All three receive both
+  error flags. This remains a concrete failure of semantic fidelity.
+
+For this task, the evidence supports keeping **Flat as the quality-focused current
+pipeline, original Linear as the low-cost baseline, and Legacy as a historical
+control**. This recommendation concerns these implementations and authored cases.
+It does not establish that trees alone outperform linear notes: Flat also adds
+correction, source attribution and different feedback/revision, and one-third of
+its final plans fall back. Isolating tree value would require a matched review
+control, which is not added or claimed in this three-way run.
+
+### Cost, validation and artifacts
+
+**864 requests =790 generation-side +74 judge requests.** Generation totals:
+Flat 344, Linear 164, Legacy 282 (including six extra battlefield attempts). Judge
+totals: Flat 24, Linear 25, Legacy 25 =71 successful judgments +three HTTP503
+failures. The two food-hub Linear failures remain charged and unscored; the Legacy
+retry succeeds. No changed caps, regenerated answers or replacement judgments.
+
+New known usage **$1.76107792** = **$0.48970672 generation** +
+**$1.27137120 judging**, **3,098,472 input /282,514 output tokens**. Unknown failure
+bounds **$1.11902560**. Additional guarded exposure **$8.16333728**. Cumulative
+**8,153 requests**, **$12.98745473 known usage**, **$59.30071412 guarded occupancy**,
+**$140.69928588 remaining** under the unchanged **$200** cap, zero pending. The
+read-only audit verifies all 8,153 artifacts with zero issues and no settlement
+rewrite. Usage is a rate/token estimate, not a settled provider invoice.
+
+Preflight 41 relevant tests passed on unchanged inference previously validated by
+335 tests +42 subtests. Post-run source/case hashes, unique complete generated
+identities, worker partitions and exact retry requests checked. Independent raw
+arithmetic verifies all/common quality totals and generation calls; temporary
+report fixtures verify missing-whole-case exclusion and all-generated costs.
+Fresh review→revision checklist IDs match; report/resume scripts compile and diff
+checks pass. All historical scores and the pre-existing user table-format edit
+remain preserved.
+
+Artifacts: `manifest_focus_v1.json`, `cases_focus_v1.json`, `compare_focus.py`,
+`resume_focus_remaining.py`, `diagnose_focus_helpers.py`,
+`flat-linear-legacy-v1_summary.json`, `flat-linear-legacy-v1_comparison.json`,
+`flat-linear-legacy-v1_diagnostics.json`, `flat-linear-legacy-v1_helper_diagnostics.json`,
+`flat-linear-legacy-v1_review_diagnostics.json`, `flat-linear-legacy-v1_spot_checks.json`,
+`cost_audit_focus_v1.json`.
+
+```bash
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/diagnose_branch_run.py flat-linear-legacy-v1 --cases-file experiments/incremental_planning/cases_focus_v1.json
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/diagnose_condition_review.py flat-linear-legacy-v1
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/diagnose_focus_helpers.py
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/summarize.py flat-linear-legacy-v1
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/compare_focus.py
+PYTHONPATH=src /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/reconcile_budget.py --output experiments/incremental_planning/cost_audit_focus_v1.json
 ```

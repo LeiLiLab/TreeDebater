@@ -1,6 +1,6 @@
 {
   "task": "Focused complete-pipeline comparison of Flat Tree, original Linear and Legacy on twelve fresh cases",
-  "status": "prepared",
+  "status": "completed: 72 generated, 71 judged, one judgment exhausted its single retry",
   "created_utc": "2026-10-03T22:18:15.413535+00:00",
   "authorization": "User explicitly requested concentrating on Flat Tree, Linear and Legacy; continue the existing user-approved cumulative USD200 task budget without increase or reset.",
   "source_commit": "c421b09",
@@ -93,8 +93,31 @@
     "guard": "Every request reserves full conservative bound atomically before dispatch; successful verified receipts settle at 4x usage, errors/unknown retain bounds. Reject dispatch above cumulative cap. No automatic retry or restart.",
     "stop": "Stop only these run workers if accounting fails or cap blocks dispatch; preserve saved answers and artifacts. No new paid compute provisioned."
   },
-  "retry_policy": "No regenerated saved answers or replaced judgments. At most one unchanged missing-judge retry after diagnosis; exhausted judgments remain missing. No automatic HTTP retries or worker restart.",
-  "judge_retries": [],
+  "retry_policy": "No saved-answer regeneration or replaced judgments. At most one unchanged missing-judge retry after diagnosis; exhausted judgments remain missing. No automatic client HTTP retries or worker restarts. Existing helper-level schema recovery remains part of each pipeline (MAX_TRY_NUM=3, 30-second waits); every attempt is metered.",
+  "judge_retries": [
+    {
+      "failed_request_id": 7900,
+      "label": "flat-linear-legacy-v1/focus_food_hub/linear/0",
+      "reason": "HTTP503",
+      "status": "retry exhausted; judgment unavailable",
+      "answer_regenerated": false,
+      "unknown_usage_bound_usd": 0.3728912,
+      "retry_request_id": 7917,
+      "identical_request_verified": true,
+      "retry_unknown_usage_bound_usd": 0.3728912
+    },
+    {
+      "failed_request_id": 7916,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+      "reason": "HTTP503",
+      "status": "succeeded; no further retry",
+      "answer_regenerated": false,
+      "unknown_usage_bound_usd": 0.3732432,
+      "retry_request_id": 7919,
+      "retry_usage_usd": 0.018972799999999998,
+      "identical_request_verified": true
+    }
+  ],
   "primary_comparisons": [
     "flat_tree vs linear: case-paired condition coverage",
     "flat_tree vs legacy: case-paired condition coverage"
@@ -114,7 +137,75 @@
     "All arms use exact target matching and no embedding fallback; this may particularly affect legacy relation attachment.",
     "All arms receive identical fixed history/evidence, model, token caps and one feedback/revision pass, but their prompts and number of preparatory calls intentionally differ.",
     "Automatic judging may miss semantic errors or apply composite checks inconsistently; preserve judgments and report spot checks separately.",
-    "Text-only simulated endpoint latency excludes ASR/TTS; pricing and usage remain provisional."
+    "Text-only simulated endpoint latency excludes ASR/TTS; pricing and usage remain provisional.",
+    "Legacy battlefield schema recovery can add 30-second waits and extra model attempts. Observed text latency includes them; report retry/warning counts separately instead of attributing the whole difference to representation."
   ],
-  "offline_preflight": "Unchanged inference source previously passed 335 tests +42 subtests; focused policy/history/feedback/budget suite now passes 41 tests. Cases validated for unique IDs/motions, side/history consistency and predefined three-check rubric; report compilation passes."
+  "offline_preflight": "Unchanged inference source previously passed 335 tests +42 subtests; focused policy/history/feedback/budget suite now passes 41 tests. Cases validated for unique IDs/motions, side/history consistency and predefined three-check rubric; report compilation passes.",
+  "preselected_spot_checks": {
+    "selection": "One case per kind, two assigned-for/two assigned-against; all three methods at repeat 0. Chosen before reading selected answer texts or verdicts. Not exhaustive adjudication.",
+    "cases": [
+      "focus_bus_display",
+      "focus_lecture_recordings",
+      "focus_day_lockers",
+      "focus_school_news"
+    ],
+    "repeats": [
+      0
+    ]
+  },
+  "existing_helper_retry_policy": {
+    "source": "src/utils/tool.py:get_response_with_retry; src/utils/constants.py:MAX_TRY_NUM",
+    "max_attempts": 3,
+    "wait_seconds_after_error": 30,
+    "changed_for_this_run": false,
+    "discovery": "Legacy battlefield output can put objects where string counterarguments are required. Record the original recovery behavior and measured wait, without editing the frozen code."
+  },
+  "completed_utc": "2026-10-03T22:51:22.753026+00:00",
+  "generated_answers": 72,
+  "judged_answers": 71,
+  "missing_judgments": [
+    [
+      "focus_food_hub",
+      "linear",
+      0
+    ]
+  ],
+  "common_complete_cases": [
+    "focus_bus_display",
+    "focus_room_booking",
+    "focus_seed_swap",
+    "focus_lecture_recordings",
+    "focus_riverside_stall",
+    "focus_remote_ballots",
+    "focus_day_lockers",
+    "focus_hybrid_meetings",
+    "focus_translated_notices",
+    "focus_school_news",
+    "focus_sports_field"
+  ],
+  "source_and_cases_unchanged": true,
+  "summary": "flat-linear-legacy-v1_summary.json",
+  "comparison": "flat-linear-legacy-v1_comparison.json",
+  "diagnostics": "flat-linear-legacy-v1_diagnostics.json",
+  "review_diagnostics": "flat-linear-legacy-v1_review_diagnostics.json",
+  "helper_diagnostics": "flat-linear-legacy-v1_helper_diagnostics.json",
+  "spot_checks": "flat-linear-legacy-v1_spot_checks.json",
+  "cost_audit": "cost_audit_focus_v1.json",
+  "final_cost": {
+    "requests": 864,
+    "generation_requests": 790,
+    "judge_requests": 74,
+    "known_usage_estimate_usd": 1.761077919999999,
+    "generation_usage_estimate_usd": 0.48970672,
+    "judging_usage_estimate_usd": 1.2713712,
+    "unknown_request_reservations_usd": 1.1190256,
+    "additional_accounted_exposure_usd": 8.163337279999993,
+    "cumulative_requests": 8153,
+    "cumulative_known_usage_usd": 12.987454730000012,
+    "cumulative_accounted_exposure_usd": 59.30071412,
+    "remaining_guarded_budget_usd": 140.69928588,
+    "pending": 0,
+    "audit_issues": []
+  },
+  "conclusion": "On these fresh cases, the current Flat pipeline improves coverage and strength versus original Linear and Legacy, with fewer automatic error flags. Flat vs Linear: +22.7pp coverage [10.6,34.8], 11 complete case pairs; Flat vs Legacy: +23.6pp [11.1,37.5], 12 pairs. Flat generation costs about 2.77x Linear with no reliable paired text-latency difference. Legacy mean latency is inflated by nine 30-second schema waits across three answers. Eight Flat final plans fall back; semantic omissions persist. Complete-pipeline gain does not establish an isolated tree benefit."
 }

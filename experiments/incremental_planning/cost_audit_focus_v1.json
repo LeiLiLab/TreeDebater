@@ -1,0 +1,249 @@
+{
+  "created_utc": "2026-10-03T22:47:35.257022+00:00",
+  "cap_usd": 200.0,
+  "entries": 8153,
+  "original_calls_sha256": "e6d390d529a88d64aac04ffe2c5d32dc13ca33d7cf30e0d1ad4831945ee6d8b9",
+  "artifacts_manifest_sha256": "8500befba4104ad98beb4a05a5f0f7e62f22805ec00ff37efe7eec85a346886d",
+  "artifacts_checked": 8153,
+  "model_totals": {
+    "google.gemma-4-26b-a4b": {
+      "entries": 7642,
+      "input_tokens": 30913186,
+      "output_tokens": 2119473,
+      "usage_estimate_usd": 4.866503380000011,
+      "original_reservations_usd": 846.5419680000006
+    },
+    "nvidia.nemotron-super-3-120b": {
+      "entries": 10,
+      "input_tokens": 6856,
+      "output_tokens": 2731,
+      "usage_estimate_usd": 0.0028035499999999997,
+      "original_reservations_usd": 0.640252
+    },
+    "gpt-5.6-sol": {
+      "entries": 500,
+      "input_tokens": 405587,
+      "output_tokens": 286045,
+      "usage_estimate_usd": 8.0775728,
+      "original_reservations_usd": 179.91629920000005
+    },
+    "bounded-audio-bundle": {
+      "entries": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "usage_estimate_usd": 0.04057500000000001,
+      "original_reservations_usd": 0.5
+    }
+  },
+  "original_reservations_usd": 1027.5985192000014,
+  "usage_estimate_usd": 12.987454730000012,
+  "candidate_successful_text_settlements": 8131,
+  "retained_full_reservations": [
+    {
+      "id": 1848,
+      "label": "v2-gpt-calibration/acknowledged_but_criticized",
+      "state": "error",
+      "reservation_usd": 0.273944,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 1849,
+      "label": "v2-gpt-parameter-check",
+      "state": "error",
+      "reservation_usd": 0.17070240000000003,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 1895,
+      "label": "grounded-heldout-v1/fresh_repair/linear/0",
+      "state": "error",
+      "reservation_usd": 0.2865104,
+      "known_usage_estimate_usd": 0.0207152
+    },
+    {
+      "id": 1962,
+      "label": "grounded-heldout-v1/fresh_lighting/linear/0",
+      "state": "error",
+      "reservation_usd": 0.2836944,
+      "known_usage_estimate_usd": 0.0206976
+    },
+    {
+      "id": 1982,
+      "label": "grounded-heldout-v1/fresh_evening_access/structured_linear/0",
+      "state": "error",
+      "reservation_usd": 0.2840288,
+      "known_usage_estimate_usd": 0.0206976
+    },
+    {
+      "id": 2151,
+      "label": "grounded-audio-v1/external-audio",
+      "state": "ok",
+      "reservation_usd": 0.5,
+      "known_usage_estimate_usd": 0.04057500000000001
+    },
+    {
+      "id": 3754,
+      "label": "branch-heldout-v1/branch_fresh_lockers/grounded_linear/1",
+      "state": "error",
+      "reservation_usd": 0.368456,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 5237,
+      "label": "retained-heldout-v1/retained_fresh_courtyard/branch_tree/1",
+      "state": "error",
+      "reservation_usd": 0.3781712,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 5263,
+      "label": "retained-heldout-v1/retained_fresh_courtyard/branch_tree/1",
+      "state": "error",
+      "reservation_usd": 0.3781712,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 5419,
+      "label": "conditions-regression-v1/retained_fresh_archive/grounded_linear/0",
+      "state": "error",
+      "reservation_usd": 0.38119840000000005,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 5771,
+      "label": "conditions-regression-v1/retained_fresh_waterstation/flat_tree/1",
+      "state": "error",
+      "reservation_usd": 0.36287680000000005,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 5779,
+      "label": "conditions-regression-v1/retained_fresh_nightgarden/grounded_linear/0",
+      "state": "error",
+      "reservation_usd": 0.36916,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 6207,
+      "label": "conditions-regression-v1/retained_fresh_workshop/flat_tree/1",
+      "state": "error",
+      "reservation_usd": 0.3637744,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 6234,
+      "label": "conditions-regression-v1/retained_fresh_courtyard/branch_tree/0",
+      "state": "error",
+      "reservation_usd": 0.37586559999999997,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 6953,
+      "label": "condition-repair-v1/retained_fresh_visitor/flat_tree/1",
+      "state": "error",
+      "reservation_usd": 0.37836480000000006,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 7163,
+      "label": "condition-repair-v1/retained_fresh_equipment/grounded_tree/0",
+      "state": "error",
+      "reservation_usd": 0.3751088,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 7190,
+      "label": "condition-repair-v1/retained_fresh_courtyard/branch_tree/0",
+      "state": "error",
+      "reservation_usd": 0.37590080000000003,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 7248,
+      "label": "condition-repair-v1/retained_fresh_nightgarden/branch_tree/1",
+      "state": "error",
+      "reservation_usd": 0.36741759999999996,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 7279,
+      "label": "condition-repair-v1/retained_fresh_nightgarden/grounded_tree/0",
+      "state": "error",
+      "reservation_usd": 0.36926559999999997,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 7900,
+      "label": "flat-linear-legacy-v1/focus_food_hub/linear/0",
+      "state": "error",
+      "reservation_usd": 0.37289120000000003,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 7916,
+      "label": "flat-linear-legacy-v1/focus_translated_notices/legacy/1",
+      "state": "error",
+      "reservation_usd": 0.3732432,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 7917,
+      "label": "flat-linear-legacy-v1/focus_food_hub/linear/0",
+      "state": "error",
+      "reservation_usd": 0.37289120000000003,
+      "known_usage_estimate_usd": null
+    }
+  ],
+  "settlement_margin": 4,
+  "proposed_accounted_exposure_usd": 59.300714119999974,
+  "proposed_available_budget_usd": 140.69928588000002,
+  "external_audio_http_calls": 20,
+  "unknown_usage_request_ids": [
+    1848,
+    1849,
+    3754,
+    5237,
+    5263,
+    5419,
+    5771,
+    5779,
+    6207,
+    6234,
+    6953,
+    7163,
+    7190,
+    7248,
+    7279,
+    7900,
+    7916,
+    7917
+  ],
+  "pending": 0,
+  "issues": [],
+  "applied": false,
+  "verified_text_rates_per_million": {
+    "google.gemma-4-26b-a4b": [
+      0.13,
+      0.4
+    ],
+    "nvidia.nemotron-super-3-120b": [
+      0.15,
+      0.65
+    ],
+    "gpt-5.6-sol": [
+      4.4,
+      22.0
+    ]
+  },
+  "pricing_sources": [
+    "https://aws.amazon.com/bedrock/pricing/",
+    "https://docs.aws.amazon.com/en_en/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html",
+    "https://developers.openai.com/api/docs/models/tts-1",
+    "https://developers.openai.com/api/docs/models/whisper-1"
+  ],
+  "policy": "4x verified cost for successful text responses; all failed/unknown/audio requests retain full original reservations. Originals are never rewritten.",
+  "limitations": [
+    "Usage estimates are not settled invoices; no provider billing statement was available.",
+    "Request logs cannot independently rule out unreported upstream retries; 4x accrual is a conservative allowance, not a proof of a billing upper bound."
+  ]
+}

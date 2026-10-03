@@ -1,0 +1,467 @@
+{
+  "run_id": "flat-linear-legacy-v1",
+  "selection": {
+    "selection": "One case per kind, two assigned-for/two assigned-against; all three methods at repeat 0. Chosen before reading selected answer texts or verdicts. Not exhaustive adjudication.",
+    "cases": [
+      "focus_bus_display",
+      "focus_lecture_recordings",
+      "focus_day_lockers",
+      "focus_school_news"
+    ],
+    "repeats": [
+      0
+    ]
+  },
+  "paid_requests": 0,
+  "examples": [
+    {
+      "case": "focus_bus_display",
+      "kind": "simple_single_turn",
+      "assigned_side": "against",
+      "prior_history": [],
+      "opponent_chunks": [
+        "I propose one timetable display at the central bus shelter, operating from seven in the morning until seven in the evening.",
+        "The printed timetable would remain alongside it. The display would show scheduled departures, not live vehicle positions.",
+        "The installation grant is available, but responsibility for paying future electricity and repairs has not been assigned."
+      ],
+      "checks": [
+        "Recognizes one display at the central shelter with seven-to-seven operating hours",
+        "Acknowledges that the printed timetable remains and does not describe the proposal as providing live vehicle tracking",
+        "Engages the unassigned ongoing electricity or repair responsibility without treating the installation grant as absent or all maintenance as already funded"
+      ],
+      "repeat": 0,
+      "methods": [
+        {
+          "mode": "flat_tree",
+          "answer": "The opponent concedes that while an installation grant is available, responsibility for future electricity and repair costs has not been assigned. This creates a gap in long-term planning; without a designated funding source for maintenance, the display risks falling into disrepair and may create a permanent financial burden for the town. Furthermore, while the display will show scheduled departures rather than live vehicle positions, we must ask if this provides sufficient utility. If the display only serves as a digital version of a paper timetable, the town must ensure the investment provides significant value beyond what is already available. We cannot approve a project where the long-term operational costs remain an unresolved question. Therefore, I oppose this motion.",
+          "judge": {
+            "checks": [
+              {
+                "passed": false,
+                "reason": "The answer never mentions that there would be only one display, that it would be at the central shelter, or that it would operate from seven to seven."
+              },
+              {
+                "passed": false,
+                "reason": "It recognizes scheduled rather than live information\u2014\u201cthe display will show scheduled departures rather than live vehicle positions\u201d\u2014but does not explicitly acknowledge that the printed timetable would remain alongside it."
+              },
+              {
+                "passed": true,
+                "reason": "It states that \u201can installation grant is available\u201d while \u201cresponsibility for future electricity and repair costs has not been assigned,\u201d and directly challenges those unresolved costs."
+              }
+            ],
+            "relevance": 5,
+            "rebuttal_strength": 4,
+            "strawman": false,
+            "unsupported_facts": false
+          },
+          "flat_final_raw_fallback": false,
+          "observation": "Recognizes the grant and unassigned upkeep; frames disrepair as a risk rather than certain immediate failure. Still omits one central-shelter display, seven-to-seven hours and explicit retention of the printed timetable. Original judgment 1/3, strength4, no error flags."
+        },
+        {
+          "mode": "linear",
+          "answer": "I will address the opponent's claims regarding the installation grant and the lack of assigned maintenance responsibility. \n\nFirst, my opponent admits that while a grant covers the initial setup, no one has been assigned to pay for electricity or repairs. This represents a significant oversight in fiscal planning. They are suggesting we build something new without a plan to keep it running. A grant is just a down payment, not a complete solution. Without a dedicated budget for upkeep, this electronic display will quickly become a broken, dark screen that wastes taxpayer money. We cannot support a project that creates a permanent, unfunded liability for our town. Instead of installing unmanaged hardware, we should invest those funds into more frequent printed updates and better-maintained physical signage that we know we can afford to keep current. Let us demand a proposal that accounts for the full lifecycle of the project, not just the first day of installation.",
+          "judge": {
+            "checks": [
+              {
+                "passed": false,
+                "reason": "The answer mentions only \u201cthis electronic display\u201d and never recognizes the central-shelter location or seven-to-seven operating hours."
+              },
+              {
+                "passed": false,
+                "reason": "\u201cWe should invest those funds into more frequent printed updates and better-maintained physical signage\u201d proposes an alternative but does not acknowledge that the printed timetable would remain alongside the display; it makes no live-tracking accusation."
+              },
+              {
+                "passed": true,
+                "reason": "\u201cWhile a grant covers the initial setup, no one has been assigned to pay for electricity or repairs\u201d accurately acknowledges the grant and engages the unassigned ongoing costs."
+              }
+            ],
+            "relevance": 4,
+            "rebuttal_strength": 3,
+            "strawman": false,
+            "unsupported_facts": true
+          },
+          "flat_final_raw_fallback": null,
+          "observation": "Asserts the display will quickly become broken/dark and that alternative signage is known to be affordable, neither established by the source. Omits scope/hours and treats paper as an alternative rather than an accepted retained option. Judgment 1/3, strength3, unsupported flag."
+        },
+        {
+          "mode": "legacy",
+          "answer": "I will first attack my opponent's flawed plan and then reinforce our position on long-term sustainability. First, regarding the display's utility, my opponent's plan is redundant. Because they admit the screen only shows scheduled times rather than live positions, it offers no information that the paper timetables don't already provide; we are essentially paying for a digital version of something we already own for free. Second, limiting operating hours to 7:00 PM ignores the vulnerable commuters traveling at night who need information most. Most importantly, I must reinforce our claim that an installation grant is insufficient. A grant covers the start, but not the future. Without a plan for electricity and repairs, this display will quickly break, becoming a dark, broken eyesore that serves as a constant reminder of wasted taxpayer money.",
+          "judge": {
+            "checks": [
+              {
+                "passed": false,
+                "reason": "Only acknowledges the closing time\u2014\u201climiting operating hours to 7:00 PM\u201d\u2014but does not recognize the 7:00 AM start, the single-display limit, or the central-shelter location."
+              },
+              {
+                "passed": false,
+                "reason": "It recognizes scheduled rather than live information\u2014\u201cthe screen only shows scheduled times rather than live positions\u201d\u2014and mentions existing \u201cpaper timetables,\u201d but never acknowledges that the printed timetable would remain alongside the display."
+              },
+              {
+                "passed": true,
+                "reason": "Explicitly states, \u201cA grant covers the start, but not the future. Without a plan for electricity and repairs,\u201d correctly engaging the unassigned ongoing costs while acknowledging the installation grant."
+              }
+            ],
+            "relevance": 5,
+            "rebuttal_strength": 4,
+            "strawman": false,
+            "unsupported_facts": true
+          },
+          "flat_final_raw_fallback": null,
+          "observation": "Asserts it will quickly break and makes an unsupported claim that vulnerable night commuters need information most. Omits most scope/hours and explicit paper retention. Judgment 1/3, strength4, unsupported flag. Higher strength does not certify factual reliability."
+        }
+      ]
+    },
+    {
+      "case": "focus_lecture_recordings",
+      "kind": "position_revision",
+      "assigned_side": "for",
+      "prior_history": [
+        {
+          "side": "against",
+          "stage": "opening",
+          "content": "I oppose all lecture recording because lecturers and students should control their spoken contributions."
+        },
+        {
+          "side": "for",
+          "stage": "rebuttal",
+          "content": "Could a limited class-only recording with consent protect that control while allowing students to revisit explanations?"
+        }
+      ],
+      "opponent_chunks": [
+        "I withdraw my blanket objection. I would allow lecturer-approved audio in the enrolled class portal for seven days after each lecture.",
+        "Recording would pause during student questions, and lecturers could decline without having to give a reason.",
+        "No public uploads are included. The unresolved issue is who checks consent and removes files when the seven days expire.",
+        "Revisiting an explanation may be useful; I have no evidence that recording necessarily reduces attendance."
+      ],
+      "checks": [
+        "Recognizes the replacement position permits lecturer-approved class-portal audio for seven days, rather than maintaining a blanket ban",
+        "Acknowledges pausing during student questions and the lecturer right to decline, and does not treat public uploads as allowed",
+        "Engages consent administration or timely deletion without attributing an established attendance decline to the opponent"
+      ],
+      "repeat": 0,
+      "methods": [
+        {
+          "mode": "flat_tree",
+          "answer": "We acknowledge the opponent's concessions, including lecturer discretion to decline recordings and the ability to pause during student questions. While they permit lecturer-approved audio in the enrolled class portal for seven days, the question of consent and file management remains. Automated system settings within the portal could potentially manage the seven-day deletion timeline, but it is unclear how such automation would verify individual student consent. If consent cannot be systematically verified, the risk of unauthorized access to spoken contributions remains. Furthermore, while the opponent notes a lack of evidence that recording reduces attendance, the potential for students to benefit from revisiting difficult explanations could still justify the policy, even if attendance levels remain unchanged.",
+          "judge": {
+            "checks": [
+              {
+                "passed": true,
+                "reason": "Explicitly recognizes the replacement: \u201cthey permit lecturer-approved audio in the enrolled class portal for seven days\u201d and does not allege a blanket ban."
+              },
+              {
+                "passed": true,
+                "reason": "Acknowledges \u201clecturer discretion to decline recordings and the ability to pause during student questions.\u201d It does not claim public uploads are allowed."
+              },
+              {
+                "passed": true,
+                "reason": "Engages both administration and deletion through \u201cthe question of consent and file management\u201d and \u201cmanage the seven-day deletion timeline,\u201d while acknowledging \u201ca lack of evidence that recording reduces attendance.\u201d"
+              }
+            ],
+            "relevance": 5,
+            "rebuttal_strength": 4,
+            "strawman": false,
+            "unsupported_facts": false
+          },
+          "flat_final_raw_fallback": true,
+          "observation": "Explicitly preserves lecturer approval/discretion, class-only portal, seven days and pauses for questions. Automation is presented as potential, not already available; engages consent/deletion. Judgment 3/3, strength4, no flags."
+        },
+        {
+          "mode": "linear",
+          "answer": "I will address my opponent's new conditions and reinforce why our support for lecture audio remains superior. First, regarding the decision to pause recordings during student questions, this creates a paradox. My opponent admits revisiting explanations is useful, yet they propose cutting out the exact moments where a student\u2019s confusion is finally cleared up. By removing the Q&A, the recording loses its primary value for struggling students. Second, the concerns regarding consent and file removal are practical challenges that modern university systems are already equipped to handle. These are routine tasks easily solved through automated deletion scripts and standard digital consent forms. We should prioritize student comprehension over administrative convenience; therefore, the motion must stand to ensure students have complete, effective access to their course material.",
+          "judge": {
+            "checks": [
+              {
+                "passed": false,
+                "reason": "\u201cI will address my opponent's new conditions\u201d is only generic; the answer never recognizes lecturer approval, the enrolled-class portal, or the seven-day limit."
+              },
+              {
+                "passed": false,
+                "reason": "It recognizes \u201cthe decision to pause recordings during student questions\u201d and does not suggest public uploads are allowed, but never acknowledges that lecturers may decline without giving a reason."
+              },
+              {
+                "passed": true,
+                "reason": "It engages both issues through \u201cconcerns regarding consent and file removal\u201d and \u201cautomated deletion scripts and standard digital consent forms,\u201d while making no claim that attendance declines."
+              }
+            ],
+            "relevance": 4,
+            "rebuttal_strength": 3,
+            "strawman": false,
+            "unsupported_facts": true
+          },
+          "flat_final_raw_fallback": null,
+          "observation": "Omits lecturer approval, portal/seven-day bounds and lecturer opt-out. Asserts modern university systems are already equipped and that automation/forms easily solve the tasks; these capabilities are absent from supplied evidence. Judgment 1/3, strength3, unsupported flag."
+        },
+        {
+          "mode": "legacy",
+          "answer": "I will first address my opponent's concerns regarding administrative management and then reinforce our claim about educational benefits.\n\nFirst, my opponent argues that uncertainty regarding consent and file deletion should stop this policy. While I acknowledge that managing files requires organization, these are merely administrative tasks, not fundamental reasons to deny students help. We can solve this by delegating these tasks to existing departmental administrative workflows and automated deletion schedules. To suggest we cannot implement audio because of paperwork is a false dilemma; we can have both order and access.\n\nSecond, the primary goal is helping students master difficult material. The educational necessity of revisiting complex lectures\u2014such as a difficult mathematical derivation or a nuanced historical timeline\u2014far outweighs these manageable logistical hurdles. By implementing simple rules, we protect privacy while ensuring no student is left behind simply because they couldn't catch every word in a single sitting.",
+          "judge": {
+            "checks": [
+              {
+                "passed": false,
+                "reason": "The answer never acknowledges lecturer approval, the enrolled class portal, or the seven-day limit; instead it characterizes the position as seeking to \u201cdeny students help.\u201d"
+              },
+              {
+                "passed": false,
+                "reason": "It does not mention that \u201cRecording would pause during student questions,\u201d that lecturers may decline, or that public uploads are excluded."
+              },
+              {
+                "passed": true,
+                "reason": "It engages \u201cuncertainty regarding consent and file deletion\u201d and proposes \u201cadministrative workflows and automated deletion schedules,\u201d while making no claim about attendance decline."
+              }
+            ],
+            "relevance": 4,
+            "rebuttal_strength": 3,
+            "strawman": true,
+            "unsupported_facts": true
+          },
+          "flat_final_raw_fallback": null,
+          "observation": "Recasts the opponent as denying students access despite their explicit limited permission; omits the replacement terms. Treats existing administrative workflows and simple rules as sufficient without evidence. Judgment 1/3, strength3, strawman and unsupported flags."
+        }
+      ]
+    },
+    {
+      "case": "focus_day_lockers",
+      "kind": "prior_concession",
+      "assigned_side": "against",
+      "prior_history": [
+        {
+          "side": "for",
+          "stage": "opening",
+          "content": "Library lockers could give visitors somewhere to leave bags while using the reading rooms."
+        },
+        {
+          "side": "against",
+          "stage": "rebuttal",
+          "content": "How would visitors who cannot operate the locks gain access, and would they have to leave a large deposit?"
+        },
+        {
+          "side": "for",
+          "stage": "rebuttal",
+          "content": "I accept staff assistance on request for visitors unable to operate a lock. That will be a condition of any trial."
+        },
+        {
+          "side": "against",
+          "stage": "rebuttal",
+          "content": "That addresses lock operation. Replacement costs and the end-of-day handling of belongings still need a plan."
+        }
+      ],
+      "opponent_chunks": [
+        "The current proposal is six lockers during library opening hours for a five-week trial, with no overnight storage.",
+        "The assistance arrangement we already agreed remains part of the proposal. Use of a locker would be free, with no cash key deposit.",
+        "Users must empty lockers by closing time. Responsibility for lost-key replacement costs is still undecided.",
+        "I accept publishing an unclaimed-item procedure before the trial begins, but no reduction in theft has been measured."
+      ],
+      "checks": [
+        "Recognizes six lockers for five weeks, usable only during library opening hours without overnight storage",
+        "Acknowledges staff assistance on request for users unable to operate a lock, and the free no-cash-deposit terms",
+        "Engages lost-key replacement responsibility without claiming the unclaimed-item procedure was refused or inventing measured theft reductions"
+      ],
+      "repeat": 0,
+      "methods": [
+        {
+          "mode": "flat_tree",
+          "answer": "The proposal for a five-week trial of six lockers during opening hours, with no overnight storage, no cash deposit, and the requirement to empty lockers by closing time, includes several necessary safeguards. However, the commitment to staff assistance on request for lock operation does not resolve the unresolved issue of financial liability. The opponent admits that responsibility for lost-key replacement costs is still undecided. Providing physical help with a lock does not establish a policy for who bears these replacement costs. Can a trial proceed effectively without knowing who is financially responsible for these expenses? Without this clarity, the trial could pose unmanaged risks to library resources.",
+          "judge": {
+            "checks": [
+              {
+                "passed": true,
+                "reason": "Explicitly recognizes \u201ca five-week trial of six lockers during opening hours, with no overnight storage\u201d and also notes \u201cthe requirement to empty lockers by closing time.\u201d"
+              },
+              {
+                "passed": false,
+                "reason": "It acknowledges \u201cstaff assistance on request for lock operation\u201d and \u201cno cash deposit,\u201d but never recognizes that locker use itself would be free."
+              },
+              {
+                "passed": true,
+                "reason": "It directly engages the issue: \u201cresponsibility for lost-key replacement costs is still undecided.\u201d It neither claims the unclaimed-item procedure was refused nor invents measured theft reductions."
+              }
+            ],
+            "relevance": 5,
+            "rebuttal_strength": 4,
+            "strawman": false,
+            "unsupported_facts": false
+          },
+          "flat_final_raw_fallback": false,
+          "observation": "Preserves five weeks/six lockers/opening hours/no overnight storage and assistance on request, and asks about unresolved replacement liability. Omits that locker use is free, so the compound second check correctly fails. Judgment 2/3, strength4, no flags."
+        },
+        {
+          "mode": "linear",
+          "answer": "I will address the opponent's claims regarding security, finances, and operations. First, if the goal is to improve security and peace of mind, this trial is based on guesswork rather than data, as my opponent admits no reduction in theft has been measured. You cannot justify a new service when its primary purpose is unproven. Second, the responsibility for lost-key costs remains undecided. We cannot move forward with a trial that carries these undefined financial risks. Finally, while you accept an unclaimed-item procedure, you ignore the actual labor involved. This forces library staff to pivot from assisting readers to acting as unpaid warehouse clerks, spending closing hours sorting and securing abandoned bags. We should invest library resources into improving literacy and study environments, rather than into unproven logistical headaches.",
+          "judge": {
+            "checks": [
+              {
+                "passed": false,
+                "reason": "Only says \u201cthis trial\u201d and never recognizes six lockers, five weeks, opening-hours-only use, or no overnight storage."
+              },
+              {
+                "passed": false,
+                "reason": "The phrase \u201cassisting readers\u201d does not acknowledge staff assistance for lock operation, and the answer never recognizes free use or no cash deposit."
+              },
+              {
+                "passed": true,
+                "reason": "It states \u201cthe responsibility for lost-key costs remains undecided,\u201d acknowledges \u201cyou accept an unclaimed-item procedure,\u201d and accurately says \u201cno reduction in theft has been measured.\u201d"
+              }
+            ],
+            "relevance": 4,
+            "rebuttal_strength": 3,
+            "strawman": false,
+            "unsupported_facts": true
+          },
+          "flat_final_raw_fallback": null,
+          "observation": "Omits scope, assistance/free/deposit terms and asserts staff are forced into unpaid warehouse duties, an unprovided causal claim. Correctly identifies lost-key funding as unresolved. Judgment 1/3, strength3, unsupported flag."
+        },
+        {
+          "mode": "legacy",
+          "answer": "We must address the fundamental flaws in the opponent's proposal. First, regarding logistical and financial complexities, the opposition's plan contains a critical gap. While they acknowledge staff assistance, they fail to determine who bears the cost for lost keys or broken locks. This is a fundamental oversight; you cannot launch a trial while leaving primary financial risks undecided. A five-week trial with only six lockers does not solve these systemic management burdens; it merely delays them. Second, I must challenge the notion that these lockers provide true convenience. A service that forces users to constantly monitor closing times and prevents overnight storage is restrictive, not convenient. Instead of adding stress to our staff, we should focus on improving reading room layouts through better floor planning and dedicated bag zones to accommodate bags naturally.",
+          "judge": {
+            "checks": [
+              {
+                "passed": true,
+                "reason": "Recognizes \u201cA five-week trial with only six lockers\u201d and that users must monitor \u201cclosing times\u201d while it \u201cprevents overnight storage.\u201d"
+              },
+              {
+                "passed": false,
+                "reason": "Only says \u201cthey acknowledge staff assistance\u201d; it does not recognize assistance specifically for users unable to operate locks, nor that use is free with no cash deposit."
+              },
+              {
+                "passed": true,
+                "reason": "Engages the unresolved issue with \u201cthey fail to determine who bears the cost for lost keys\u201d and neither alleges refusal of an unclaimed-item procedure nor claims measured theft reductions."
+              }
+            ],
+            "relevance": 5,
+            "rebuttal_strength": 4,
+            "strawman": false,
+            "unsupported_facts": true
+          },
+          "flat_final_raw_fallback": null,
+          "observation": "Keeps several scope/time limits but not precise assistance/free/deposit terms. Adds broken-lock liability beyond the stated lost-key issue and claims the trial merely delays systemic burdens. Judgment 2/3, strength4, unsupported flag."
+        }
+      ]
+    },
+    {
+      "case": "focus_school_news",
+      "kind": "multiple_issues",
+      "assigned_side": "for",
+      "prior_history": [
+        {
+          "side": "against",
+          "stage": "opening",
+          "content": "A school communication platform could include a newsletter, student photos, polls, public comments and advertising. I object to treating all those features as one harmless package."
+        },
+        {
+          "side": "for",
+          "stage": "rebuttal",
+          "content": "Could we evaluate a simple newsletter separately from photos, polls or public comments?"
+        },
+        {
+          "side": "against",
+          "stage": "rebuttal",
+          "content": "A calendar, event reminders and club listings are also possible. No item should publish a student home address or private contact details."
+        },
+        {
+          "side": "for",
+          "stage": "rebuttal",
+          "content": "Agreed on protecting private details. We still need to decide the initial scope and who checks each issue."
+        }
+      ],
+      "opponent_chunks": [
+        "I would allow a text-only newsletter for two issues over one month. Student photographs, public comments and advertising would not be included.",
+        "Families could choose a printed copy at no charge instead. They would not have to install an app or create an online account.",
+        "A named editor must check items before release. The privacy rules we discussed remain necessary, but I am not claiming a privacy incident has already occurred.",
+        "The editor workload and funding are unsettled. Easier access to dates and notices is a possible benefit even though no improvement in academic results is established."
+      ],
+      "checks": [
+        "Recognizes the opponent allows a text-only two-issue one-month trial, excluding photographs, public comments and advertising",
+        "Acknowledges the free printed alternative without requiring an app or account",
+        "Engages editor workload or funding while acknowledging possible access benefits, without inventing an existing privacy breach or academic gains"
+      ],
+      "repeat": 0,
+      "methods": [
+        {
+          "mode": "flat_tree",
+          "answer": "The opponent suggests that a lack of established academic improvement invalidates the benefit of easier information access. However, improved communication and academic performance are independent outcomes; providing timely dates and notices is a distinct goal. \n\nWhile we acknowledge the opponent's safeguards\u2014including a text-only format for two issues per month, the exclusion of photos and advertising, and the option for free printed copies\u2014the proposal's feasibility remains conditional. Specifically, the editor's workload and funding are currently unsettled. If the resources required for a named editor to check every item are not secured, the intended safety and reliability of the newsletter could be compromised. How does the school intend to resolve these unsettled implementation costs?",
+          "judge": {
+            "checks": [
+              {
+                "passed": false,
+                "reason": "The answer says \u201ca text-only format for two issues per month, the exclusion of photos and advertising,\u201d which changes the trial from two issues over one month to two issues per month and omits the exclusion of public comments."
+              },
+              {
+                "passed": false,
+                "reason": "It acknowledges \u201cthe option for free printed copies\u201d but does not recognize that families need not install an app or create an online account."
+              },
+              {
+                "passed": true,
+                "reason": "It acknowledges access as a separate benefit\u2014\u201cproviding timely dates and notices is a distinct goal\u201d\u2014and engages that \u201cthe editor's workload and funding are currently unsettled,\u201d while claiming neither an existing privacy breach nor academic gains."
+              }
+            ],
+            "relevance": 4,
+            "rebuttal_strength": 3,
+            "strawman": true,
+            "unsupported_facts": true
+          },
+          "flat_final_raw_fallback": false,
+          "observation": "Still falsely attributes a claim that absent academic improvement invalidates access benefits. Changes two issues over one month into two per month, omits public-comment exclusion and no-app/no-account conditions, although it keeps free print and conditional editor concerns. Judgment 1/3, strength3, both flags; review does not solve semantic fidelity."
+        },
+        {
+          "mode": "linear",
+          "answer": "I will address my opponent's concerns regarding academic results and resource uncertainty. First, my opponent argues that a newsletter is unnecessary because it does not improve academic results. This shifts the focus away from our actual goal. The purpose of this motion is to improve communication and family engagement, not to change test scores. We must judge success by how effectively parents receive information, not by grades. Second, while my opponent claims workload and funding are unsettled, being unsettled is not a reason to reject a beneficial idea. My opponent even admitted that easier access to school dates\u2014ensuring no family misses an important event\u2014is a benefit. Instead of letting these logistical hurdles prevent us from starting, we should use these proven benefits to drive our planning for budget and staffing.",
+          "judge": {
+            "checks": [
+              {
+                "passed": false,
+                "reason": "The answer only refers generically to \u201cprevent us from starting\u201d and never acknowledges the text-only, two-issue, one-month trial or the exclusions of photographs, public comments, and advertising."
+              },
+              {
+                "passed": false,
+                "reason": "\u201chow effectively parents receive information\u201d is generic and does not acknowledge the free printed copy or that no app or online account is required."
+              },
+              {
+                "passed": false,
+                "reason": "It engages \u201cworkload and funding\u201d but converts a possible benefit into certainty by claiming \u201censuring no family misses an important event\u201d and calling these \u201cproven benefits\u201d; it also misstates the opponent as arguing the newsletter is unnecessary due to academic results."
+              }
+            ],
+            "relevance": 3,
+            "rebuttal_strength": 2,
+            "strawman": true,
+            "unsupported_facts": true
+          },
+          "flat_final_raw_fallback": null,
+          "observation": "Invents the opponents argument that a newsletter is unnecessary because grades do not improve, then upgrades possible access benefits to proven certainty. Omits trial bounds and access alternatives. Judgment 0/3, strength2, both flags."
+        },
+        {
+          "mode": "legacy",
+          "answer": "While the opponent's caution is well-intentioned, their solution is so restrictive that it defeats the purpose of the digital medium. First, regarding utility, their proposal for a text-only newsletter twice a month fails to solve the core issue of efficient communication. By stripping away digital benefits, they are merely proposing a digital version of a paper flyer. Instead, a digital format provides families with instant access to vital dates on their phones, meeting the real-time necessity of modern school life. Second, regarding privacy and workload, we can implement strict editorial oversight through a designated communications officer and robust privacy protocols to prevent data leaks. We must embrace digital efficiency as a customizable tool rather than running away from it to avoid manageable risks.",
+          "judge": {
+            "checks": [
+              {
+                "passed": false,
+                "reason": "It mentions \u201ctheir proposal for a text-only newsletter twice a month\u201d but does not recognize the one-month trial or explicitly acknowledge the exclusions of photographs, public comments, and advertising."
+              },
+              {
+                "passed": false,
+                "reason": "The answer never acknowledges the \u201cprinted copy at no charge\u201d or that no app or online account is required."
+              },
+              {
+                "passed": true,
+                "reason": "It engages \u201cprivacy and workload\u201d and says the format \u201cprovides families with instant access to vital dates\u201d; it does not claim an existing privacy breach or established academic gains."
+              }
+            ],
+            "relevance": 4,
+            "rebuttal_strength": 2,
+            "strawman": true,
+            "unsupported_facts": true
+          },
+          "flat_final_raw_fallback": null,
+          "observation": "Argues the opponent is retreating from digital communication even though they allow a limited digital trial. Omits the one-month end, exclusions and access alternatives. Editorial/privacy assurances are not established. Judgment 1/3, strength2, both flags."
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Twelve selected outputs, not exhaustive independent human adjudication.",
+    "All automatic verdicts retained; observations do not replace scores or create an adjusted error rate.",
+    "Differences combine planning, corrections, grounding and revision; not an isolated causal test of tree representation."
+  ]
+}

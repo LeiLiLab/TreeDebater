@@ -1,0 +1,1883 @@
+{
+  "run_id": "flat-linear-legacy-v1",
+  "metadata": {
+    "tree_limits": {
+      "max_tree_targets": 8,
+      "max_tree_context_nodes": 16
+    },
+    "source_digest": "020537bccb7ddffc59acb238ebb4ad0667d522de0d00615522ac27f89c6bed45",
+    "cases_digest": "45f5c1db68e958eb7060a92b4ed650c2375ed86694e8141434d97c3cddeec2db",
+    "split": "test",
+    "case_ids": [
+      "focus_bus_display",
+      "focus_room_booking",
+      "focus_seed_swap",
+      "focus_lecture_recordings",
+      "focus_riverside_stall",
+      "focus_remote_ballots",
+      "focus_day_lockers",
+      "focus_hybrid_meetings",
+      "focus_translated_notices",
+      "focus_food_hub",
+      "focus_school_news",
+      "focus_sports_field"
+    ],
+    "modes": [
+      "flat_tree",
+      "linear",
+      "legacy"
+    ],
+    "repeats": 2,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 2,
+    "judge_model": "gpt-5.6-sol",
+    "cap_usd": 200.0,
+    "judge_max_tokens": 1600,
+    "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted",
+    "judge_reasoning_effort": "none",
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "primary_comparisons": [
+    "flat_tree_vs_linear",
+    "flat_tree_vs_legacy"
+  ],
+  "metrics": [
+    {
+      "mode": "flat_tree",
+      "generated": 24,
+      "judged": 24,
+      "checklist_rate": 0.5138888888888888,
+      "rebuttal_strength": 3.6666666666666665,
+      "strawman_rate": 0.08333333333333333,
+      "unsupported_fact_rate": 0.25,
+      "residual_text_seconds": 13.99152644023095,
+      "generation_cost_usd": 0.010858632083333333,
+      "generation_calls_mean": 14.333333333333334,
+      "prior_setup_calls_mean": 2.6666666666666665,
+      "live_calls_mean": 11.666666666666666,
+      "input_tokens_mean": 71995.375,
+      "output_tokens_mean": 3748.0833333333335,
+      "answer_words_mean": 114,
+      "worker_return_seconds_mean": 16.616926722484344,
+      "invalid_plan_events": 20,
+      "final_raw_fallbacks": 8
+    },
+    {
+      "mode": "linear",
+      "generated": 24,
+      "judged": 23,
+      "checklist_rate": 0.3043478260869565,
+      "rebuttal_strength": 2.782608695652174,
+      "strawman_rate": 0.5217391304347826,
+      "unsupported_fact_rate": 0.9130434782608695,
+      "residual_text_seconds": 13.548813516259543,
+      "generation_cost_usd": 0.003919679583333334,
+      "generation_calls_mean": 6.833333333333333,
+      "prior_setup_calls_mean": 0,
+      "live_calls_mean": 6.833333333333333,
+      "input_tokens_mean": 21244.458333333332,
+      "output_tokens_mean": 2894.75,
+      "answer_words_mean": 132.83333333333334,
+      "worker_return_seconds_mean": 13.548846843043671,
+      "invalid_plan_events": 0,
+      "final_raw_fallbacks": null
+    },
+    {
+      "mode": "legacy",
+      "generated": 24,
+      "judged": 24,
+      "checklist_rate": 0.2777777777777778,
+      "rebuttal_strength": 2.625,
+      "strawman_rate": 0.75,
+      "unsupported_fact_rate": 1,
+      "residual_text_seconds": 27.017413670873793,
+      "generation_cost_usd": 0.005626135,
+      "generation_calls_mean": 11.75,
+      "prior_setup_calls_mean": 2.6666666666666665,
+      "live_calls_mean": 9.083333333333334,
+      "input_tokens_mean": 33376.166666666664,
+      "output_tokens_mean": 3218.0833333333335,
+      "answer_words_mean": 133.45833333333334,
+      "worker_return_seconds_mean": 29.902415443500406,
+      "invalid_plan_events": 0,
+      "final_raw_fallbacks": null
+    }
+  ],
+  "paired_comparisons": {
+    "flat_tree_vs_linear": {
+      "checklist_rate": {
+        "case_count": 11,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 0.5,
+            "after": 0.3333333333333333,
+            "difference": -0.16666666666666669
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 0.16666666666666666,
+            "after": 0.6666666666666666,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 0.3333333333333333,
+            "after": 0.6666666666666666,
+            "difference": 0.3333333333333333
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 0.6666666666666666,
+            "after": 0.8333333333333333,
+            "difference": 0.16666666666666663
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 0.16666666666666666,
+            "after": 0.6666666666666666,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 0.16666666666666666,
+            "after": 0.5,
+            "difference": 0.33333333333333337
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 0.3333333333333333,
+            "after": 0.3333333333333333,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          },
+          {
+            "case": "focus_school_news",
+            "before": 0,
+            "after": 0.3333333333333333,
+            "difference": 0.3333333333333333
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 0.16666666666666666,
+            "after": 0.5,
+            "difference": 0.33333333333333337
+          }
+        ],
+        "before_mean": 0.30303030303030304,
+        "after_mean": 0.5303030303030303,
+        "difference": 0.22727272727272727,
+        "difference_95ci": [
+          0.10606060606060605,
+          0.3484848484848485
+        ]
+      },
+      "rebuttal_strength": {
+        "case_count": 11,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 3.5,
+            "after": 4,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 2.5,
+            "after": 3.5,
+            "difference": 1.0
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 2.5,
+            "after": 3.5,
+            "difference": 1.0
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 3,
+            "after": 4,
+            "difference": 1
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 3,
+            "after": 3.5,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 3,
+            "after": 3.5,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 2.5,
+            "after": 4,
+            "difference": 1.5
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 3,
+            "after": 4,
+            "difference": 1
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 3,
+            "after": 3.5,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_school_news",
+            "before": 2,
+            "after": 3,
+            "difference": 1
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 2.5,
+            "after": 3.5,
+            "difference": 1.0
+          }
+        ],
+        "before_mean": 2.772727272727273,
+        "after_mean": 3.6363636363636362,
+        "difference": 0.8636363636363636,
+        "difference_95ci": [
+          0.6818181818181818,
+          1.0454545454545454
+        ]
+      },
+      "strawman_rate": {
+        "case_count": 11,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_school_news",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          }
+        ],
+        "before_mean": 0.5,
+        "after_mean": 0.09090909090909091,
+        "difference": -0.4090909090909091,
+        "difference_95ci": [
+          -0.6363636363636364,
+          -0.18181818181818182
+        ]
+      },
+      "unsupported_fact_rate": {
+        "case_count": 11,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_school_news",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          }
+        ],
+        "before_mean": 0.9090909090909091,
+        "after_mean": 0.2727272727272727,
+        "difference": -0.6363636363636364,
+        "difference_95ci": [
+          -0.8181818181818182,
+          -0.45454545454545453
+        ]
+      },
+      "residual_text_seconds": {
+        "case_count": 11,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 11.821923085983144,
+            "after": 11.608110658475198,
+            "difference": -0.21381242750794627
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 12.000267852039542,
+            "after": 12.926373716531089,
+            "difference": 0.9261058644915465
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 11.714333980518859,
+            "after": 15.739352375967428,
+            "difference": 4.025018395448569
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 14.491149301989935,
+            "after": 10.46933056897251,
+            "difference": -4.021818733017426
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 9.677489186491584,
+            "after": 13.894146063510561,
+            "difference": 4.216656877018977
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 20.348120952025056,
+            "after": 13.874382208974566,
+            "difference": -6.47373874305049
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 15.562677039997652,
+            "after": 14.648719402961433,
+            "difference": -0.9139576370362192
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 10.669975140539464,
+            "after": 15.16031869550352,
+            "difference": 4.490343554964056
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 13.91892579101841,
+            "after": 12.969716676976532,
+            "difference": -0.9492091140418779
+          },
+          {
+            "case": "focus_school_news",
+            "before": 13.020625962992199,
+            "after": 14.555173848028062,
+            "difference": 1.5345478850358631
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 15.86811179551296,
+            "after": 16.054645804018946,
+            "difference": 0.186534008505987
+          }
+        ],
+        "before_mean": 13.553963644464437,
+        "after_mean": 13.80911545635635,
+        "difference": 0.2551518118919127,
+        "difference_95ci": [
+          -1.7126235838407988,
+          2.0968520939376587
+        ]
+      },
+      "generation_cost_usd": {
+        "case_count": 11,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 0.00325222,
+            "after": 0.006368295,
+            "difference": 0.0031160750000000003
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 0.003347885,
+            "after": 0.006968785000000001,
+            "difference": 0.0036209000000000007
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 0.00325675,
+            "after": 0.00768722,
+            "difference": 0.00443047
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 0.004190615,
+            "after": 0.010214825,
+            "difference": 0.00602421
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 0.0037927250000000003,
+            "after": 0.012589240000000002,
+            "difference": 0.008796515000000001
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 0.004098935,
+            "after": 0.01024624,
+            "difference": 0.0061473050000000005
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 0.004084465000000001,
+            "after": 0.012669840000000002,
+            "difference": 0.008585375000000001
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 0.00392196,
+            "after": 0.011644020000000001,
+            "difference": 0.007722060000000001
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 0.003974765,
+            "after": 0.0116641,
+            "difference": 0.007689335
+          },
+          {
+            "case": "focus_school_news",
+            "before": 0.00421144,
+            "after": 0.013145150000000001,
+            "difference": 0.008933710000000001
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 0.004175165,
+            "after": 0.012879205000000001,
+            "difference": 0.008704040000000001
+          }
+        ],
+        "before_mean": 0.003846084090909091,
+        "after_mean": 0.010552447272727274,
+        "difference": 0.006706363181818183,
+        "difference_95ci": [
+          0.00541743,
+          0.00786000181818182
+        ]
+      }
+    },
+    "flat_tree_vs_legacy": {
+      "checklist_rate": {
+        "case_count": 12,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 0.3333333333333333,
+            "after": 0.3333333333333333,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 0.16666666666666666,
+            "after": 0.6666666666666666,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 0.16666666666666666,
+            "after": 0.6666666666666666,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 0.3333333333333333,
+            "after": 0.8333333333333333,
+            "difference": 0.49999999999999994
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 0,
+            "after": 0.6666666666666666,
+            "difference": 0.6666666666666666
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 0.3333333333333333,
+            "after": 0.3333333333333333,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          },
+          {
+            "case": "focus_food_hub",
+            "before": 0.3333333333333333,
+            "after": 0.3333333333333333,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_school_news",
+            "before": 0.3333333333333333,
+            "after": 0.3333333333333333,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          }
+        ],
+        "before_mean": 0.2777777777777778,
+        "after_mean": 0.5138888888888888,
+        "difference": 0.2361111111111111,
+        "difference_95ci": [
+          0.11111111111111112,
+          0.375
+        ]
+      },
+      "rebuttal_strength": {
+        "case_count": 12,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 4,
+            "after": 4,
+            "difference": 0
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 3,
+            "after": 3.5,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 2.5,
+            "after": 3.5,
+            "difference": 1.0
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 2.5,
+            "after": 4,
+            "difference": 1.5
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 3,
+            "after": 3.5,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 2.5,
+            "after": 3.5,
+            "difference": 1.0
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 3,
+            "after": 4,
+            "difference": 1
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 2.5,
+            "after": 4,
+            "difference": 1.5
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 2,
+            "after": 3.5,
+            "difference": 1.5
+          },
+          {
+            "case": "focus_food_hub",
+            "before": 2.5,
+            "after": 4,
+            "difference": 1.5
+          },
+          {
+            "case": "focus_school_news",
+            "before": 2,
+            "after": 3,
+            "difference": 1
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 2,
+            "after": 3.5,
+            "difference": 1.5
+          }
+        ],
+        "before_mean": 2.625,
+        "after_mean": 3.6666666666666665,
+        "difference": 1.0416666666666667,
+        "difference_95ci": [
+          0.75,
+          1.2916666666666667
+        ]
+      },
+      "strawman_rate": {
+        "case_count": 12,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_food_hub",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_school_news",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          }
+        ],
+        "before_mean": 0.75,
+        "after_mean": 0.08333333333333333,
+        "difference": -0.6666666666666666,
+        "difference_95ci": [
+          -0.875,
+          -0.4583333333333333
+        ]
+      },
+      "unsupported_fact_rate": {
+        "case_count": 12,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_food_hub",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_school_news",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          }
+        ],
+        "before_mean": 1,
+        "after_mean": 0.25,
+        "difference": -0.75,
+        "difference_95ci": [
+          -0.9166666666666666,
+          -0.5416666666666666
+        ]
+      },
+      "residual_text_seconds": {
+        "case_count": 12,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 13.29343965247972,
+            "after": 11.608110658475198,
+            "difference": -1.6853289940045215
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 13.319483890518313,
+            "after": 12.926373716531089,
+            "difference": -0.3931101739872247
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 16.449594272999093,
+            "after": 15.739352375967428,
+            "difference": -0.7102418970316648
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 13.878464520472335,
+            "after": 10.46933056897251,
+            "difference": -3.4091339514998253
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 111.51466542301932,
+            "after": 13.894146063510561,
+            "difference": -97.62051935950876
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 13.212806472496595,
+            "after": 13.874382208974566,
+            "difference": 0.6615757364779711
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 14.418346772989025,
+            "after": 14.648719402961433,
+            "difference": 0.2303726299724076
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 12.632906730519608,
+            "after": 15.16031869550352,
+            "difference": 2.527411964983912
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 14.561073080520146,
+            "after": 12.969716676976532,
+            "difference": -1.5913564035436139
+          },
+          {
+            "case": "focus_food_hub",
+            "before": 65.74115466600051,
+            "after": 15.998047262851564,
+            "difference": -49.74310740314895
+          },
+          {
+            "case": "focus_school_news",
+            "before": 16.203415188472718,
+            "after": 14.555173848028062,
+            "difference": -1.648241340444656
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 18.983613379998133,
+            "after": 16.054645804018946,
+            "difference": -2.928967575979186
+          }
+        ],
+        "before_mean": 27.017413670873793,
+        "after_mean": 13.99152644023095,
+        "difference": -13.025887230642843,
+        "difference_95ci": [
+          -32.73495836963654,
+          -0.5625029576185625
+        ]
+      },
+      "generation_cost_usd": {
+        "case_count": 12,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 0.0039867900000000005,
+            "after": 0.006368295,
+            "difference": 0.002381505
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 0.0038839900000000004,
+            "after": 0.006968785000000001,
+            "difference": 0.0030847950000000004
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 0.003952880000000001,
+            "after": 0.00768722,
+            "difference": 0.003734339999999999
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 0.005122555000000001,
+            "after": 0.010214825,
+            "difference": 0.0050922699999999994
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 0.0077969250000000006,
+            "after": 0.012589240000000002,
+            "difference": 0.004792315000000001
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 0.0050991100000000004,
+            "after": 0.01024624,
+            "difference": 0.00514713
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 0.00592306,
+            "after": 0.012669840000000002,
+            "difference": 0.006746780000000002
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 0.005895335,
+            "after": 0.011644020000000001,
+            "difference": 0.005748685000000002
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 0.005923645,
+            "after": 0.0116641,
+            "difference": 0.005740455
+          },
+          {
+            "case": "focus_food_hub",
+            "before": 0.00787462,
+            "after": 0.014226665,
+            "difference": 0.006352044999999999
+          },
+          {
+            "case": "focus_school_news",
+            "before": 0.0060411300000000005,
+            "after": 0.013145150000000001,
+            "difference": 0.007104020000000001
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 0.00601358,
+            "after": 0.012879205000000001,
+            "difference": 0.006865625000000001
+          }
+        ],
+        "before_mean": 0.005626135,
+        "after_mean": 0.010858632083333333,
+        "difference": 0.005232497083333333,
+        "difference_95ci": [
+          0.004369409583333333,
+          0.006016261666666667
+        ]
+      }
+    },
+    "linear_vs_legacy": {
+      "checklist_rate": {
+        "case_count": 11,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 0.16666666666666666,
+            "after": 0.16666666666666666,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 0.16666666666666666,
+            "after": 0.3333333333333333,
+            "difference": 0.16666666666666666
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 0.3333333333333333,
+            "after": 0.6666666666666666,
+            "difference": 0.3333333333333333
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 0,
+            "after": 0.16666666666666666,
+            "difference": 0.16666666666666666
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 0.3333333333333333,
+            "after": 0.16666666666666666,
+            "difference": -0.16666666666666666
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 0.3333333333333333,
+            "after": 0.3333333333333333,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 0.3333333333333333,
+            "after": 0.3333333333333333,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_school_news",
+            "before": 0.3333333333333333,
+            "after": 0,
+            "difference": -0.3333333333333333
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 0.3333333333333333,
+            "after": 0.16666666666666666,
+            "difference": -0.16666666666666666
+          }
+        ],
+        "before_mean": 0.2727272727272727,
+        "after_mean": 0.30303030303030304,
+        "difference": 0.030303030303030307,
+        "difference_95ci": [
+          -0.07575757575757576,
+          0.13636363636363635
+        ]
+      },
+      "rebuttal_strength": {
+        "case_count": 11,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 4,
+            "after": 3.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 3,
+            "after": 2.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 2.5,
+            "after": 2.5,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 2.5,
+            "after": 3,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 3,
+            "after": 3,
+            "difference": 0
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 2.5,
+            "after": 3,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 3,
+            "after": 2.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 2.5,
+            "after": 3,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 2,
+            "after": 3,
+            "difference": 1
+          },
+          {
+            "case": "focus_school_news",
+            "before": 2,
+            "after": 2,
+            "difference": 0
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 2,
+            "after": 2.5,
+            "difference": 0.5
+          }
+        ],
+        "before_mean": 2.6363636363636362,
+        "after_mean": 2.772727272727273,
+        "difference": 0.13636363636363635,
+        "difference_95ci": [
+          -0.13636363636363635,
+          0.4090909090909091
+        ]
+      },
+      "strawman_rate": {
+        "case_count": 11,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 0.5,
+            "after": 1,
+            "difference": 0.5
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_school_news",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          }
+        ],
+        "before_mean": 0.7272727272727273,
+        "after_mean": 0.5,
+        "difference": -0.22727272727272727,
+        "difference_95ci": [
+          -0.5,
+          0.0
+        ]
+      },
+      "unsupported_fact_rate": {
+        "case_count": 11,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "focus_school_news",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          }
+        ],
+        "before_mean": 1,
+        "after_mean": 0.9090909090909091,
+        "difference": -0.09090909090909091,
+        "difference_95ci": [
+          -0.22727272727272727,
+          0
+        ]
+      },
+      "residual_text_seconds": {
+        "case_count": 11,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 13.29343965247972,
+            "after": 11.821923085983144,
+            "difference": -1.4715165664965753
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 13.319483890518313,
+            "after": 12.000267852039542,
+            "difference": -1.3192160384787712
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 16.449594272999093,
+            "after": 11.714333980518859,
+            "difference": -4.735260292480234
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 13.878464520472335,
+            "after": 14.491149301989935,
+            "difference": 0.6126847815176006
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 111.51466542301932,
+            "after": 9.677489186491584,
+            "difference": -101.83717623652774
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 13.212806472496595,
+            "after": 20.348120952025056,
+            "difference": 7.135314479528461
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 14.418346772989025,
+            "after": 15.562677039997652,
+            "difference": 1.1443302670086268
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 12.632906730519608,
+            "after": 10.669975140539464,
+            "difference": -1.962931589980144
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 14.561073080520146,
+            "after": 13.91892579101841,
+            "difference": -0.6421472895017359
+          },
+          {
+            "case": "focus_school_news",
+            "before": 16.203415188472718,
+            "after": 13.020625962992199,
+            "difference": -3.1827892254805192
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 18.983613379998133,
+            "after": 15.86811179551296,
+            "difference": -3.1155015844851732
+          }
+        ],
+        "before_mean": 23.49707358040773,
+        "after_mean": 13.553963644464437,
+        "difference": -9.94310993594329,
+        "difference_95ci": [
+          -28.99072849154155,
+          0.7048943210155069
+        ]
+      },
+      "generation_cost_usd": {
+        "case_count": 11,
+        "cases": [
+          {
+            "case": "focus_bus_display",
+            "before": 0.0039867900000000005,
+            "after": 0.00325222,
+            "difference": -0.0007345700000000004
+          },
+          {
+            "case": "focus_room_booking",
+            "before": 0.0038839900000000004,
+            "after": 0.003347885,
+            "difference": -0.0005361050000000003
+          },
+          {
+            "case": "focus_seed_swap",
+            "before": 0.003952880000000001,
+            "after": 0.00325675,
+            "difference": -0.0006961300000000005
+          },
+          {
+            "case": "focus_lecture_recordings",
+            "before": 0.005122555000000001,
+            "after": 0.004190615,
+            "difference": -0.0009319400000000009
+          },
+          {
+            "case": "focus_riverside_stall",
+            "before": 0.0077969250000000006,
+            "after": 0.0037927250000000003,
+            "difference": -0.0040042
+          },
+          {
+            "case": "focus_remote_ballots",
+            "before": 0.0050991100000000004,
+            "after": 0.004098935,
+            "difference": -0.0010001750000000007
+          },
+          {
+            "case": "focus_day_lockers",
+            "before": 0.00592306,
+            "after": 0.004084465000000001,
+            "difference": -0.0018385949999999993
+          },
+          {
+            "case": "focus_hybrid_meetings",
+            "before": 0.005895335,
+            "after": 0.00392196,
+            "difference": -0.0019733749999999994
+          },
+          {
+            "case": "focus_translated_notices",
+            "before": 0.005923645,
+            "after": 0.003974765,
+            "difference": -0.00194888
+          },
+          {
+            "case": "focus_school_news",
+            "before": 0.0060411300000000005,
+            "after": 0.00421144,
+            "difference": -0.0018296900000000001
+          },
+          {
+            "case": "focus_sports_field",
+            "before": 0.00601358,
+            "after": 0.004175165,
+            "difference": -0.0018384150000000004
+          }
+        ],
+        "before_mean": 0.005421727272727273,
+        "after_mean": 0.003846084090909091,
+        "difference": -0.001575643181818182,
+        "difference_95ci": [
+          -0.0021759386363636364,
+          -0.0010689490909090913
+        ]
+      }
+    }
+  },
+  "descriptive_subgroups": [
+    {
+      "mode": "flat_tree",
+      "grouping": "kind",
+      "value": "multiple_issues",
+      "n": 6,
+      "independent_cases": 3,
+      "checklist_rate": 0.38888888888888884,
+      "strength_mean": 3.5,
+      "unsupported_fact_rate": 0.3333333333333333
+    },
+    {
+      "mode": "flat_tree",
+      "grouping": "kind",
+      "value": "position_revision",
+      "n": 6,
+      "independent_cases": 3,
+      "checklist_rate": 0.6666666666666666,
+      "strength_mean": 3.6666666666666665,
+      "unsupported_fact_rate": 0.16666666666666666
+    },
+    {
+      "mode": "flat_tree",
+      "grouping": "kind",
+      "value": "prior_concession",
+      "n": 6,
+      "independent_cases": 3,
+      "checklist_rate": 0.4444444444444444,
+      "strength_mean": 3.8333333333333335,
+      "unsupported_fact_rate": 0.3333333333333333
+    },
+    {
+      "mode": "flat_tree",
+      "grouping": "kind",
+      "value": "simple_single_turn",
+      "n": 6,
+      "independent_cases": 3,
+      "checklist_rate": 0.5555555555555556,
+      "strength_mean": 3.6666666666666665,
+      "unsupported_fact_rate": 0.16666666666666666
+    },
+    {
+      "mode": "flat_tree",
+      "grouping": "side",
+      "value": "against",
+      "n": 12,
+      "independent_cases": 6,
+      "checklist_rate": 0.4722222222222222,
+      "strength_mean": 3.75,
+      "unsupported_fact_rate": 0.25
+    },
+    {
+      "mode": "flat_tree",
+      "grouping": "side",
+      "value": "for",
+      "n": 12,
+      "independent_cases": 6,
+      "checklist_rate": 0.5555555555555556,
+      "strength_mean": 3.5833333333333335,
+      "unsupported_fact_rate": 0.25
+    },
+    {
+      "mode": "linear",
+      "grouping": "kind",
+      "value": "multiple_issues",
+      "n": 5,
+      "independent_cases": 3,
+      "checklist_rate": 0.13333333333333333,
+      "strength_mean": 2.4,
+      "unsupported_fact_rate": 0.8
+    },
+    {
+      "mode": "linear",
+      "grouping": "kind",
+      "value": "position_revision",
+      "n": 6,
+      "independent_cases": 3,
+      "checklist_rate": 0.4444444444444444,
+      "strength_mean": 3,
+      "unsupported_fact_rate": 0.8333333333333334
+    },
+    {
+      "mode": "linear",
+      "grouping": "kind",
+      "value": "prior_concession",
+      "n": 6,
+      "independent_cases": 3,
+      "checklist_rate": 0.2777777777777778,
+      "strength_mean": 2.8333333333333335,
+      "unsupported_fact_rate": 1
+    },
+    {
+      "mode": "linear",
+      "grouping": "kind",
+      "value": "simple_single_turn",
+      "n": 6,
+      "independent_cases": 3,
+      "checklist_rate": 0.3333333333333333,
+      "strength_mean": 2.8333333333333335,
+      "unsupported_fact_rate": 1
+    },
+    {
+      "mode": "linear",
+      "grouping": "side",
+      "value": "against",
+      "n": 11,
+      "independent_cases": 6,
+      "checklist_rate": 0.3636363636363636,
+      "strength_mean": 2.909090909090909,
+      "unsupported_fact_rate": 1
+    },
+    {
+      "mode": "linear",
+      "grouping": "side",
+      "value": "for",
+      "n": 12,
+      "independent_cases": 6,
+      "checklist_rate": 0.25,
+      "strength_mean": 2.6666666666666665,
+      "unsupported_fact_rate": 0.8333333333333334
+    },
+    {
+      "mode": "legacy",
+      "grouping": "kind",
+      "value": "multiple_issues",
+      "n": 6,
+      "independent_cases": 3,
+      "checklist_rate": 0.3333333333333333,
+      "strength_mean": 2.1666666666666665,
+      "unsupported_fact_rate": 1
+    },
+    {
+      "mode": "legacy",
+      "grouping": "kind",
+      "value": "position_revision",
+      "n": 6,
+      "independent_cases": 3,
+      "checklist_rate": 0.2222222222222222,
+      "strength_mean": 2.6666666666666665,
+      "unsupported_fact_rate": 1
+    },
+    {
+      "mode": "legacy",
+      "grouping": "kind",
+      "value": "prior_concession",
+      "n": 6,
+      "independent_cases": 3,
+      "checklist_rate": 0.3333333333333333,
+      "strength_mean": 2.5,
+      "unsupported_fact_rate": 1
+    },
+    {
+      "mode": "legacy",
+      "grouping": "kind",
+      "value": "simple_single_turn",
+      "n": 6,
+      "independent_cases": 3,
+      "checklist_rate": 0.2222222222222222,
+      "strength_mean": 3.1666666666666665,
+      "unsupported_fact_rate": 1
+    },
+    {
+      "mode": "legacy",
+      "grouping": "side",
+      "value": "against",
+      "n": 12,
+      "independent_cases": 6,
+      "checklist_rate": 0.3055555555555555,
+      "strength_mean": 2.8333333333333335,
+      "unsupported_fact_rate": 1
+    },
+    {
+      "mode": "legacy",
+      "grouping": "side",
+      "value": "for",
+      "n": 12,
+      "independent_cases": 6,
+      "checklist_rate": 0.25,
+      "strength_mean": 2.4166666666666665,
+      "unsupported_fact_rate": 1
+    }
+  ],
+  "flat_binding_subgroups": [
+    {
+      "valid_final_plan": true,
+      "n": 16,
+      "checklist_rate": 0.5208333333333333,
+      "interpretation": "Post-generation descriptive subset; selection prevents a causal comparison."
+    },
+    {
+      "valid_final_plan": false,
+      "n": 8,
+      "checklist_rate": 0.5,
+      "interpretation": "Post-generation descriptive subset; selection prevents a causal comparison."
+    }
+  ],
+  "common_complete_cases": [
+    "focus_bus_display",
+    "focus_room_booking",
+    "focus_seed_swap",
+    "focus_lecture_recordings",
+    "focus_riverside_stall",
+    "focus_remote_ballots",
+    "focus_day_lockers",
+    "focus_hybrid_meetings",
+    "focus_translated_notices",
+    "focus_school_news",
+    "focus_sports_field"
+  ],
+  "common_case_metrics": [
+    {
+      "mode": "flat_tree",
+      "case_count": 11,
+      "answers": 22,
+      "checklist_rate": 0.5303030303030303,
+      "rebuttal_strength": 3.6363636363636362,
+      "strawman_rate": 0.09090909090909091,
+      "unsupported_fact_rate": 0.2727272727272727,
+      "residual_text_seconds": 13.80911545635635,
+      "generation_cost_usd": 0.010552447272727273
+    },
+    {
+      "mode": "linear",
+      "case_count": 11,
+      "answers": 22,
+      "checklist_rate": 0.30303030303030304,
+      "rebuttal_strength": 2.772727272727273,
+      "strawman_rate": 0.5,
+      "unsupported_fact_rate": 0.9090909090909091,
+      "residual_text_seconds": 13.553963644464437,
+      "generation_cost_usd": 0.003846084090909091
+    },
+    {
+      "mode": "legacy",
+      "case_count": 11,
+      "answers": 22,
+      "checklist_rate": 0.2727272727272727,
+      "rebuttal_strength": 2.6363636363636362,
+      "strawman_rate": 0.7272727272727273,
+      "unsupported_fact_rate": 1,
+      "residual_text_seconds": 23.49707358040773,
+      "generation_cost_usd": 0.005421727272727273
+    }
+  ],
+  "missing_judgments": [
+    [
+      "focus_food_hub",
+      "linear",
+      0
+    ]
+  ],
+  "missing_sensitivity": {
+    "mode_bounds": {
+      "flat_tree": {
+        "missing": 0,
+        "mean_bounds": [
+          0.513888888888889,
+          0.513888888888889
+        ]
+      },
+      "linear": {
+        "missing": 1,
+        "mean_bounds": [
+          0.2916666666666666,
+          0.33333333333333326
+        ]
+      },
+      "legacy": {
+        "missing": 0,
+        "mean_bounds": [
+          0.27777777777777773,
+          0.27777777777777773
+        ]
+      }
+    },
+    "pair_difference_bounds": {
+      "flat_tree_vs_linear": [
+        0.1805555555555557,
+        0.22222222222222238
+      ],
+      "flat_tree_vs_legacy": [
+        0.23611111111111122,
+        0.23611111111111122
+      ],
+      "linear_vs_legacy": [
+        0.01388888888888884,
+        0.055555555555555525
+      ]
+    },
+    "interpretation": "Unknown scores range from zero to one; logical all-generated bounds, not imputed verdicts or confidence intervals."
+  },
+  "usage_including_judging": {
+    "calls": 864,
+    "reserved_upper_usd": 112.34397040000016,
+    "unresolved_calls": 3,
+    "input_tokens": 3098472,
+    "output_tokens": 282514,
+    "reported_usage_estimate_usd": 1.761077919999999,
+    "accounted_exposure_usd": 8.163337279999993
+  },
+  "completion_audit": {
+    "worker_completion_markers": 1,
+    "pending_requests": 0,
+    "failed_requests": 3,
+    "finished_with_missing_judgment_markers": 1,
+    "generated_answers": 72,
+    "judged_answers": 71
+  },
+  "paid_requests": 0,
+  "limitations": [
+    "Fresh authored cases, not a standard or representative debate benchmark; twelve independent cases, two model samples each.",
+    "Methods differ in correction, planning, grounding and revision as well as tree use; compares complete pipelines, not isolated tree topology.",
+    "Flat was selected using previous cases; new case outputs remain untouched during this frozen verification. Do not compare absolute scores directly to earlier case sets.",
+    "Six assigned-for and six assigned-against cases; three cases per kind are too few for reliable subgroup rankings.",
+    "All arms use exact target matching and no embedding fallback; this may particularly affect legacy relation attachment.",
+    "All arms receive identical fixed history/evidence, model, token caps and one feedback/revision pass, but their prompts and number of preparatory calls intentionally differ.",
+    "Automatic judging may miss semantic errors or apply composite checks inconsistently; preserve judgments and report spot checks separately.",
+    "Text-only simulated endpoint latency excludes ASR/TTS; pricing and usage remain provisional.",
+    "Legacy battlefield schema recovery can add 30-second waits and extra model attempts. Observed text latency includes them; report retry/warning counts separately instead of attributing the whole difference to representation.",
+    "Pairs average repeats within a case and exclude an entire case with any missing judgment; descriptive timing/cost uses all generated answers.",
+    "Error flags are automated judgments with known false positives/negatives; zero flags does not establish zero errors.",
+    "Subgroups and Flat valid-plan/fallback splits are descriptive, small and selected; no causal isolation.",
+    "Positive error/latency/cost differences are worse; bootstrap intervals are unadjusted for multiple comparisons."
+  ]
+}

@@ -183,6 +183,17 @@ but generation tokens and text-ready wait increase. Historical scores remain
 bound to their frozen versions; see [the process log](../process.md) for settings,
 failures, costs and the before/after comparison.
 
+A fresh focused comparison now covers Flat Tree, original Linear and Legacy on
+12 new cases, two repeats each: 72 answers and 71 judgments (one exhausted judge
+retry). On the 11 cases complete in all methods, condition coverage is
+53.0% /30.3% /27.3%, with Flat gaining 22.7 percentage points over Linear
+(95% case-bootstrap interval 10.6–34.8). Flat generation costs about 2.77× Linear;
+paired text latency is not reliably different. Legacy mean latency includes
+three exhausted schema-recovery episodes. Flat still has 8/24 final-plan fallbacks
+and semantic errors. This compares complete pipelines, including different review
+prompts, and does not isolate tree representation; see the process log for all
+case-matched scores, missing-data handling, output inspection and costs.
+
 ## Run locally
 
 Use Python **3.10 or newer**. For real debates, activate the same environment that runs
