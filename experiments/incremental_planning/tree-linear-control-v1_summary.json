@@ -1,0 +1,96 @@
+{
+  "run_id": "tree-linear-control-v1",
+  "metadata": {
+    "source_digest": "8b86fdce3d17151c645f07334302895e4a1c897039aed62366941590331e3d44",
+    "cases_digest": "010a549169e25889a58760fa1e682974e5a712b2063c64c39f0e3466285f2b73",
+    "split": "test",
+    "case_ids": [
+      "tree_fresh_microgrid",
+      "tree_fresh_shuttle",
+      "tree_fresh_wetlands",
+      "tree_fresh_alerts",
+      "tree_fresh_tools",
+      "tree_fresh_market",
+      "tree_fresh_river",
+      "tree_fresh_pool"
+    ],
+    "modes": [
+      "linear"
+    ],
+    "repeats": 1,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 2,
+    "judge_model": "gpt-5.6-sol",
+    "cap_usd": 200.0,
+    "judge_max_tokens": 1600,
+    "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted",
+    "judge_reasoning_effort": "none",
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "expected_answers": 8,
+  "completed_answers": 8,
+  "missing": [],
+  "metrics": [
+    {
+      "mode": "linear",
+      "n": 8,
+      "checklist_rate": 0.5833333333333333,
+      "strength_mean": 2.75,
+      "strawman_rate": 0.5,
+      "unsupported_fact_rate": 1,
+      "residual_text_mean_s": 13.641111789882416,
+      "residual_text_median_s": 13.745505625498481,
+      "residual_worker_return_mean_s": 13.641150724630279,
+      "generation_calls_mean": 7.5,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 7.5,
+      "generation_cost_mean_usd": 0.00424651,
+      "answer_words_mean": 130.25,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 0,
+      "invalid_targets": 0,
+      "revisions": 0
+    }
+  ],
+  "reference_mode": "linear",
+  "paired_vs_baseline": {},
+  "paired_vs_legacy": {},
+  "component_comparisons": {},
+  "usage_including_judging": {
+    "calls": 68,
+    "reserved_upper_usd": 8.8873936,
+    "unresolved_calls": 0,
+    "input_tokens": 191497,
+    "output_tokens": 29892,
+    "reported_usage_estimate_usd": 0.17517248,
+    "accounted_exposure_usd": 0.70068992
+  },
+  "request_audit": {
+    "missing_artifacts": [],
+    "truncated_calls": [],
+    "errors": [],
+    "runtime_warning_counts": []
+  },
+  "limitations": [
+    "Small authored scenario set, not a standard debate benchmark",
+    "Different generator/judge models, but no human adjudication; automatic judging remains fallible",
+    "Spot checks found inconsistent constraint judgments; automated scores are provisional, not established accuracy",
+    "Zero unsupported-fact flags do not establish factual correctness",
+    "Text-only replay; latency uses a simulated schedule and excludes ASR/TTS/network playback",
+    "Text-ready timing precedes post-speech tree analysis; worker-return timing is reported separately",
+    "Exact-target matching shared across arms; embedding fallback disabled",
+    "Cost uses provider-reported tokens and published rates, not a settled invoice"
+  ],
+  "completion_audit": {
+    "worker_completion_markers": 2,
+    "pending_requests": 0,
+    "failed_requests": 0
+  }
+}

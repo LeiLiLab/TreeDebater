@@ -1,0 +1,124 @@
+{
+  "created_utc": "2026-10-03T07:14:03.105315+00:00",
+  "cap_usd": 200.0,
+  "entries": 2808,
+  "original_calls_sha256": "a9b34e65a73c39b1a12b25228f13a4bb543ba187a4b81b7809a694b5b2d05134",
+  "artifacts_manifest_sha256": "786ec600f087407431562ad5e51e3664fdbd3c800f98f665ec65888174eed268",
+  "artifacts_checked": 2808,
+  "model_totals": {
+    "google.gemma-4-26b-a4b": {
+      "entries": 2688,
+      "input_tokens": 7086973,
+      "output_tokens": 831854,
+      "usage_estimate_usd": 1.2540480900000008,
+      "original_reservations_usd": 240.56166400000015
+    },
+    "nvidia.nemotron-super-3-120b": {
+      "entries": 10,
+      "input_tokens": 6856,
+      "output_tokens": 2731,
+      "usage_estimate_usd": 0.0028035499999999997,
+      "original_reservations_usd": 0.640252
+    },
+    "gpt-5.6-sol": {
+      "entries": 109,
+      "input_tokens": 76638,
+      "output_tokens": 56936,
+      "usage_estimate_usd": 1.5897991999999992,
+      "original_reservations_usd": 35.26860480000002
+    },
+    "bounded-audio-bundle": {
+      "entries": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "usage_estimate_usd": 0.04057500000000001,
+      "original_reservations_usd": 0.5
+    }
+  },
+  "original_reservations_usd": 276.9705208000001,
+  "usage_estimate_usd": 2.88722584,
+  "candidate_successful_text_settlements": 2802,
+  "retained_full_reservations": [
+    {
+      "id": 1848,
+      "label": "v2-gpt-calibration/acknowledged_but_criticized",
+      "state": "error",
+      "reservation_usd": 0.273944,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 1849,
+      "label": "v2-gpt-parameter-check",
+      "state": "error",
+      "reservation_usd": 0.17070240000000003,
+      "known_usage_estimate_usd": null
+    },
+    {
+      "id": 1895,
+      "label": "grounded-heldout-v1/fresh_repair/linear/0",
+      "state": "error",
+      "reservation_usd": 0.2865104,
+      "known_usage_estimate_usd": 0.0207152
+    },
+    {
+      "id": 1962,
+      "label": "grounded-heldout-v1/fresh_lighting/linear/0",
+      "state": "error",
+      "reservation_usd": 0.2836944,
+      "known_usage_estimate_usd": 0.0206976
+    },
+    {
+      "id": 1982,
+      "label": "grounded-heldout-v1/fresh_evening_access/structured_linear/0",
+      "state": "error",
+      "reservation_usd": 0.2840288,
+      "known_usage_estimate_usd": 0.0206976
+    },
+    {
+      "id": 2151,
+      "label": "grounded-audio-v1/external-audio",
+      "state": "ok",
+      "reservation_usd": 0.5,
+      "known_usage_estimate_usd": 0.04057500000000001
+    }
+  ],
+  "settlement_margin": 4,
+  "proposed_accounted_exposure_usd": 12.93704176000002,
+  "proposed_available_budget_usd": 187.06295823999997,
+  "external_audio_http_calls": 20,
+  "unknown_usage_request_ids": [
+    1848,
+    1849
+  ],
+  "pending": 0,
+  "issues": [],
+  "applied": false,
+  "verified_text_rates_per_million": {
+    "google.gemma-4-26b-a4b": [
+      0.13,
+      0.4
+    ],
+    "nvidia.nemotron-super-3-120b": [
+      0.15,
+      0.65
+    ],
+    "gpt-5.6-sol": [
+      4.4,
+      22.0
+    ]
+  },
+  "pricing_sources": [
+    "https://aws.amazon.com/bedrock/pricing/",
+    "https://docs.aws.amazon.com/en_en/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html",
+    "https://developers.openai.com/api/docs/models/tts-1",
+    "https://developers.openai.com/api/docs/models/whisper-1"
+  ],
+  "policy": "4x verified cost for successful text responses; all failed/unknown/audio requests retain full original reservations. Originals are never rewritten.",
+  "limitations": [
+    "Usage estimates are not settled invoices; no provider billing statement was available.",
+    "Request logs cannot independently rule out unreported upstream retries; 4x accrual is a conservative allowance, not a proof of a billing upper bound."
+  ],
+  "actual_accounted_exposure_usd": 12.93704176,
+  "source_freeze_verified_after_completion": true,
+  "source_digest": "8b86fdce3d17151c645f07334302895e4a1c897039aed62366941590331e3d44"
+}

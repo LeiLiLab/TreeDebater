@@ -39,7 +39,7 @@ Keep the model, input chunks, prior debate context, evidence, answer budget, and
 | --- | --- | --- | --- |
 | Legacy (`legacy`) | 边听边维护原始论证树，结束后规划并生成反驳 | 保留论证关系；缺少显式撤回修正和提前反驳笔记 | 第一轮：12 案例 × 2 次，Gemma 评分 |
 | End-of-turn (`end_of_turn`) | 收集完整发言后集中分析树和生成反驳 | 减少重复分析；工作集中在端点后 | 第一轮：12 × 2，Gemma 评分 |
-| Linear (`linear`) | 不用论证树，每段输入更新自由文本反驳笔记 | 简单、较低开销；限定条件和假设容易混淆 | 第一轮 12 × 2；第二轮 10 × 1，GPT-5.6 评分 |
+| Linear (`linear`) | 不用论证树，每段输入更新自由文本反驳笔记 | 简单、较低开销；限定条件和假设容易混淆 | 第一轮 12 × 2；第二轮 10 × 1；第三轮补充 8 × 1（后两轮 GPT-5.6），本轮通过率 58.3%，等待 13.64s |
 | Corrected Tree (`corrected_tree`) | 树支持说话者自己的修改/撤回，归档失效分支 | 修正旧目标；仍在端点后规划反驳 | 第一轮：12 × 2，Gemma 评分 |
 | Adaptive Linear (`adaptive_linear`) | Linear 加模型门控，决定更新或等待 | 可跳过重复工作；门控本身增加调用与延迟 | 第一轮：12 × 2，Gemma 评分 |
 | Tree Plan (`tree_plan`) | 可纠错论证树驱动流式反驳笔记 | 同时组织论证关系和提前准备；树与笔记维护较贵 | 第一轮：12 × 2，Gemma 评分；第三轮：8 × 1，GPT-5.6，通过率 50.0%，模拟文本等待 17.28s |
@@ -56,7 +56,7 @@ Evaluate targeted rebuttal quality, final-condition correctness, claim coverage,
 
 ## Budget and accounting
 
-**Latest completed run:** approved cumulative cap remains **USD200**. After the third comparison, provider-usage estimate is **$2.71205336**, active conservative budget occupancy **$12.23635184**, and remaining guarded headroom **$187.76364816**, with zero pending requests. Historical pre-dispatch reservations total $268.0831272; this audit sum is not current occupancy. Successful requests settle at 4× verified usage; failed/unknown/audio reservations remain. The previous USD320 proposal is withdrawn.
+**Latest completed run:** the original Linear control is now complete. Approved cumulative cap remains **USD200**; cumulative provider-usage estimate **$2.88722584**, active guarded occupancy **$12.93704176**, available **$187.06295824**, zero pending requests. Historical pre-dispatch reservations total $276.9705208 and are not current occupancy. Successful requests settle at 4× verified usage; historical failed/unknown/audio bounds remain. The earlier USD320 proposal is withdrawn.
 
 - Approved cumulative cap: **USD 200.00**.
 - At creation of this log: **0 paid inference requests launched by this task; attributable experiment cost USD 0.00**. Existing unrelated proxy traffic is excluded.
@@ -657,4 +657,57 @@ Final result commit command (only task-owned files):
 ```bash
 git add process.md src/scripts/benchmark_incremental_planning.py tests/test_benchmark_tree_history.py experiments/incremental_planning/manifest_v3.json experiments/incremental_planning/summarize.py experiments/incremental_planning/diagnose_tree_run.py experiments/incremental_planning/tree-grounded-dev-v1_summary.json experiments/incremental_planning/tree-grounded-heldout-v1_summary.json experiments/incremental_planning/tree-grounded-heldout-v1_diagnostics.json experiments/incremental_planning/cost_audit_v3.json
 git commit -m "Report tree comparison and preserve diagnostic snapshots"
+```
+
+## Original Linear matched control — 2026-10-03 UTC
+
+User requested **和linear进行对照**. The third comparison already included Grounded/Light Linear, but lacked the original free-text `linear` baseline. Add exactly eight original Linear answers on the same frozen eight cases, one repetition, two workers. Reuse completed tree/grounded/light results without rejudging or regenerating them. Same Gemma generation, GPT-5.6 Sol judge with 1,600-token cap, shared prior speeches, 60-second answer budget, helper temperature 0 and generator temperature 0.3, plan cap 700, generator cap 1,600, no ASR/TTS.
+
+Starting source **679666e** differs from evaluated tree source 3accc6e only in deep-copying diagnostic snapshots; no inference prompt, policy, grading or timing section changed. The supplemental arm is run after viewing tree results, with no tuning; disclose temporal/provider-load confounding and do not call this new unseen validation. Manifest: `experiments/incremental_planning/manifest_linear_control.json`.
+
+Budget skill continues under the existing USD200 authorization. Starting cumulative usage estimate $2.71205336; active guarded occupancy $12.23635184; no pending requests. Expected additional usage $0.10–$0.40, planning upper $1; pre-dispatch allowance including a bounded retry $14. Shared per-request admission guard and success settlement remain active; no spending reset or cap increase. Official AWS pricing rechecked: Gemma $0.13/$0.40 and GPT geographic short-context $4.40/$22 per million input/output tokens, unchanged. Sources: [Bedrock pricing](https://aws.amazon.com/bedrock/pricing/) and [GPT model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html).
+
+```bash
+# Run separately with N=0 and N=1:
+PYTHONPATH=src HF_HUB_OFFLINE=1 /home/danqingwang/anaconda3/envs/debate/bin/python src/scripts/benchmark_incremental_planning.py --run-id tree-linear-control-v1 --split test --cases-file experiments/incremental_planning/cases_v3.json --modes linear --judge-model gpt-5.6-sol --judge-max-tokens 1600 --cap-usd 200 --repeats 1 --workers 2 --worker-index N > experiments/incremental_planning/run/tree-linear-control-v1-workerN.log 2>&1
+```
+
+### Linear control completed and compared
+
+**8/8 original Linear answers and GPT-5.6 judgments completed**, two workers exited 0, no failures, truncations or retries. Source/cases hashes verified unchanged after completion. Supplemental source `679666e`, digest `8b86fdce3d17151c645f07334302895e4a1c897039aed62366941590331e3d44`. `compare_linear_control.py` verifies identical case IDs, repeats, generator, judge, token cap, temperatures, input schedule and concurrency; only mode lists and the documented diagnostic-only source difference are allowed. It joins the 48 results into a separate report and leaves all original results and judgments unchanged.
+
+| Mode | Checklist pass rate | Strength / 5 | Strawman flag | Unsupported-fact flag | Simulated text wait | Generation calls | Generation usage USD/answer |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| **Original Linear** | **58.3%** | **2.75** | **50.0%** | **100.0%** | **13.64s** | **7.50** | **0.004247** |
+| Tree Plan | 50.0% | 3.00 | 37.5% | 87.5% | 17.28s | 14.00 | 0.007092 |
+| Grounded Linear | 66.7% | 3.63 | 12.5% | 37.5% | 9.87s | 7.50 | 0.003687 |
+| Grounded Tree | 62.5% | 3.50 | 25.0% | 12.5% | 11.37s | 14.00 | 0.006538 |
+| Light Linear | 70.8% | 3.63 | 25.0% | 37.5% | 10.52s | 7.13 | 0.003484 |
+| Light Tree | 62.5% | 3.88 | 0.0% | 25.0% | 11.96s | 13.25 | 0.006360 |
+
+Original Linear averages 130.25 words. As above, the newer grounded pipelines produce shorter answers, contributing to their latency; timing is simulated residual text wait and excludes ASR/TTS. Calls include prior-history tree setup and post-answer own-tree analysis; per-answer cost excludes judges. Flags are automated judgments with small denominators, not independently established error rates.
+
+| Candidate minus original Linear | Checklist difference, percentage points (95% case-bootstrap interval) | Text latency difference (95% interval) |
+| --- | ---: | ---: |
+| Tree Plan | −8.3 [−25.0, 0.0] | +3.64s [+1.22, +5.87] |
+| Grounded Linear | +8.3 [0.0, +20.8] | −3.77s [−5.24, −2.25] |
+| Light Linear | +12.5 [−4.2, +29.2] | −3.12s [−4.82, −1.13] |
+| Grounded Tree | +4.2 [0.0, +12.5] | −2.27s [−3.75, −0.74] |
+| Light Tree | +4.2 [−8.3, +16.7] | −1.68s [−3.93, +0.14] |
+
+**Interpretation:** Grounded/Light Tree modestly exceed original Linear on checklist means, but both quality intervals touch or cross zero. Grounded Tree has lower measured residual latency in this comparison; Light Tree's latency interval crosses zero. Relative to the original Linear baseline, tree variants require about 1.77–1.87× generation calls. The matched Grounded/Light comparisons are more informative about the tree component: Grounded Tree trails Grounded Linear by 4.2 percentage points and adds 1.50s, while Light Tree trails Light Linear by 8.3 points and adds 1.43s. These matched quality intervals also include zero. Therefore **the current sample does not demonstrate an independent tree-structure advantage**. Improvements over old Tree Plan or original Linear cannot be attributed entirely to the tree; grounding feedback/revision and answer length are also changed. Keep trees as the principal method under investigation, with these Linear controls retained for subsequent experiments.
+
+This is a supplemental matched comparison on already-used cases, with one repetition each; no new case or prompt tuning was performed. Original Linear ran in a later time block, so bootstrap intervals do not account for systematic provider-load changes. Do not describe this as a randomized six-arm simultaneous experiment or independent held-out confirmation.
+
+Cost: **68** new requests (60 generation/planning, 8 judges), 191,497 input and 29,892 output tokens, usage estimate **$0.17517248**, active occupancy attributable to this run **$0.70068992**. Full audit of **2,808 entries/artifacts** found zero issues and zero pending requests. Cumulative usage estimate **$2.88722584**, guarded occupancy **$12.93704176**, remaining **$187.06295824** within the unchanged $200 cap. No new historical error reservations were released; no cap increase.
+
+Validation: both workers completed; all metadata and case identities matched; frozen source/cases hashes unchanged; original tree answers/scores retained; raw request audit reports no missing/error/truncated records. Inference source is unchanged from the previously tested 235-test version; this turn adds reporting only. Reports: `tree-linear-control-v1_summary.json`, **`tree-vs-linear-v1_comparison.json`**, `cost_audit_linear_control.json`, `manifest_linear_control.json`.
+
+```bash
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/summarize.py tree-linear-control-v1
+/home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/compare_linear_control.py
+PYTHONPATH=src /home/danqingwang/anaconda3/envs/debate/bin/python experiments/incremental_planning/reconcile_budget.py --output experiments/incremental_planning/cost_audit_linear_control.json
+git diff --check
+git add process.md experiments/incremental_planning/manifest_linear_control.json experiments/incremental_planning/compare_linear_control.py experiments/incremental_planning/tree-linear-control-v1_summary.json experiments/incremental_planning/tree-vs-linear-v1_comparison.json experiments/incremental_planning/cost_audit_linear_control.json
+git commit -m "Compare original Linear against grounded tree variants"
 ```

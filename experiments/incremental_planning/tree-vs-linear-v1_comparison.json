@@ -1,0 +1,658 @@
+{
+  "reference_mode": "linear",
+  "source_runs": [
+    "tree-grounded-heldout-v1",
+    "tree-linear-control-v1"
+  ],
+  "total_answers": 48,
+  "cases": [
+    "tree_fresh_microgrid",
+    "tree_fresh_shuttle",
+    "tree_fresh_wetlands",
+    "tree_fresh_alerts",
+    "tree_fresh_tools",
+    "tree_fresh_market",
+    "tree_fresh_river",
+    "tree_fresh_pool"
+  ],
+  "repeats": 1,
+  "metrics": [
+    {
+      "mode": "linear",
+      "n": 8,
+      "checklist_rate": 0.5833333333333333,
+      "strength_mean": 2.75,
+      "strawman_rate": 0.5,
+      "unsupported_fact_rate": 1,
+      "residual_text_mean_s": 13.641111789882416,
+      "residual_text_median_s": 13.745505625498481,
+      "residual_worker_return_mean_s": 13.641150724630279,
+      "generation_calls_mean": 7.5,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 7.5,
+      "generation_cost_mean_usd": 0.00424651,
+      "answer_words_mean": 130.25,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 0,
+      "invalid_targets": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "tree_plan",
+      "n": 8,
+      "checklist_rate": 0.5,
+      "strength_mean": 3,
+      "strawman_rate": 0.375,
+      "unsupported_fact_rate": 0.875,
+      "residual_text_mean_s": 17.284605552281036,
+      "residual_text_median_s": 18.510806407488417,
+      "residual_worker_return_mean_s": 20.502695310539465,
+      "generation_calls_mean": 14,
+      "prior_context_setup_calls_mean": 1,
+      "live_generation_calls_mean": 13,
+      "generation_cost_mean_usd": 0.007092028750000001,
+      "answer_words_mean": 131,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 0,
+      "invalid_targets": 0,
+      "revisions": 8
+    },
+    {
+      "mode": "grounded_linear",
+      "n": 8,
+      "checklist_rate": 0.6666666666666666,
+      "strength_mean": 3.625,
+      "strawman_rate": 0.125,
+      "unsupported_fact_rate": 0.375,
+      "residual_text_mean_s": 9.867752328638744,
+      "residual_text_median_s": 10.223258827521931,
+      "residual_worker_return_mean_s": 9.86778567951842,
+      "generation_calls_mean": 7.5,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 7.5,
+      "generation_cost_mean_usd": 0.0036872650000000003,
+      "answer_words_mean": 104.75,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 6,
+      "invalid_targets": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "grounded_tree",
+      "n": 8,
+      "checklist_rate": 0.625,
+      "strength_mean": 3.5,
+      "strawman_rate": 0.25,
+      "unsupported_fact_rate": 0.125,
+      "residual_text_mean_s": 11.371739149763016,
+      "residual_text_median_s": 11.246558748011012,
+      "residual_worker_return_mean_s": 13.422586911154212,
+      "generation_calls_mean": 14,
+      "prior_context_setup_calls_mean": 1,
+      "live_generation_calls_mean": 13,
+      "generation_cost_mean_usd": 0.0065381,
+      "answer_words_mean": 114.375,
+      "gate_waits": 0,
+      "duplicate_skips": 0,
+      "incomplete_waits": 0,
+      "invalid_states": 9,
+      "invalid_targets": 0,
+      "revisions": 7
+    },
+    {
+      "mode": "light_linear",
+      "n": 8,
+      "checklist_rate": 0.7083333333333333,
+      "strength_mean": 3.625,
+      "strawman_rate": 0.25,
+      "unsupported_fact_rate": 0.375,
+      "residual_text_mean_s": 10.524711687365198,
+      "residual_text_median_s": 9.352550052979495,
+      "residual_worker_return_mean_s": 10.52474491961766,
+      "generation_calls_mean": 7.125,
+      "prior_context_setup_calls_mean": 0,
+      "live_generation_calls_mean": 7.125,
+      "generation_cost_mean_usd": 0.00348432125,
+      "answer_words_mean": 112.75,
+      "gate_waits": 0,
+      "duplicate_skips": 2,
+      "incomplete_waits": 1,
+      "invalid_states": 5,
+      "invalid_targets": 0,
+      "revisions": 0
+    },
+    {
+      "mode": "light_tree",
+      "n": 8,
+      "checklist_rate": 0.625,
+      "strength_mean": 3.875,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0.25,
+      "residual_text_mean_s": 11.957015306514222,
+      "residual_text_median_s": 12.085507354000583,
+      "residual_worker_return_mean_s": 14.197467850259272,
+      "generation_calls_mean": 13.25,
+      "prior_context_setup_calls_mean": 1,
+      "live_generation_calls_mean": 12.25,
+      "generation_cost_mean_usd": 0.0063598875000000004,
+      "answer_words_mean": 108.125,
+      "gate_waits": 0,
+      "duplicate_skips": 2,
+      "incomplete_waits": 1,
+      "invalid_states": 7,
+      "invalid_targets": 0,
+      "revisions": 7
+    }
+  ],
+  "paired_vs_original_linear": {
+    "tree_plan": {
+      "baseline": "linear",
+      "candidate": "tree_plan",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0.0,
+          "latency_diff_s": 6.490861961967312
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.0,
+          "latency_diff_s": 7.066282958956435
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.979339215962682
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": -0.6666666666666667,
+          "latency_diff_s": 6.1519275142244325
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.2286112639703788
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.23906815209193155
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.0,
+          "latency_diff_s": 4.06899102096213
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.0,
+          "latency_diff_s": 6.881546442979015
+        }
+      ],
+      "quality_diff_mean": -0.08333333333333334,
+      "quality_diff_95ci": [
+        -0.25,
+        0.0
+      ],
+      "latency_diff_mean_s": 3.643493762398619,
+      "latency_diff_95ci_s": [
+        1.2167533718675259,
+        5.868690705308677
+      ]
+    },
+    "grounded_linear": {
+      "baseline": "linear",
+      "candidate": "grounded_linear",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -5.605346774973441
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.0,
+          "latency_diff_s": -4.381480136013124
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.0,
+          "latency_diff_s": -5.842289758962579
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": 0,
+          "latency_diff_s": -2.5361553329857998
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.9066376100527123
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.0,
+          "latency_diff_s": -2.2230372589547187
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -6.8695493579725735
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.1776205399655737
+        }
+      ],
+      "quality_diff_mean": 0.08333333333333334,
+      "quality_diff_95ci": [
+        0.0,
+        0.20833333333333331
+      ],
+      "latency_diff_mean_s": -3.773359461243672,
+      "latency_diff_95ci_s": [
+        -5.235069710863172,
+        -2.2485308203758905
+      ]
+    },
+    "light_linear": {
+      "baseline": "linear",
+      "candidate": "light_linear",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -0.4083953320514411
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.0,
+          "latency_diff_s": -4.74887164804386
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -4.678362071048468
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": -4.422669896972366
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": 2.22534134297166
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -4.316769002994988
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.0,
+          "latency_diff_s": -6.658628368983045
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -1.9228458430152386
+        }
+      ],
+      "quality_diff_mean": 0.125,
+      "quality_diff_95ci": [
+        -0.04166666666666668,
+        0.2916666666666667
+      ],
+      "latency_diff_mean_s": -3.1164001025172183,
+      "latency_diff_95ci_s": [
+        -4.818869132257532,
+        -1.1341272646459402
+      ]
+    },
+    "grounded_tree": {
+      "baseline": "linear",
+      "candidate": "grounded_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.7930080830701627
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 1.2314672149950638
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.0,
+          "latency_diff_s": -5.336705831985455
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": 0,
+          "latency_diff_s": -1.8599837359506637
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": -3.3569734550546855
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.8274747309624217
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.0,
+          "latency_diff_s": -5.43573090195423
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.7765715969726443
+        }
+      ],
+      "quality_diff_mean": 0.04166666666666667,
+      "quality_diff_95ci": [
+        0.0,
+        0.125
+      ],
+      "latency_diff_mean_s": -2.2693726401194,
+      "latency_diff_95ci_s": [
+        -3.74771340960433,
+        -0.7432553622493288
+      ]
+    },
+    "light_tree": {
+      "baseline": "linear",
+      "candidate": "light_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 0.42279556195717305
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.6623212810372934
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": -2.812905929982662
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": 0.26414506102446467
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.1095272369566374
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.0,
+          "latency_diff_s": -3.416421701957006
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.0,
+          "latency_diff_s": -8.422324545914307
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.044733732007444
+        }
+      ],
+      "quality_diff_mean": 0.04166666666666667,
+      "quality_diff_95ci": [
+        -0.08333333333333334,
+        0.16666666666666669
+      ],
+      "latency_diff_mean_s": -1.6840964833681937,
+      "latency_diff_95ci_s": [
+        -3.934968472465698,
+        0.14455678062222432
+      ]
+    }
+  },
+  "matched_grounding_controls": {
+    "grounded_tree_vs_grounded_linear": {
+      "baseline": "grounded_linear",
+      "candidate": "grounded_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": -0.33333333333333337,
+          "latency_diff_s": 3.8123386919032782
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 5.612947351008188
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0.0,
+          "latency_diff_s": 0.5055839269771241
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": 0,
+          "latency_diff_s": 0.6761715970351361
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.4503358450019732
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.395562527992297
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": -0.3333333333333333,
+          "latency_diff_s": 1.4338184560183436
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.954192136938218
+        }
+      ],
+      "quality_diff_mean": -0.041666666666666664,
+      "quality_diff_95ci": [
+        -0.16666666666666669,
+        0.08333333333333334
+      ],
+      "latency_diff_mean_s": 1.503986821124272,
+      "latency_diff_95ci_s": [
+        0.19191864575259387,
+        3.0298774179827888
+      ]
+    },
+    "light_tree_vs_light_linear": {
+      "baseline": "light_linear",
+      "candidate": "light_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "tree_fresh_microgrid",
+          "quality_diff": 0,
+          "latency_diff_s": 0.8311908940086141
+        },
+        {
+          "case": "tree_fresh_shuttle",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.0865503670065664
+        },
+        {
+          "case": "tree_fresh_wetlands",
+          "quality_diff": 0,
+          "latency_diff_s": 1.8654561410658062
+        },
+        {
+          "case": "tree_fresh_alerts",
+          "quality_diff": 0.0,
+          "latency_diff_s": 4.68681495799683
+        },
+        {
+          "case": "tree_fresh_tools",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.1158141060150228
+        },
+        {
+          "case": "tree_fresh_market",
+          "quality_diff": -0.3333333333333333,
+          "latency_diff_s": 0.9003473010379821
+        },
+        {
+          "case": "tree_fresh_river",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.763696176931262
+        },
+        {
+          "case": "tree_fresh_pool",
+          "quality_diff": -0.3333333333333333,
+          "latency_diff_s": 2.9675795750226825
+        }
+      ],
+      "quality_diff_mean": -0.08333333333333333,
+      "quality_diff_95ci": [
+        -0.20833333333333331,
+        0.0
+      ],
+      "latency_diff_mean_s": 1.4323036191490246,
+      "latency_diff_95ci_s": [
+        -0.005073087850178126,
+        2.802502581012959
+      ]
+    }
+  },
+  "source_metadata": {
+    "tree-grounded-heldout-v1": {
+      "source_digest": "2a553e68d02c45bc8f9b2ecf13932744a8f8aba8f8db905a035b3a2eebb5b92f",
+      "cases_digest": "010a549169e25889a58760fa1e682974e5a712b2063c64c39f0e3466285f2b73",
+      "split": "test",
+      "case_ids": [
+        "tree_fresh_microgrid",
+        "tree_fresh_shuttle",
+        "tree_fresh_wetlands",
+        "tree_fresh_alerts",
+        "tree_fresh_tools",
+        "tree_fresh_market",
+        "tree_fresh_river",
+        "tree_fresh_pool"
+      ],
+      "modes": [
+        "tree_plan",
+        "grounded_linear",
+        "light_linear",
+        "grounded_tree",
+        "light_tree"
+      ],
+      "repeats": 1,
+      "model": "google.gemma-4-26b-a4b",
+      "workers": 2,
+      "judge_model": "gpt-5.6-sol",
+      "cap_usd": 200.0,
+      "judge_max_tokens": 1600,
+      "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+      "main_temperature": 0.3,
+      "helper_temperature": 0,
+      "judge_temperature": "unsupported; omitted",
+      "judge_reasoning_effort": "none",
+      "matching": "exact string targets; embedding fallback disabled for every mode",
+      "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+      "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+    },
+    "tree-linear-control-v1": {
+      "source_digest": "8b86fdce3d17151c645f07334302895e4a1c897039aed62366941590331e3d44",
+      "cases_digest": "010a549169e25889a58760fa1e682974e5a712b2063c64c39f0e3466285f2b73",
+      "split": "test",
+      "case_ids": [
+        "tree_fresh_microgrid",
+        "tree_fresh_shuttle",
+        "tree_fresh_wetlands",
+        "tree_fresh_alerts",
+        "tree_fresh_tools",
+        "tree_fresh_market",
+        "tree_fresh_river",
+        "tree_fresh_pool"
+      ],
+      "modes": [
+        "linear"
+      ],
+      "repeats": 1,
+      "model": "google.gemma-4-26b-a4b",
+      "workers": 2,
+      "judge_model": "gpt-5.6-sol",
+      "cap_usd": 200.0,
+      "judge_max_tokens": 1600,
+      "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+      "main_temperature": 0.3,
+      "helper_temperature": 0,
+      "judge_temperature": "unsupported; omitted",
+      "judge_reasoning_effort": "none",
+      "matching": "exact string targets; embedding fallback disabled for every mode",
+      "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+      "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+    }
+  },
+  "costs_including_judges": {
+    "tree-grounded-heldout-v1": {
+      "calls": 487,
+      "reserved_upper_usd": 57.088435999999994,
+      "unresolved_calls": 0,
+      "input_tokens": 1353835,
+      "output_tokens": 134956,
+      "reported_usage_estimate_usd": 0.8319772199999995,
+      "accounted_exposure_usd": 3.327908879999998
+    },
+    "tree-linear-control-v1": {
+      "calls": 68,
+      "reserved_upper_usd": 8.8873936,
+      "unresolved_calls": 0,
+      "input_tokens": 191497,
+      "output_tokens": 29892,
+      "reported_usage_estimate_usd": 0.17517248,
+      "accounted_exposure_usd": 0.70068992
+    }
+  },
+  "limitations": [
+    "Supplemental Linear block runs after tree results were observed; no inference prompts or cases tuned.",
+    "Only source difference from frozen tree run is deep copying diagnostic snapshots outside measured call sections; generation and judging code/settings unchanged.",
+    "Same two-worker concurrency, but latency remains vulnerable to provider-load changes between blocks.",
+    "Same eight authored cases and one repetition; this is a matched supplemental control, not new independent validation.",
+    "One repetition per authored case; intervals bootstrap cases and are unadjusted for multiple comparisons.",
+    "Checklist measures explicit coverage of supplied conditions, not overall debate ability; omissions can fail composite checks.",
+    "Strawman and unsupported-fact fields are fallible automatic flags, not independently verified error rates.",
+    "Residual latency is text-only, simulated from a fixed input schedule and measured call durations; no audio playback.",
+    "Comparisons to original Linear bundle grounding/feedback changes with tree changes; matched grounded/light arms better control these components.",
+    "Some tree answers used raw-prefix fallback; score differences do not isolate successful node binding."
+  ]
+}
