@@ -1,6 +1,6 @@
 {
   "task": "Verify condition protocol and assertion-review repairs against frozen sixth-round pipeline",
-  "status": "prepared",
+  "status": "completed: 64 generated and 64 judged",
   "created_utc": "2026-10-03T21:06:16.205389+00:00",
   "authorization": "User requested repairs; same previously authorized cumulative USD200 task budget; no increase or reset.",
   "source_commit": "c421b09",
@@ -93,5 +93,89 @@
     "Text-only simulated endpoint latency excludes ASR/TTS; automatic judge flags need spot checking."
   ],
   "offline_preflight": "335 tests +42 subtests passed; parser replay accepts 54/64 instead of 12/64; compilation/diff pass.",
-  "judge_retries": []
+  "judge_retries": [
+    {
+      "failed_request_id": 6953,
+      "label": "condition-repair-v1/retained_fresh_visitor/flat_tree/1",
+      "reason": "HTTP503",
+      "status": "succeeded; no further retry",
+      "answer_regenerated": false,
+      "unknown_usage_bound_usd": 0.3783648,
+      "retry_request_id": 6972,
+      "retry_usage_usd": 0.021159599999999997,
+      "identical_request_verified": true
+    },
+    {
+      "failed_request_id": 7163,
+      "label": "condition-repair-v1/retained_fresh_equipment/grounded_tree/0",
+      "reason": "HTTP503",
+      "status": "succeeded; no further retry",
+      "answer_regenerated": false,
+      "unknown_usage_bound_usd": 0.3751088,
+      "retry_request_id": 7191,
+      "retry_usage_usd": 0.016134799999999998,
+      "identical_request_verified": true
+    },
+    {
+      "failed_request_id": 7190,
+      "label": "condition-repair-v1/retained_fresh_courtyard/branch_tree/0",
+      "reason": "HTTP503",
+      "status": "succeeded; no further retry",
+      "answer_regenerated": false,
+      "unknown_usage_bound_usd": 0.3759008,
+      "retry_request_id": 7236,
+      "retry_usage_usd": 0.0159808,
+      "identical_request_verified": true
+    },
+    {
+      "failed_request_id": 7248,
+      "label": "condition-repair-v1/retained_fresh_nightgarden/branch_tree/1",
+      "reason": "HTTP503",
+      "status": "succeeded; no further retry",
+      "answer_regenerated": false,
+      "unknown_usage_bound_usd": 0.3674176,
+      "retry_request_id": 7280,
+      "retry_usage_usd": 0.0138776,
+      "identical_request_verified": true
+    },
+    {
+      "failed_request_id": 7279,
+      "label": "condition-repair-v1/retained_fresh_nightgarden/grounded_tree/0",
+      "reason": "HTTP503",
+      "status": "succeeded; no further retry",
+      "answer_regenerated": false,
+      "unknown_usage_bound_usd": 0.3692656,
+      "retry_request_id": 7281,
+      "retry_usage_usd": 0.013763200000000001,
+      "identical_request_verified": true
+    }
+  ],
+  "completed_utc": "2026-10-03T21:35:10.202802+00:00",
+  "generated_answers": 64,
+  "judged_answers": 64,
+  "missing_judgments": [],
+  "summary": "condition-repair-v1_summary.json",
+  "diagnostics": "condition-repair-v1_diagnostics.json",
+  "review_diagnostics": "condition-repair-v1_review_diagnostics.json",
+  "comparison": "condition-repair-v1_comparison.json",
+  "spot_checks": "condition-repair-v1_spot_checks.json",
+  "cost_audit": "cost_audit_v7.json",
+  "source_and_cases_unchanged": true,
+  "final_cost": {
+    "requests": 973,
+    "generation_requests": 904,
+    "judge_requests": 69,
+    "known_usage_estimate_usd": 1.7640269200000003,
+    "generation_usage_estimate_usd": 0.79946332,
+    "judging_usage_estimate_usd": 0.9645636,
+    "unknown_request_reservations_usd": 1.8660576,
+    "additional_accounted_exposure_usd": 8.92216527999999,
+    "cumulative_requests": 7289,
+    "cumulative_known_usage_usd": 11.226376810000001,
+    "cumulative_accounted_exposure_usd": 51.13737684,
+    "remaining_guarded_budget_usd": 148.86262316,
+    "pending": 0,
+    "audit_issues": []
+  },
+  "conclusion": "Planning type regression repaired: Grounded Tree rejected snapshots 52->5 and final fallback 15->2 of 16. Tree-mode unsupported/strawman flags decline, but spot checks show false negatives. Branch checklist coverage decreases 62.5%->58.3%; all before/after checklist intervals include zero. Condition review omissions and semantic applicability errors persist. No reliable overall quality or branch-over-flat advantage; text latency and generation token costs increase."
 }

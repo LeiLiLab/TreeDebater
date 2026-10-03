@@ -1,0 +1,2471 @@
+{
+  "baseline_run": "conditions-regression-v1",
+  "candidate_run": "condition-repair-v1",
+  "metadata_before": {
+    "tree_limits": {
+      "max_tree_targets": 8,
+      "max_tree_context_nodes": 16
+    },
+    "source_digest": "c464d172d48443b5a5c91ac9fa70c7b6f52a33548e9ea12f7493966e0aebf1af",
+    "cases_digest": "74efd27c324fdfbbd4aa9fe6f9b988c53f86fc9e30616b650d71dfcc92bae92c",
+    "split": "test",
+    "case_ids": [
+      "retained_fresh_workshop",
+      "retained_fresh_parcel",
+      "retained_fresh_nightgarden",
+      "retained_fresh_waterstation",
+      "retained_fresh_archive",
+      "retained_fresh_courtyard",
+      "retained_fresh_equipment",
+      "retained_fresh_visitor"
+    ],
+    "modes": [
+      "grounded_linear",
+      "grounded_tree",
+      "flat_tree",
+      "branch_tree"
+    ],
+    "repeats": 2,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 2,
+    "judge_model": "gpt-5.6-sol",
+    "cap_usd": 200.0,
+    "judge_max_tokens": 1600,
+    "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted",
+    "judge_reasoning_effort": "none",
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "metadata_after": {
+    "tree_limits": {
+      "max_tree_targets": 8,
+      "max_tree_context_nodes": 16
+    },
+    "source_digest": "020537bccb7ddffc59acb238ebb4ad0667d522de0d00615522ac27f89c6bed45",
+    "cases_digest": "74efd27c324fdfbbd4aa9fe6f9b988c53f86fc9e30616b650d71dfcc92bae92c",
+    "split": "test",
+    "case_ids": [
+      "retained_fresh_workshop",
+      "retained_fresh_parcel",
+      "retained_fresh_nightgarden",
+      "retained_fresh_waterstation",
+      "retained_fresh_archive",
+      "retained_fresh_courtyard",
+      "retained_fresh_equipment",
+      "retained_fresh_visitor"
+    ],
+    "modes": [
+      "grounded_linear",
+      "grounded_tree",
+      "flat_tree",
+      "branch_tree"
+    ],
+    "repeats": 2,
+    "model": "google.gemma-4-26b-a4b",
+    "workers": 2,
+    "judge_model": "gpt-5.6-sol",
+    "cap_usd": 200.0,
+    "judge_max_tokens": 1600,
+    "prior_context": "fixed shared speeches, setup calls included in cost and reported separately from live latency",
+    "main_temperature": 0.3,
+    "helper_temperature": 0,
+    "judge_temperature": "unsupported; omitted",
+    "judge_reasoning_effort": "none",
+    "matching": "exact string targets; embedding fallback disabled for every mode",
+    "latency": "measured call times on simulated 2.3 words/sec serial input schedule; text only",
+    "generation": "real TreeDebater.rebuttal_generation + one feedback/revision pass; 60-second word budget; no TTS"
+  },
+  "primary_comparison": "branch_tree/checklist_rate",
+  "paired_before_after": {
+    "grounded_linear": {
+      "checklist_rate": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0.6666666666666666,
+            "after": 0.6666666666666666,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.5,
+            "after": 0.3333333333333333,
+            "difference": -0.16666666666666669
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.5,
+            "after": 0.3333333333333333,
+            "difference": -0.16666666666666669
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0.6666666666666666,
+            "after": 0.8333333333333333,
+            "difference": 0.16666666666666663
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          }
+        ],
+        "before_mean": 0.4583333333333333,
+        "after_mean": 0.5208333333333333,
+        "difference": 0.0625,
+        "difference_95ci": [
+          -0.04166666666666668,
+          0.14583333333333334
+        ]
+      },
+      "rebuttal_strength": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 4,
+            "after": 4,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 3.5,
+            "after": 3,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 4,
+            "after": 3.5,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 4,
+            "after": 3.5,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 3,
+            "after": 4,
+            "difference": 1
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 3,
+            "after": 4,
+            "difference": 1
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 3.5,
+            "after": 3.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 3.5,
+            "after": 3.5,
+            "difference": 0.0
+          }
+        ],
+        "before_mean": 3.5625,
+        "after_mean": 3.625,
+        "difference": 0.0625,
+        "difference_95ci": [
+          -0.3125,
+          0.5
+        ]
+      },
+      "strawman_rate": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0,
+            "after": 0.5,
+            "difference": 0.5
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0,
+            "after": 0.5,
+            "difference": 0.5
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          }
+        ],
+        "before_mean": 0.0625,
+        "after_mean": 0.1875,
+        "difference": 0.125,
+        "difference_95ci": [
+          0.0,
+          0.3125
+        ]
+      },
+      "unsupported_fact_rate": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0,
+            "after": 0.5,
+            "difference": 0.5
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          }
+        ],
+        "before_mean": 0.375,
+        "after_mean": 0.25,
+        "difference": -0.125,
+        "difference_95ci": [
+          -0.375,
+          0.125
+        ]
+      },
+      "residual_text_seconds": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 9.15207199449651,
+            "after": 11.369750551966717,
+            "difference": 2.217678557470208
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 11.282206326024607,
+            "after": 10.65622308946331,
+            "difference": -0.6259832365612965
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 9.823830541979987,
+            "after": 11.841445876983926,
+            "difference": 2.0176153350039385
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 9.072461141535314,
+            "after": 11.34364923046087,
+            "difference": 2.2711880889255553
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 10.487798926478717,
+            "after": 10.99477971001761,
+            "difference": 0.5069807835388929
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 11.801830285025062,
+            "after": 13.362873292993754,
+            "difference": 1.561043007968692
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 10.418852738512214,
+            "after": 12.755286472965963,
+            "difference": 2.336433734453749
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 8.446250089502428,
+            "after": 11.14954689098522,
+            "difference": 2.703296801482793
+          }
+        ],
+        "before_mean": 10.060662755444355,
+        "after_mean": 11.684194389479671,
+        "difference": 1.6235316340353165,
+        "difference_95ci": [
+          0.8370695079029247,
+          2.274378841102589
+        ]
+      },
+      "generation_cost_usd": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0.0037886000000000005,
+            "after": 0.00428905,
+            "difference": 0.0005004499999999995
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.003697435,
+            "after": 0.004266065,
+            "difference": 0.0005686300000000005
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.0037433550000000003,
+            "after": 0.004274205,
+            "difference": 0.0005308499999999994
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0.00343691,
+            "after": 0.0039115,
+            "difference": 0.00047459
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.00410371,
+            "after": 0.004355535000000001,
+            "difference": 0.00025182500000000066
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.0040019700000000005,
+            "after": 0.0045645600000000005,
+            "difference": 0.00056259
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0.003874635,
+            "after": 0.00448319,
+            "difference": 0.0006085549999999998
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.003730165,
+            "after": 0.004366725,
+            "difference": 0.00063656
+          }
+        ],
+        "before_mean": 0.0037970975000000003,
+        "after_mean": 0.00431385375,
+        "difference": 0.00051675625,
+        "difference_95ci": [
+          0.0004311056250000001,
+          0.0005823174999999997
+        ]
+      }
+    },
+    "grounded_tree": {
+      "checklist_rate": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0.8333333333333333,
+            "after": 0.8333333333333333,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.3333333333333333,
+            "after": 0.6666666666666666,
+            "difference": 0.3333333333333333
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.6666666666666666,
+            "after": 0.6666666666666666,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0.8333333333333333,
+            "after": 0.8333333333333333,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.5,
+            "after": 0.3333333333333333,
+            "difference": -0.16666666666666669
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.6666666666666666,
+            "after": 0.5,
+            "difference": -0.16666666666666663
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0,
+            "after": 0.3333333333333333,
+            "difference": 0.3333333333333333
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          }
+        ],
+        "before_mean": 0.5208333333333333,
+        "after_mean": 0.5833333333333333,
+        "difference": 0.0625,
+        "difference_95ci": [
+          -0.06249999999999999,
+          0.1875
+        ]
+      },
+      "rebuttal_strength": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 4,
+            "after": 4,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 3.5,
+            "after": 3.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 4,
+            "after": 4,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 4,
+            "after": 4,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 3.5,
+            "after": 3.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 4,
+            "after": 4,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 3,
+            "after": 3.5,
+            "difference": 0.5
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 3,
+            "after": 4,
+            "difference": 1
+          }
+        ],
+        "before_mean": 3.625,
+        "after_mean": 3.8125,
+        "difference": 0.1875,
+        "difference_95ci": [
+          0.0,
+          0.4375
+        ]
+      },
+      "strawman_rate": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          }
+        ],
+        "before_mean": 0.25,
+        "after_mean": 0.0625,
+        "difference": -0.1875,
+        "difference_95ci": [
+          -0.4375,
+          0
+        ]
+      },
+      "unsupported_fact_rate": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          }
+        ],
+        "before_mean": 0.75,
+        "after_mean": 0.1875,
+        "difference": -0.5625,
+        "difference_95ci": [
+          -0.875,
+          -0.25
+        ]
+      },
+      "residual_text_seconds": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 10.688186010549543,
+            "after": 16.957954324461753,
+            "difference": 6.269768313912209
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 12.388500353466952,
+            "after": 13.287870892963838,
+            "difference": 0.8993705394968856
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 11.723606926505454,
+            "after": 14.873326313012512,
+            "difference": 3.1497193865070585
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 12.626219216035679,
+            "after": 14.43549207097385,
+            "difference": 1.8092728549381718
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 10.677352039027028,
+            "after": 11.982362961978652,
+            "difference": 1.3050109229516238
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 10.97473558751517,
+            "after": 12.133174287941074,
+            "difference": 1.1584387004259042
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 14.92074392849463,
+            "after": 16.609427797986427,
+            "difference": 1.688683869491797
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 13.843374183459673,
+            "after": 13.853672284516506,
+            "difference": 0.01029810105683282
+          }
+        ],
+        "before_mean": 12.230339780631766,
+        "after_mean": 14.266660116729327,
+        "difference": 2.0363203360975604,
+        "difference_95ci": [
+          0.9907795558792714,
+          3.4425966912094736
+        ]
+      },
+      "generation_cost_usd": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0.010248375,
+            "after": 0.012476285,
+            "difference": 0.0022279099999999996
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.011044735,
+            "after": 0.01277342,
+            "difference": 0.0017286850000000006
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.011217365,
+            "after": 0.01220677,
+            "difference": 0.0009894050000000005
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0.00993806,
+            "after": 0.01051769,
+            "difference": 0.0005796299999999994
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.0168866,
+            "after": 0.017716905,
+            "difference": 0.0008303049999999999
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.0159467,
+            "after": 0.017471415,
+            "difference": 0.0015247149999999994
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0.01399361,
+            "after": 0.01563033,
+            "difference": 0.0016367200000000012
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.013426605000000001,
+            "after": 0.0153792,
+            "difference": 0.0019525949999999997
+          }
+        ],
+        "before_mean": 0.01283775625,
+        "after_mean": 0.014271501875,
+        "difference": 0.001433745625,
+        "difference_95ci": [
+          0.00105609,
+          0.00180157875
+        ]
+      }
+    },
+    "flat_tree": {
+      "checklist_rate": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.5,
+            "after": 1,
+            "difference": 0.5
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.8333333333333333,
+            "after": 0.5,
+            "difference": -0.33333333333333326
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.5,
+            "after": 0.6666666666666666,
+            "difference": 0.16666666666666663
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.5,
+            "after": 0.8333333333333333,
+            "difference": 0.33333333333333326
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          }
+        ],
+        "before_mean": 0.6666666666666666,
+        "after_mean": 0.75,
+        "difference": 0.08333333333333333,
+        "difference_95ci": [
+          -0.08333333333333331,
+          0.25
+        ]
+      },
+      "rebuttal_strength": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 3.5,
+            "after": 4,
+            "difference": 0.5
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 2,
+            "after": 4,
+            "difference": 2
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 4,
+            "after": 4,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 4.5,
+            "after": 4,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 4,
+            "after": 4,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 4,
+            "after": 4,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 3,
+            "after": 4,
+            "difference": 1
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 3.5,
+            "after": 3,
+            "difference": -0.5
+          }
+        ],
+        "before_mean": 3.5625,
+        "after_mean": 3.875,
+        "difference": 0.3125,
+        "difference_95ci": [
+          -0.1875,
+          0.9375
+        ]
+      },
+      "strawman_rate": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          }
+        ],
+        "before_mean": 0.4375,
+        "after_mean": 0,
+        "difference": -0.4375,
+        "difference_95ci": [
+          -0.6875,
+          -0.1875
+        ]
+      },
+      "unsupported_fact_rate": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          }
+        ],
+        "before_mean": 0.4375,
+        "after_mean": 0.125,
+        "difference": -0.3125,
+        "difference_95ci": [
+          -0.625,
+          -0.0625
+        ]
+      },
+      "residual_text_seconds": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 9.942574271961348,
+            "after": 16.181280455028173,
+            "difference": 6.2387061830668245
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 10.805702656973153,
+            "after": 15.008329665957717,
+            "difference": 4.202627008984564
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 13.565573942003539,
+            "after": 13.481501094007399,
+            "difference": -0.0840728479961399
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 11.127680620469619,
+            "after": 14.150029160984559,
+            "difference": 3.0223485405149404
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 14.275273730570916,
+            "after": 11.699664141982794,
+            "difference": -2.5756095885881223
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 11.100132825959008,
+            "after": 15.175665882008616,
+            "difference": 4.075533056049608
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 10.673112527525518,
+            "after": 12.856097055482678,
+            "difference": 2.18298452795716
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 11.688272072497057,
+            "after": 10.114743574988097,
+            "difference": -1.5735284975089598
+          }
+        ],
+        "before_mean": 11.64729033099502,
+        "after_mean": 13.583413878805004,
+        "difference": 1.9361235478099843,
+        "difference_95ci": [
+          -0.06747939009073889,
+          3.877838490265276
+        ]
+      },
+      "generation_cost_usd": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0.01068232,
+            "after": 0.01151506,
+            "difference": 0.0008327400000000002
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.011453605,
+            "after": 0.01251329,
+            "difference": 0.0010596849999999994
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.01143592,
+            "after": 0.012229425000000002,
+            "difference": 0.0007935050000000016
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0.009818965,
+            "after": 0.010496715,
+            "difference": 0.0006777499999999995
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.014103045000000002,
+            "after": 0.01533553,
+            "difference": 0.0012324849999999984
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.01400168,
+            "after": 0.014725485,
+            "difference": 0.0007238049999999992
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0.01301734,
+            "after": 0.014527825000000001,
+            "difference": 0.0015104850000000006
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.013299990000000001,
+            "after": 0.014409465,
+            "difference": 0.0011094749999999987
+          }
+        ],
+        "before_mean": 0.012226608125,
+        "after_mean": 0.013219099375000001,
+        "difference": 0.0009924912499999997,
+        "difference_95ci": [
+          0.0008134043750000004,
+          0.001186514374999999
+        ]
+      }
+    },
+    "branch_tree": {
+      "checklist_rate": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 1,
+            "after": 0.3333333333333333,
+            "difference": -0.6666666666666667
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 1,
+            "after": 0.6666666666666666,
+            "difference": -0.33333333333333337
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 1,
+            "after": 0.8333333333333333,
+            "difference": -0.16666666666666674
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.5,
+            "after": 0.6666666666666666,
+            "difference": 0.16666666666666663
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.5,
+            "after": 0.6666666666666666,
+            "difference": 0.16666666666666663
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0.16666666666666666,
+            "after": 0.5,
+            "difference": 0.33333333333333337
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          }
+        ],
+        "before_mean": 0.625,
+        "after_mean": 0.5833333333333333,
+        "difference": -0.04166666666666669,
+        "difference_95ci": [
+          -0.27083333333333337,
+          0.14583333333333334
+        ]
+      },
+      "rebuttal_strength": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 4,
+            "after": 3,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 3.5,
+            "after": 3.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 3.5,
+            "after": 4,
+            "difference": 0.5
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 3.5,
+            "after": 4,
+            "difference": 0.5
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 4,
+            "after": 4,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 3.5,
+            "after": 4,
+            "difference": 0.5
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 3,
+            "after": 3.5,
+            "difference": 0.5
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 2,
+            "after": 3,
+            "difference": 1
+          }
+        ],
+        "before_mean": 3.375,
+        "after_mean": 3.625,
+        "difference": 0.25,
+        "difference_95ci": [
+          -0.1875,
+          0.625
+        ]
+      },
+      "strawman_rate": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 1,
+            "after": 0.5,
+            "difference": -0.5
+          }
+        ],
+        "before_mean": 0.4375,
+        "after_mean": 0.0625,
+        "difference": -0.375,
+        "difference_95ci": [
+          -0.625,
+          -0.1875
+        ]
+      },
+      "unsupported_fact_rate": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0,
+            "after": 0,
+            "difference": 0
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.5,
+            "after": 0,
+            "difference": -0.5
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 1,
+            "after": 0,
+            "difference": -1
+          }
+        ],
+        "before_mean": 0.5625,
+        "after_mean": 0,
+        "difference": -0.5625,
+        "difference_95ci": [
+          -0.8125,
+          -0.3125
+        ]
+      },
+      "residual_text_seconds": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 11.344985341507709,
+            "after": 14.202766220492776,
+            "difference": 2.857780878985068
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 11.082218329043826,
+            "after": 15.524659851012984,
+            "difference": 4.442441521969158
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 12.14529780150042,
+            "after": 13.013066291023279,
+            "difference": 0.8677684895228595
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 11.810015685012331,
+            "after": 14.355784828017931,
+            "difference": 2.5457691430056
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 13.616572841012385,
+            "after": 13.565203571983147,
+            "difference": -0.05136926902923733
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 16.907879518490518,
+            "after": 14.151894537499174,
+            "difference": -2.755984980991343
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 13.396867600036785,
+            "after": 17.126629961974686,
+            "difference": 3.729762361937901
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 12.975271746952785,
+            "after": 17.695026121509727,
+            "difference": 4.719754374556942
+          }
+        ],
+        "before_mean": 12.909888607944595,
+        "after_mean": 14.954378922939213,
+        "difference": 2.0444903149946185,
+        "difference_95ci": [
+          0.30840177975187544,
+          3.5566889450492454
+        ]
+      },
+      "generation_cost_usd": {
+        "case_count": 8,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0.014383125,
+            "after": 0.014733345000000002,
+            "difference": 0.0003502200000000018
+          },
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.013711245,
+            "after": 0.018717245,
+            "difference": 0.005006
+          },
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.013770115000000001,
+            "after": 0.014298810000000002,
+            "difference": 0.0005286950000000009
+          },
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0.013098845000000001,
+            "after": 0.014073120000000001,
+            "difference": 0.0009742750000000001
+          },
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.023623785,
+            "after": 0.021036145,
+            "difference": -0.002587640000000002
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.020481815,
+            "after": 0.02215741,
+            "difference": 0.0016755949999999985
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0.020167255000000002,
+            "after": 0.020597735,
+            "difference": 0.000430479999999997
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.01966101,
+            "after": 0.01968221,
+            "difference": 2.1199999999998997e-05
+          }
+        ],
+        "before_mean": 0.017362149375,
+        "after_mean": 0.0181620025,
+        "difference": 0.0007998531249999994,
+        "difference_95ci": [
+          -0.0005266168750000008,
+          0.00225756125
+        ]
+      }
+    }
+  },
+  "descriptive": [
+    {
+      "mode": "grounded_linear",
+      "version": "before",
+      "generated": 16,
+      "judged": 16,
+      "checklist_rate": 0.4583333333333333,
+      "rebuttal_strength": 3.5625,
+      "strawman_rate": 0.0625,
+      "unsupported_fact_rate": 0.375,
+      "residual_text_seconds": 10.060662755444355,
+      "generation_cost_usd": 0.0037970975000000003,
+      "generation_calls": 7,
+      "answer_words": 120.75
+    },
+    {
+      "mode": "grounded_linear",
+      "version": "after",
+      "generated": 16,
+      "judged": 16,
+      "checklist_rate": 0.5208333333333333,
+      "rebuttal_strength": 3.625,
+      "strawman_rate": 0.1875,
+      "unsupported_fact_rate": 0.25,
+      "residual_text_seconds": 11.684194389479671,
+      "generation_cost_usd": 0.00431385375,
+      "generation_calls": 7,
+      "answer_words": 113
+    },
+    {
+      "mode": "grounded_tree",
+      "version": "before",
+      "generated": 16,
+      "judged": 16,
+      "checklist_rate": 0.5208333333333333,
+      "rebuttal_strength": 3.625,
+      "strawman_rate": 0.25,
+      "unsupported_fact_rate": 0.75,
+      "residual_text_seconds": 12.230339780631766,
+      "generation_cost_usd": 0.01283775625,
+      "generation_calls": 16.5,
+      "answer_words": 113.4375
+    },
+    {
+      "mode": "grounded_tree",
+      "version": "after",
+      "generated": 16,
+      "judged": 16,
+      "checklist_rate": 0.5833333333333333,
+      "rebuttal_strength": 3.8125,
+      "strawman_rate": 0.0625,
+      "unsupported_fact_rate": 0.1875,
+      "residual_text_seconds": 14.266660116729327,
+      "generation_cost_usd": 0.014271501875,
+      "generation_calls": 16.5,
+      "answer_words": 107.375
+    },
+    {
+      "mode": "flat_tree",
+      "version": "before",
+      "generated": 16,
+      "judged": 16,
+      "checklist_rate": 0.6666666666666666,
+      "rebuttal_strength": 3.5625,
+      "strawman_rate": 0.4375,
+      "unsupported_fact_rate": 0.4375,
+      "residual_text_seconds": 11.64729033099502,
+      "generation_cost_usd": 0.012226608125,
+      "generation_calls": 16.5,
+      "answer_words": 116.875
+    },
+    {
+      "mode": "flat_tree",
+      "version": "after",
+      "generated": 16,
+      "judged": 16,
+      "checklist_rate": 0.75,
+      "rebuttal_strength": 3.875,
+      "strawman_rate": 0,
+      "unsupported_fact_rate": 0.125,
+      "residual_text_seconds": 13.583413878805004,
+      "generation_cost_usd": 0.013219099375000001,
+      "generation_calls": 16.5,
+      "answer_words": 103.25
+    },
+    {
+      "mode": "branch_tree",
+      "version": "before",
+      "generated": 16,
+      "judged": 16,
+      "checklist_rate": 0.625,
+      "rebuttal_strength": 3.375,
+      "strawman_rate": 0.4375,
+      "unsupported_fact_rate": 0.5625,
+      "residual_text_seconds": 12.909888607944595,
+      "generation_cost_usd": 0.017362149375,
+      "generation_calls": 16.5,
+      "answer_words": 116.5
+    },
+    {
+      "mode": "branch_tree",
+      "version": "after",
+      "generated": 16,
+      "judged": 16,
+      "checklist_rate": 0.5833333333333333,
+      "rebuttal_strength": 3.625,
+      "strawman_rate": 0.0625,
+      "unsupported_fact_rate": 0,
+      "residual_text_seconds": 14.954378922939213,
+      "generation_cost_usd": 0.0181620025,
+      "generation_calls": 16.5,
+      "answer_words": 108.5
+    }
+  ],
+  "subgroups": [
+    {
+      "mode": "grounded_linear",
+      "kind": "dense_current_branches",
+      "comparison": {
+        "case_count": 4,
+        "cases": [
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          }
+        ],
+        "before_mean": 0.3333333333333333,
+        "after_mean": 0.5,
+        "difference": 0.16666666666666669,
+        "difference_95ci": [
+          0.16666666666666669,
+          0.16666666666666669
+        ]
+      }
+    },
+    {
+      "mode": "grounded_linear",
+      "kind": "implicit_narrowing",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0.6666666666666666,
+            "after": 0.6666666666666666,
+            "difference": 0.0
+          }
+        ],
+        "before_mean": 0.6666666666666666,
+        "after_mean": 0.6666666666666666,
+        "difference": 0.0,
+        "difference_95ci": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "mode": "grounded_linear",
+      "kind": "independent_branch",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0.6666666666666666,
+            "after": 0.8333333333333333,
+            "difference": 0.16666666666666663
+          }
+        ],
+        "before_mean": 0.6666666666666666,
+        "after_mean": 0.8333333333333333,
+        "difference": 0.16666666666666663,
+        "difference_95ci": [
+          0.16666666666666663,
+          0.16666666666666663
+        ]
+      }
+    },
+    {
+      "mode": "grounded_linear",
+      "kind": "prior_concession",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.5,
+            "after": 0.3333333333333333,
+            "difference": -0.16666666666666669
+          }
+        ],
+        "before_mean": 0.5,
+        "after_mean": 0.3333333333333333,
+        "difference": -0.16666666666666669,
+        "difference_95ci": [
+          -0.16666666666666669,
+          -0.16666666666666669
+        ]
+      }
+    },
+    {
+      "mode": "grounded_linear",
+      "kind": "reassertion",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.5,
+            "after": 0.3333333333333333,
+            "difference": -0.16666666666666669
+          }
+        ],
+        "before_mean": 0.5,
+        "after_mean": 0.3333333333333333,
+        "difference": -0.16666666666666669,
+        "difference_95ci": [
+          -0.16666666666666669,
+          -0.16666666666666669
+        ]
+      }
+    },
+    {
+      "mode": "grounded_tree",
+      "kind": "dense_current_branches",
+      "comparison": {
+        "case_count": 4,
+        "cases": [
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.5,
+            "after": 0.3333333333333333,
+            "difference": -0.16666666666666669
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.6666666666666666,
+            "after": 0.5,
+            "difference": -0.16666666666666663
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0,
+            "after": 0.3333333333333333,
+            "difference": 0.3333333333333333
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          }
+        ],
+        "before_mean": 0.375,
+        "after_mean": 0.41666666666666663,
+        "difference": 0.04166666666666667,
+        "difference_95ci": [
+          -0.16666666666666666,
+          0.25
+        ]
+      }
+    },
+    {
+      "mode": "grounded_tree",
+      "kind": "implicit_narrowing",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 0.8333333333333333,
+            "after": 0.8333333333333333,
+            "difference": 0.0
+          }
+        ],
+        "before_mean": 0.8333333333333333,
+        "after_mean": 0.8333333333333333,
+        "difference": 0.0,
+        "difference_95ci": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "mode": "grounded_tree",
+      "kind": "independent_branch",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 0.8333333333333333,
+            "after": 0.8333333333333333,
+            "difference": 0.0
+          }
+        ],
+        "before_mean": 0.8333333333333333,
+        "after_mean": 0.8333333333333333,
+        "difference": 0.0,
+        "difference_95ci": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "mode": "grounded_tree",
+      "kind": "prior_concession",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.3333333333333333,
+            "after": 0.6666666666666666,
+            "difference": 0.3333333333333333
+          }
+        ],
+        "before_mean": 0.3333333333333333,
+        "after_mean": 0.6666666666666666,
+        "difference": 0.3333333333333333,
+        "difference_95ci": [
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      }
+    },
+    {
+      "mode": "grounded_tree",
+      "kind": "reassertion",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.6666666666666666,
+            "after": 0.6666666666666666,
+            "difference": 0.0
+          }
+        ],
+        "before_mean": 0.6666666666666666,
+        "after_mean": 0.6666666666666666,
+        "difference": 0.0,
+        "difference_95ci": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "mode": "flat_tree",
+      "kind": "dense_current_branches",
+      "comparison": {
+        "case_count": 4,
+        "cases": [
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.5,
+            "after": 0.6666666666666666,
+            "difference": 0.16666666666666663
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.5,
+            "after": 0.8333333333333333,
+            "difference": 0.33333333333333326
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          }
+        ],
+        "before_mean": 0.5,
+        "after_mean": 0.625,
+        "difference": 0.12499999999999997,
+        "difference_95ci": [
+          0.0,
+          0.24999999999999994
+        ]
+      }
+    },
+    {
+      "mode": "flat_tree",
+      "kind": "implicit_narrowing",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          }
+        ],
+        "before_mean": 1,
+        "after_mean": 1,
+        "difference": 0,
+        "difference_95ci": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "mode": "flat_tree",
+      "kind": "independent_branch",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 1,
+            "after": 1,
+            "difference": 0
+          }
+        ],
+        "before_mean": 1,
+        "after_mean": 1,
+        "difference": 0,
+        "difference_95ci": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "mode": "flat_tree",
+      "kind": "prior_concession",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.5,
+            "after": 1,
+            "difference": 0.5
+          }
+        ],
+        "before_mean": 0.5,
+        "after_mean": 1,
+        "difference": 0.5,
+        "difference_95ci": [
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "mode": "flat_tree",
+      "kind": "reassertion",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 0.8333333333333333,
+            "after": 0.5,
+            "difference": -0.33333333333333326
+          }
+        ],
+        "before_mean": 0.8333333333333333,
+        "after_mean": 0.5,
+        "difference": -0.33333333333333326,
+        "difference_95ci": [
+          -0.33333333333333326,
+          -0.33333333333333326
+        ]
+      }
+    },
+    {
+      "mode": "branch_tree",
+      "kind": "dense_current_branches",
+      "comparison": {
+        "case_count": 4,
+        "cases": [
+          {
+            "case": "retained_fresh_archive",
+            "before": 0.5,
+            "after": 0.6666666666666666,
+            "difference": 0.16666666666666663
+          },
+          {
+            "case": "retained_fresh_courtyard",
+            "before": 0.5,
+            "after": 0.6666666666666666,
+            "difference": 0.16666666666666663
+          },
+          {
+            "case": "retained_fresh_equipment",
+            "before": 0.16666666666666666,
+            "after": 0.5,
+            "difference": 0.33333333333333337
+          },
+          {
+            "case": "retained_fresh_visitor",
+            "before": 0.3333333333333333,
+            "after": 0.5,
+            "difference": 0.16666666666666669
+          }
+        ],
+        "before_mean": 0.375,
+        "after_mean": 0.5833333333333333,
+        "difference": 0.20833333333333331,
+        "difference_95ci": [
+          0.16666666666666663,
+          0.2916666666666667
+        ]
+      }
+    },
+    {
+      "mode": "branch_tree",
+      "kind": "implicit_narrowing",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_workshop",
+            "before": 1,
+            "after": 0.3333333333333333,
+            "difference": -0.6666666666666667
+          }
+        ],
+        "before_mean": 1,
+        "after_mean": 0.3333333333333333,
+        "difference": -0.6666666666666667,
+        "difference_95ci": [
+          -0.6666666666666667,
+          -0.6666666666666667
+        ]
+      }
+    },
+    {
+      "mode": "branch_tree",
+      "kind": "independent_branch",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_waterstation",
+            "before": 1,
+            "after": 0.8333333333333333,
+            "difference": -0.16666666666666674
+          }
+        ],
+        "before_mean": 1,
+        "after_mean": 0.8333333333333333,
+        "difference": -0.16666666666666674,
+        "difference_95ci": [
+          -0.16666666666666674,
+          -0.16666666666666674
+        ]
+      }
+    },
+    {
+      "mode": "branch_tree",
+      "kind": "prior_concession",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_parcel",
+            "before": 0.5,
+            "after": 0.5,
+            "difference": 0.0
+          }
+        ],
+        "before_mean": 0.5,
+        "after_mean": 0.5,
+        "difference": 0.0,
+        "difference_95ci": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "mode": "branch_tree",
+      "kind": "reassertion",
+      "comparison": {
+        "case_count": 1,
+        "cases": [
+          {
+            "case": "retained_fresh_nightgarden",
+            "before": 1,
+            "after": 0.6666666666666666,
+            "difference": -0.33333333333333337
+          }
+        ],
+        "before_mean": 1,
+        "after_mean": 0.6666666666666666,
+        "difference": -0.33333333333333337,
+        "difference_95ci": [
+          -0.33333333333333337,
+          -0.33333333333333337
+        ]
+      }
+    }
+  ],
+  "missing_sensitivity": [],
+  "missing_before": [],
+  "missing_after": [],
+  "within_new": {
+    "grounded_tree_vs_grounded_linear": {
+      "baseline": "grounded_linear",
+      "candidate": "grounded_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": 5.588203772495035
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 2.6316478035005275
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 3.0318804360285867
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.0918428405129816
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": -0.16666666666666669,
+          "latency_diff_s": 0.9875832519610412
+        },
+        {
+          "case": "retained_fresh_courtyard",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.2296990050526801
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": -0.16666666666666669,
+          "latency_diff_s": 3.854141325020464
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": 2.7041253935312852
+        }
+      ],
+      "quality_diff_mean": 0.062499999999999986,
+      "quality_diff_95ci": [
+        -0.06250000000000001,
+        0.1875
+      ],
+      "latency_diff_mean_s": 2.582465727249655,
+      "latency_diff_95ci_s": [
+        1.2400642284264904,
+        3.83399271388771
+      ]
+    },
+    "flat_tree_vs_grounded_tree": {
+      "baseline": "grounded_tree",
+      "candidate": "flat_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": -0.77667386943358
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": 0.33333333333333337,
+          "latency_diff_s": 1.7204587729938794
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": -0.16666666666666663,
+          "latency_diff_s": -1.3918252190051135
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": 0.16666666666666674,
+          "latency_diff_s": -0.2854629099892918
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": -0.2826988199958578
+        },
+        {
+          "case": "retained_fresh_courtyard",
+          "quality_diff": 0.33333333333333326,
+          "latency_diff_s": 3.042491594067542
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": -3.753330742503749
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": -3.738928709528409
+        }
+      ],
+      "quality_diff_mean": 0.16666666666666669,
+      "quality_diff_95ci": [
+        0.04166666666666669,
+        0.27083333333333337
+      ],
+      "latency_diff_mean_s": -0.6832462379243225,
+      "latency_diff_95ci_s": [
+        -2.194939078450261,
+        0.8659538905776571
+      ]
+    },
+    "branch_tree_vs_flat_tree": {
+      "baseline": "flat_tree",
+      "candidate": "branch_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": -0.6666666666666667,
+          "latency_diff_s": -1.978514234535396
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": -0.5,
+          "latency_diff_s": 0.5163301850552671
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": -0.4684348029841203
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": -0.16666666666666674,
+          "latency_diff_s": 0.20575566703337245
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": 0.0,
+          "latency_diff_s": 1.8655394300003536
+        },
+        {
+          "case": "retained_fresh_courtyard",
+          "quality_diff": -0.16666666666666663,
+          "latency_diff_s": -1.0237713445094414
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": 0.0,
+          "latency_diff_s": 4.270532906492008
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": 7.58028254652163
+        }
+      ],
+      "quality_diff_mean": -0.16666666666666669,
+      "quality_diff_95ci": [
+        -0.35416666666666674,
+        -1.3877787807814457e-17
+      ],
+      "latency_diff_mean_s": 1.3709650441342092,
+      "latency_diff_95ci_s": [
+        -0.4745686060632579,
+        3.567048672455712
+      ]
+    },
+    "branch_tree_vs_grounded_linear": {
+      "baseline": "grounded_linear",
+      "candidate": "branch_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": -0.3333333333333333,
+          "latency_diff_s": 2.833015668526059
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": 4.868436761549674
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 1.171620414039353
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.0121355975570623
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": 2.570423861965537
+        },
+        {
+          "case": "retained_fresh_courtyard",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": 0.7890212445054203
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": 0.0,
+          "latency_diff_s": 4.371343489008723
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": 6.545479230524506
+        }
+      ],
+      "quality_diff_mean": 0.06249999999999999,
+      "quality_diff_95ci": [
+        -0.08333333333333333,
+        0.18749999999999997
+      ],
+      "latency_diff_mean_s": 3.270184533459542,
+      "latency_diff_95ci_s": [
+        2.0724526550220617,
+        4.561564054325572
+      ]
+    },
+    "branch_tree_vs_grounded_tree": {
+      "baseline": "grounded_tree",
+      "candidate": "branch_tree",
+      "case_count": 8,
+      "case_differences": [
+        {
+          "case": "retained_fresh_workshop",
+          "quality_diff": -0.49999999999999994,
+          "latency_diff_s": -2.755188103968976
+        },
+        {
+          "case": "retained_fresh_parcel",
+          "quality_diff": -0.16666666666666663,
+          "latency_diff_s": 2.2367889580491465
+        },
+        {
+          "case": "retained_fresh_nightgarden",
+          "quality_diff": 0.0,
+          "latency_diff_s": -1.8602600219892338
+        },
+        {
+          "case": "retained_fresh_waterstation",
+          "quality_diff": 0.0,
+          "latency_diff_s": -0.07970724295591936
+        },
+        {
+          "case": "retained_fresh_archive",
+          "quality_diff": 0.3333333333333333,
+          "latency_diff_s": 1.5828406100044958
+        },
+        {
+          "case": "retained_fresh_courtyard",
+          "quality_diff": 0.16666666666666663,
+          "latency_diff_s": 2.0187202495581005
+        },
+        {
+          "case": "retained_fresh_equipment",
+          "quality_diff": 0.16666666666666669,
+          "latency_diff_s": 0.5172021639882587
+        },
+        {
+          "case": "retained_fresh_visitor",
+          "quality_diff": 0.0,
+          "latency_diff_s": 3.841353836993221
+        }
+      ],
+      "quality_diff_mean": 6.938893903907228e-18,
+      "quality_diff_95ci": [
+        -0.16666666666666666,
+        0.14583333333333331
+      ],
+      "latency_diff_mean_s": 0.6877188062098867,
+      "latency_diff_95ci_s": [
+        -0.7798118669707037,
+        2.044428388144297
+      ]
+    }
+  },
+  "cost_new": {
+    "calls": 973,
+    "reserved_upper_usd": 149.87261279999998,
+    "unresolved_calls": 5,
+    "input_tokens": 5416143,
+    "output_tokens": 289448,
+    "reported_usage_estimate_usd": 1.7640269200000003,
+    "accounted_exposure_usd": 8.92216527999999
+  },
+  "limitations": [
+    "Known-case regression: earlier failures informed implementation; not fresh held-out validation.",
+    "Combined protocol, extraction prompt, source fallback and feedback/revision repairs; does not isolate each component.",
+    "Only eight independent authored cases; repeat runs are not independent, intervals unadjusted for multiple comparisons.",
+    "Saved baseline model samples/judgments are reused; decoding variability and provider drift remain possible.",
+    "Text-only simulated endpoint latency excludes ASR/TTS; automatic judge flags need spot checking.",
+    "All differences are after minus before; positive error-rate/latency/cost differences are worse.",
+    "Paired estimates drop a whole case if either version lacks a repeat judgment; descriptive rows use all judged answers.",
+    "Case-bootstrap intervals average repeats first and are not corrected for multiple comparisons.",
+    "Generation and judging are fresh samples; no direct causal isolation of extraction versus review."
+  ]
+}

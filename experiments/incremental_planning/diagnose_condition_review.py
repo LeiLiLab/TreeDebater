@@ -8,7 +8,7 @@ import sys
 
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'src'))
-from streaming.constraint_review import audit_feedback
+from streaming.constraint_review import audit_feedback, draft_units
 from scripts.benchmark_incremental_planning import code_digest
 
 
@@ -41,7 +41,22 @@ def diagnose(run_id='conditions-regression-v1'):
                 review_data,_ = json.JSONDecoder().raw_decode(prompt.split('\nAssertion review data:\n',1)[1])
             audit=json.loads(audit_feedback(raw,checklist,draft,
                 sources=review_data.get('opponent_sources',[]), evidence_sources=review_data.get('evidence_sources',[])))
+            try:
+                response=json.loads(raw.strip().removeprefix('```json').removesuffix('```').strip())
+            except (ValueError, AttributeError):
+                response={}
+            raw_checks=response.get('checks',[]) if isinstance(response,dict) else []
+            raw_checks=raw_checks if isinstance(raw_checks,list) else []
+            raw_assertions=response.get('assertions',[]) if isinstance(response,dict) else []
+            raw_assertions=raw_assertions if isinstance(raw_assertions,list) else []
+            expected_ids={c['constraint_id'] for c in checklist}
+            received_ids=[c.get('id') for c in raw_checks if isinstance(c,dict) and isinstance(c.get('id'),str)]
+            sentence_ids=[a.get('sentence') for a in raw_assertions if isinstance(a,dict) and type(a.get('sentence')) is int]
             rows.append(dict(id=request_id,label=label,mode=label.split('/')[2],
+                raw_condition_rows=len(raw_checks),missing_condition_rows=sum(i not in received_ids for i in expected_ids),
+                raw_not_applicable=sum(isinstance(c,dict) and c.get('status')=='not_applicable' for c in raw_checks),
+                source_candidates=sum(c['kind']=='source_candidate' for c in checklist),
+                draft_sentences=len(draft_units(draft)),missing_sentence_rows=sum(i not in sentence_ids for i in range(len(draft_units(draft)))),
                 condition_count=len(checklist),typed_conditions=sum(c.get('node_id') is not None and c['kind'] != 'source_candidate' for c in checklist),
                 format_valid=audit['review_format_valid'],truncated=a.get('truncated',False),
                 invalid_ids=audit['invalid_review_ids'],
@@ -58,12 +73,17 @@ def diagnose(run_id='conditions-regression-v1'):
             assertions.update(r['assertion_status_counts'])
         metrics.append(dict(mode=mode,reviews=len(rs),format_valid=sum(r['format_valid'] for r in rs),
             truncated=sum(r['truncated'] for r in rs),conditions=sum(r['condition_count'] for r in rs),
-            typed_conditions=sum(r['typed_conditions'] for r in rs),invalid_ids=sum(r['invalid_ids'] for r in rs),
+            typed_conditions=sum(r['typed_conditions'] for r in rs),
+            source_candidates=sum(r['source_candidates'] for r in rs),
+            missing_condition_rows=sum(r['missing_condition_rows'] for r in rs),
+            raw_not_applicable=sum(r['raw_not_applicable'] for r in rs),
+            draft_sentences=sum(r['draft_sentences'] for r in rs),missing_sentence_rows=sum(r['missing_sentence_rows'] for r in rs),
+            invalid_ids=sum(r['invalid_ids'] for r in rs),
             statuses=dict(statuses),assertion_statuses=dict(assertions),
             invalid_sentence_ids=sum(r['invalid_sentence_ids'] for r in rs)))
     report=dict(run_id=run_id,source_digest=meta['source_digest'],metrics=metrics,reviews=rows,revisions=revisions,
         paid_requests=0,limitations=[
-            'Validation establishes row identity and verbatim draft evidence only; semantic statuses remain unverified model judgments.',
+            'Validation establishes row identity and verbatim draft/source evidence only; semantic statuses remain unverified model judgments.',
             'Condition counts measure extracted material, not recall against independently annotated ground truth.',
             'No claim that final text fixed a flagged condition without inspecting its final answer.'])
     (base/f'{run_id}_review_diagnostics.json').write_text(json.dumps(report,indent=2)+'\n')

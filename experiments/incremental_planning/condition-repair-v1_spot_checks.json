@@ -1,0 +1,936 @@
+{
+  "baseline_run": "conditions-regression-v1",
+  "candidate_run": "condition-repair-v1",
+  "paid_requests": 0,
+  "limitations": [
+    "Purposive inspection of four examples, not exhaustive human adjudication or a corrected error rate.",
+    "Automatic judgments are retained verbatim; manual observations do not replace scores."
+  ],
+  "examples": [
+    {
+      "case": "retained_fresh_equipment",
+      "mode": "branch_tree",
+      "repeat": 0,
+      "opponent_chunks": [
+        "The first phase lends only balls and board games for one school term, with loans lasting up to two days. All other items need a later storage decision.",
+        "I accept no cash deposit during the trial. That does not mean lost items have no replacement cost.",
+        "Borrowers would receive the published allocation rule before booking, and items would be checked when returned.",
+        "The source of the replacement fund is still undecided. Access to shared games is a reason to consider the trial, not evidence that it pays for itself."
+      ],
+      "before_answer": "While the opponent concedes that no cash deposits will be required during the trial, this does not resolve the socioeconomic barrier. If lost items still incur replacement costs, low-income individuals face the same financial risk and potential exclusion as they would with a deposit. A sudden, unexpected bill for lost equipment remains a significant barrier to access.\n\nFurthermore, the opponent admits the source of the replacement fund is undecided. This leaves a critical execution gap: the center has no concrete plan to cover the costs of lost or damaged items during the trial period. Launching a program without a defined method for financial sustainability risks leaving the center unable to manage the very costs the trial is meant to test.",
+      "after_answer": "The opponent acknowledges that the trial is limited to balls and board games for one term, with two-day loan limits and no cash deposits. While they permit an allocation rule and equipment inspections, they admit the source of the replacement fund remains undecided. This creates a significant financial uncertainty. If items are lost or damaged, how will the center cover these replacement costs without a pre-allocated fund? Launching a trial without a defined mechanism to manage these potential costs may result in unmanaged liabilities. A trial should ideally test a sustainable model, but the center should address these financial uncertainties before accepting the plan.",
+      "before_judge": {
+        "checks": [
+          {
+            "passed": false,
+            "reason": "The answer mentions only \u201cduring the trial\u201d and never recognizes that it is limited to balls and board games, one school term, and loans of up to two days."
+          },
+          {
+            "passed": false,
+            "reason": "It recognizes that \u201cno cash deposits will be required during the trial,\u201d but never acknowledges the opponent\u2019s published allocation rule."
+          },
+          {
+            "passed": true,
+            "reason": "It directly engages the unresolved funding issue: \u201cthe source of the replacement fund is undecided,\u201d and does not claim the trial is self-financing or attack storage for future items."
+          }
+        ],
+        "relevance": 4,
+        "rebuttal_strength": 3,
+        "strawman": true,
+        "unsupported_facts": true
+      },
+      "after_judge": {
+        "checks": [
+          {
+            "passed": true,
+            "reason": "Explicitly states \u201climited to balls and board games for one term, with two-day loan limits.\u201d"
+          },
+          {
+            "passed": false,
+            "reason": "It recognizes \u201cno cash deposits\u201d but only says they \u201cpermit an allocation rule,\u201d without acknowledging that the rule is published."
+          },
+          {
+            "passed": true,
+            "reason": "Directly engages that \u201cthe source of the replacement fund remains undecided\u201d and asks how replacement costs will be covered, without claiming self-financing or attacking storage for future items."
+          }
+        ],
+        "relevance": 5,
+        "rebuttal_strength": 4,
+        "strawman": false,
+        "unsupported_facts": false
+      },
+      "review_request_id": 6376,
+      "checks": [
+        {
+          "constraint_id": "40eeb5420575ef4b",
+          "kind": "precondition",
+          "quote": "I accept publishing an allocation rule",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "976bbc6075b32ed3",
+          "kind": "scope",
+          "quote": "lends only balls and board games",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "60a5224fa32949f2",
+          "kind": "timing",
+          "quote": "for one school term",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "99869d67f804bc3b",
+          "kind": "timing",
+          "quote": "loans lasting up to two days",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "63c40b3f94fa2391",
+          "kind": "precondition",
+          "quote": "All other items need a later storage decision",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-e7e7bcc005be6e5e",
+          "kind": "source_candidate",
+          "quote": "The source of the replacement fund is still undecided.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-82d90c44a4303b74",
+          "kind": "source_candidate",
+          "quote": "Access to shared games is a reason to consider the trial, not evidence that it pays for itself.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-1f549d89d087600e",
+          "kind": "source_candidate",
+          "quote": "The center could lend footballs, rackets, walking poles and picnic blankets. Different groups would benefit from different items.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-efb50e7b0d2164ed",
+          "kind": "source_candidate",
+          "quote": "Board games could serve indoor groups. Exercise mats could help classes. A pump could support cyclists. A folding cart could help people carry supplies.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-06b64c590aff5ead",
+          "kind": "source_candidate",
+          "quote": "A repair kit, a stopwatch and a set of cones are additional possibilities.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-5c7800eb73039b83",
+          "kind": "source_candidate",
+          "quote": "I accept no cash deposit during the trial. That does not mean lost items have no replacement cost.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ],
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's response regarding financial risks and the logic of their proposed trial.",
+          "status": "supported",
+          "source_quote": "The source of the replacement fund is still undecided. Access to shared games is a reason to consider the trial, not evidence that it pays for itself.",
+          "reason": "Correctly identifies the two main points of the opponent's reply.",
+          "fix": ""
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, regarding the replacement costs, the opponent admits the source of the replacement fund is undecided.",
+          "status": "supported",
+          "source_quote": "The source of the replacement fund is still undecided.",
+          "reason": "Directly matches opponent's statement.",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "This is a massive logical error.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Labeling an undecided fund a 'massive logical error' is a value judgment, not a factual derivation.",
+          "fix": "This creates a significant financial uncertainty."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "You cannot launch a program where the cost of broken or lost items is an unknown debt.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Asserts an inevitable outcome (unknown debt) from an undecided fund.",
+          "fix": "Launching a program without a defined fund could result in unallocated replacement costs."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Without a clear fund, the center is essentially gambling with its own budget.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Uses speculative 'gambling' metaphor to assert a causal budget impact.",
+          "fix": "Without a clear fund, the center may face unexpected budgetary pressures."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "Second, the opponent argues that access to games justifies a trial.",
+          "status": "supported",
+          "source_quote": "Access to shared games is a reason to consider the trial, not evidence that it pays for itself.",
+          "reason": "Accurately reflects the opponent's distinction.",
+          "fix": ""
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "However, a trial without a financial plan is not a test; it is a liability.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts a trial is a 'liability' by definition, which is a rhetorical escalation.",
+          "fix": "However, a trial without a financial plan may present unmanaged liabilities."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "A trial should prove a model works, but you haven't even decided how to pay for the failures.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Asserts the opponent 'hasn't decided' how to pay, which is a premise for a question rather than a fact.",
+          "fix": "A trial should prove a model works, but how will the center cover potential failures?"
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "Therefore, this plan remains an irresponsible risk that the center should not accept.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Concludes the plan is 'irresponsible' based on unverified risks.",
+          "fix": "Therefore, the center should address these financial uncertainties before accepting the plan."
+        }
+      ],
+      "final_raw_fallback": true,
+      "observation": "New answer explicitly keeps item scope, term, two-day loans and no deposits. It still omits publication of the allocation rule. Automated coverage 1/3 to 2/3 and both error flags clear, but the new final planner used raw fallback; this example does not establish successful branch guidance."
+    },
+    {
+      "case": "retained_fresh_nightgarden",
+      "mode": "branch_tree",
+      "repeat": 0,
+      "opponent_chunks": [
+        "After speaking with the volunteer group, I again propose later opening, but only until eight on Fridays for a four-week trial.",
+        "No amplified sound would be allowed, and the trial depends on a named volunteer being present for each session.",
+        "I accept recording neighbor complaints and publishing them at the end of the trial; no claim of neighborhood approval has been established.",
+        "If a session has no volunteer, it closes at the existing time. Volunteer reliability remains the question to resolve."
+      ],
+      "before_answer": "The opponent proposes a four-week trial on Fridays until 8:00 PM, contingent on named volunteers being present and prohibiting amplified sound. While the proposal includes a fallback to close at existing times if no volunteer is present, and commits to publishing neighbor complaints after the trial, these measures do not resolve our core concerns. Prohibiting amplified sound does not prevent other noise disturbances, such as shouting or heavy footsteps. Furthermore, a named volunteer is not a trained professional capable of managing conflicts or ensuring immediate neighbor protection. Recording complaints only after the trial concludes provides no real-time mitigation for residents. These constraints address the symptoms of potential disruption but leave the underlying execution gaps regarding noise monitoring and active security unaddressed.",
+      "after_answer": "The opponent proposes a four-week trial on Fridays until 8:00 PM, including a prohibition on amplified sound and a requirement for a named volunteer at each session. They also commit to recording and publishing neighbor complaints at the end of the trial. While these measures address certain concerns, they leave significant risks unresolved. Relying on a fallback to existing closing times if no volunteer is present may lead to inconsistent availability for users. Furthermore, documenting complaints after the trial concludes is a reactive measure; it does not prevent potential noise disturbances from occurring during the extended hours. We should seek proactive protections rather than relying on post-trial reports. Consequently, these safeguards may not sufficiently mitigate the risks of an unstable trial and potential neighborhood disturbance.",
+      "before_judge": {
+        "checks": [
+          {
+            "passed": true,
+            "reason": "Explicitly states: \u201ca four-week trial on Fridays until 8:00 PM,\u201d and does not treat the withdrawn nightly ten-o\u2019clock proposal as current."
+          },
+          {
+            "passed": true,
+            "reason": "Acknowledges both conditions: \u201ccontingent on named volunteers being present\u201d and \u201ca fallback to close at existing times if no volunteer is present.\u201d"
+          },
+          {
+            "passed": true,
+            "reason": "Engages volunteer reliability and complaint handling while recognizing the sound restriction: \u201ca named volunteer is not a trained professional,\u201d \u201cRecording complaints,\u201d and \u201cprohibiting amplified sound.\u201d It does not claim neighborhood approval."
+          }
+        ],
+        "relevance": 5,
+        "rebuttal_strength": 3,
+        "strawman": true,
+        "unsupported_facts": true
+      },
+      "after_judge": {
+        "checks": [
+          {
+            "passed": true,
+            "reason": "Explicitly identifies \u201ca four-week trial on Fridays until 8:00 PM,\u201d rather than the withdrawn nightly ten-o\u2019clock proposal."
+          },
+          {
+            "passed": true,
+            "reason": "Acknowledges both \u201ca requirement for a named volunteer at each session\u201d and \u201ca fallback to existing closing times if no volunteer is present.\u201d"
+          },
+          {
+            "passed": true,
+            "reason": "Engages both reliability and review through \u201cinconsistent availability for users\u201d and \u201crecording and publishing neighbor complaints,\u201d while recognizing \u201ca prohibition on amplified sound\u201d and making no neighborhood-approval claim."
+          }
+        ],
+        "relevance": 5,
+        "rebuttal_strength": 4,
+        "strawman": false,
+        "unsupported_facts": false
+      },
+      "review_request_id": 6448,
+      "checks": [
+        {
+          "constraint_id": "e3a06dfd071d92b4",
+          "kind": "precondition",
+          "quote": "while we investigate staffing",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "a83dba8c33d93497",
+          "kind": "timing",
+          "quote": "until eight on Fridays",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "1fec9838ca9a9558",
+          "kind": "scope",
+          "quote": "for a four-week trial",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "19d4333bceb615eb",
+          "kind": "timing",
+          "quote": "at the end of the trial",
+          "status": "preserved",
+          "draft_quote": "record and publish complaints after the trial",
+          "reason": "Addresses the timing of publication",
+          "fix": ""
+        },
+        {
+          "constraint_id": "899e03085e9f2142",
+          "kind": "exception",
+          "quote": "No amplified sound would be allowed",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "cdac149f1f0af841",
+          "kind": "precondition",
+          "quote": "the trial depends on a named volunteer being present for each session",
+          "status": "preserved",
+          "draft_quote": "the opponent suggests closing early if no volunteer appears",
+          "reason": "Addresses the named volunteer requirement",
+          "fix": ""
+        },
+        {
+          "constraint_id": "0062ed73787316ea",
+          "kind": "exception",
+          "quote": "If a session has no volunteer, it closes at the existing time",
+          "status": "preserved",
+          "draft_quote": "the opponent suggests closing early if no volunteer appears",
+          "reason": "Addresses the fallback closing time",
+          "fix": ""
+        },
+        {
+          "constraint_id": "source-0b5f905e3223e239",
+          "kind": "source_candidate",
+          "quote": "Evening access would help residents with daytime jobs.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ],
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's proposed safeguards regarding staffing and noise management.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, regarding staffing, the opponent suggests closing early if no volunteer appears.",
+          "status": "supported",
+          "source_quote": "If a session has no volunteer, it closes at the existing time.",
+          "reason": "Matches opponent's fallback",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "While this avoids some chaos, it fails to solve the core issue of reliability.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Assumes reliability is a failure rather than a question to be tested",
+          "fix": "While this avoids some chaos, it does not guarantee the reliability needed for a consistent schedule."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "A trial based on unpredictable availability is not a functional plan; it creates constant uncertainty for users.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts 'unpredictable availability' and 'constant uncertainty' as facts",
+          "fix": "A trial dependent on specific volunteers may lead to inconsistent availability for users."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "Second, regarding noise, the opponent offers to record and publish complaints after the trial.",
+          "status": "supported",
+          "source_quote": "I accept recording neighbor complaints and publishing them at the end of the trial",
+          "reason": "Matches opponent's concession",
+          "fix": ""
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "While I acknowledge this transparency, it is purely reactive.",
+          "status": "supported",
+          "source_quote": "at the end of the trial",
+          "reason": "Matches opponent's timing",
+          "fix": ""
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Documenting a disturbance after it has already disturbed a neighbor\u2019s sleep does nothing to prevent the actual harm.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Assumes a disturbance will occur and affect sleep",
+          "fix": "Documenting a disturbance after it has occurred does not prevent the potential harm to neighbors' sleep."
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "We need proactive protection, not a post-trial report.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Value judgment/preference",
+          "fix": "We should seek proactive protection rather than relying on post-trial reports."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "Therefore, these weak safeguards do not justify extending the hours.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Conclusion based on unverified causal links",
+          "fix": "Therefore, these safeguards may not sufficiently mitigate the risks of extending the hours."
+        },
+        {
+          "sentence": 9,
+          "draft_quote": "We must prioritize the neighborhood's peace over an unstable trial.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Value judgment",
+          "fix": "We must weigh the neighborhood's peace against the risks of an unstable trial."
+        }
+      ],
+      "final_raw_fallback": false,
+      "observation": "New answer removes the unsupported volunteer-incompetence assertion and retains all named bounds. It still says documenting complaints occurs after trial completion, whereas the source attaches that deadline to publication. The automatic judge gives all checks and clears both error flags; the uncorrected temporal reading shows a false-negative limitation. Verdicts are preserved."
+    },
+    {
+      "case": "retained_fresh_archive",
+      "mode": "branch_tree",
+      "repeat": 1,
+      "opponent_chunks": [
+        "Saturday opening is now a six-Saturday trial with two booked research places per session. School visits remain by separate appointment.",
+        "All the access ideas remain options, but the immediate request funds only the supervised research desk and finding aids. Scanning and the listening point need separate costings.",
+        "A named archivist must approve handling of fragile originals. Permission checks still precede release of any later scans.",
+        "Staffing the six sessions is unresolved. A canceled session must be rescheduled or refunded; funding for that guarantee has not been identified."
+      ],
+      "before_answer": "While we accept the safeguards of archivist approval for fragile originals, permission checks for scans, and publishing a maintenance contact, these protocols do not resolve the underlying operational risks. \n\nThe opponent\u2019s six-Saturday trial, limited to two booked research places, still lacks identified funding to guarantee rescheduled or refunded sessions if staffing fails. A trial period does not mitigate the need for reliable personnel; it merely creates a window of high risk where unfulfilled promises could damage the archive's reputation. Furthermore, limiting immediate funding to the research desk and finding aids does not solve the staffing requirement. These specific services still necessitate the durable, supervised staffing that the opponent admits remains unresolved. Protocols alone cannot replace the people required to execute them.",
+      "after_answer": "While the opponent has clarified that the immediate funding request is limited to the supervised research desk and finding aids, and that the expansion is a six-Saturday trial with two booked research places per session, these boundaries do not resolve our core concerns. The opponent explicitly admits that staffing the six sessions remains unresolved and that funding for the required rescheduling or refund guarantee has not been identified. A narrow budget for finding aids does not address the need for reliable staffing or the costs of managing service disruptions. Without identified funding for these contingencies, the trial carries significant operational risks. Therefore, the proposal lacks the necessary operational certainty and should be opposed.",
+      "before_judge": {
+        "checks": [
+          {
+            "passed": false,
+            "reason": "The answer says \u201csix-Saturday trial, limited to two booked research places\u201d but does not recognize that the two places are available per session."
+          },
+          {
+            "passed": false,
+            "reason": "It recognizes \u201climiting immediate funding to the research desk and finding aids\u201d but never acknowledges that scanning and the listening point \u201cneed separate costings.\u201d"
+          },
+          {
+            "passed": true,
+            "reason": "It engages both \u201cstaffing ... remains unresolved\u201d and the lack of \u201cfunding to guarantee rescheduled or refunded sessions,\u201d while explicitly accepting \u201carchivist approval for fragile originals\u201d and \u201cpermission checks for scans.\u201d"
+          }
+        ],
+        "relevance": 5,
+        "rebuttal_strength": 4,
+        "strawman": false,
+        "unsupported_facts": false
+      },
+      "after_judge": {
+        "checks": [
+          {
+            "passed": true,
+            "reason": "Explicitly states \u201cthe expansion is a six-Saturday trial with two booked research places per session.\u201d"
+          },
+          {
+            "passed": false,
+            "reason": "It says funding \u201cis limited to the supervised research desk and finding aids,\u201d but never explicitly recognizes that scanning and the listening point require separate costings."
+          },
+          {
+            "passed": true,
+            "reason": "Engages both issues: \u201cstaffing the six sessions remains unresolved\u201d and \u201cfunding for the required rescheduling or refund guarantee has not been identified,\u201d without claiming permission checks or fragile-item supervision were rejected."
+          }
+        ],
+        "relevance": 5,
+        "rebuttal_strength": 4,
+        "strawman": false,
+        "unsupported_facts": false
+      },
+      "review_request_id": 6635,
+      "checks": [
+        {
+          "constraint_id": "d4b4d9ec17caa707",
+          "kind": "precondition",
+          "quote": "Scanning and the listening point need separate costings",
+          "status": "not_applicable",
+          "draft_quote": "the opponent's attempt to narrow the debate to immediate costs",
+          "reason": "The draft targets the staffing/contingency gap, not the separate costings for scanning/listening points.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "4b0004f7578ad1b2",
+          "kind": "timing",
+          "quote": "six-Saturday trial",
+          "status": "preserved",
+          "draft_quote": "the trial period",
+          "reason": "Refers to the six-Saturday trial.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "bcf4182909145e64",
+          "kind": "scope",
+          "quote": "two booked research places per session",
+          "status": "preserved",
+          "draft_quote": "the scope of the initial funding",
+          "reason": "Refers to the limited research desk/finding aids scope.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "97dba058d1043dd4",
+          "kind": "exception",
+          "quote": "School visits remain by separate appointment",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-5a20d3d6feffd7b2",
+          "kind": "source_candidate",
+          "quote": "Volunteers could guide first-time visitors.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-70b625ae0d550d06",
+          "kind": "source_candidate",
+          "quote": "I accept publishing a terminal-maintenance contact.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-926bf630f032c6b0",
+          "kind": "source_candidate",
+          "quote": "All the access ideas remain options, but the immediate request funds only the supervised research desk and finding aids.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-052a5bb527218d12",
+          "kind": "source_candidate",
+          "quote": "Readers could request digital scans. Fragile originals would stay supervised.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-5e2cb0dcbf20bebb",
+          "kind": "source_candidate",
+          "quote": "I accept permission checks before scans are released.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-b6fab1e20576d646",
+          "kind": "source_candidate",
+          "quote": "Permission checks still precede release of any later scans.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-a1ff824d32981b37",
+          "kind": "source_candidate",
+          "quote": "Staffing the six sessions is unresolved. A canceled session must be rescheduled or refunded; funding for that guarantee has not been identified.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "limit-3718903b2b1315fa",
+          "kind": "scope",
+          "quote": "Staffing the six sessions is unresolved.",
+          "status": "preserved",
+          "draft_quote": "need for reliable staffing",
+          "reason": "Addresses the unresolved staffing for the six sessions.",
+          "fix": ""
+        },
+        {
+          "constraint_id": "limit-8260ed73dabdb903",
+          "kind": "scope",
+          "quote": "Readers could request digital scans.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "limit-0243bd8df96ca5fb",
+          "kind": "scope",
+          "quote": "Fragile originals would stay supervised.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "limit-d6a02c48ac58be38",
+          "kind": "scope",
+          "quote": "A canceled session must be rescheduled or refunded; funding for that guarantee has not been identified.",
+          "status": "preserved",
+          "draft_quote": "costs of rescheduling canceled sessions",
+          "reason": "Addresses the unidentifed funding for the cancellation guarantee.",
+          "fix": ""
+        }
+      ],
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's attempt to narrow the debate to immediate costs, which fails to resolve our core concerns.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "The opponent did not attempt to narrow the debate to 'immediate costs'; they explicitly admitted staffing is unresolved.",
+          "fix": "I will address how the opponent's focus on immediate funding fails to resolve our core concerns."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, while I acknowledge the opponent has clarified the scope of the initial funding and the trial period, this does not fix the underlying problem.",
+          "status": "supported",
+          "source_quote": "All the access ideas remain options, but the immediate request funds only the supervised research desk and finding aids.",
+          "reason": "Correctly identifies the scope limitation.",
+          "fix": ""
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "They claim the expansion is viable because they are limiting the request, but this is a logical error.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "The opponent did not claim the expansion is viable; they admitted staffing is unresolved.",
+          "fix": "They attempt to justify the expansion by limiting the immediate request, but this is a logical error."
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "A narrow budget for finding aids does not magically solve the need for reliable staffing or the costs of rescheduling canceled sessions.",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "The link between budget scope and staffing necessity is an inference, not an established fact.",
+          "fix": "A narrow budget for finding aids does not address the need for reliable staffing or the costs of rescheduling canceled sessions."
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "As we have discussed, an expansion requires a complete operational plan.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "Without identified funding for staffing and a guarantee for service disruptions, this trial is an unstable risk.",
+          "status": "conditional",
+          "source_quote": "Staffing the six sessions is unresolved. A canceled session must be rescheduled or refunded; funding for that guarantee has not been identified.",
+          "reason": "The risk is a consequence of the unresolved issues, not an inevitable outcome.",
+          "fix": "Without identified funding for staffing and a guarantee for service disruptions, this trial carries significant operational risks."
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "Therefore, the proposal remains irresponsible and should be opposed.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Value judgment 'irresponsible' is not a grounded empirical claim.",
+          "fix": "Therefore, the proposal lacks the necessary operational certainty and should be opposed."
+        }
+      ],
+      "final_raw_fallback": false,
+      "observation": "Separate costing is available in the new condition checklist, yet feedback labels it unrelated because the draft focuses on staffing. Final answer omits it. Source-quotation validation cannot prove two claims belong to independent proposals. New answer does restore per-session scope and keeps the unresolved staffing/refund issues."
+    },
+    {
+      "case": "retained_fresh_archive",
+      "mode": "flat_tree",
+      "repeat": 1,
+      "opponent_chunks": [
+        "Saturday opening is now a six-Saturday trial with two booked research places per session. School visits remain by separate appointment.",
+        "All the access ideas remain options, but the immediate request funds only the supervised research desk and finding aids. Scanning and the listening point need separate costings.",
+        "A named archivist must approve handling of fragile originals. Permission checks still precede release of any later scans.",
+        "Staffing the six sessions is unresolved. A canceled session must be rescheduled or refunded; funding for that guarantee has not been identified."
+      ],
+      "before_answer": "Even within the scope of a six-Saturday trial, the proposed protocols face significant execution gaps. While the opponent accepts permission checks for scans and the publication of a maintenance contact, these measures do not replace the need for professional oversight. A requirement for archivist approval of fragile originals is only effective if a trained professional is present to provide it. Furthermore, while volunteers may guide visitors, they are not substitutes for the specialized staff required to manage archival collections. Most critically, the opponent admits that staffing for these sessions remains unresolved and that funding for the required cancellation guarantees has not been identified. We cannot support an expansion that relies on protocols without the professional personnel or the financial stability to implement them.",
+      "after_answer": "The opponent proposes a six-Saturday trial with two booked research places per session, while acknowledging that permission checks will precede scan releases and a terminal-maintenance contact can be published. However, the plan remains incomplete. Staffing for these six sessions is currently unresolved, and funding for the requirement to reschedule or refund canceled sessions has not been identified. Without these resources, the trial risks being unable to meet its own session guarantees. Furthermore, by requiring separate costings for scanning and the listening point, the proposal delays the implementation of these specific accessibility benefits. How can the town commit to a trial if the basic staffing and refund guarantees necessary to run it are not yet secured?",
+      "before_judge": {
+        "checks": [
+          {
+            "passed": false,
+            "reason": "It recognizes only \u201ca six-Saturday trial\u201d and does not acknowledge the two booked research places per session."
+          },
+          {
+            "passed": false,
+            "reason": "The answer mentions \u201cfunding for the required cancellation guarantees\u201d but never acknowledges that immediate funding covers the supervised research desk and finding aids while scanning and the listening point need separate costings."
+          },
+          {
+            "passed": true,
+            "reason": "It directly notes \u201cstaffing for these sessions remains unresolved\u201d and unidentified cancellation-guarantee funding, while also stating that \u201cthe opponent accepts permission checks\u201d and acknowledging \u201carchivist approval of fragile originals.\u201d"
+          }
+        ],
+        "relevance": 5,
+        "rebuttal_strength": 4,
+        "strawman": false,
+        "unsupported_facts": true
+      },
+      "after_judge": {
+        "checks": [
+          {
+            "passed": true,
+            "reason": "Explicitly states: \u201ca six-Saturday trial with two booked research places per session.\u201d"
+          },
+          {
+            "passed": false,
+            "reason": "It notes \u201crequiring separate costings for scanning and the listening point\u201d but never acknowledges that immediate funding covers only the supervised research desk and finding aids."
+          },
+          {
+            "passed": true,
+            "reason": "Engages both unresolved issues: \u201cStaffing for these six sessions is currently unresolved, and funding for the requirement to reschedule or refund canceled sessions has not been identified,\u201d while recognizing that \u201cpermission checks will precede scan releases\u201d and not claiming fragile-item supervision was rejected."
+          }
+        ],
+        "relevance": 5,
+        "rebuttal_strength": 4,
+        "strawman": false,
+        "unsupported_facts": false
+      },
+      "review_request_id": 6508,
+      "checks": [
+        {
+          "constraint_id": "6c565f984fd7c3b3",
+          "kind": "timing",
+          "quote": "six-Saturday trial",
+          "status": "preserved",
+          "draft_quote": "six-week trial",
+          "reason": "Matches timing constraint",
+          "fix": ""
+        },
+        {
+          "constraint_id": "b575e1b4fcf0ed7f",
+          "kind": "scope",
+          "quote": "two booked research places per session",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "c048377a1a9d66e0",
+          "kind": "precondition",
+          "quote": "A canceled session must be rescheduled or refunded",
+          "status": "preserved",
+          "draft_quote": "refund guarantees lack funding",
+          "reason": "Matches precondition constraint",
+          "fix": ""
+        },
+        {
+          "constraint_id": "81ad6f6be8d41d9f",
+          "kind": "precondition",
+          "quote": "School visits remain by separate appointment",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "b2384263f7741b9e",
+          "kind": "precondition",
+          "quote": "Fragile originals would stay supervised",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "3d5f4cf778f400b1",
+          "kind": "precondition",
+          "quote": "A named archivist must approve handling of fragile originals",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "e341ec0ae2f00654",
+          "kind": "precondition",
+          "quote": "Scanning and the listening point need separate costings",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "ec2e2595218288c9",
+          "kind": "concession",
+          "quote": "I accept publishing a terminal-maintenance contact.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "7fc9b8cf6ad09016",
+          "kind": "concession",
+          "quote": "I accept permission checks before scans are released.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "734ad83b9dd7c99b",
+          "kind": "precondition",
+          "quote": "Permission checks still precede release of any later scans",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        },
+        {
+          "constraint_id": "source-4d76212ddfbfdf72",
+          "kind": "source_candidate",
+          "quote": "the immediate request funds only the supervised research desk and finding aids.",
+          "status": "unchecked",
+          "draft_quote": "",
+          "reason": "Missing, duplicate or invalid review evidence.",
+          "fix": "Review against the source."
+        }
+      ],
+      "assertion_checks": [
+        {
+          "sentence": 0,
+          "draft_quote": "I will address the opponent's claims regarding the trial period and the fragmented nature of their proposal.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 1,
+          "draft_quote": "First, the opponent suggests a six-week trial, yet admits staffing remains unresolved and refund guarantees lack funding.",
+          "status": "unchecked",
+          "source_quote": "",
+          "reason": "Missing, duplicate or invalid assertion review.",
+          "fix": "Inspect every premise; remove unsupported claims or ask a precise question."
+        },
+        {
+          "sentence": 2,
+          "draft_quote": "This is a logical error.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Value judgment/labeling",
+          "fix": ""
+        },
+        {
+          "sentence": 3,
+          "draft_quote": "How can a trial be considered a viable expansion if the basic requirements to run it are missing?",
+          "status": "conditional",
+          "source_quote": "",
+          "reason": "Hypothetical question",
+          "fix": ""
+        },
+        {
+          "sentence": 4,
+          "draft_quote": "A trial without staff or a budget is just a series of failures waiting to happen.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Asserts inevitable failure from a risk",
+          "fix": "A trial without staff or a budget risks being unable to meet its own guarantees."
+        },
+        {
+          "sentence": 5,
+          "draft_quote": "Second, the plan is too fragmented.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Subjective characterization",
+          "fix": ""
+        },
+        {
+          "sentence": 6,
+          "draft_quote": "By pushing scanning and listening points to \"separate costings,\" the opponent is moving the goalposts.",
+          "status": "supported",
+          "source_quote": "Scanning and the listening point need separate costings",
+          "reason": "Matches opponent data",
+          "fix": ""
+        },
+        {
+          "sentence": 7,
+          "draft_quote": "They are offering a hollow shell of access while delaying the actual benefits.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Uses 'moving the goalposts' as a factual claim of intent",
+          "fix": "By requiring separate costings for scanning and listening points, the opponent is delaying the implementation of these benefits."
+        },
+        {
+          "sentence": 8,
+          "draft_quote": "This instability makes the expansion an irresponsible risk for the town.",
+          "status": "unsupported",
+          "source_quote": "",
+          "reason": "Metaphorical/unverified claim",
+          "fix": ""
+        }
+      ],
+      "final_raw_fallback": true,
+      "observation": "New answer includes separate costings but claims that this requirement delays accessibility implementation. That delay is not established by the source. The automatic judge does not flag unsupported facts; retain its verdict and this narrower manual observation separately."
+    }
+  ]
+}

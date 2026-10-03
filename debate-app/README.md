@@ -174,7 +174,12 @@ older limit schema, causing 15/16 final plans to fall back in this run. Semantic
 extraction and review applicability also remain imperfect. The current repair unifies
 the six planning limit types, strengthens applicability/premise review and preserves
 unclassified source candidates. Offline replay accepts 54/64 old plans versus 12/64;
-335 tests and 42 subtests pass. Same-case model verification is pending. Historical scores remain
+335 tests and 42 subtests pass. The repair has now completed 64 matched model
+answers/judgments: Grounded Tree final fallback falls from 15/16 to 2/16 and tree-mode
+error flags decline. Branch coverage falls from 62.5% to 58.3%, however, and all
+before/after coverage intervals include zero. Review omissions and semantic errors
+persist; inspection also finds errors missed by the judge. Existing calls are reused,
+but generation tokens and text-ready wait increase. Historical scores remain
 bound to their frozen versions; see [the process log](../process.md) for settings,
 failures, costs and the before/after comparison.
 
