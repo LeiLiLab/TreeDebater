@@ -50,15 +50,34 @@ from utils.constants import CLOSING_TIME, OPENING_TIME, REBUTTAL_TIME
 from utils.tool import logger
 
 
+ASR_TIMEOUT_S = 30.0   # a 15 s segment normally transcribes in ~1-3 s
+ASR_MAX_ATTEMPTS = 3
+
+
 def transcribe_audio_segment(segment: AudioSegment, audio_format: str = "mp3") -> str:
-    """Transcribe a pydub ``AudioSegment`` using OpenAI Whisper (``whisper-1``)."""
-    buf = BytesIO()
-    segment.export(buf, format=audio_format)
-    buf.seek(0)
-    buf.name = f"audio.{audio_format}"
-    client = OpenAI()
-    transcript = client.audio.transcriptions.create(model="whisper-1", file=buf, language="en")
-    return (transcript.text or "").strip()
+    """Transcribe a pydub ``AudioSegment`` using OpenAI Whisper (``whisper-1``).
+
+    The request carries an explicit timeout and is retried: without one, a hung
+    HTTP call blocks the listener thread for the rest of the turn (observed once
+    in run 138: the listener froze at 135 s of a 236 s speech and the main
+    thread then waited the full listener-join timeout).
+    """
+    raw = BytesIO()
+    segment.export(raw, format=audio_format)
+    data = raw.getvalue()
+    client = OpenAI(timeout=ASR_TIMEOUT_S, max_retries=0)
+    last_err: Optional[Exception] = None
+    for attempt in range(ASR_MAX_ATTEMPTS):
+        buf = BytesIO(data)
+        buf.name = f"audio.{audio_format}"
+        try:
+            transcript = client.audio.transcriptions.create(model="whisper-1", file=buf, language="en")
+            return (transcript.text or "").strip()
+        except Exception as e:  # timeout / transient API error
+            last_err = e
+            logger.warning(f"[StreamingInputEnv] ASR attempt {attempt + 1}/{ASR_MAX_ATTEMPTS} failed: {e}")
+            time.sleep(1.0 * (attempt + 1))
+    raise RuntimeError(f"ASR failed after {ASR_MAX_ATTEMPTS} attempts: {last_err}")
 
 
 def _log_id_from_filename(filename: str) -> str:
@@ -229,11 +248,55 @@ class StreamingInputEnv:
         except KeyboardInterrupt:
             logger.info("[StreamingInputEnv] KeyboardInterrupt; stopping.")
         finally:
+            # Drain: the speech is over, so transcribe whatever audio is left
+            # even if it is shorter than min_audio_seconds. Without this the
+            # final <min_audio_seconds of every speech (usually the conclusion)
+            # never reaches the debate tree.
+            if use_cursor and continuous_file is not None and continuous_file.is_file():
+                try:
+                    self._drain_cursor_audio(continuous_file, cfg.playback_cursor[0], emitted_ms, cap_audio_ms, text_buf, text_first_seen)
+                except Exception as e:
+                    logger.warning(f"[StreamingInputEnv] Final drain failed: {e}")
             for log_id in list(text_buf.keys()):
                 if text_buf.get(log_id):
                     self._flush_text(text_buf[log_id])
                     text_buf[log_id] = []
             logger.debug(f"[StreamingInputEnv] thread_end stage={cfg.stage} statement_side={cfg.statement_side} t={time.time():.3f}")
+
+    def _drain_cursor_audio(
+        self,
+        continuous_file: Path,
+        cursor_seconds: float,
+        emitted_ms: Dict[str, int],
+        cap_audio_ms: Optional[int],
+        text_buf: Dict[str, List[str]],
+        text_first_seen: Dict[str, float],
+    ) -> None:
+        """Transcribe the un-emitted tail of the continuous audio (any length >= 1 s)."""
+        cfg = self.config
+        log_id = "continuous"
+        available_audio = self._read_audio_up_to_cursor(continuous_file, cursor_seconds)
+        if available_audio is None:
+            return
+        already_ms = emitted_ms.get(log_id, 0)
+        end_ms = len(available_audio)
+        if cap_audio_ms is not None:
+            end_ms = min(end_ms, cap_audio_ms)
+        tail_ms = end_ms - already_ms
+        if tail_ms < 1000:
+            logger.debug(f"[StreamingInputEnv] drain_skip tail={tail_ms/1000.0:.2f}s t={time.time():.3f}")
+            return
+        segment = available_audio[already_ms:end_ms]
+        logger.debug(f"[StreamingInputEnv] drain_start audio_range={already_ms/1000.0:.2f}-{end_ms/1000.0:.2f}s t={time.time():.3f}")
+        asr_start = time.time()
+        text = transcribe_audio_segment(segment, audio_format=cfg.audio_format)
+        emitted_ms[log_id] = end_ms
+        logger.info(
+            f"[StreamingInputEnv] Drain transcribed s={tail_ms/1000.0:.2f} words={len(text.split())} "
+            f"total_processed={end_ms/1000.0:.2f}s asr_time={time.time()-asr_start:.2f}s"
+        )
+        # force_flush=True: the speech is over, push the text into the tree now
+        self._append_transcript_text(log_id, text, True, text_buf, text_first_seen)
 
     def _idle_text_flush(self, text_buf: Dict[str, List[str]], text_first_seen: Dict[str, float]) -> None:
         cfg = self.config
@@ -375,10 +438,22 @@ class StreamingInputEnv:
             text_first_seen.pop(log_id, None)
 
     def _read_audio_up_to_cursor(self, continuous_file: Path, cursor_seconds: float) -> Optional[AudioSegment]:
-        """Read continuous audio file up to the cursor position."""
+        """Read continuous audio file up to the cursor position.
+
+        The decoded file is cached by (mtime, size): the playback thread only
+        rewrites it once per chunk, but this is polled every second and decoding
+        a 4-minute MP3 costs ~0.5 s of CPU each time.
+        """
         try:
             read_start = time.time()
-            full_audio = AudioSegment.from_file(str(continuous_file))
+            st = continuous_file.stat()
+            key = (st.st_mtime_ns, st.st_size)
+            cached = getattr(self, "_continuous_cache", None)
+            if cached is not None and cached[0] == key:
+                full_audio = cached[1]
+            else:
+                full_audio = AudioSegment.from_file(str(continuous_file))
+                self._continuous_cache = (key, full_audio)
             cursor_ms = int(cursor_seconds * 1000)
             if cursor_ms <= 0:
                 return None

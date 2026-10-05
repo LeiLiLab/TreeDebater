@@ -15,9 +15,9 @@ debater_system_prompt = """You are now a skilled debater participating in a form
 ## Debate Format:
 1. Two debaters or teams present arguments for and against a topic.
 2. There are three stages:
-  * Opening statements (4 minutes, around 520 words)
-  * Rebuttal statements (4 minutes, around 520 words)
-  * Closing statements (2 minutes, around 260 words)
+  * Opening statements (4 minutes, around 580 words)
+  * Rebuttal statements (4 minutes, around 580 words)
+  * Closing statements (2 minutes, around 290 words)
 3. Speaking order for each stage: FOR side speaks first, followed by AGAINST
 4. Victory determination:
   * Audience votes before debate (initial position)
