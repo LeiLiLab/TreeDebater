@@ -312,10 +312,7 @@ def get_retrieval_from_rehearsal_tree(
     additional_info = []
     retrieval_nodes = []
 
-    if prepared_tree_list is None:
-        return additional_info, retrieval_nodes
-
-    for tree in prepared_tree_list:
+    for tree in prepared_tree_list or []:
         if action_type == "propose" or action_type == "reinforce":
             if action_type == "propose":
                 match_node = tree.get_node_by_claim(target_claim, side=side)
@@ -355,14 +352,15 @@ def get_retrieval_from_rehearsal_tree(
                 for c in match_node.children:
                     score = c.get_strength(max_depth=look_ahead_num)
                     node_info += f"{c.claim} (Strength: {score:.1f})\n\t"
-                additional_info.append(node_info)
-                retrieval_nodes.append(
-                    ["Prepared-Tree-Retrieval", action_type, target_claim, match_node.claim, similarity, node_info]
-                )
+                if node_info.strip():
+                    additional_info.append(node_info)
+                    retrieval_nodes.append(
+                        ["Prepared-Tree-Retrieval", action_type, target_claim, match_node.claim, similarity, node_info]
+                    )
         else:
             raise ValueError(f"Invalid action: {action_type}")
 
-    if additional_info == [] and match_node is None:
+    if not additional_info:
         logger.debug(
             f"[Prepared-Tree-Retrieval-Summary] {action_type} Miss. No additional info found for [{target_claim}]"
         )
@@ -384,17 +382,18 @@ def get_retrieval_from_rehearsal_tree(
                     for c in match_node.children:
                         score = c.get_strength(max_depth=look_ahead_num)
                         node_info += f"{c.claim} (Strength: {score:.1f})\n\t"
-                    additional_info_from_oppo_tree.append(node_info)
-                    retrieval_nodes.append(
-                        [
-                            "Prepared-Opponent-Tree-Retrieval",
-                            action_type,
-                            target_claim,
-                            match_node.claim,
-                            similarity,
-                            node_info,
-                        ]
-                    )
+                    if node_info.strip():
+                        additional_info_from_oppo_tree.append(node_info)
+                        retrieval_nodes.append(
+                            [
+                                "Prepared-Opponent-Tree-Retrieval",
+                                action_type,
+                                target_claim,
+                                match_node.claim,
+                                similarity,
+                                node_info,
+                            ]
+                        )
             elif action_type == "propose" or action_type == "reinforce":
                 match_node, similarity = tree.get_most_similar_node(
                     target_claim, query_embedding=query_embedding, side=side, top_k=1, threshold=0.8
@@ -425,7 +424,7 @@ def get_retrieval_from_rehearsal_tree(
             else:
                 raise ValueError(f"Invalid action: {action_type}")
 
-    if additional_info_from_oppo_tree == [] and match_node is None:
+    if not additional_info_from_oppo_tree:
         logger.debug(
             f"[Prepared-Opponent-Tree-Retrieval-Summary] {action_type} Miss. No additional info found for [{target_claim}]"
         )
