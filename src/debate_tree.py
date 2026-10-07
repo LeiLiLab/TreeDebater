@@ -533,9 +533,10 @@ class Tree:
         hits = semantic_search(
             torch.tensor(query_embedding), torch.tensor(node_embedding), score_function=dot_score, top_k=top_k
         )[0]
-        retrieval_idx = [x["corpus_id"] for x in hits if x["score"] >= threshold]
+        accepted_hits = [x for x in hits if x["score"] >= threshold]
+        retrieval_idx = [x["corpus_id"] for x in accepted_hits]
         retrieval_node = [nodes[idx] for idx in retrieval_idx]
-        retrieval_similarity = [x["score"] for x in hits]
+        retrieval_similarity = [x["score"] for x in accepted_hits]
 
         if len(retrieval_idx) == 0:
             highest_score = hits[0]["score"]

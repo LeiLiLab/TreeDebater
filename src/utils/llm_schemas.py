@@ -83,6 +83,7 @@ class SelectionFrameworkResponse(SchemaBase):
 class ActionItem(SchemaBase):
     action: str
     target_claim: str
+    target_node_id: str | None = None
     target_argument: str | None = None
     prepared_materials: str | None = None
     targeted_debate_tree: Literal["you", "opponent"] | None = None
@@ -137,3 +138,22 @@ class SelectedIdsResponse(SchemaBase):
 
 class QueryResponse(SchemaBase):
     query: list[str]
+
+
+class RehearsalMaterialDecision(SchemaBase):
+    id: int = Field(strict=True)
+    relation: Literal["supports", "challenges", "answers", "related", "unrelated", "uncertain"]
+    target_part: Literal["claim", "premise", "objection"]
+    scope: Literal["compatible", "incompatible", "uncertain"]
+    target_quote: str
+    material_quote: str
+    reason: str
+
+
+class RehearsalRelationDecision(SchemaBase):
+    id: int = Field(strict=True)
+    materials: list[RehearsalMaterialDecision]
+
+
+class RehearsalRelationResponse(SchemaBase):
+    decisions: list[RehearsalRelationDecision]

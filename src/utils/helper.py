@@ -239,6 +239,7 @@ def get_actions_from_tree(claims, tree, oppo_tree, *, selected_ids=None):
                             "idx": len(actions),
                             "action": action,
                             "target_claim": node.claim,
+                            "target_node_id": getattr(node, "node_id", None),
                             "target_argument": " ".join(node.argument),
                             "claim_owner": "us" if action == "reinforce" else "opponent",
                             "desired_direction": "support" if action == "reinforce" else "challenge",
@@ -269,6 +270,7 @@ def get_actions_from_tree(claims, tree, oppo_tree, *, selected_ids=None):
                             "idx": len(actions),
                             "action": action,
                             "target_claim": node.claim,
+                            "target_node_id": getattr(node, "node_id", None),
                             "target_argument": " ".join(node.argument),
                             "claim_owner": "us" if action == "reinforce" else "opponent",
                             "desired_direction": "support" if action == "reinforce" else "challenge",
@@ -333,142 +335,12 @@ def get_battlefields_from_actions(llm, motion, side, claims, actions, tree, oppo
 
 
 def get_retrieval_from_rehearsal_tree(
-    action_type,
-    target_claim,
-    side,
-    oppo_side,
-    prepared_tree_list,
-    prepared_oppo_tree_list,
-    look_ahead_num,
-    query_embedding,
+    action_type, target_claim, side, oppo_side, prepared_tree_list,
+    prepared_oppo_tree_list, look_ahead_num, query_embedding, **kwargs,
 ):
-    additional_info = []
-    retrieval_nodes = []
-
-    if prepared_tree_list is None:
-        return additional_info, retrieval_nodes
-
-    for tree in prepared_tree_list:
-        if action_type == "propose" or action_type == "reinforce":
-            if action_type == "propose":
-                match_node = tree.get_node_by_claim(target_claim, side=side)
-                similarity = 1.0 if match_node is not None else 0.0
-            else:
-                match_node, similarity = tree.get_most_similar_node(
-                    target_claim, query_embedding=query_embedding, side=side, top_k=1, threshold=0.8
-                )
-
-            if match_node is not None:
-                logger.debug(
-                    f"[Prepared-Tree-Retrieval] {action_type} Hit: [{target_claim}] with [{match_node.claim}], Similarity: {similarity:0.2f}"
-                )
-                score = match_node.get_strength(max_depth=look_ahead_num)
-                match_node.argument = (
-                    [match_node.argument] if isinstance(match_node.argument, str) else match_node.argument
-                )
-                if len(match_node.argument) > 0:
-                    node_info = " ".join(match_node.argument) + f"(Strength: {score:.1f})\n\t"
-                else:
-                    node_info = f"(Strength: {score:.1f})\n\t"
-                additional_info.append(node_info)
-                retrieval_nodes.append(
-                    ["Prepared-Tree-Retrieval", action_type, target_claim, match_node.claim, similarity, node_info]
-                )
-                if action_type == "propose":
-                    break
-        elif action_type == "attack" or action_type == "rebut":
-            match_node, similarity = tree.get_most_similar_node(
-                target_claim, query_embedding=query_embedding, side=oppo_side, top_k=1, threshold=0.8
-            )
-            if match_node is not None:
-                logger.debug(
-                    f"[Prepared-Tree-Retrieval] {action_type} Hit: [{target_claim}] with [{match_node.claim}], Similarity: {similarity:0.2f}"
-                )
-                node_info = ""
-                for c in match_node.children:
-                    score = c.get_strength(max_depth=look_ahead_num)
-                    node_info += f"{c.claim} (Strength: {score:.1f})\n\t"
-                additional_info.append(node_info)
-                retrieval_nodes.append(
-                    ["Prepared-Tree-Retrieval", action_type, target_claim, match_node.claim, similarity, node_info]
-                )
-        else:
-            raise ValueError(f"Invalid action: {action_type}")
-
-    if additional_info == [] and match_node is None:
-        logger.debug(
-            f"[Prepared-Tree-Retrieval-Summary] {action_type} Miss. No additional info found for [{target_claim}]"
-        )
-    else:
-        logger.debug(f"[Prepared-Tree-Retrieval-Summary] {action_type} Hit. Additional info: {additional_info}")
-
-    additional_info_from_oppo_tree = []
-    if prepared_oppo_tree_list is not None:
-        for tree in prepared_oppo_tree_list:
-            if action_type == "attack" or action_type == "rebut":
-                match_node, similarity = tree.get_most_similar_node(
-                    target_claim, query_embedding=query_embedding, side=oppo_side, top_k=1, threshold=0.8
-                )
-                if match_node is not None:
-                    logger.debug(
-                        f"[Prepared-Opponent-Tree-Retrieval] {action_type} Hit: [{target_claim}] with [{match_node.claim}], Similarity: {similarity:0.2f}"
-                    )
-                    node_info = ""
-                    for c in match_node.children:
-                        score = c.get_strength(max_depth=look_ahead_num)
-                        node_info += f"{c.claim} (Strength: {score:.1f})\n\t"
-                    additional_info_from_oppo_tree.append(node_info)
-                    retrieval_nodes.append(
-                        [
-                            "Prepared-Opponent-Tree-Retrieval",
-                            action_type,
-                            target_claim,
-                            match_node.claim,
-                            similarity,
-                            node_info,
-                        ]
-                    )
-            elif action_type == "propose" or action_type == "reinforce":
-                match_node, similarity = tree.get_most_similar_node(
-                    target_claim, query_embedding=query_embedding, side=side, top_k=1, threshold=0.8
-                )
-                if match_node is not None:
-                    logger.debug(
-                        f"[Prepared-Opponent-Tree-Retrieval] {action_type} Hit: [{target_claim}] with [{match_node.claim}], Similarity: {similarity:0.2f}"
-                    )
-                    score = match_node.get_strength(max_depth=look_ahead_num)
-                    match_node.argument = (
-                        [match_node.argument] if isinstance(match_node.argument, str) else match_node.argument
-                    )
-                    if len(match_node.argument) > 0:
-                        node_info = " ".join(match_node.argument) + f"(Strength: {score:.1f})\n\t"
-                    else:
-                        node_info = f"(Strength: {score:.1f})\n\t"
-                    additional_info_from_oppo_tree.append(node_info)
-                    retrieval_nodes.append(
-                        [
-                            "Prepared-Opponent-Tree-Retrieval",
-                            action_type,
-                            target_claim,
-                            match_node.claim,
-                            similarity,
-                            node_info,
-                        ]
-                    )
-            else:
-                raise ValueError(f"Invalid action: {action_type}")
-
-    if additional_info_from_oppo_tree == [] and match_node is None:
-        logger.debug(
-            f"[Prepared-Opponent-Tree-Retrieval-Summary] {action_type} Miss. No additional info found for [{target_claim}]"
-        )
-    else:
-        logger.debug(
-            f"[Prepared-Opponent-Tree-Retrieval-Summary] {action_type} Hit. Additional info: {additional_info_from_oppo_tree}"
-        )
-
-    additional_info = additional_info + additional_info_from_oppo_tree
-    return additional_info, retrieval_nodes
+    from .rehearsal_retrieval import retrieve
+    return retrieve(action_type, target_claim, side, oppo_side, prepared_tree_list,
+                    prepared_oppo_tree_list, look_ahead_num, query_embedding, **kwargs)
 
 
 ##################### Time-Adjuster #####################

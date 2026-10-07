@@ -34,7 +34,7 @@ from utils.helper import (
     get_retrieval_from_rehearsal_tree,
     rank_evidence,
 )
-from utils.llm_schemas import SelectedIdsResponse
+from utils.llm_schemas import SelectedIdsResponse, RehearsalRelationResponse
 from utils.model import HelperClient
 from utils.prompts import *
 from utils.time_estimator import LengthEstimator
@@ -279,12 +279,16 @@ class TreeDebater(Debater):
         """
         Generate the claim pool for the debater
         """
+        limit = getattr(self.config, "claim_pool_limit", 10)
+        if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
+            raise ValueError("claim_pool_limit must be a positive integer")
         if self.pool_file is not None and os.path.exists(self.pool_file):
             with open(self.pool_file, "r") as file:
-                self.claim_pool = json.load(file)[:8]
+                self.rehearsal_claim_pool = json.load(file)
+                self.claim_pool = self.rehearsal_claim_pool[:limit]
             oppo_pool_file = self.pool_file.replace(f"pool_{self.side}", f"pool_{self.oppo_side}")
             with open(oppo_pool_file, "r") as file:
-                self.oppo_claim_pool = json.load(file)[:8]
+                self.oppo_claim_pool = json.load(file)
             self.definition = self.claim_pool[0][0].get("definition", None)
         else:
             logger.info(f"Starting to create a pool of size {pool_size}")
@@ -364,6 +368,8 @@ class TreeDebater(Debater):
         # Only build prepared tree list if rehearsal tree is enabled
         if self.use_rehearsal_tree:
             self.prepared_tree_list = self._get_prepared_tree(self.side)
+            if getattr(self.config, "rehearsal_mode", "hybrid") == "hybrid":
+                self._warm_rehearsal_indexes()
         else:
             self.prepared_tree_list = None
 
@@ -728,8 +734,9 @@ class TreeDebater(Debater):
                     logger.debug(f"[BatchListener] analyze_end stage={st} side={self.side} t={time.time():.3f}")
 
         # Only prepare opponent tree list if both debate flow tree and rehearsal tree are enabled
-        if self.use_rehearsal_tree and self.prepared_oppo_tree_list is None:
-            self.prepared_oppo_tree_list = self._get_prepared_tree(self.oppo_side)
+        if self.use_rehearsal_tree:
+            if self.prepared_oppo_tree_list is None:
+                self.prepared_oppo_tree_list = self._get_prepared_tree(self.oppo_side)
         else:
             self.prepared_oppo_tree_list = None
 
@@ -957,38 +964,13 @@ class TreeDebater(Debater):
         return retrieval, retrieval_feedback
 
     def _get_prepared_tree(self, side):
-        prepared_tree = []
+        # Recall from the full loaded pool; relevance is checked per action below.
         if side == self.side:
-            for x in self.main_claims:
-                data = x["tree_structure"]
-                tree = PrepareTree.from_json(data)
-                prepared_tree.append(tree)
+            pool = getattr(self, "rehearsal_claim_pool", self.claim_pool)
+            claims = [x[0] for x in pool] if pool else self.main_claims
         else:
-            # opponent's tree
-            match_trees = []
-            if self.oppo_debate_tree.max_level > 0:
-                for x in self.oppo_claim_pool:
-                    data = x[0]["tree_structure"]
-                    tree = PrepareTree.from_json(data)
-                    root_claim = tree.root.claim
-                    match_node, similarity = self.oppo_debate_tree.get_most_similar_node(
-                        root_claim, side=side, level=1, top_k=1, threshold=0.8
-                    )
-                    if match_node is not None:
-                        match_trees.append((tree, similarity, match_node.claim))
-
-            sorted_match_trees = sorted(match_trees, key=lambda x: x[1], reverse=True)
-            for i in range(min(len(sorted_match_trees), 3)):
-                prepared_tree.append(sorted_match_trees[i][0])
-                similarity = sorted_match_trees[i][1]
-                query_claim = sorted_match_trees[i][2]
-
-                log_llm_io(
-                    logger,
-                    phase="get_prepared_tree",
-                    title=f"Opponent's Tree (similarity: {similarity:0.2f}) for claim: {query_claim}",
-                    body=tree.print_tree(include_status=True),
-                )
+            claims = [x[0] for x in self.oppo_claim_pool]
+        prepared_tree = [PrepareTree.from_json(x["tree_structure"]) for x in claims]
 
         thoughts = {
             "stage": self.status,
@@ -1000,16 +982,84 @@ class TreeDebater(Debater):
 
         return prepared_tree
 
+    def _warm_rehearsal_indexes(self):
+        """Pay model startup and material encoding during debate preparation."""
+        from utils.hybrid_rehearsal import HybridRehearsalRetriever
+        from utils.local_encoder import get_local_encoder
+        from utils.rehearsal_index_cache import DEFAULT_CACHE_DIR
+        if self.prepared_tree_list is None:
+            self.prepared_tree_list = self._get_prepared_tree(self.side)
+        if self.prepared_oppo_tree_list is None:
+            self.prepared_oppo_tree_list = self._get_prepared_tree(self.oppo_side)
+        encoder = get_local_encoder(
+            getattr(self.config, "rehearsal_local_model", "sentence-transformers/all-MiniLM-L6-v2"),
+            getattr(self.config, "rehearsal_encoder_threads", 2),
+        )
+        if not hasattr(self, "_local_rehearsal_indexes"):
+            self._local_rehearsal_indexes = {}
+        for group in ("attack", "support"):
+            index = HybridRehearsalRetriever(
+                encoder, getattr(self.config, "rehearsal_semantic_min_score", 0.35),
+                getattr(self.config, "rehearsal_max_per_anchor", None),
+                cache_dir=getattr(self.config, "rehearsal_index_cache_dir", DEFAULT_CACHE_DIR))
+            index.prepare(self.prepared_tree_list, self.prepared_oppo_tree_list,
+                          self.side, self.oppo_side, group == "attack")
+            self._local_rehearsal_indexes["hybrid", group] = index
+        warmup = getattr(encoder, 'warmup', None)
+        if callable(warmup):
+            warmup()
+
+    def _validate_rehearsal_candidates(self, action, candidates):
+        from utils.rehearsal_retrieval import relation_prompt
+        prompt = relation_prompt(self.motion, action["action"], action["target_claim"],
+                                 action.get("target_argument", ""), candidates,
+                                 context=action.get("target_context"))
+        cache = getattr(self, "_rehearsal_relation_cache", None)
+        if cache is None:
+            cache = self._rehearsal_relation_cache = {}
+        if prompt not in cache:
+            decisions, _ = get_response_with_retry(
+                self.helper_client, prompt, "decisions", response_model=RehearsalRelationResponse,
+                temperature=0,
+            )
+            if not isinstance(decisions, list):
+                logger.warning("[Rehearsal-Retrieval] Relation validation failed; no material accepted")
+                return []
+            cache[prompt] = decisions
+        from utils.local_rehearsal import remember_verdicts
+        if not hasattr(self, "_rehearsal_local_verdict_cache"):
+            self._rehearsal_local_verdict_cache = {}
+        remember_verdicts(self._rehearsal_local_verdict_cache, self.motion, action, candidates, cache[prompt])
+        return cache[prompt]
+
     def _retrieve_on_prepared_tree(self, action):
         # Skip retrieval if rehearsal tree is disabled
         if not self.use_rehearsal_tree:
             return ""
 
-        # retrieve similar action from the prepared tree
+        mode = getattr(self.config, "rehearsal_mode", "hybrid")
+        if mode not in {"local", "hybrid", "llm"}:
+            raise ValueError(f"Invalid rehearsal_mode: {mode}")
+        local_stats = {}
+        # Non-legacy listeners may return before initializing rehearsal pools.
+        if self.prepared_tree_list is None:
+            self.prepared_tree_list = self._get_prepared_tree(self.side)
+        if self.prepared_oppo_tree_list is None:
+            self.prepared_oppo_tree_list = self._get_prepared_tree(self.oppo_side)
+
+        # Resolve live context once so validation and quote checks see identical text.
+        from utils.rehearsal_retrieval import target_context
+        target_side = self.oppo_side if action["action"] in {"attack", "rebut"} else self.side
+        context = target_context(action, {
+            "you": self.debate_tree, "opponent": self.oppo_debate_tree,
+        }, target_side)
+        retrieval_action = dict(action, target_argument=context["argument"], target_context=context)
+
+        # Retrieve candidates, then validate their argument relation.
         target_claim = action["target_claim"]
         action_type = action["action"]
-        look_ahead_num = REMAINING_ROUND_NUM[f"{self.status}_{self.side}"]
-        query_embedding = self._get_embedding_from_cache(target_claim)
+        retrieval_stage = action.get('stage', self.status)
+        look_ahead_num = REMAINING_ROUND_NUM[f"{retrieval_stage}_{self.side}"]
 
         with timed_phase(
             logger,
@@ -1018,21 +1068,64 @@ class TreeDebater(Debater):
             side=self.side,
             action_type=action_type,
         ):
-            additional_info, retrieval_nodes = get_retrieval_from_rehearsal_tree(
-                action_type,
-                target_claim,
-                self.side,
-                self.oppo_side,
-                self.prepared_tree_list,
-                self.prepared_oppo_tree_list,
-                look_ahead_num,
-                query_embedding,
-            )
+            if mode in {"local", "hybrid"}:
+                from utils.local_rehearsal import LocalRehearsalRetriever
+                if not hasattr(self, "_local_rehearsal_indexes"):
+                    self._local_rehearsal_indexes = {}
+                group = (mode, "attack" if action_type in {"attack", "rebut"} else "support")
+                if group not in self._local_rehearsal_indexes:
+                    if mode == "hybrid":
+                        from utils.hybrid_rehearsal import HybridRehearsalRetriever
+                        from utils.local_encoder import get_local_encoder
+                        from utils.rehearsal_index_cache import DEFAULT_CACHE_DIR
+                        encoder = get_local_encoder(
+                            getattr(self.config, "rehearsal_local_model", "sentence-transformers/all-MiniLM-L6-v2"),
+                            getattr(self.config, "rehearsal_encoder_threads", 2),
+                        )
+                        self._local_rehearsal_indexes[group] = HybridRehearsalRetriever(
+                            encoder, getattr(self.config, "rehearsal_semantic_min_score", 0.35),
+                            getattr(self.config, "rehearsal_max_per_anchor", None),
+                            cache_dir=getattr(self.config, "rehearsal_index_cache_dir", DEFAULT_CACHE_DIR))
+                    else:
+                        self._local_rehearsal_indexes[group] = LocalRehearsalRetriever()
+                retriever = self._local_rehearsal_indexes[group]
+                holders = [self, self.debate_tree, self.oppo_debate_tree]
+                holders += list(self.prepared_tree_list or []) + list(self.prepared_oppo_tree_list or [])
+                caches = [getattr(holder, "embedding_cache", {}) for holder in holders]
+                additional_info, retrieval_nodes = retriever.retrieve(
+                    self.motion, retrieval_action, self.side, self.oppo_side,
+                    self.prepared_tree_list, self.prepared_oppo_tree_list, look_ahead_num,
+                    embedding_caches=[c for c in caches if isinstance(c, dict)],
+                    verdicts=getattr(self, "_rehearsal_local_verdict_cache", {}),
+                    candidate_k=getattr(self.config, "rehearsal_candidate_k", 20),
+                    max_results=getattr(self.config, "rehearsal_max_results", 3),
+                    min_score=getattr(self.config, "rehearsal_local_min_score", 0.25),
+                )
+                local_stats = dict(retriever.stats)
+            else:
+                query_embedding = self._get_embedding_from_cache(target_claim)
+                additional_info, retrieval_nodes = get_retrieval_from_rehearsal_tree(
+                    action_type,
+                    target_claim,
+                    self.side,
+                    self.oppo_side,
+                    self.prepared_tree_list,
+                    self.prepared_oppo_tree_list,
+                    look_ahead_num,
+                    query_embedding,
+                    embed=self.debate_tree.get_embedding_from_cache,
+                    validate=lambda candidates: self._validate_rehearsal_candidates(retrieval_action, candidates),
+                    target_argument=context["argument"],
+                    candidate_k=getattr(self.config, "rehearsal_candidate_k", 20),
+                    max_results=getattr(self.config, "rehearsal_max_results", 3),
+                )
 
         thoughts = {
-            "stage": self.status,
+            "stage": retrieval_stage,
             "side": self.side,
             "mode": "retrieve_on_prepared_tree",
+            "retrieval_mode": mode,
+            "local_stats": local_stats,
             "action_type": action_type,
             "target_claim": target_claim,
             "retrieval_nodes": retrieval_nodes,

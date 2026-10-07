@@ -9,6 +9,7 @@ import time
 import traceback
 from dataclasses import dataclass
 from functools import partial
+from pathlib import Path
 
 import litellm
 import requests
@@ -49,6 +50,16 @@ class DebaterConfig(AgentConfig):
     system_prompt: str = expert_debater_system_prompt + rhetorical_techniques_prompt
     add_retrieval_feedback: bool = True
     use_rehearsal_tree: bool = True
+    claim_pool_limit: int = 10
+    rehearsal_mode: str = "hybrid"  # hybrid/local: offline; llm: remote validation
+    rehearsal_local_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    rehearsal_encoder_threads: int = 2
+    rehearsal_index_cache_dir: str | None = str(Path(__file__).resolve().parents[1] / '.cache' / 'rehearsal_indexes')
+    rehearsal_semantic_min_score: float = 0.35
+    rehearsal_local_min_score: float = 0.25
+    rehearsal_candidate_k: int = 20
+    rehearsal_max_results: int = 3
+    rehearsal_max_per_anchor: int | None = None
     use_debate_flow_tree: bool = True
     url: str = "http://127.0.0.1:8081/"
     streaming_tts: bool = False
