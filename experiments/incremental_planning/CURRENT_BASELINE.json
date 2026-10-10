@@ -1,0 +1,5 @@
+{
+  "id": "treedebater-motion-v70-20261010",
+  "manifest": "experiments/incremental_planning/baselines/v70-20261010/baseline.json",
+  "archive": "experiments/incremental_planning/baselines/v70-20261010/snapshot.tar.gz"
+}
