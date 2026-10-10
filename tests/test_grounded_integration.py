@@ -7,12 +7,11 @@ from ouragents import TreeDebater
 from streaming.planning import IncrementalPlanner, PlanningConfig
 
 
-@pytest.mark.parametrize("mode,grounded", [("linear", False), ("structured_linear", False),
-                                           ("grounded_linear", True), ("light_linear", True),
-                                           ("grounded_tree", True), ("light_tree", True),
+@pytest.mark.parametrize("mode,grounded", [("linear", False), ("adaptive_linear", False),
                                            ("branch_tree", True), ("flat_tree", True)])
 def test_existing_feedback_and_revision_calls_receive_grounding_without_extra_calls(mode, grounded):
     p = TreeDebater.__new__(TreeDebater)
+    p.config = SimpleNamespace(model='test')
     p.motion, p.side, p.oppo_side, p.status = "Restrict cars", "against", "for", "rebuttal"
     from debate_tree import DebateTree
     p.debate_tree, p.oppo_debate_tree = DebateTree(p.motion, p.side), DebateTree(p.motion, p.oppo_side)

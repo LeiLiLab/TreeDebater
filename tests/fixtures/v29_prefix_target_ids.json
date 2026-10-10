@@ -1,0 +1,36 @@
+[
+  {
+    "text": "We support the motion. The central dispute is whether mandatory verification improves digital safety or compromises fundamental privacy and security. We will address concerns regarding inclusivity and data risks through accountability-driven frameworks.",
+    "target_ids": [
+      "0d54f8ac82674c5ca87faece79b9dc46"
+    ],
+    "framework": {
+      "ready": true,
+      "position": "for",
+      "core_dispute": "Whether verification improves safety or compromises privacy and security.",
+      "response_axes": [
+        "Safety vs Privacy",
+        "Accountability vs Anonymity"
+      ],
+      "prefix_action": "keep",
+      "reason": "The opponent has established their position, allowing for a rebuttal-focused overview."
+    }
+  },
+  {
+    "text": "We support the motion. The central dispute is whether verification improves safety or compromises privacy. We will address concerns regarding inclusivity and security risks by demonstrating how accountability-driven frameworks protect all users.",
+    "target_ids": [
+      "0d54f8ac82674c5ca87faece79b9dc46"
+    ],
+    "framework": {
+      "ready": true,
+      "position": "for",
+      "core_dispute": "Whether verification improves safety or compromises privacy and security.",
+      "response_axes": [
+        "Safety vs Privacy",
+        "Accountability vs Anonymity"
+      ],
+      "prefix_action": "replace",
+      "reason": "The opponent has established their position, allowing for a rebuttal-focused overview."
+    }
+  }
+]

@@ -80,20 +80,3 @@ def select_nodes(trees, side, *, max_targets=DEFAULT_MAX_TARGETS,
                 include(sibling)
             parent = parent.parent
     return targets, context
-
-
-def render_selected_tree(tree, side, *, max_targets=DEFAULT_MAX_TARGETS,
-                         max_context_nodes=DEFAULT_MAX_CONTEXT_NODES):
-    """Small explicit view for older tree policies that use prose tree prompts."""
-    import json
-    from .claim_constraints import exported_constraints
-    targets, context = select_nodes([tree], side, max_targets=max_targets,
-                                    max_context_nodes=max_context_nodes, require_sources=False)
-    selected = {n.node_id for n in targets + context}
-    return json.dumps({'view': 'selected current nodes; omitted history remains stored',
-                       'nodes': [{'node_id': n.node_id, 'side': n.side, 'claim': n.claim,
-                                  'arguments': list(n.argument), 'constraints': exported_constraints(n),
-                                  'sources': list(getattr(n, 'source_spans', [])),
-                                  'relation': getattr(n, 'relation', None),
-                                  'parent_id': n.parent.node_id if n.parent.node_id in selected else None}
-                                 for n in targets + context]}, ensure_ascii=False)

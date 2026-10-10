@@ -704,14 +704,15 @@ class DebateTree(Tree):
                 lines.append(f"Meta Rebuttal to the attacks on this debate tree: {self.meta_rebuttal_list}")
         return "".join(lines)
 
-    def update_node(self, action, new_claim=None, new_argument=None, target=None):
-        if len(new_claim) == 0:
+    def update_node(self, action, new_claim=None, new_argument=None, target=None, target_id=None):
+        if not isinstance(new_claim, str) or not new_claim.strip():
             logger.warning(f"Empty claim: [{new_claim}]")
             return
-        if target is None:
+        new_argument = [new_argument] if isinstance(new_argument, str) else list(new_argument or [])
+        if target is None and action != 'propose' and not target_id:
             logger.warning(f"Target is None for the action: {action} and claim: {new_claim}, skip")
             return
-        if target == "N/A":
+        if target == "N/A" and action != 'propose' and not target_id:
             if action == "attack":
                 self.meta_attack_list.append(new_claim)
             elif action == "rebut":
@@ -739,23 +740,16 @@ class DebateTree(Tree):
         else:  # propose or reinforce or attack, the target is the same side
             target_node_side = self.root.side
 
-        match_node = self.get_node_by_claim(target, side=target_node_side)
-        if match_node is None:
-            match_node, similarity = self.get_most_similar_node(target, side=target_node_side, top_k=1, threshold=0.8)
-
-        # try to find the rebut node in the same side
-        if match_node is None and action == "rebut":
-            logger.info(
-                f"Cannot find the matched node for: action: {action}, target: {target}, try to find the reinforce node in the same side"
-            )
-            action = "reinforce"
-            match_node = self.get_node_by_claim(target, side=self.root.side)
-            if match_node is None:
-                match_node, similarity = self.get_most_similar_node(target, side=self.root.side, top_k=1, threshold=0.8)
-
-        if match_node is None:
+        from streaming.target_matching import resolve_target
+        matched, resolution = resolve_target([(self, n) for n in self.get_all_nodes()],
+                                              dict(target=target, target_id=target_id), expected_side=target_node_side)
+        self.update_events = getattr(self, 'update_events', []) + [dict(
+            action='TARGET_RESOLUTION', requested=action,
+            outcome='matched' if resolution['reason'] is None else 'unresolved', **resolution)]
+        if resolution['reason'] is not None:
             logger.warning(f"Cannot find the matched node for action: {action}, target: {target}")
             return
+        _, match_node = matched
 
         if action == "reinforce":
             match_node.argument.extend(new_argument)

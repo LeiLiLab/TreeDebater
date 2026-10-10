@@ -66,6 +66,49 @@ class BranchPlanResponse(BaseModel):
     rebuttals: list[BranchMove]
 
 
+class OverviewFramework(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    ready: bool
+    position: str
+    core_dispute: str
+    response_axes: list[str]
+    prefix_action: Literal['wait', 'keep', 'replace']
+    reason: str
+
+
+class BodyPlanItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    axis: int | None
+    target: int | None
+    issue: str
+    action: Literal['develop_case', 'challenge_support', 'challenge_inference',
+                    'answer_objection', 'concede_then_distinguish', 'weigh']
+    point: str
+    weight: int
+
+
+class ListeningBranchPlanResponse(BranchPlanResponse):
+    overview: OverviewFramework
+    body_plan: list[BodyPlanItem] = Field(default_factory=list)
+
+
+class ListeningSelectionOverview(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    ready: bool
+    core_dispute: str
+    response_axes: list[str]
+    prefix_action: Literal['wait', 'keep', 'replace']
+    reason: str
+
+
+class ListeningSelectionResponse(BaseModel):
+    """The listener selects source material; the speech writer owns arguments."""
+    model_config = ConfigDict(extra="forbid")
+    claims: list[BranchChoice]
+    limits: list[int]
+    overview: ListeningSelectionOverview
+
+
 class SelectionClaimsOnlyResponse(SchemaBase):
     selection: list[str]
 
@@ -134,6 +177,7 @@ class AuthorsResponse(SchemaBase):
 
 class SelectedIdsResponse(SchemaBase):
     selected_ids: list[int | str]
+    analysis: dict[str, str] = Field(default_factory=dict)
 
 
 class QueryResponse(SchemaBase):

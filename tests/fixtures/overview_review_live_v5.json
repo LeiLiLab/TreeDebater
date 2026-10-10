@@ -1,0 +1,526 @@
+{
+  "provenance": "Recorded Gemma4-26B responses from listening-motion-live-v5; review payload and output only. No API dispatch.",
+  "cases": [
+    {
+      "case": "speculative",
+      "payload": {
+        "context": {
+          "motion": "Social media should be required to verify user identities",
+          "our_side": "against",
+          "stage": "opening",
+          "debate_history": [],
+          "current_targets": [
+            {
+              "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+              "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+              "arguments": [
+                "Identity verification increases user accountability.",
+                "Verification can help reduce online harms."
+              ],
+              "sources": [
+                "We support mandatory identity verification to improve accountability, focusing on how verification might mitigate online harms."
+              ],
+              "version": "22a94969dc5a5962",
+              "constraints": []
+            }
+          ],
+          "final_transcript": "We support mandatory identity verification to improve accountability, focusing on how verification might mitigate online harms.",
+          "heard_transcript": "We support mandatory identity verification to improve accountability, focusing on how verification might mitigate online harms."
+        },
+        "target_ids": [
+          "a9e4569109d7498dbe910e6d13b3f3c7"
+        ],
+        "draft": "We oppose mandatory verification, arguing that the risks to privacy, security, and inclusivity outweigh purported accountability benefits.",
+        "framework": {
+          "ready": true,
+          "position": "against",
+          "core_dispute": "Whether the benefits of increased accountability and reduced online harm justify the significant risks to privacy, security, and digital inclusivity.",
+          "response_axes": [
+            "Privacy and safety of vulnerable populations",
+            "Barriers to digital inclusivity and access",
+            "Security risks of centralized identity databases"
+          ],
+          "prefix_action": "replace",
+          "reason": "The opponent has established their opening stance focusing on accountability and harm mitigation, allowing for the construction of a framework centered on the trade-offs between these goals and the risks identified in our main claims."
+        },
+        "checklist": [
+          {
+            "constraint_id": "source-0caf3fe7e1013fd1",
+            "kind": "source_candidate",
+            "quote": "We support mandatory identity verification to improve accountability, focusing on how verification might mitigate online harms.",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          }
+        ],
+        "sentences": [
+          "We oppose mandatory verification, arguing that the risks to privacy, security, and inclusivity outweigh purported accountability benefits."
+        ],
+        "sources": [
+          "We support mandatory identity verification to improve accountability, focusing on how verification might mitigate online harms."
+        ],
+        "final_input_units": []
+      },
+      "responses": [
+        {
+          "call_id": 10254,
+          "finish_reason": "stop",
+          "content": "{ \"overview_ok\": true, \"continuation_ok\": true, \"checks\": [], \"assertions\": [ { \"sentence\": 0, \"status\": \"supported\", \"sources\": [ 0 ], \"reason\": \"The draft correctly identifies the opponent's stated goal of accountability and harm mitigation as the counterpoint to the risks being raised.\" } ], \"issues\": [] }"
+        },
+        {
+          "call_id": 10255,
+          "finish_reason": "stop",
+          "content": "{ \"overview_ok\": true, \"continuation_ok\": true, \"checks\": [], \"assertions\": [ { \"sentence\": 0, \"status\": \"supported\", \"sources\": [ 0 ], \"reason\": \"The draft correctly identifies the opponent's position on accountability and frames the disagreement as a trade-off against the risks mentioned.\" } ], \"issues\": [] }"
+        }
+      ]
+    },
+    {
+      "case": "endpoint",
+      "payload": {
+        "context": {
+          "motion": "Social media should be required to verify user identities",
+          "our_side": "against",
+          "stage": "opening",
+          "debate_history": [
+            {
+              "stage": "opening",
+              "side": "for",
+              "content": "We support mandatory identity verification to improve accountability, focusing on how verification might mitigate online harms. Today, we argue that social media platforms must be required to confirm the real-world identity of every user account. We will demonstrate how this mandate restores digital integrity through three key areas – individual accountability, systemic truth, and structural security. To be clear, our position is that a mandate must require platforms to ensure every account is tied to a verified, real-world person through secure, privacy-preserving protocols. This is not about making every post public, but about ensuring that every account is secure. ensuring that behind every screen is a person who can be held responsible for their actions. The standard for victory in this debate is the side that demonstrates the most effective mechanism for reducing systemic digital harm. First, identity verification significantly reduces online harassment and cyberbullying. Currently, the internet is like a crowded room where everyone is wearing a mask. When people feel invisible, they lose their sense of empathy and act with a cruelty they would never show in person. By requiring real identities, we introduce personal accountability. When a user knows their actions are linked to their actual persona, the impulse to engage in aggressive behavior drops significantly. Accountability changes the way we treat one another. other. Second, mandatory verification mitigates the spread of disinformation and coordinated influence operations. As documented by cyber security researchers, we are seeing a crisis where bot networks and coordinated inauthentic behavior simulate widespread consensus to manipulate public opinion. These malicious actors rely on the ability to create thousands... of ghost accounts at almost no cost. If every account must be tied to a verified identity, the ability to scale these deceptive campaigns is destroyed. It becomes much harder for bad actors to manufacture a false reality when they cannot hide behind a wall of automated fake profiles. Finally, identity requirements enhance the security and integrity of digital interactions, and anonymity provides a very important tool. for fraud, catfishing, and social engineering that can ruin lives and deplete life savings. In a world where we conduct much of our business and social lives online, we need to know that the people we interact with are who they say they are. While data security is paramount, the current state of unchecked anonymity poses a far greater and more immediate threat to our social fabric. By establishing a baseline of verified users, platforms create a trustworthy environment that structurally minimizes the risk of interacting with deceptive or malicious entities. In conclusion, we must weigh the value of absolute anonymity. against the necessity of a safe, truthful, and secure society. While some may value the shield of a mask, that mask is currently being used to facilitate bullying, spread lies, and commit fraud. We believe that by bringing accountability back to the digital world, we can build a healthier public square. For these reasons, we strongly support the motion.",
+              "tree_via_streaming": true
+            }
+          ],
+          "current_targets": [
+            {
+              "node_id": "0c239d0384fd419cbd24cd900f3c4c77",
+              "claim": "The mandate requires platforms to ensure every account is tied to a verified, real-world person through secure, privacy-preserving protocols.",
+              "arguments": [
+                "The mandate specifies that accounts must be linked to real-world identities.",
+                "Verification must be conducted using secure and privacy-preserving protocols."
+              ],
+              "sources": [
+                "our position is that a mandate must require platforms to ensure every account is tied to a verified, real-world person through secure, privacy-preserving protocols."
+              ],
+              "version": "76af33aaa25df237",
+              "constraints": [
+                {
+                  "kind": "precondition",
+                  "quote": "through secure, privacy-preserving protocols",
+                  "source_node_id": "0c239d0384fd419cbd24cd900f3c4c77",
+                  "constraint_id": "b909d646a917fcca"
+                }
+              ]
+            },
+            {
+              "node_id": "58743801187744f7939dade7bb27acf2",
+              "claim": "The standard for victory in this debate is the side that demonstrates the most effective mechanism for reducing systemic digital harm.",
+              "arguments": [],
+              "sources": [
+                "The standard for victory in this debate is the side that demonstrates the most effective mechanism for reducing systemic digital harm."
+              ],
+              "version": "be1ce715c5bf7a62",
+              "constraints": []
+            },
+            {
+              "node_id": "807aa7249027449c8474ff626ce20188",
+              "claim": "Mandatory verification mitigates the spread of disinformation and coordinated influence operations.",
+              "arguments": [
+                "Mandatory verification helps reduce the spread of disinformation.",
+                "Mandatory verification helps mitigate coordinated influence operations.",
+                "Bot networks and coordinated inauthentic behavior simulate widespread consensus to manipulate public opinion.",
+                "Malicious actors exploit the ability to create massive numbers of accounts to conduct influence operations.",
+                "Tying accounts to verified identities destroys the ability to scale deceptive campaigns.",
+                "Preventing bad actors from using automated fake profiles makes it harder to manufacture a false reality."
+              ],
+              "sources": [
+                "Second, mandatory verification mitigates the spread of disinformation and coordinated influence operations.",
+                "As documented by cyber security researchers, we are seeing a crisis where bot networks and coordinated inauthentic behavior simulate widespread consensus to manipulate public opinion. These malicious actors rely on the ability to create thousands...",
+                "If every account must be tied to a verified identity, the ability to scale these deceptive campaigns is destroyed.",
+                "It becomes much harder for bad actors to manufacture a false reality when they cannot hide behind a wall of automated fake profiles."
+              ],
+              "version": "c4a9ba6db9b8b023",
+              "constraints": []
+            },
+            {
+              "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+              "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+              "arguments": [
+                "Identity verification increases user accountability.",
+                "Verification can help reduce online harms.",
+                "Identity verification restores digital integrity by increasing individual accountability.",
+                "Mandating real-world identity confirmation helps address systemic issues.",
+                "Identity verification is intended to ensure account security rather than publicizing user content.",
+                "Identity verification ensures users can be held responsible for their actions.",
+                "Identity verification is a tool to reduce harassment and cyberbullying.",
+                "Anonymity (the 'mask') creates a sense of invisibility.",
+                "Invisibility causes people to lose empathy.",
+                "This loss of empathy results in online cruelty that differs from in-person behavior.",
+                "Linking actions to actual personas introduces personal accountability.",
+                "Knowing actions are linked to real identities reduces the impulse for aggressive behavior.",
+                "Accountability improves interpersonal treatment online.",
+                "Identity requirements enhance the security and integrity of digital interactions.",
+                "Identity verification helps prevent fraud, catfishing, and social engineering.",
+                "Online business and social lives require knowing the true identity of interactants.",
+                "Establishing a baseline of verified users creates a trustworthy environment.",
+                "Verification structurally minimizes the risk of interacting with deceptive or malicious entities.",
+                "Anonymity (the 'mask') facilitates bullying, lies, and fraud.",
+                "Identity verification brings accountability back to the digital world.",
+                "Accountability helps build a healthier public square."
+              ],
+              "sources": [
+                "We support mandatory identity verification to improve accountability, focusing on how verification might mitigate online harms.",
+                "Today, we argue that social media platforms must be required to confirm the real-world identity of every user account. We will demonstrate how this mandate restores digital integrity through three key areas – individual accountability, systemic",
+                "This is not about making every post public, but about ensuring that every account is secure.",
+                "ensuring that behind every screen is a person who can be held responsible for their actions.",
+                "First, identity verification significantly reduces online harassment and cyberbullying.",
+                "the internet is like a crowded room where everyone is wearing a mask. When people feel invisible, they lose their sense of empathy and act with a cruelty they would never show in person.",
+                "By requiring real identities, we introduce personal accountability. When a user knows their actions are linked to their actual persona, the impulse to engage in aggressive behavior drops significantly. Accountability changes the way we treat one another.",
+                "Finally, identity requirements enhance the security and integrity of digital interactions, and anonymity provides a very important tool.",
+                "for fraud, catfishing, and social engineering that can ruin lives and deplete life savings.",
+                "In a world where we conduct much of our business and social lives online, we need to know that the people we interact with are who they say they are.",
+                "By establishing a baseline of verified users, platforms create a trustworthy environment that structurally minimizes the risk of interacting with deceptive or malicious entities.",
+                "While some may value the shield of a mask, that mask is currently being used to facilitate bullying, spread lies, and commit fraud. We believe that by bringing accountability back to the digital world, we can build a healthier public square."
+              ],
+              "version": "756b66679f0a9a81",
+              "constraints": []
+            }
+          ],
+          "final_transcript": "We support mandatory identity verification to improve accountability, focusing on how verification might mitigate online harms. Today, we argue that social media platforms must be required to confirm the real-world identity of every user account. We will demonstrate how this mandate restores digital integrity through three key areas – individual accountability, systemic truth, and structural security. To be clear, our position is that a mandate must require platforms to ensure every account is tied to a verified, real-world person through secure, privacy-preserving protocols. This is not about making every post public, but about ensuring that every account is secure. ensuring that behind every screen is a person who can be held responsible for their actions. The standard for victory in this debate is the side that demonstrates the most effective mechanism for reducing systemic digital harm. First, identity verification significantly reduces online harassment and cyberbullying. Currently, the internet is like a crowded room where everyone is wearing a mask. When people feel invisible, they lose their sense of empathy and act with a cruelty they would never show in person. By requiring real identities, we introduce personal accountability. When a user knows their actions are linked to their actual persona, the impulse to engage in aggressive behavior drops significantly. Accountability changes the way we treat one another. other. Second, mandatory verification mitigates the spread of disinformation and coordinated influence operations. As documented by cyber security researchers, we are seeing a crisis where bot networks and coordinated inauthentic behavior simulate widespread consensus to manipulate public opinion. These malicious actors rely on the ability to create thousands... of ghost accounts at almost no cost. If every account must be tied to a verified identity, the ability to scale these deceptive campaigns is destroyed. It becomes much harder for bad actors to manufacture a false reality when they cannot hide behind a wall of automated fake profiles. Finally, identity requirements enhance the security and integrity of digital interactions, and anonymity provides a very important tool. for fraud, catfishing, and social engineering that can ruin lives and deplete life savings. In a world where we conduct much of our business and social lives online, we need to know that the people we interact with are who they say they are. While data security is paramount, the current state of unchecked anonymity poses a far greater and more immediate threat to our social fabric. By establishing a baseline of verified users, platforms create a trustworthy environment that structurally minimizes the risk of interacting with deceptive or malicious entities. In conclusion, we must weigh the value of absolute anonymity. against the necessity of a safe, truthful, and secure society. While some may value the shield of a mask, that mask is currently being used to facilitate bullying, spread lies, and commit fraud. We believe that by bringing accountability back to the digital world, we can build a healthier public square. For these reasons, we strongly support the motion.",
+          "heard_transcript": "We support mandatory identity verification to improve accountability, focusing on how verification might mitigate online harms. Today, we argue that social media platforms must be required to confirm the real-world identity of every user account. We will demonstrate how this mandate restores digital integrity through three key areas – individual accountability, systemic truth, and structural security. To be clear, our position is that a mandate must require platforms to ensure every account is tied to a verified, real-world person through secure, privacy-preserving protocols. This is not about making every post public, but about ensuring that every account is secure. ensuring that behind every screen is a person who can be held responsible for their actions. The standard for victory in this debate is the side that demonstrates the most effective mechanism for reducing systemic digital harm. First, identity verification significantly reduces online harassment and cyberbullying. Currently, the internet is like a crowded room where everyone is wearing a mask. When people feel invisible, they lose their sense of empathy and act with a cruelty they would never show in person. By requiring real identities, we introduce personal accountability. When a user knows their actions are linked to their actual persona, the impulse to engage in aggressive behavior drops significantly. Accountability changes the way we treat one another. other. Second, mandatory verification mitigates the spread of disinformation and coordinated influence operations. As documented by cyber security researchers, we are seeing a crisis where bot networks and coordinated inauthentic behavior simulate widespread consensus to manipulate public opinion. These malicious actors rely on the ability to create thousands... of ghost accounts at almost no cost. If every account must be tied to a verified identity, the ability to scale these deceptive campaigns is destroyed. It becomes much harder for bad actors to manufacture a false reality when they cannot hide behind a wall of automated fake profiles. Finally, identity requirements enhance the security and integrity of digital interactions, and anonymity provides a very important tool. for fraud, catfishing, and social engineering that can ruin lives and deplete life savings. In a world where we conduct much of our business and social lives online, we need to know that the people we interact with are who they say they are. While data security is paramount, the current state of unchecked anonymity poses a far greater and more immediate threat to our social fabric. By establishing a baseline of verified users, platforms create a trustworthy environment that structurally minimizes the risk of interacting with deceptive or malicious entities. In conclusion, we must weigh the value of absolute anonymity. against the necessity of a safe, truthful, and secure society. While some may value the shield of a mask, that mask is currently being used to facilitate bullying, spread lies, and commit fraud. We believe that by bringing accountability back to the digital world, we can build a healthier public square. For these reasons, we strongly support the motion."
+        },
+        "target_ids": [
+          "0c239d0384fd419cbd24cd900f3c4c77",
+          "58743801187744f7939dade7bb27acf2",
+          "807aa7249027449c8474ff626ce20188",
+          "a9e4569109d7498dbe910e6d13b3f3c7"
+        ],
+        "draft": "We oppose mandatory verification, arguing that the risks to privacy, security, and inclusivity outweigh purported accountability benefits.",
+        "framework": {
+          "ready": true,
+          "position": "against",
+          "core_dispute": "Whether the benefits of increased accountability and reduced online harm justify the significant risks to privacy, security, and digital inclusivity.",
+          "response_axes": [
+            "Privacy and safety of vulnerable populations",
+            "Barriers to digital inclusivity and access",
+            "Security risks of centralized identity databases"
+          ],
+          "prefix_action": "keep",
+          "reason": "The opponent's opening statement confirms the initial scope of accountability and harm mitigation, which aligns with our existing framework for weighing these against our core claims."
+        },
+        "checklist": [
+          {
+            "kind": "precondition",
+            "quote": "through secure, privacy-preserving protocols",
+            "source_node_id": "0c239d0384fd419cbd24cd900f3c4c77",
+            "constraint_id": "b909d646a917fcca",
+            "node_id": "0c239d0384fd419cbd24cd900f3c4c77",
+            "claim": "The mandate requires platforms to ensure every account is tied to a verified, real-world person through secure, privacy-preserving protocols.",
+            "planned_target": false
+          },
+          {
+            "constraint_id": "source-b097146b7d8aa8c2",
+            "kind": "source_candidate",
+            "quote": "The standard for victory in this debate is the side that demonstrates the most effective mechanism for reducing systemic digital harm.",
+            "source_node_id": "58743801187744f7939dade7bb27acf2",
+            "node_id": "58743801187744f7939dade7bb27acf2",
+            "claim": "The standard for victory in this debate is the side that demonstrates the most effective mechanism for reducing systemic digital harm.",
+            "planned_target": false
+          },
+          {
+            "constraint_id": "source-66f7e112985fbbf8",
+            "kind": "source_candidate",
+            "quote": "Second, mandatory verification mitigates the spread of disinformation and coordinated influence operations.",
+            "source_node_id": "807aa7249027449c8474ff626ce20188",
+            "node_id": "807aa7249027449c8474ff626ce20188",
+            "claim": "Mandatory verification mitigates the spread of disinformation and coordinated influence operations.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-fafa426d4814b233",
+            "kind": "source_candidate",
+            "quote": "As documented by cyber security researchers, we are seeing a crisis where bot networks and coordinated inauthentic behavior simulate widespread consensus to manipulate public opinion. These malicious actors rely on the ability to create thousands...",
+            "source_node_id": "807aa7249027449c8474ff626ce20188",
+            "node_id": "807aa7249027449c8474ff626ce20188",
+            "claim": "Mandatory verification mitigates the spread of disinformation and coordinated influence operations.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-14dea8940b6ce7b1",
+            "kind": "source_candidate",
+            "quote": "If every account must be tied to a verified identity, the ability to scale these deceptive campaigns is destroyed.",
+            "source_node_id": "807aa7249027449c8474ff626ce20188",
+            "node_id": "807aa7249027449c8474ff626ce20188",
+            "claim": "Mandatory verification mitigates the spread of disinformation and coordinated influence operations.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-cd20faa6b72c764a",
+            "kind": "source_candidate",
+            "quote": "It becomes much harder for bad actors to manufacture a false reality when they cannot hide behind a wall of automated fake profiles.",
+            "source_node_id": "807aa7249027449c8474ff626ce20188",
+            "node_id": "807aa7249027449c8474ff626ce20188",
+            "claim": "Mandatory verification mitigates the spread of disinformation and coordinated influence operations.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-0caf3fe7e1013fd1",
+            "kind": "source_candidate",
+            "quote": "We support mandatory identity verification to improve accountability, focusing on how verification might mitigate online harms.",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-75af7e7bf3928c1f",
+            "kind": "source_candidate",
+            "quote": "Today, we argue that social media platforms must be required to confirm the real-world identity of every user account. We will demonstrate how this mandate restores digital integrity through three key areas – individual accountability, systemic",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-52cd5ce1749caed8",
+            "kind": "source_candidate",
+            "quote": "This is not about making every post public, but about ensuring that every account is secure.",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-dc6c8f988f85c539",
+            "kind": "source_candidate",
+            "quote": "ensuring that behind every screen is a person who can be held responsible for their actions.",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-5dbf1978c9b97ad5",
+            "kind": "source_candidate",
+            "quote": "First, identity verification significantly reduces online harassment and cyberbullying.",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-c5220ea6b8a7ee26",
+            "kind": "source_candidate",
+            "quote": "the internet is like a crowded room where everyone is wearing a mask. When people feel invisible, they lose their sense of empathy and act with a cruelty they would never show in person.",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-d97874ce8e4b5901",
+            "kind": "source_candidate",
+            "quote": "By requiring real identities, we introduce personal accountability. When a user knows their actions are linked to their actual persona, the impulse to engage in aggressive behavior drops significantly. Accountability changes the way we treat one another.",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-4771a9809376fd77",
+            "kind": "source_candidate",
+            "quote": "Finally, identity requirements enhance the security and integrity of digital interactions, and anonymity provides a very important tool.",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-7e21a9740aee8b95",
+            "kind": "source_candidate",
+            "quote": "for fraud, catfishing, and social engineering that can ruin lives and deplete life savings.",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-c00b2a704e4d7f2c",
+            "kind": "source_candidate",
+            "quote": "In a world where we conduct much of our business and social lives online, we need to know that the people we interact with are who they say they are.",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-f9f1e33a971888e4",
+            "kind": "source_candidate",
+            "quote": "By establishing a baseline of verified users, platforms create a trustworthy environment that structurally minimizes the risk of interacting with deceptive or malicious entities.",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "source-18fdee87627f2711",
+            "kind": "source_candidate",
+            "quote": "While some may value the shield of a mask, that mask is currently being used to facilitate bullying, spread lies, and commit fraud. We believe that by bringing accountability back to the digital world, we can build a healthier public square.",
+            "source_node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "node_id": "a9e4569109d7498dbe910e6d13b3f3c7",
+            "claim": "Mandatory identity verification improves accountability and mitigates online harms.",
+            "planned_target": true
+          },
+          {
+            "constraint_id": "limit-c5aa704abd1a7e37",
+            "node_id": null,
+            "claim": null,
+            "source_node_id": null,
+            "kind": "scope",
+            "quote": "the internet is like a crowded room where everyone is wearing a mask.",
+            "planned_target": false
+          },
+          {
+            "constraint_id": "limit-89d13d8048c4258f",
+            "node_id": null,
+            "claim": null,
+            "source_node_id": null,
+            "kind": "scope",
+            "quote": "By requiring real identities, we introduce personal accountability.",
+            "planned_target": false
+          },
+          {
+            "constraint_id": "limit-929bcc8a8779eb07",
+            "node_id": null,
+            "claim": null,
+            "source_node_id": null,
+            "kind": "scope",
+            "quote": "As documented by cyber security researchers, we are seeing a crisis where bot networks and coordinated inauthentic behavior simulate widespread consensus to manipulate public opinion.",
+            "planned_target": false
+          },
+          {
+            "constraint_id": "limit-c55e29d2c0aac06b",
+            "node_id": null,
+            "claim": null,
+            "source_node_id": null,
+            "kind": "scope",
+            "quote": "These malicious actors rely on the ability to create thousands...",
+            "planned_target": false
+          },
+          {
+            "constraint_id": "limit-d85857a2b62fefca",
+            "node_id": null,
+            "claim": null,
+            "source_node_id": null,
+            "kind": "scope",
+            "quote": "Today, we argue that social media platforms must be required to confirm the real-world identity of every user account.",
+            "planned_target": false
+          },
+          {
+            "constraint_id": "limit-4fb7b649b3bf3e2a",
+            "node_id": null,
+            "claim": null,
+            "source_node_id": null,
+            "kind": "scope",
+            "quote": "We will demonstrate how this mandate restores digital integrity through three key areas – individual accountability, systemic",
+            "planned_target": false
+          },
+          {
+            "constraint_id": "limit-2de593a08a83c602",
+            "node_id": null,
+            "claim": null,
+            "source_node_id": null,
+            "kind": "scope",
+            "quote": "When people feel invisible, they lose their sense of empathy and act with a cruelty they would never show in person.",
+            "planned_target": false
+          },
+          {
+            "constraint_id": "limit-e3f82d3bb45a57a5",
+            "node_id": null,
+            "claim": null,
+            "source_node_id": null,
+            "kind": "scope",
+            "quote": "When a user knows their actions are linked to their actual persona, the impulse to engage in aggressive behavior drops significantly.",
+            "planned_target": false
+          },
+          {
+            "constraint_id": "limit-0f87b20b110a3f46",
+            "node_id": null,
+            "claim": null,
+            "source_node_id": null,
+            "kind": "scope",
+            "quote": "Accountability changes the way we treat one another.",
+            "planned_target": false
+          },
+          {
+            "constraint_id": "limit-cae7bbc3eaad603c",
+            "node_id": null,
+            "claim": null,
+            "source_node_id": null,
+            "kind": "scope",
+            "quote": "While some may value the shield of a mask, that mask is currently being used to facilitate bullying, spread lies, and commit fraud.",
+            "planned_target": false
+          },
+          {
+            "constraint_id": "limit-84fc8a2df9c2e2c3",
+            "node_id": null,
+            "claim": null,
+            "source_node_id": null,
+            "kind": "scope",
+            "quote": "We believe that by bringing accountability back to the digital world, we can build a healthier public square.",
+            "planned_target": false
+          }
+        ],
+        "sentences": [
+          "We oppose mandatory verification, arguing that the risks to privacy, security, and inclusivity outweigh purported accountability benefits."
+        ],
+        "sources": [
+          "We support mandatory identity verification to improve accountability, focusing on how verification might mitigate online harms. Today, we argue that social media platforms must be required to confirm the real-world identity of every user account. We will demonstrate how this mandate restores digital integrity through three key areas – individual accountability, systemic truth, and structural security. To be clear, our position is that a mandate must require platforms to ensure every account is tied to a verified, real-world person through secure, privacy-preserving protocols. This is not about making every post public, but about ensuring that every account is secure. ensuring that behind every screen is a person who can be held responsible for their actions. The standard for victory in this debate is the side that demonstrates the most effective mechanism for reducing systemic digital harm. First, identity verification significantly reduces online harassment and cyberbullying. Currently, the internet is like a crowded room where everyone is wearing a mask. When people feel invisible, they lose their sense of empathy and act with a cruelty they would never show in person. By requiring real identities, we introduce personal accountability. When a user knows their actions are linked to their actual persona, the impulse to engage in aggressive behavior drops significantly. Accountability changes the way we treat one another. other. Second, mandatory verification mitigates the spread of disinformation and coordinated influence operations. As documented by cyber security researchers, we are seeing a crisis where bot networks and coordinated inauthentic behavior simulate widespread consensus to manipulate public opinion. These malicious actors rely on the ability to create thousands... of ghost accounts at almost no cost. If every account must be tied to a verified identity, the ability to scale these deceptive campaigns is destroyed. It becomes much harder for bad actors to manufacture a false reality when they cannot hide behind a wall of automated fake profiles. Finally, identity requirements enhance the security and integrity of digital interactions, and anonymity provides a very important tool. for fraud, catfishing, and social engineering that can ruin lives and deplete life savings. In a world where we conduct much of our business and social lives online, we need to know that the people we interact with are who they say they are. While data security is paramount, the current state of unchecked anonymity poses a far greater and more immediate threat to our social fabric. By establishing a baseline of verified users, platforms create a trustworthy environment that structurally minimizes the risk of interacting with deceptive or malicious entities. In conclusion, we must weigh the value of absolute anonymity. against the necessity of a safe, truthful, and secure society. While some may value the shield of a mask, that mask is currently being used to facilitate bullying, spread lies, and commit fraud. We believe that by bringing accountability back to the digital world, we can build a healthier public square. For these reasons, we strongly support the motion."
+        ],
+        "final_input_units": [
+          "We support mandatory identity verification to improve accountability, focusing on how verification might mitigate online harms.",
+          "Today, we argue that social media platforms must be required to confirm the real-world identity of every user account.",
+          "We will demonstrate how this mandate restores digital integrity through three key areas – individual accountability, systemic truth, and structural security.",
+          "To be clear, our position is that a mandate must require platforms to ensure every account is tied to a verified, real-world person through secure, privacy-preserving protocols.",
+          "This is not about making every post public, but about ensuring that every account is secure.",
+          "ensuring that behind every screen is a person who can be held responsible for their actions.",
+          "The standard for victory in this debate is the side that demonstrates the most effective mechanism for reducing systemic digital harm.",
+          "First, identity verification significantly reduces online harassment and cyberbullying.",
+          "Currently, the internet is like a crowded room where everyone is wearing a mask.",
+          "When people feel invisible, they lose their sense of empathy and act with a cruelty they would never show in person.",
+          "By requiring real identities, we introduce personal accountability.",
+          "When a user knows their actions are linked to their actual persona, the impulse to engage in aggressive behavior drops significantly.",
+          "Accountability changes the way we treat one another.",
+          "other.",
+          "Second, mandatory verification mitigates the spread of disinformation and coordinated influence operations.",
+          "As documented by cyber security researchers, we are seeing a crisis where bot networks and coordinated inauthentic behavior simulate widespread consensus to manipulate public opinion.",
+          "These malicious actors rely on the ability to create thousands...",
+          "of ghost accounts at almost no cost.",
+          "If every account must be tied to a verified identity, the ability to scale these deceptive campaigns is destroyed.",
+          "It becomes much harder for bad actors to manufacture a false reality when they cannot hide behind a wall of automated fake profiles.",
+          "Finally, identity requirements enhance the security and integrity of digital interactions, and anonymity provides a very important tool.",
+          "for fraud, catfishing, and social engineering that can ruin lives and deplete life savings.",
+          "In a world where we conduct much of our business and social lives online, we need to know that the people we interact with are who they say they are.",
+          "While data security is paramount, the current state of unchecked anonymity poses a far greater and more immediate threat to our social fabric.",
+          "By establishing a baseline of verified users, platforms create a trustworthy environment that structurally minimizes the risk of interacting with deceptive or malicious entities.",
+          "In conclusion, we must weigh the value of absolute anonymity.",
+          "against the necessity of a safe, truthful, and secure society.",
+          "While some may value the shield of a mask, that mask is currently being used to facilitate bullying, spread lies, and commit fraud.",
+          "We believe that by bringing accountability back to the digital world, we can build a healthier public square.",
+          "For these reasons, we strongly support the motion."
+        ]
+      },
+      "responses": [
+        {
+          "call_id": 10295,
+          "finish_reason": "stop",
+          "content": "{ \"overview_ok\": true, \"continuation_ok\": true, \"checks\": [ { \"condition\": 0, \"relation\": \"qualifies\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The overview does not claim the mandate is unconditional or lacks security protocols; it focuses on the weighing of risks versus benefits.\" }, { \"condition\": 1, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's victory standard is a procedural claim that does not impact the validity of the overview's framing of the core dispute.\" }, { \"condition\": 2, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The specific mechanism of disinformation mitigation is a detail of the opponent's case, not a prerequisite for the overview's high-level framing.\" }, { \"condition\": 3, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The specific details of bot networks are part of the opponent's evidence, not necessary for the overview's framing.\" }, { \"condition\": 4, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The scale of deceptive campaigns is a detail of the opponent's argument, not a prerequisite for the overview.\" }, { \"condition\": 5, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The difficulty of manufacturing false reality is a detail of the opponent's argument, not a prerequisite for the overview.\" }, { \"condition\": 6, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's general claim of accountability is the subject of the dispute, not a condition the overview must satisfy.\" }, { \"condition\": 7, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's specific claim about restoring integrity is the subject of the dispute.\" }, { \"condition\": 8, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's claim about post publicity is a clarification of their position, not a condition for the overview.\" }, { \"condition\": 9, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's claim about accountability is the subject of the dispute.\" }, { \"condition\": 10, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's claim about harassment reduction is the subject of the dispute.\" }, { \"condition\": 11, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's claim about empathy is a detail of their argument.\" }, { \"condition\": 12, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's claim about personal accountability is the subject of the dispute.\" }, { \"condition\": 13, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's claim about security/integrity is the subject of the dispute.\" }, { \"condition\": 14, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's claim about fraud is the subject of the dispute.\" }, { \"condition\": 15, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's claim about social/business life is a detail of their argument.\" }, { \"condition\": 16, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's claim about trustworthy environments is a detail of their argument.\" }, { \"condition\": 17, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The opponent's claim about the mask is a detail of their argument.\" } ], \"assertions\": [ { \"sentence\": 0, \"status\": \"conditional\", \"sources\": [], \"reason\": \"The claim that risks outweigh benefits is a value judgment and a central thesis of the side, not a factual assertion supported by the opponent's text.\" } ], \"issues\": [], \"endpoint_checks\": [] }"
+        },
+        {
+          "call_id": 10296,
+          "finish_reason": "stop",
+          "content": "{ \"overview_ok\": true, \"continuation_ok\": true, \"checks\": [ { \"condition\": 0, \"relation\": \"qualifies\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The overview does not make a claim about the specific protocols used, so the requirement for privacy-preserving protocols does not need to be recited to avoid being misleading.\" }, { \"condition\": 1, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The victory standard is a procedural rule for the debate and does not impact the substantive framing of the risks versus benefits.\" }, { \"condition\": 2, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The specific mechanism of disinformation mitigation is part of the opponent's case, which the overview correctly frames as a 'purported benefit' to be weighed.\" }, { \"condition\": 3, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The specific causal link between bot networks and consensus is part of the opponent's argument, not a prerequisite for the overview's framing.\" }, { \"condition\": 4, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The scaling of deceptive campaigns is a detail of the opponent's argument.\" }, { \"condition\": 5, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The difficulty of manufacturing false reality is a detail of the opponent's argument.\" }, { \"condition\": 6, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The general claim of accountability is the subject of the weighing, not a condition the overview must satisfy.\" }, { \"condition\": 7, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The specific areas of integrity are the opponent's roadmap.\" }, { \"condition\": 8, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The distinction between public posts and account security is a detail of the opponent's definition.\" }, { \"condition\": 9, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The concept of responsibility is part of the opponent's accountability claim.\" }, { \"condition\": 10, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The reduction of harassment is a specific benefit being weighed.\" }, { \"condition\": 11, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The empathy/mask analogy is a detail of the opponent's argument.\" }, { \"condition\": 12, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The mechanism of personal accountability is a detail of the opponent's argument.\" }, { \"condition\": 13, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The impact on interpersonal treatment is a detail of the opponent's argument.\" }, { \"condition\": 14, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The enhancement of security/integrity is a benefit being weighed.\" }, { \"condition\": 15, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The specific harms of fraud/catfishing are details of the opponent's argument.\" }, { \"condition\": 16, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The necessity of knowing identities for business is a detail of the opponent's argument.\" }, { \"condition\": 17, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The creation of a trustworthy environment is a detail of the opponent's argument.\" }, { \"condition\": 18, \"relation\": \"context\", \"status\": \"not_applicable\", \"sentences\": [ 0 ], \"reason\": \"The summary of the mask's use is a detail of the opponent's argument.\" } ], \"assertions\": [ { \"sentence\": 0, \"status\": \"conditional\", \"sources\": [], \"reason\": \"The claim that risks outweigh benefits is a value judgment/positional stance, not a factual assertion supported by the provided text.\" } ], \"issues\": [], \"endpoint_checks\": [] }"
+        }
+      ]
+    }
+  ]
+}

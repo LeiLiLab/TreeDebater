@@ -17,7 +17,9 @@ def planner(mode, **kw):
 
 def callbacks(llm=None):
     return dict(llm=llm or Mock(return_value="Rebut the stated policy only."), analyze=Mock(),
-                context=lambda: {"motion": "Limit cars", "our_side": "against"})
+                context=lambda: {"motion": "Limit cars", "our_side": "against", "tree_targets": [],
+                                 "constraints": [], "position_limits": [],
+                                 "correction_history": [], "use_topology": False})
 
 
 def test_linear_is_causal_and_never_builds_a_tree():
@@ -34,14 +36,14 @@ def test_linear_is_causal_and_never_builds_a_tree():
 
 
 def test_adaptive_wait_keeps_tail_and_forces_endpoint_reconciliation():
-    p = planner("adaptive_tree")
+    p = planner("adaptive_linear")
     c = callbacks(Mock(side_effect=["Initial plan", '{"action":"WAIT"}', "Narrowed plan"]))
     p.observe("Ban cars.", **c)
     p.observe("Only downtown.", **c)
     assert p.instructions() == ""  # stale version cannot be used as current
-    assert c["analyze"].call_count == 1
+    c["analyze"].assert_not_called()
     p.finalize("Ban cars. Only downtown.", reset_tree=Mock(), **c)
-    assert c["analyze"].call_args.args == ("Only downtown.", True)
+    c["analyze"].assert_not_called()
     assert "Narrowed plan" in p.instructions()
     assert p.finished
 
@@ -58,7 +60,7 @@ def test_update_cap_does_not_drop_final_qualifier():
 
 
 def test_final_asr_replacement_restores_turn_snapshot_before_replay():
-    p = planner("corrected_tree")
+    p = planner("branch_tree")
     c = callbacks()
     reset = Mock()
     p.observe("Allow all cars.", **c)
@@ -171,3 +173,10 @@ def test_correction_id_tolerates_paraphrased_target_but_cannot_change_other_spea
     assert t.root.children[-1].supersedes == claim.node_id
     args["target_id"] = "invented-id"
     assert revise_claim([t], side="for", **args) == 0
+
+
+@pytest.mark.parametrize("mode", ["corrected_tree", "tree_plan", "adaptive_tree", "structured_linear",
+                                 "grounded_linear", "light_linear", "grounded_tree", "light_tree"])
+def test_retired_planning_mode_is_rejected(mode):
+    with pytest.raises(ValueError, match="Unknown planning mode"):
+        PlanningConfig(mode=mode)

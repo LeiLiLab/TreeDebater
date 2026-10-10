@@ -9,6 +9,7 @@ from debate_tree import DebateTree
 from ouragents import TreeDebater
 from streaming.argument_revisions import revise_claim
 from streaming.grounding import parse_state
+from streaming.branch_planning import parse_branch_state, planning_material
 from streaming.planning import IncrementalPlanner, PlanningConfig
 from streaming.tree_grounding import attach_source, tree_targets
 
@@ -69,22 +70,23 @@ def test_retained_historical_target_and_dependencies_invalidate_old_plan():
     tree = DebateTree('Transport', 'for')
     a = proposal(tree, 'Ban all cars.')
     tree.update_node('attack', new_claim='Ambulances need access.', new_argument=[], target=a.claim)
-    p = IncrementalPlanner(PlanningConfig(mode='grounded_tree'))
+    p = IncrementalPlanner(PlanningConfig(mode='flat_tree'))
     p.start('for:opening')
     p.chunks, p.version, p.plan_version = [a.claim], 1, 1
-    p.state = parse_state(json.dumps(state(a)), a.claim, tree_targets=tree_targets([tree], 'for'))
+    context = planning_material(tree_targets([tree], 'for'), [tree], 'for', topology=False)
+    p.state = parse_branch_state('{"claims":[{"target":0}],"limits":[],"rebuttals":[]}', a.claim, context)
     p.plan = json.dumps(p.state)
     assert revise_claim([tree], target=a.claim, side='for', action='revise', claim='Only private cars.',
                         arguments=[], source='Only private cars.') == 1
     assert a.children and a.source_spans == ['Ban all cars.'] and a.position_status == 'superseded'
     assert tree.root.children[-1].source_spans == ['Only private cars.']
-    p.revalidate_tree({'tree_targets': tree_targets([tree], 'for')})
+    p.revalidate_tree(planning_material(tree_targets([tree], 'for'), [tree], 'for', topology=False))
     assert not p.state and 'Ambulances need access' not in p.instructions()
     assert p.events[-1]['action'] == 'INVALID_TARGET'
     assert tree.revisions[0]['before']['children']
 
 
-def player(monkeypatch, mode='grounded_tree'):
+def player(monkeypatch, mode='flat_tree'):
     p = TreeDebater.__new__(TreeDebater)
     p.motion, p.side, p.oppo_side, p.status = 'Transport', 'against', 'for', 'opening'
     p.debate_tree, p.oppo_debate_tree = DebateTree(p.motion, p.side), DebateTree(p.motion, p.oppo_side)
@@ -98,12 +100,16 @@ def player(monkeypatch, mode='grounded_tree'):
     monkeypatch.setattr('ouragents.extract_statement', extraction)
     def plan(prompt, **kwargs):
         nodes = p.oppo_debate_tree.root.children
-        return [json.dumps(state(nodes[-1]))]
+        targets = p._planning_context()['tree_targets']
+        index = next(i for i, target in enumerate(targets) if target['node_id'] == nodes[-1].node_id)
+        return [json.dumps({'claims': [{'target': index}], 'limits': [],
+                            'rebuttals': [{'target': 0, 'move': 'challenge_inference',
+                                          'point': 'Ask about implementation.', 'assumptions': []}]})]
     p.helper_client = Mock(side_effect=plan)
     return p
 
 
-@pytest.mark.parametrize('mode', ['grounded_tree', 'light_tree'])
+@pytest.mark.parametrize('mode', ['branch_tree', 'flat_tree'])
 def test_live_observation_keeps_real_tree_and_bound_grounding(monkeypatch, mode):
     p = player(monkeypatch, mode)
     p.observe_opponent('Limit cars.', 'for', 'opening')
@@ -111,18 +117,14 @@ def test_live_observation_keeps_real_tree_and_bound_grounding(monkeypatch, mode)
     node = p.oppo_debate_tree.root.children[0]
     assert p.planner.state['rebuttals'][0]['target_node_id'] == node.node_id
     assert 'GROUNDING CHECK' in p._current_planning_instructions(grounding=True)
-    assert 'TREE TARGET SELECTION' in p.helper_client.call_args.args[0]
+    assert 'Prepare compact JSON rebuttal choices' in p.helper_client.call_args.args[0]
     assert 'Future exception' not in p.helper_client.call_args.args[0]
 
 
-def test_light_tree_skips_duplicates_buffers_and_replays_asr_replacement(monkeypatch):
-    p = player(monkeypatch, 'light_tree')
-    p.observe_opponent('Limit cars except', 'for', 'opening')
-    assert not p.oppo_debate_tree.root.children and not p.helper_client.called
-    p.observe_opponent('ambulances.', 'for', 'opening')
+def test_flat_tree_replays_asr_replacement_and_preserves_checkpoint(monkeypatch):
+    p = player(monkeypatch, 'flat_tree')
+    p.observe_opponent('Limit cars except ambulances.', 'for', 'opening')
     assert p.oppo_debate_tree.root.children[0].claim == 'Limit cars except ambulances.'
-    p.observe_opponent('ambulances.', 'for', 'opening')
-    assert p.helper_client.call_count == 1
     checkpoint = copy.deepcopy(p.planner)
     p.finalize_opponent('Allow all cars.', 'for', 'opening')
     assert [n.claim for n in p.oppo_debate_tree.root.children] == ['Allow all cars.']

@@ -47,8 +47,8 @@ deepseek_api_key = os.environ.get("DEEPSEEK_API_KEY", "")  # Get the DeepSeek AP
 ####################### Time Estimation #######################
 
 WORD_BUDGET_FOR_DRAFT = 500
-LENGTH_MODE_FOR_DRAFT = "phonemes"  # rough estimatation, phonemes/words/syllables
-TIME_MODE_FOR_STATEMENT = "time"  # CPU word-rate seconds; optional fastspeech/openai
+LENGTH_MODE_FOR_DRAFT = "phonemes"  # Shared draft measurement: phonemes/words/syllables
+TIME_MODE_FOR_STATEMENT = "fastspeech"  # Match baseline in experiments/stage_summary.md; time/fastspeech/openai
 TIME_TOLERANCE = 15  # seconds
 
 from streaming.config import SpeechBudgets
@@ -58,7 +58,10 @@ REBUTTAL_TIME = SpeechBudgets.rebuttal
 CLOSING_TIME = SpeechBudgets.closing
 DEFAULT_MAX_WORDS = 520
 
-WORDRATIO = {"phonemes": 4.5, "words": 1, "syllables": 1.75, "fastspeech": 0.46, "openai": 0.46, "time": 0.46}
+from utils.speech_duration import SECONDS_PER_WORD
+
+WORDRATIO = {"phonemes": 4.5, "words": 1, "syllables": 1.75,
+             "fastspeech": SECONDS_PER_WORD, "openai": SECONDS_PER_WORD, "time": SECONDS_PER_WORD}
 
 REMAINING_ROUND_NUM = {
     "opening_for": 3,

@@ -4,10 +4,12 @@ from .claim_constraints import bind_constraints, exported_constraints, validate_
 from .tree_grounding import attach_source
 from .grounding import normalize
 from .tree_selection import is_current, selection_status
+from .target_matching import resolve_target
 
 
 def target_registry(trees):
     return [{"node_id": n.node_id, "side": n.side, "claim": n.claim,
+             "tree_side": tree.side, "level": n.level, "arguments": list(n.argument),
              "parent_id": n.parent.node_id if n.parent.parent is not None else None,
              "selection_status": selection_status(n),
              "constraints": exported_constraints(n),
@@ -15,7 +17,7 @@ def target_registry(trees):
             for tree in trees for n in tree.get_all_nodes() if n.parent is not None]
 
 
-def apply_statements(trees, statements, transcript, side):
+def apply_statements(trees, statements, transcript, side, *, allow_corrections=True):
     """Resolve against the pre-update graph, then apply one correction per target.
 
     The latest quoted correction wins. At the same source position a replacement
@@ -29,12 +31,14 @@ def apply_statements(trees, statements, transcript, side):
     events = []
 
     def resolve(p):
-        if p.get('target_id'):
-            matches = [(t,n) for t,n in initial if n.node_id == p['target_id']]
-        else:
-            matches = [(t,n) for t,n in initial if is_current(n)
-                       and claim_key(n.claim) == claim_key(p.get('target',''))]
-        return matches[0] if len(matches) == 1 else None
+        if p['action'] == 'propose':
+            return None
+        expected = side if p['action'] in ('reinforce', 'revise', 'retract') else ('against' if side == 'for' else 'for')
+        hint = p.get('targeted_debate_tree')
+        preferred = own if hint == 'you' else next((t for t in trees if t is not own), None) if hint == 'opponent' else None
+        match, info = resolve_target(initial, p, expected_side=expected, preferred_tree=preferred)
+        record('TARGET_RESOLUTION', requested=p['action'], outcome='matched' if info['reason'] is None else 'unresolved', **info)
+        return match
 
     def record(action, **fields):
         events.append(dict(action=action, side=side, **fields))
@@ -63,6 +67,17 @@ def apply_statements(trees, statements, transcript, side):
             record('REJECT_SOURCE');continue
         purposes = item.get('purpose') or []
         if isinstance(purposes,dict):purposes=[purposes]
+        if not allow_corrections:
+            permitted = []
+            for p in purposes:
+                if p['action'] in ('revise', 'retract'):
+                    record('REJECT_CORRECTION_DISABLED', requested=p['action'])
+                else:
+                    permitted.append(p)
+            # An ignored withdrawal must not turn into a positive claim.
+            if purposes and not permitted:
+                continue
+            purposes = permitted
         valid.append((item,purposes))
 
     # Resolve every relation before any mutation, then execute in speech order.
@@ -99,7 +114,7 @@ def apply_statements(trees, statements, transcript, side):
         update_order = base_order + offset
         if kind == 'correction':
             p, (tree, node) = purposes[0]
-            if getattr(node, 'position_status', 'current') != 'current':
+            if not is_current(node):
                 record('INACTIVE_CORRECTION', requested=p['action'], node_id=node.node_id)
                 if p['action']=='revise':propose(item,'historical correction target')
                 continue
@@ -166,6 +181,8 @@ If the speaker narrows/replaces an old claim, emit ONE revise with the replaceme
 and all still-applicable conditions; never retract and then revise the same ID.
 Use retract ONLY for a withdrawal without a replacement. If a relation is unclear,
 preserve the current sourced claim as propose, rather than invent a link.
+When several nodes share a claim, use tree_side, parent_id and arguments to identify
+the intended branch. If these do not establish a target, do not select an arbitrary ID.
 Keep independently qualified claims separate. Preserve timing, exemptions,
 conditions and explicitly unanswered implementation questions in claim/arguments.
 All content fields must be exact current-speech excerpts. Prior context is for

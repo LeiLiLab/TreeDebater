@@ -1,4 +1,5 @@
 import time
+import math
 import os
 from typing import Any, Type
 
@@ -63,6 +64,23 @@ safety_setting = [
 ]
 
 
+def helper_messages(prompt, *, sys=None, history_messages=None):
+    """Assemble an owned request while keeping spoken history in its chat roles."""
+    messages = [{"role": "system", "content": sys}] if sys is not None else []
+    for entry in history_messages or ():
+        if (entry.get('role') not in ('user', 'assistant')
+                or not isinstance(entry.get('content'), str)):
+            raise ValueError('Helper history must contain user/assistant text messages')
+        messages.append({"role": entry['role'], "content": entry['content']})
+    messages.append({"role": "user", "content": prompt})
+    return messages
+
+
+class CompletionResults(list):
+    """List-compatible helper output carrying provider-reported request cost."""
+    response_cost = 0.0
+
+
 def HelperClient(
     prompt,
     model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
@@ -73,11 +91,16 @@ def HelperClient(
     sys=None,
     response_model: Type[BaseModel] | None = None,
     use_instructor: bool | None = None,
+    json_mode: bool | None = None,
+    request_timeout: float | None = None,
+    history_messages=None,
+    on_text=None,
 ) -> list[str] | list[BaseModel]:
-    if sys is not None:
-        messages = [{"role": "system", "content": sys}]
-    else:
-        messages = []
+    if json_mode is False and response_model is not None:
+        raise ValueError('A structured response_model cannot use json_mode=False')
+    if on_text is not None and (not callable(on_text) or n != 1 or response_model is not None or json_mode is not False):
+        raise ValueError('Text streaming requires one plain-text response and a callable on_text')
+    messages = helper_messages(prompt, sys=sys, history_messages=history_messages)
 
     kwargs = {}
     if os.environ.get("DEBATE_LLM_API_BASE"):
@@ -106,11 +129,17 @@ def HelperClient(
     else:
         raise NotImplementedError(f"{model} is not supported.")
 
-    messages.append({"role": "user", "content": prompt})
-    responses = []
+    if request_timeout is not None:
+        if isinstance(request_timeout, bool) or not math.isfinite(request_timeout) or request_timeout <= 0:
+            raise ValueError('request_timeout must be finite and positive')
+        kwargs.update(timeout=request_timeout, num_retries=0)
+    responses = CompletionResults()
     for i in range(n):
         t0 = time.perf_counter()
-        wants_json = "json" in prompt.lower() or (sys is not None and "json" in sys.lower())
+        # Speech prompts may mention JSON as input data or explicitly forbid it.
+        # Let callers state the output contract instead of relying on that word.
+        wants_json = json_mode if json_mode is not None else (
+            "json" in prompt.lower() or (sys is not None and "json" in sys.lower()))
         structured_enabled = response_model is not None and (
             use_instructor is True or (use_instructor is None and _supports_structured_output(model_name))
         )
@@ -139,6 +168,7 @@ def HelperClient(
                 max_tokens=max_tokens,
                 stop=stop,
                 kwargs=kwargs,
+                **({'on_text': on_text} if on_text is not None else {}),
             )
 
         elapsed = time.perf_counter() - t0
@@ -148,6 +178,7 @@ def HelperClient(
                 cost = getattr(response, "_hidden_params", {}).get("response_cost")
                 if cost is not None:
                     ctx["response_cost"] = cost
+                    responses.response_cost += cost
             except Exception:
                 pass
         log_timing(logger, "helper_client_litellm", elapsed, **ctx)
@@ -175,7 +206,7 @@ def _supports_structured_output(model_name: str) -> bool:
     return any(x in name for x in ["gpt", "o1", "claude", "gemini"])
 
 
-def _completion_text(model_name: str, messages, wants_json: bool, temperature: float, max_tokens: int, stop, kwargs):
+def _completion_text(model_name: str, messages, wants_json: bool, temperature: float, max_tokens: int, stop, kwargs, on_text=None):
     call_kwargs: dict[str, Any] = dict(
         model=model_name,
         messages=messages,
@@ -186,7 +217,43 @@ def _completion_text(model_name: str, messages, wants_json: bool, temperature: f
     )
     if wants_json:
         call_kwargs["response_format"] = {"type": "json_object"}
-    return litellm.completion(num_retries=3, **call_kwargs)
+    retries = call_kwargs.pop('num_retries', 3)
+    if on_text is not None:
+        # A retry after any delivered delta would repeat already committed speech.
+        call_kwargs.setdefault('timeout', 60)
+        stream = litellm.completion(num_retries=0, stream=True,
+                                    stream_options={'include_usage': True}, **call_kwargs)
+        chunks = []
+        finished = False
+        try:
+            for chunk in stream:
+                chunks.append(chunk)
+                for choice in chunk.choices:
+                    if choice.finish_reason is not None:
+                        if choice.finish_reason != 'stop':
+                            raise ValueError(f'Speech stream did not finish normally: {choice.finish_reason}')
+                        finished = True
+                    delta = getattr(choice.delta, 'content', None)
+                    if delta:
+                        on_text(delta)
+            if not finished:
+                raise ValueError('Speech stream ended without a completion marker')
+            response = litellm.stream_chunk_builder(chunks, messages=messages)
+            cost = next((getattr(c, '_hidden_params', {}).get('response_cost') for c in reversed(chunks)
+                         if getattr(c, '_hidden_params', {}).get('response_cost') is not None), None)
+            if cost is None:
+                try:
+                    cost = litellm.completion_cost(completion_response=response, model=model_name)
+                except Exception:
+                    pass  # Same unknown-cost behavior as a non-streaming provider response.
+            if cost is not None:
+                response._hidden_params['response_cost'] = cost
+            return response
+        finally:
+            close = getattr(stream, 'close', None)
+            if close is not None:
+                close()
+    return litellm.completion(num_retries=retries, **call_kwargs)
 
 
 def _completion_structured(

@@ -70,6 +70,8 @@ class Env:
 
         for player in self.debaters.values():
             player.streaming_output_config = config.streaming.output
+            player.speech_budgets = config.speech_budgets
+            player.debate_first_side = 'against' if self.reverse else 'for'
 
         # init judge
         if config.judge_num > 1:

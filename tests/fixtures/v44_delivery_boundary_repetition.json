@@ -1,0 +1,32 @@
+[
+  {
+    "turn": "00_opening_for",
+    "original": "Human writers provide the \"semantic grounding\" that AI lacks, ensuring that linguistic outputs align with real-world ethical consequences rather than mere probabilistic patterns. Imagine a professional journalist who publishes an AI-generated report containing subtle but dangerous factual errors.",
+    "candidate": "Human writers provide the \"semantic grounding\" that AI lacks, ensuring linguistic outputs align with real-world ethical consequences rather than mere probabilistic patterns. Consider a professional journalist who publishes an AI-generated report containing subtle but dangerous factual errors. Without the rigorous training of a skilled writer who understands nuance and fact-checking, truth is lost.",
+    "following": "Without the rigorous training of a skilled writer who understands nuance and fact-checking, truth is lost. Human writers act as the essential ethical filter, providing the oversight needed to maintain high standards of truth.",
+    "original_verdict": {
+      "preserves_meaning": true,
+      "issues": []
+    }
+  },
+  {
+    "turn": "02_rebuttal_for",
+    "original": "My opponent suggests that by bypassing the struggle of syntax, we are simply moving the cognitive load to a higher level of \"conceptual architecture.\" This is an incorrect assumption.",
+    "candidate": "My opponent suggests that bypassing the struggle of syntax merely shifts the cognitive load to a higher level of \"conceptual architecture.\" This is a false assumption. The \"productive struggle\" of manual writing is not a mechanical burden...",
+    "following": "The \"productive struggle\" of manual writing is not a mechanical burden to be discarded; it is a cognitive necessity. When you write, you are forced to reconcile your internal thoughts with the external constraints of language.",
+    "original_verdict": {
+      "preserves_meaning": true,
+      "issues": []
+    }
+  },
+  {
+    "turn": "03_rebuttal_against",
+    "original": "We need people who can verify truth, not just people who can write beautiful sentences. Finally, regarding the need for human writers to act as an ethical filter, my opponent argues that without traditional writing training, truth and integrity will be lost.",
+    "candidate": "We need individuals capable of verifying truth, not merely those who can compose beautiful sentences. Finally, regarding the necessity of human writers as ethical filters, my opponent argues that without traditional writing training, truth and integrity will be lost. We contend that this is a misunderstanding of how oversight works.",
+    "following": "We contend that this is a misunderstanding of how oversight works in an automated age. The responsibility for accuracy and ethics is shifting from the act of writing to the act of verification.",
+    "original_verdict": {
+      "preserves_meaning": true,
+      "issues": []
+    }
+  }
+]

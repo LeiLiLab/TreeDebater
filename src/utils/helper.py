@@ -203,7 +203,7 @@ def build_logic_claims(llm, motion, side, claim_pool, context="", definition="",
 ##################### Debate Flow Tree #####################
 
 
-def get_actions_from_tree(claims, tree, oppo_tree, *, selected_ids=None):
+def get_actions_from_tree(claims, tree, oppo_tree):
     actions = []
 
     if tree.max_level == 0:
@@ -230,10 +230,6 @@ def get_actions_from_tree(claims, tree, oppo_tree, *, selected_ids=None):
             else:
                 action = "reinforce" if (level + 1) % 2 == 1 else "rebut"
                 for node in nodes:
-                    if selected_ids is not None:
-                        if node.node_id not in selected_ids:
-                            continue
-                        action = 'reinforce' if node.side == tree.side else 'rebut'
                     actions.append(
                         {
                             "idx": len(actions),
@@ -247,7 +243,6 @@ def get_actions_from_tree(claims, tree, oppo_tree, *, selected_ids=None):
                             "counterarguments": [
                                 {"claim": child.claim, "arguments": list(child.argument)}
                                 for child in node.children
-                                if selected_ids is None or child.node_id in selected_ids
                             ],
                             "targeted_debate_tree": "you",
                         }
@@ -261,10 +256,6 @@ def get_actions_from_tree(claims, tree, oppo_tree, *, selected_ids=None):
             else:
                 action = "attack" if (level + 1) % 2 == 1 else "reinforce"
                 for node in nodes:
-                    if selected_ids is not None:
-                        if node.node_id not in selected_ids:
-                            continue
-                        action = 'attack' if node.side == oppo_tree.side else 'reinforce'
                     actions.append(
                         {
                             "idx": len(actions),
@@ -278,7 +269,6 @@ def get_actions_from_tree(claims, tree, oppo_tree, *, selected_ids=None):
                             "counterarguments": [
                                 {"claim": child.claim, "arguments": list(child.argument)}
                                 for child in node.children
-                                if selected_ids is None or child.node_id in selected_ids
                             ],
                             "targeted_debate_tree": "opponent",
                         }
@@ -295,15 +285,15 @@ def get_actions_from_tree(claims, tree, oppo_tree, *, selected_ids=None):
     return actions
 
 
-def get_battlefields_from_actions(llm, motion, side, claims, actions, tree, oppo_tree, *, tree_views=None):
+def get_battlefields_from_actions(llm, motion, side, claims, actions, tree, oppo_tree):
     prompt = debate_flow_tree_action_eval_prompt.format(
         motion=motion,
         side=side,
         act="SUPPORT" if side == "for" else "OPPOSE",
         claims=claims,
         actions=json.dumps(actions, indent=2),
-        tree=tree_views[0] if tree_views is not None else tree.print_tree(include_status=True),
-        oppo_tree=tree_views[1] if tree_views is not None else oppo_tree.print_tree(include_status=True, reverse=True),
+        tree=tree.print_tree(include_status=True),
+        oppo_tree=oppo_tree.print_tree(include_status=True, reverse=True),
     )
     log_llm_io(logger, phase="helper", title="Debate-Flow-Tree-Action-Eval-Prompt", body=prompt.strip(), side=side)
     eval_results, response = get_response_with_retry(
@@ -425,6 +415,8 @@ def extract_statement(llm, motion, statement, claims=None, tree=None, side=None,
         from streaming.tree_updates import RELATION_INSTRUCTIONS
         from streaming.claim_constraints import CONSTRAINT_EXTRACTION
         prompt += RELATION_INSTRUCTIONS + CONSTRAINT_EXTRACTION + "\n" + json.dumps(relation_targets)
+        if not allow_corrections:
+            prompt += "\nFor this extraction revise/retract are disabled. Use propose for a new position; do not retire existing nodes.\n"
 
     if tree is not None and planned_actions:
         prompt += (

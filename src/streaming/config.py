@@ -9,7 +9,11 @@ class Validated:
         nonnegative = {'max_audio_wait_seconds', 'max_text_wait_seconds', 'max_total_audio_seconds',
                        'max_refinements', 'early_max_refinements', 'tolerance_ratio',
                        'last_chunk_upper_tolerance_ratio', 'refine_deadline_margin_seconds',
-                       'speed_adjust_min_slack_seconds', 'seam_head_ms', 'seam_tail_ms', 'seam_fade_ms'}
+                       'speed_adjust_min_slack_seconds', 'seam_head_ms', 'seam_tail_ms', 'seam_fade_ms',
+                       'local_tempo_deadband_seconds', 'listening_prefix_max_rewrites',
+                       'listening_planning_timeout_seconds', 'listening_body_update_words',
+                       'first_body_chunk_seconds', 'listening_prefix_min_words',
+                       'listening_prefix_target_words'}
         for f in fields(self):
             value = getattr(self, f.name)
             if f.type is bool:
@@ -58,10 +62,35 @@ class PlaybackConfig(Validated):
 
 @dataclass
 class OutputConfig(Validated):
+    speech_mode: str = 'full_script'
+    # Legacy setting maps total draft attempts to initial + semantic rewrites.
+    listening_prefix_max_updates: object = None
+    # Optional legacy repeated review; default policy caches reviews per text/context.
+    listening_prefix_review_enabled: bool = False
+    listening_prefix_initial_review_enabled: bool = True
+    listening_prefix_max_rewrites: int = 2
+    listening_prefix_max_calls: int = 48
+    # Optional lower bound for authored English prefix words before any audio is published.
+    listening_prefix_min_words: int = 0
+    listening_prefix_target_words: int = 0
+    # Accepted for old configs; preparation now uses the upcoming stage's seconds.
+    listening_body_words: int = 240
+    listening_body_update_words: int = 100
+    listening_prefix_pre_synthesize: bool = False
+    listening_prefix_overlap_final_update: bool = False
+    listening_parallel_body_feedback: bool = False
+    listening_parallel_endpoint_revision: bool = False
+    listening_single_body_revision: bool = False
+    # Single whole-body revision streams into the native length/TTS loop.
+    listening_stream_body_revision: bool = True
+    # Publish from complete ASR plus a fixed task; merge analysis state afterward.
+    listening_body_snapshot_delivery: bool = True
+    listening_planning_timeout_seconds: float = 0.0
     budget_mode: str = 'experiment_elapsed'
     model: str = 'tts-1'
     voice: str = 'echo'
     refinement_model: str = 'gpt-5-mini'
+    allow_expansion: bool = True
     max_refinements: int = 10
     early_max_refinements: int = 3
     max_parallel_tts: int = 8
@@ -72,6 +101,12 @@ class OutputConfig(Validated):
     enable_early_cut: bool = False
     adaptive_delivery: bool = False
     first_chunk_seconds: float = 12.0
+    # Optional ceiling for the first body chunk after a listening prefix; zero keeps proportional allocation.
+    first_body_chunk_seconds: float = 0.0
+    first_chunk_local_tempo: bool = False
+    local_tempo_min: float = 0.85
+    local_tempo_max: float = 1.15
+    local_tempo_deadband_seconds: float = 0.10
     later_chunk_seconds: float = 30.0
     early_cut_ratio: float = 1.25
     ratio_prestart_threshold: float = 2.0
@@ -88,13 +123,26 @@ class OutputConfig(Validated):
     seam_head_ms: int = 60
     seam_tail_ms: int = 250
     seam_fade_ms: int = 10
+    audience_feedback_mode: str = 'full'
+    listening_prepare_evidence: bool = True
+    listening_evidence_candidates: int = 20
 
     def __post_init__(self):
         super().__post_init__()
+        if self.audience_feedback_mode not in ('full', 'compact'):
+            raise ValueError('audience_feedback_mode must be full or compact')
+        if self.listening_prefix_max_updates is not None:
+            if type(self.listening_prefix_max_updates) is not int or self.listening_prefix_max_updates < 1:
+                raise ValueError('listening_prefix_max_updates must be a positive integer')
+            self.listening_prefix_max_rewrites = self.listening_prefix_max_updates - 1
+        if self.speech_mode not in ('full_script', 'overlap_prefix', 'listening_prefix', 'incremental'):
+            raise ValueError('speech_mode must be full_script, overlap_prefix, listening_prefix or incremental')
         if self.budget_mode not in ("experiment_elapsed", "audio_duration"):
             raise ValueError("budget_mode must be experiment_elapsed or audio_duration")
         if self.speed_adjust_min > self.speed_adjust_max:
             raise ValueError('speed_adjust_min must not exceed speed_adjust_max')
+        if not .5 <= self.local_tempo_min <= 1 <= self.local_tempo_max <= 2:
+            raise ValueError('local tempo bounds must satisfy 0.5 <= min <= 1 <= max <= 2')
         if self.min_stream_chunks > self.max_stream_chunks:
             raise ValueError('min_stream_chunks must not exceed max_stream_chunks')
 

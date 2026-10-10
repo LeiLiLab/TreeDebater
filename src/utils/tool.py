@@ -270,11 +270,9 @@ def remove_citation(text: str, keep_main=False) -> str:
         content, reference = statement, ""
 
     if not keep_main:
-        pattern = r"\([^0-9_\s\W]*\)"
-        content = re.sub(pattern, "", content)
-
-        # Remove citations with square brackets []
-        pattern = r"\[[^0-9_\s\W]*\]"
+        # Match only numeric citation markers, preserving ordinary bracketed text.
+        numbers = r"[0-9]+(?:_[0-9]+)*(?:\s*[,;\-–—]\s*[0-9]+(?:_[0-9]+)*)*"
+        pattern = rf"\(\s*{numbers}\s*\)|\[\s*{numbers}\s*\]"
         content = re.sub(pattern, "", content)
 
         # Remove extra whitespace that might be left

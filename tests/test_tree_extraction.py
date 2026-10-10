@@ -115,13 +115,20 @@ class PlanHandoffTests(unittest.TestCase):
                     return prompt
                 player = SimpleNamespace(
                     side='against', motion='Writing still matters', act='OPPOSE', counter_act='SUPPORT',
+                    config=SimpleNamespace(streaming_tts=False),
                     use_debate_flow_tree=True, main_claims_content=['AI lowers costs'],
                     debate_thoughts=[{'mode': 'choose_main_claims', 'framework': '', 'explanation': ''}],
                     listen=Mock(), claim_selection=Mock(), debate_tree=Mock(), oppo_debate_tree=Mock(),
                     _add_additional_info=add_info, speak=Mock(return_value='AI lowers costs.'), _analyze_statement=Mock(),
                 )
-                scope = {'math': __import__('math'), 'WORDRATIO': {'time': 0.4},
+                from utils import speech_length
+                scope = {'math': __import__('math'), 'time': __import__('time'), 'speech_length': speech_length,
                          f'expert_{stage}_prompt_2': '{act}'}
+                from types import MethodType
+                for name in ('_generate_stage', '_prepare_stage_prompt'):
+                    method = load_function(SRC / 'ouragents.py', name, scope, cls='TreeDebater')
+                    setattr(player, name, MethodType(method, player))
+                player._listening_prefix_enabled = lambda: False
                 tree_context = load_function(SRC / 'ouragents.py', '_generation_tree_context', scope, cls='TreeDebater')
                 player._generation_tree_context = lambda: tree_context(player)
                 generate = load_function(SRC / 'ouragents.py', stage + '_generation', scope, cls='TreeDebater')
@@ -130,20 +137,23 @@ class PlanHandoffTests(unittest.TestCase):
 
     def test_opponent_analysis_does_not_receive_own_plan_and_propose_na_is_resolved(self):
         from contextlib import nullcontext
-        extract = Mock(return_value=[{'claim': 'Writing develops creativity', 'arguments': [],
+        from debate_tree import DebateTree
+        extract = Mock(return_value=[{'claim': 'Writing develops creativity', 'arguments': [], 'content': 'Writing develops creativity.',
                                      'purpose': {'action': 'propose', 'target': 'N/A', 'targeted_debate_tree': 'you'}}])
         scope = {'logger': logging.getLogger('plan-test'), 'timed_phase': lambda *a, **kw: nullcontext(),
                  'extract_statement': extract}
         analyze = load_function(SRC / 'ouragents.py', '_analyze_statement', scope, cls='TreeDebater')
         player = SimpleNamespace(use_debate_flow_tree=True, side='against', status='opening', motion='Writing still matters',
-                                 helper_client=Mock(), debate_tree=Mock(), oppo_debate_tree=Mock(), debate_thoughts=[])
+                                 helper_client=Mock(), debate_tree=DebateTree('Writing still matters', 'against'),
+                                 oppo_debate_tree=DebateTree('Writing still matters', 'for'), debate_thoughts=[])
         # A proposal must work after an earlier streaming batch already populated the tree.
-        player.oppo_debate_tree.max_level = 1
+        player.oppo_debate_tree.update_node('propose', new_claim='Writing preserves culture', new_argument=[])
         analyze(player, 'Writing develops creativity.', 'for', planned_actions=[{'action': 'propose'}])
         self.assertIsNone(extract.call_args.kwargs['planned_actions'])
-        player.oppo_debate_tree.update_node.assert_called_once_with(
-            'propose', new_claim='Writing develops creativity', new_argument=[], target='Writing develops creativity')
-        player.debate_tree.update_node.assert_not_called()
+        self.assertEqual(player.oppo_debate_tree.root.children[-1].claim, 'Writing develops creativity')
+        self.assertFalse(player.debate_tree.root.children)
+        self.assertEqual(len(extract.call_args.kwargs['relation_targets']), 1)
+        self.assertIn('tree_updates', player.debate_thoughts[-1])
 
 
 class MainClaimTests(unittest.TestCase):

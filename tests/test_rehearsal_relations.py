@@ -147,7 +147,8 @@ def test_loading_retains_full_rehearsal_pool_without_growing_planning_prompt(tmp
     (tmp_path / 'pool_against.json').write_text(json.dumps(other))
     method = load_function(SRC / 'ouragents.py', 'claim_generation',
                            {'os': os, 'json': json}, cls='TreeDebater')
-    p = NS(pool_file=str(file), side='for', oppo_side='against', config=NS(claim_pool_limit=limit))
+    p = NS(pool_file=str(file), side='for', oppo_side='against', config=NS(claim_pool_limit=limit),
+           _listening_prefix_enabled=lambda: False)
     method(p, 50)
     assert len(p.claim_pool) == limit
     assert p.rehearsal_claim_pool == own and p.oppo_claim_pool == other

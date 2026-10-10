@@ -5,15 +5,16 @@ Splits debate text into chunks, adaptively refines each chunk's length to hit it
 
 Key features vs the serial pipeline in tts.py:
   - Chunk-based processing: text is split by paragraphs, each chunk gets a proportional share of the total time budget.
-  - Adaptive refinement: A CPU word-rate heuristic estimates duration; if off-target, an LLM rewrites the chunk to a target word count.  Multiple TTS candidates are submitted in parallel and the closest-to-target is picked.
+  - Adaptive refinement: The configured backend estimates duration; if off-target, an LLM rewrites the chunk to a target word count.  Multiple TTS candidates are submitted in parallel and the closest-to-target is picked.
   - Streaming overlap: while chunk N's audio plays, chunk N+1 is being refined and TTS-generated (time_budget for chunk N+1 = audio duration of chunk N).
-  - No information loss: instead of trimming sentences at the end, text is rewritten to fit the budget.
+  - Configurable length edits: shorten-only mode and optional meaning checks protect the original text; model checks remain fallible.
 """
 
 import concurrent.futures
 import csv
 import json
 import os
+import sys
 import threading
 import time
 from dataclasses import dataclass, asdict
@@ -27,9 +28,12 @@ from pydub import AudioSegment
 from pydub.exceptions import CouldntDecodeError
 
 from utils.tool import remove_citation, remove_subtitles
-from utils.time_estimator import LengthEstimator
-from utils.speech_duration import estimate_speech_seconds
+from utils.time_estimator import LengthEstimator, TTS_INPUT_LIMIT
+from utils import speech_length
 from streaming.config import OutputConfig, from_mapping
+from streaming.audio_tempo import fit_audio_tempo
+from streaming.delivery_edit import EditScope
+from streaming.revision_stream import RevisionStream
 
 # Compatibility aliases; canonical defaults live in streaming.config.OutputConfig.
 TOLERANCE_RATIO = OutputConfig.tolerance_ratio
@@ -76,6 +80,12 @@ class ChunkProfile:
     normal_tts_times_s: str = "[]"
     chosen_worker_label: str = ""    # "" / "prestart" / "normal" (chunk 0 has no worker)
     chosen_intra_iter: int = 0       # iteration within the chosen worker (0 = raw text)
+    local_tempo_input_seconds: float = 0.0
+    local_tempo_speed: float = 1.0
+    local_tempo_processing_s: float = 0.0
+    local_tempo_status: str = 'disabled'
+    local_tempo_clamped: bool = False
+    local_tempo_error: str = ''
 
 
 @dataclass
@@ -97,15 +107,62 @@ def _now():
     return time.perf_counter()
 
 
-def _in_range(est: float, target_s: float, tol_s: float, tol_upper_s: float) -> bool:
-    return (est - target_s) <= tol_upper_s and (target_s - est) <= tol_s
+def _in_range(est: float, target_s: float, tol_s: float, tol_upper_s: float, *, allow_short=False) -> bool:
+    return (est - target_s) <= tol_upper_s and (allow_short or (target_s - est) <= tol_s)
 
 
-def _estimate_duration(text: str) -> float:
-    return estimate_speech_seconds(remove_subtitles(remove_citation(text)[0]))
+def duration_estimator(config=None):
+    """Bind optional paid estimation to the renderer's client factory and output settings.
+
+    Experiments replace OpenAI here with their guarded factory. The estimator
+    itself never constructs a separate client or chooses another voice/model.
+    """
+    cfg = from_mapping(OutputConfig, config)
+    def audio_duration(text):
+        client = OpenAI()
+        try:
+            return _query_time_profiled(client, text, voice=cfg.voice, model=cfg.model)['audio_seconds']
+        finally:
+            client.close()
+    return speech_length.statement_estimator(audio_duration=audio_duration)
 
 
-def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], next_chunk_text: str = "", model: str = OutputConfig.refinement_model, motion: str = "", side: str = "") -> str:
+def estimate_statement_seconds(text, config=None):
+    return duration_estimator(config).query_time(text)
+
+
+def _estimate_duration(text: str, *, measured_seconds_per_word=None, client=None, config=None, voice=None) -> float:
+    cfg = from_mapping(OutputConfig, config)
+    audio_duration = (lambda chunk: _query_time_profiled(client, chunk,
+        voice=voice or cfg.voice, model=cfg.model)['audio_seconds']) if client is not None else None
+    return speech_length.estimate_seconds(text, measured_seconds_per_word=measured_seconds_per_word,
+                                         audio_duration=audio_duration)
+
+
+def _text_request(client, model, messages, max_tokens, *, json_mode=False):
+    """Use the configured rewrite model; Gemma may use the existing local proxy."""
+    options = {}
+    owned = None
+    if "deepseek" in model.lower():
+        owned = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"], base_url="https://api.deepseek.com")
+        model = model.split("/", 1)[-1]
+        options["extra_body"] = {"thinking": {"type": "disabled"}}
+    elif model.startswith('google.gemma') and os.environ.get('DEBATE_LLM_API_BASE'):
+        owned = OpenAI(base_url=os.environ['DEBATE_LLM_API_BASE'],
+                       api_key=os.environ.get('DEBATE_LLM_API_KEY') or 'local-proxy')
+    elif model == 'gpt-5-mini':
+        options['reasoning_effort'] = 'minimal'
+    if json_mode:
+        options['response_format'] = {'type': 'json_object'}
+    try:
+        return (owned or client).chat.completions.create(
+            model=model, messages=messages, max_completion_tokens=max_tokens, **options)
+    finally:
+        if owned is not None:
+            owned.close()
+
+
+def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], next_chunk_text: str = "", model: str = OutputConfig.refinement_model, motion: str = "", side: str = "", *, source_text=None) -> str:
     context_block = ""
     context_word_count = 0
     if prev_texts:
@@ -128,21 +185,12 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], n
     if next_chunk_text:
         next_block = (
             f"\n\nThe paragraph you rewrite will be followed immediately by this next paragraph "
-            f"(do NOT rewrite it, just ensure your output flows naturally into it):\n\n"
-            f"{next_chunk_text[:2000]}"
+            f"(read-only: do not copy, paraphrase, anticipate or move its claims into your paragraph; "
+            f"it will still be spoken in full):\n\n"
+            f"{next_chunk_text}"
         )
 
-    request_options = {}
-    if "deepseek" in model.lower():
-        client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"], base_url="https://api.deepseek.com")
-        model = model.split("/", 1)[-1]
-        request_options["extra_body"] = {"thinking": {"type": "disabled"}}
-    elif model == "gpt-5-mini":
-        request_options["reasoning_effort"] = "minimal"
-    resp = client.chat.completions.create(
-        **request_options,
-        model=model,
-        messages=[
+    resp = _text_request(client, model, [
             {
                 "role": "system",
                 "content": (
@@ -157,6 +205,9 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], n
                     "Do not turn a concession into agreement with the opposing side or strengthen it into the conclusion. "
                     "Never swap 'we argue' and 'my opponent argues'. Meaning takes priority over the target word count. "
                     "Do NOT add new arguments or repeat points already made in the preceding text. "
+                    "The immutable source owns this paragraph's content. Expand or compress only that "
+                    "content; neighbouring paragraphs are context, never material to fill the word target. "
+                    "A previous length-edit proposal cannot authorize content absent from the immutable source. "
                     "Ensure the rewritten paragraph connects smoothly with what comes before and after it. "
                     "Output only the rewritten paragraph, no preamble."
                 ),
@@ -169,21 +220,26 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], n
                     f"{context_note} "
                     f"Keep the debating style and the core argument intact.\n\n"
                     f"{text[:8000]}"
+                    f"\n\nImmutable source for this paragraph:\n{source_text if source_text is not None else text}"
                     f"{next_block}"
                 ),
             },
-        ],
-        max_completion_tokens=4096,
-    )
+        ], 4096)
     return (resp.choices[0].message.content or "").strip()
 
 
+def _validate_tts_input(content):
+    if len(content) > TTS_INPUT_LIMIT:
+        raise ValueError(f'TTS input exceeds {TTS_INPUT_LIMIT} characters; split it before synthesis')
+
+
 def _query_time_profiled(client, content: str, voice: str = "echo", speed: float = 1.0, model: str = OutputConfig.model) -> Dict[str, Any]:
+    _validate_tts_input(content)
     t0 = _now()
     response = client.audio.speech.create(
         model=model,
         voice=voice,
-        input=content[:4096],
+        input=content,
         response_format="mp3",
         speed=speed,
     )
@@ -205,6 +261,7 @@ def _query_time_profiled(client, content: str, voice: str = "echo", speed: float
 
 
 def _tts_with_retry(client, content: str, voice: str = "echo", speed: float = 1.0, max_attempts: int = 5, model: str = OutputConfig.model) -> Dict[str, Any]:
+    _validate_tts_input(content)
     for attempt in range(max_attempts):
         try:
             return _query_time_profiled(client, content, voice=voice, speed=speed, model=model)
@@ -224,16 +281,27 @@ class _TtsCandidate:
     future: Any             # concurrent.futures.Future -> Dict from _query_time_profiled
     worker_label: str = ""  # "prestart" / "normal" — which worker produced this
     intra_iter: int = 0     # iteration index within the producing worker (0 = raw, k = k-th refine)
+    completed_at: Optional[float] = None
+    edit_scope: Optional[EditScope] = None
+    obsolete: bool = False
+    published: bool = False
+    audio_reused: bool = False
 
 
 def _pick_best_completed(
     candidates: List[_TtsCandidate],
     target_s: float,
+    deadline: Optional[float] = None,
 ) -> Tuple[_TtsCandidate, Dict]:
     def _collect_done() -> List[Tuple[_TtsCandidate, Dict]]:
         out = []
         for c in candidates:
+            if c.obsolete:
+                continue
             if c.future.done():
+                if (deadline is not None and c.intra_iter > 0
+                        and (c.completed_at is None or c.completed_at > deadline)):
+                    continue
                 try:
                     out.append((c, c.future.result()))
                 except Exception:
@@ -244,13 +312,13 @@ def _pick_best_completed(
 
     if not done:
         concurrent.futures.wait(
-            [c.future for c in candidates],
+            [c.future for c in candidates if not c.obsolete],
             return_when=concurrent.futures.FIRST_COMPLETED,
         )
         done = _collect_done()
 
     if not done:
-        concurrent.futures.wait([c.future for c in candidates])
+        concurrent.futures.wait([c.future for c in candidates if not c.obsolete])
         done = _collect_done()
 
     if not done:
@@ -266,7 +334,7 @@ class _ChunkRefineContext:
     worker, a normal-refine worker) can run concurrently against the same context,
     contributing candidates to a shared pool until either:
       - any candidate's fs_estimate hits target -> first worker to confirm sets done_event
-      - main loop's deadline (= prev_audio_s) elapses -> external code stops everything
+      - the remaining queued playback window expires -> no further optional edits
     """
     def __init__(
         self,
@@ -291,6 +359,7 @@ class _ChunkRefineContext:
         self.side = side
         self.original_text = original_text
         self.seconds_per_word = None
+        self.rewrite_checks = []
 
         self._target_s = target_s
         self._tol_s = tol_s
@@ -302,12 +371,13 @@ class _ChunkRefineContext:
 
         self.stop_event = threading.Event()
         self.done_event = threading.Event()
-        self._adopt_lock = threading.Lock()
+        self._adopt_lock = threading.RLock()
 
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.config.max_parallel_tts)
 
         self.prev_texts = list(prev_texts)
         self.next_chunk_text = next_chunk_text
+        self._edit_scope = EditScope(original_text, tuple(prev_texts), next_chunk_text)
         self.voice = voice
         self.max_ref = max_ref
 
@@ -318,15 +388,81 @@ class _ChunkRefineContext:
         self._stats: Dict[str, Dict[str, Any]] = {}
         self._stats_lock = threading.Lock()
 
+        self.estimation_error = None
         self.chosen_cand: Optional[_TtsCandidate] = None
         self.chosen_tts_out: Optional[Dict[str, Any]] = None
 
         self.t_start_wall = _now()
         self.workers: List[threading.Thread] = []
+        self.refinement_deadline = None
+        self.parallel_refinement = self.config.adaptive_delivery and self.config.max_parallel_tts > 1
+        self.prepared_audio = None
+
+    def refinement_expired(self):
+        return self.refinement_deadline is not None and _now() >= self.refinement_deadline
+
+    def fail_estimation(self, error):
+        with self._adopt_lock:
+            if self.estimation_error is None:
+                self.estimation_error = error
+            self.stop_event.set()
+            self.done_event.set()
+
+    def raise_estimation_error(self):
+        if self.estimation_error is not None:
+            error = self.estimation_error
+            raise RuntimeError(f'Duration estimation failed: {type(error).__name__}: {error}') from error
 
     def get_target(self) -> Tuple[float, float, float]:
         with self._target_lock:
             return self._target_s, self._tol_s, self._tol_upper_s
+
+    def edit_scope(self):
+        with self._adopt_lock:
+            return self._edit_scope
+
+    def update_context(self, prev_texts, next_chunk_text):
+        """Expire contextual edits atomically; retain immutable source audio.
+
+        A prestart can synthesize before the preceding segment is committed. Its
+        approval is speculative too: neither a ready result nor a late callback
+        may promote it after that context changes. Fresh edits use one snapshot
+        through writing, review and synthesis registration.
+        """
+        with self._adopt_lock:
+            old = self._edit_scope
+            if old.preceding == tuple(prev_texts) and old.following == next_chunk_text:
+                return
+            self._edit_scope = EditScope(self.original_text, tuple(prev_texts),
+                                         next_chunk_text, old.revision + 1)
+            self.prev_texts = list(prev_texts)
+            self.next_chunk_text = next_chunk_text
+            with self.candidates_lock:
+                for candidate in self.candidates:
+                    if candidate.edit_scope is not None:
+                        candidate.obsolete = True
+            if self.chosen_cand is not None and self.chosen_cand.obsolete:
+                self.chosen_cand = None
+                self.chosen_tts_out = None
+                self.done_event.clear()
+                self.stop_event.clear()
+
+    def reusable_proposal(self):
+        """Reuse speculative text, never its stale approval; prefer ready audio."""
+        with self._adopt_lock, self.candidates_lock:
+            candidates = []
+            for c in self.candidates:
+                if not c.obsolete or c.edit_scope is None or c.edit_scope.source != self.original_text:
+                    continue
+                try:
+                    seconds = c.future.result()['audio_seconds'] if c.future.done() else c.fs_estimated_s
+                except Exception:
+                    continue
+                candidates.append((c, seconds))
+            if not candidates:
+                return None
+            target = self.get_target()[0]
+            return min(candidates, key=lambda row: abs(row[1] - target))[0]
 
     def update_target(self, target_s: float, tol_s: float, tol_upper_s: float) -> None:
         with self._adopt_lock:
@@ -335,7 +471,8 @@ class _ChunkRefineContext:
                 self._tol_s = tol_s
                 self._tol_upper_s = tol_upper_s
             if (self.config.adaptive_delivery and self.chosen_tts_out is not None
-                    and not _in_range(self.chosen_tts_out['audio_seconds'], target_s, tol_s, tol_upper_s)):
+                    and not _in_range(self.chosen_tts_out['audio_seconds'], target_s, tol_s, tol_upper_s,
+                                      allow_short=not self.config.allow_expansion)):
                 self.chosen_cand = None
                 self.chosen_tts_out = None
                 self.done_event.clear()
@@ -368,25 +505,85 @@ class _ChunkRefineContext:
                 fs_times.extend(s["fs_times"])
             return n_ref_total, llm_times, fs_times
 
-    def add_candidate(self, text: str, est: float, label: str, intra_iter: int) -> _TtsCandidate:
-        with self.candidates_lock:
+    def add_candidate(self, text: str, est: float, label: str, intra_iter: int,
+                      *, edit_scope=None) -> Optional[_TtsCandidate]:
+        # The adoption lock also closes the review-to-registration race. Workers
+        # always supply their captured scope; direct callers bind to the current one.
+        with self._adopt_lock, self.candidates_lock:
+            if intra_iter > 0:
+                edit_scope = edit_scope or self._edit_scope
+                if edit_scope != self._edit_scope:
+                    return None
+            # Normal and prestart branches share the same raw audio and identical edits.
+            key = ' '.join(text.split())
+            for existing in self.candidates:
+                if (not existing.obsolete and existing.edit_scope == edit_scope
+                        and ' '.join(existing.text.split()) == key):
+                    return existing
             iteration = len(self.candidates)
             cand = _TtsCandidate(
                 iteration=iteration,
                 text=text,
                 fs_estimated_s=est,
-                future=self.executor.submit(_tts_with_retry, self.client, text, self.voice, model=self.config.model),
+                future=None,
                 worker_label=label,
                 intra_iter=intra_iter,
+                edit_scope=edit_scope,
             )
+            def synthesize():
+                # Queued optional work must not start another request after publication.
+                if intra_iter > 0 and (cand.obsolete or self.stop_event.is_set() or self.refinement_expired()):
+                    raise concurrent.futures.CancelledError('Candidate missed playback deadline')
+                try:
+                    if intra_iter == 0 and self.prepared_audio is not None:
+                        future = self.prepared_audio.match(text, self.voice, self.config.model)
+                        if future is not None:
+                            try:
+                                result = future.result()
+                            except Exception:
+                                pass  # Failed speculation falls back to ordinary synthesis.
+                            else:
+                                cand.audio_reused = True
+                                self.prepared_audio.mark_reused()
+                                return result
+                    return _tts_with_retry(self.client, text, self.voice, model=self.config.model)
+                finally:
+                    cand.completed_at = _now()
+            # Audio is immutable and can be shared after a NEW contextual review.
+            # A queued obsolete request will cancel itself, so only share audio
+            # already running or successfully finished.
+            reusable = next((c for c in self.candidates
+                if c.text == text and (c.future.running() or
+                    (c.future.done() and not c.future.cancelled() and c.future.exception() is None))), None)
+            if reusable is None:
+                cand.future = self.executor.submit(synthesize)
+            else:
+                cand.future = reusable.future
+                cand.audio_reused = True
+                cand.completed_at = reusable.completed_at
+                cand.future.add_done_callback(lambda future: setattr(cand, 'completed_at', reusable.completed_at))
             self.candidates.append(cand)
+        if self.parallel_refinement:
+            # Selection must respond to ANY finished audio, even while the writer
+            # is preparing another candidate. Never hold the pool lock in callbacks.
+            def completed(future):
+                try:
+                    self.try_adopt(cand, future.result())
+                except Exception:
+                    pass  # Failed candidates leave the original/other audio available.
+            cand.future.add_done_callback(completed)
         return cand
 
     def try_adopt(self, cand: _TtsCandidate, tts_out: Dict[str, Any]) -> bool:
         with self._adopt_lock:
-            if self.done_event.is_set() or (self.config.adaptive_delivery and self.stop_event.is_set()):
+            if cand.obsolete or (cand.edit_scope is not None and cand.edit_scope != self._edit_scope):
                 return False
-            if self.config.adaptive_delivery and not _in_range(tts_out['audio_seconds'], *self.get_target()):
+            if self.done_event.is_set() or (self.config.adaptive_delivery
+                    and (self.stop_event.is_set() or self.refinement_expired())):
+                return False
+            if ((self.config.adaptive_delivery or not self.config.allow_expansion)
+                    and not _in_range(tts_out['audio_seconds'], *self.get_target(),
+                                      allow_short=not self.config.allow_expansion)):
                 return False
             self.chosen_cand = cand
             self.chosen_tts_out = tts_out
@@ -403,6 +600,7 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
     Sets ctx.done_event via try_adopt() when its candidate hits target.
     """
     cur = ctx.original_text
+    attempted_texts = {' '.join(cur.split())}
 
     if ctx.stop_event.is_set():
         return
@@ -410,9 +608,10 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
     # ---- step 0: fs estimate raw text + submit raw TTS candidate ----
     t = _now()
     try:
-        est = (LengthEstimator.count_words(cur) * ctx.seconds_per_word
-               if ctx.seconds_per_word else _estimate_duration(cur))
-    except Exception:
+        est = _estimate_duration(cur, measured_seconds_per_word=ctx.seconds_per_word,
+                                 client=ctx.client, config=ctx.config, voice=ctx.voice)
+    except Exception as exc:
+        ctx.fail_estimation(exc)
         return
     ctx.add_fs_time(label, _now() - t)
 
@@ -422,7 +621,8 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
     target_s, tol_s, tol_upper_s = ctx.get_target()
     cand = ctx.add_candidate(cur, est, label, intra_iter=0)
 
-    if ctx.config.adaptive_delivery or _in_range(est, target_s, tol_s, tol_upper_s):
+    if (cand.future.done() or (ctx.config.adaptive_delivery and not ctx.parallel_refinement)
+            or _in_range(est, target_s, tol_s, tol_upper_s, allow_short=not ctx.config.allow_expansion)):
         try:
             tts_out = cand.future.result()
             if ctx.try_adopt(cand, tts_out):
@@ -434,42 +634,80 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
 
     # ---- LLM refinement loop ----
     n_ref_local = 0
-    while not ctx.stop_event.is_set() and n_ref_local < ctx.max_ref:
+    worker_scope = ctx.edit_scope()
+    prepared_proposal = ctx.reusable_proposal() if label == 'normal' else None
+    while not ctx.stop_event.is_set() and not ctx.refinement_expired() and n_ref_local < ctx.max_ref:
+        if worker_scope != ctx.edit_scope():
+            break  # The normal worker owns the new context; never continue an old edit chain.
         target_s, tol_s, tol_upper_s = ctx.get_target()
         if target_s <= 0:
             break
 
         cw = LengthEstimator.count_words(cur)
-        rate = est / max(cw, 1)
         tw = max(1 if ctx.config.adaptive_delivery else 10,
                  round(cw * target_s / max(est, .001 if ctx.config.adaptive_delivery else 1.0)))
 
-        t = _now()
-        try:
-            cur = _revise_to_n_words(ctx.client, cur, tw, ctx.prev_texts, ctx.next_chunk_text, model=ctx.config.refinement_model, motion=ctx.motion, side=ctx.side)
-        except Exception:
+        if not ctx.config.allow_expansion and tw >= cw:
             break
-        ctx.add_llm_time(label, _now() - t)
+        previous = cur
+        t = _now()
+        reused_proposal = prepared_proposal is not None
+        if reused_proposal:
+            cur = prepared_proposal.text
+            prepared_proposal = None
+        else:
+            try:
+                cur = _revise_to_n_words(ctx.client, cur, tw, list(worker_scope.preceding),
+                    worker_scope.following, model=ctx.config.refinement_model, motion=ctx.motion,
+                    side=ctx.side, source_text=worker_scope.source)
+            except Exception:
+                break
+            ctx.add_llm_time(label, _now() - t)
         n_ref_local += 1
+        check = {'worker': label, 'original': ctx.original_text, 'candidate': cur,
+                 'accepted': True, 'verified': False, 'edit_scope': worker_scope.payload(),
+                 'reused_proposal': reused_proposal}
+        if not cur or (not ctx.config.allow_expansion
+                       and LengthEstimator.count_words(cur) > LengthEstimator.count_words(previous)):
+            check.update(accepted=False, reason='Empty or expanded length edit')
+        elif ' '.join(cur.split()) in attempted_texts:
+            check.update(accepted=False, reason='Unchanged or previously attempted text; reuse existing audio')
+        elif ctx.stop_event.is_set() or ctx.refinement_expired():
+            check.update(accepted=False, reason='Cancelled before verification or synthesis')
+        elif worker_scope != ctx.edit_scope():
+            check.update(accepted=False, reason='Context changed during writing; approval withheld')
+        if worker_scope != ctx.edit_scope():
+            check.update(accepted=False, reason='Context changed before synthesis; approval withheld')
+        with ctx._stats_lock:
+            ctx.rewrite_checks.append(check)
+        if not check['accepted']:
+            break  # Raw TTS remains in the candidate pool; never fail the whole turn for a bad edit.
 
-        if ctx.stop_event.is_set():
+        if ctx.stop_event.is_set() or ctx.refinement_expired():
             break
+        attempted_texts.add(' '.join(cur.split()))
 
         t = _now()
         try:
-            est = (LengthEstimator.count_words(cur) * rate
-                   if ctx.config.adaptive_delivery else _estimate_duration(cur))
-        except Exception:
-            break
+            est = _estimate_duration(cur, measured_seconds_per_word=ctx.seconds_per_word,
+                                 client=ctx.client, config=ctx.config, voice=ctx.voice)
+        except Exception as exc:
+            ctx.fail_estimation(exc)
+            return
         ctx.add_fs_time(label, _now() - t)
 
-        if ctx.stop_event.is_set():
+        if ctx.stop_event.is_set() or ctx.refinement_expired():
             break
 
-        cand = ctx.add_candidate(cur, est, label, intra_iter=n_ref_local)
+        cand = ctx.add_candidate(cur, est, label, intra_iter=n_ref_local, edit_scope=worker_scope)
+        if cand is None:
+            with ctx._stats_lock:
+                check.update(accepted=False, reason='Context changed at synthesis registration')
+            break
 
         target_s, tol_s, tol_upper_s = ctx.get_target()
-        if ctx.config.adaptive_delivery or _in_range(est, target_s, tol_s, tol_upper_s):
+        if (cand.future.done() or (ctx.config.adaptive_delivery and not ctx.parallel_refinement)
+                or _in_range(est, target_s, tol_s, tol_upper_s, allow_short=not ctx.config.allow_expansion)):
             try:
                 tts_out = cand.future.result()
                 if ctx.try_adopt(cand, tts_out):
@@ -478,6 +716,27 @@ def _refine_worker(ctx: _ChunkRefineContext, label: str) -> None:
                     est = float(tts_out['audio_seconds'])
             except Exception:
                 pass
+
+
+def _wait_for_refinement(ctx, deadline):
+    """Stop at the playback deadline or when no worker can improve the audio.
+
+    Initial synthesis is mandatory even when body preparation consumed the whole
+    playback buffer. Let it be submitted; candidate selection can then await its
+    result. The worker's deadline prevents optional edits after that point.
+    """
+    while not ctx.done_event.is_set():
+        with ctx.candidates_lock:
+            pending_audio = any(not c.obsolete and not c.future.done() for c in ctx.candidates)
+        if not any(worker.is_alive() for worker in ctx.workers) and not pending_audio:
+            return _now() >= deadline
+        remaining = deadline - _now()
+        if remaining <= 0:
+            with ctx.candidates_lock:
+                if ctx.candidates:
+                    return True
+        ctx.done_event.wait(timeout=min(.02, remaining) if remaining > 0 else .02)
+    return False
 
 
 # -------- chunk utilities --------
@@ -514,12 +773,14 @@ def _early_cut_chunk(
     text: str,
     target_s: float,
     early_cut_ratio: float = EARLY_CUT_RATIO,
+    *, estimate=None,
 ) -> Tuple[str, str]:
     """
     Split text into (head, tail) where head's FS estimate ≈ target_s.
     Returns (head, tail); tail may be empty if the whole text fits.
     Only called when fs_estimate(text) / target_s > early_cut_ratio.
     """
+    estimate = estimate or _estimate_duration
     sentences = _split_sentences(text)
     if len(sentences) <= 1:
         return text, ""
@@ -527,7 +788,7 @@ def _early_cut_chunk(
     head_sentences: List[str] = []
     for sent in sentences:
         candidate = " ".join(head_sentences + [sent])
-        est = _estimate_duration(candidate)
+        est = estimate(candidate)
         if est > target_s and head_sentences:
             break
         head_sentences.append(sent)
@@ -563,35 +824,6 @@ def split_by_paragraphs(text: str) -> List[str]:
     """Split text on double newlines into non-empty paragraphs."""
     parts = [p.strip() for p in text.split("\n\n") if p.strip()]
     return parts if parts else [text.strip()] if text.strip() else []
-
-
-def split_for_adaptive_delivery(segments: List[str], first_seconds: float, later_seconds: float) -> List[str]:
-    """Keep sentences intact when possible; bound long sentences by word count.
-
-    This is local splitting only: no model call delays the first audio request.
-    The initial 0.46 s/word estimate is replaced by measured audio for refinement.
-    """
-    chunks, current = [], []
-    first_limit = max(1, round(first_seconds / 0.46))
-    later_limit = max(1, round(later_seconds / 0.46))
-    for segment in segments:
-        for sentence in _split_sentences(segment):
-            words = sentence.split()
-            limit = later_limit if chunks else first_limit
-            if current and len(current) + len(words) > limit:
-                chunks.append(' '.join(current))
-                current = []
-            while words:
-                limit = later_limit if chunks else first_limit
-                take = min(len(words), limit - len(current))
-                current.extend(words[:take])
-                words = words[take:]
-                if len(current) == limit:
-                    chunks.append(' '.join(current))
-                    current = []
-    if current:
-        chunks.append(' '.join(current))
-    return chunks
 
 
 def _pack_sentences(text: str, target_chars: int) -> List[str]:
@@ -657,8 +889,16 @@ def split_into_chunks(text: str, total_budget_s: float, config: Optional[OutputC
     return out
 
 
+def split_body_chunks(tail, remaining, config):
+    """Use the same paragraph boundaries for speculative and committed audio."""
+    tail, _ = remove_citation(tail)
+    tail = remove_subtitles(tail)
+    return _merge_short_chunks(split_into_chunks(tail, remaining, config),
+                               min_words=config.min_chunk_words)
+
+
 # -------- pipeline --------
-def run_pipeline(
+def _run_pipeline(
     client,
     segments_list: List[str],
     total_budget_s: float,
@@ -671,6 +911,11 @@ def run_pipeline(
     on_chunk=None,
     motion: str = "",
     side: str = "",
+    tail_supplier=None,
+    validate_chunk=None,
+    prepared_first_audio=None,
+    prepared_body_audio=None,
+    _contexts=None,
 ) -> Tuple[List[ChunkProfile], RoundProfile, bytes, List[str]]:
     """
     Run the streaming TTS pipeline on a list of text segments.
@@ -683,6 +928,7 @@ def run_pipeline(
     voice = cfg.voice if voice is None else voice
     enable_early_cut = cfg.enable_early_cut if enable_early_cut is None else enable_early_cut
     early_cut_ratio = cfg.early_cut_ratio if early_cut_ratio is None else early_cut_ratio
+    estimate = lambda text: _estimate_duration(text, client=client, config=cfg, voice=voice)
     round_t0 = _now()
     chunk_profiles: List[ChunkProfile] = []
 
@@ -692,8 +938,11 @@ def run_pipeline(
     audio_total = 0.0
     overrun_total = 0.0
 
-    if cfg.adaptive_delivery:
-        segments_list = split_for_adaptive_delivery(segments_list, cfg.first_chunk_seconds, cfg.later_chunk_seconds)
+    has_listening_prefix = tail_supplier is not None
+    if has_listening_prefix:
+        if len(segments_list) != 1 or not segments_list[0].strip():
+            raise ValueError('Deferred speech requires exactly one fixed prefix')
+        segments_list = list(segments_list)
     else:
         segments_list = list(_merge_short_chunks(segments_list, min_words=cfg.min_chunk_words))
     n_chunks = len(segments_list)
@@ -709,6 +958,11 @@ def run_pipeline(
     all_mp3_bytes: List[bytes] = []
 
     prev_audio_s: Optional[float] = None
+    playback_end = None  # Estimated end of all published, queued audio.
+    use_playback_deadline = cfg.adaptive_delivery or tail_supplier is not None
+    body_stream = None
+    stream_finished = True
+    unseen_chars = 0.0
 
     # Pre-start contexts indexed by target chunk idx. A context is created when
     # we kick off a prestart worker for that chunk (ratio or last-chunk variant).
@@ -752,13 +1006,14 @@ def run_pipeline(
             tol_s=tol_est,
             tol_upper_s=tol_upper_est,
             prev_texts=list(final_texts),
-            next_chunk_text="",
+            next_chunk_text=segments_list[target_idx + 1] if target_idx + 1 < len(segments_list) else "",
             voice=voice,
             max_ref=cfg.max_refinements,
             kickoff_iter=iter_i,
             kickoff_kind="ratio",
         )
         ctx.seconds_per_word = _measured_rate()
+        _contexts.append(ctx)
         _chunk_contexts[target_idx] = ctx
         th = threading.Thread(target=_refine_worker, args=(ctx, "prestart"), daemon=True)
         ctx.workers.append(th)
@@ -806,6 +1061,7 @@ def run_pipeline(
             kickoff_kind="last",
         )
         ctx.seconds_per_word = _measured_rate()
+        _contexts.append(ctx)
         _chunk_contexts[last_idx] = ctx
         th = threading.Thread(target=_refine_worker, args=(ctx, "prestart"), daemon=True)
         ctx.workers.append(th)
@@ -816,22 +1072,31 @@ def run_pipeline(
         )
 
     i = 0
-    while i < len(segments_list):
+    while i < len(segments_list) or not stream_finished:
+        if body_stream is not None:
+            ready, stream_finished, unseen_chars = body_stream.read(wait=i >= len(segments_list))
+            segments_list.extend(ready)
+            total_chars_initial = sum(len(c) for c in segments_list)
+            if i >= len(segments_list):
+                break
         chunk = segments_list[i]
         n_chunks = len(segments_list)  # may grow due to early-cut
 
+        _validate_tts_input(chunk)
         chunk_t0 = _now()
         chunk_words = LengthEstimator.count_words(chunk)
         chunk_chars = len(chunk)
 
-        remaining_chars_total = sum(len(c) for c in segments_list[i:])
+        remaining_chars_total = sum(len(c) for c in segments_list[i:]) + unseen_chars
         target_s = audio_budget_remaining * (chunk_chars / remaining_chars_total)
+        if i == 0 and (tail_supplier is not None or cfg.first_chunk_local_tempo):
+            target_s = min(cfg.first_chunk_seconds, audio_budget_remaining)
 
         # ---- early-cut: if chunk is too long relative to budget, split it now ----
         if enable_early_cut and i > 0:
-            fs_pre = _estimate_duration(chunk)
+            fs_pre = estimate(chunk)
             if fs_pre / target_s > early_cut_ratio:
-                head, tail = _early_cut_chunk(chunk, target_s, early_cut_ratio)
+                head, tail = _early_cut_chunk(chunk, target_s, early_cut_ratio, estimate=estimate)
                 if tail:
                     segments_list[i] = head
                     segments_list.insert(i + 1, tail)
@@ -839,19 +1104,22 @@ def run_pipeline(
                     n_chunks = len(segments_list)
                     chunk_chars = len(chunk)
                     chunk_words = LengthEstimator.count_words(chunk)
-                    remaining_chars_total = sum(len(c) for c in segments_list[i:])
+                    remaining_chars_total = sum(len(c) for c in segments_list[i:]) + unseen_chars
                     target_s = audio_budget_remaining * (chunk_chars / remaining_chars_total)
                     print(f"  chunk {i:03d} | early-cut: fs_pre={fs_pre:.1f}s > {early_cut_ratio}x target={target_s:.1f}s → split into head({len(head)}c)+tail({len(tail)}c)")
 
+        if (i == 1 and has_listening_prefix and cfg.first_body_chunk_seconds > 0
+                and (not stream_finished or i + 1 < n_chunks)):
+            target_s = min(target_s, cfg.first_body_chunk_seconds)
         tol_s = max(cfg.min_tolerance_seconds, target_s * tolerance_ratio)
         remaining_chunks = n_chunks - i
         tol_upper_s = (
             max(cfg.min_tolerance_seconds, target_s * cfg.last_chunk_upper_tolerance_ratio)
-            if remaining_chunks == 1
+            if remaining_chunks == 1 and stream_finished
             else tol_s
         )
 
-        max_ref = cfg.early_max_refinements if i < n_chunks // 2 else cfg.max_refinements
+        max_ref = cfg.early_max_refinements if (not stream_finished or i < n_chunks // 2) else cfg.max_refinements
         next_chunk_text = segments_list[i + 1] if i + 1 < len(segments_list) else ""
 
         seg = None
@@ -875,7 +1143,7 @@ def run_pipeline(
         # For iter i, ratio check looks at c[i+2]/c[i+1]; last-chunk fires when i == n-3.
         # Both kickoffs run BEFORE we process the current chunk, so chunk 0's TTS
         # runs in parallel with the prestart for chunk 2 (if ratio triggered).
-        if not (cfg.adaptive_delivery and i == 0):
+        if stream_finished and not ((cfg.adaptive_delivery or tail_supplier is not None) and i == 0):
             _kickoff_ratio_prestart(i)
             _kickoff_last_chunk_prestart(i)
 
@@ -897,7 +1165,12 @@ def run_pipeline(
 
             for attempt in range(10):
                 try:
-                    tts_out = _query_time_profiled(client, refined, voice=voice, model=cfg.model)
+                    if prepared_first_audio and (prepared_first_audio['text'], prepared_first_audio['voice'],
+                            prepared_first_audio['model']) == (refined, voice, cfg.model):
+                        tts_out = dict(prepared_first_audio['tts_out'], tts_api_s=0.)
+                        prepared_first_audio = None
+                    else:
+                        tts_out = _query_time_profiled(client, refined, voice=voice, model=cfg.model)
                     audio_seconds = float(tts_out["audio_seconds"])
                     tts_api_s = float(tts_out["tts_api_s"])
                     mp3_parse_s = float(tts_out["mp3_parse_s"])
@@ -920,17 +1193,24 @@ def run_pipeline(
 
         # ---- chunks 1+: shared candidate pool with prestart + normal workers ----
         else:
-            time_budget_s = prev_audio_s
+            time_budget_s = (max(0., playback_end - _now())
+                             if use_playback_deadline else prev_audio_s)
+            margin_s = min(cfg.refine_deadline_margin_seconds, time_budget_s / 2)
+            deadline = (playback_end - margin_s if use_playback_deadline
+                        else _now() + time_budget_s - margin_s)
 
             # Pop existing prestart context (if any), or build a fresh context
             ctx = _chunk_contexts.pop(i, None)
+            if ctx is not None and ctx.original_text != chunk:
+                # Early cuts or inserted segments changed source ownership. Keep
+                # the retired pool for lifecycle cleanup, never reuse its audio.
+                ctx.stop_event.set()
+                ctx = None
             if ctx is not None:
                 # Prestart was running; push the up-to-date target so its next
                 # iteration uses real budget instead of the initial estimate.
                 ctx.update_target(target_s, tol_s, tol_upper_s)
-                # update prev_texts for normal worker via its own field
-                ctx.prev_texts = list(final_texts)
-                ctx.next_chunk_text = next_chunk_text
+                ctx.update_context(final_texts, next_chunk_text)
                 chunk_prestart_kind = ctx.kickoff_kind
             else:
                 ctx = _ChunkRefineContext(
@@ -949,8 +1229,13 @@ def run_pipeline(
                     kickoff_kind="",
                 )
                 chunk_prestart_kind = ""
+                _contexts.append(ctx)
 
             ctx.seconds_per_word = _measured_rate()
+            if i == 1:
+                ctx.prepared_audio = prepared_body_audio
+            if use_playback_deadline:
+                ctx.refinement_deadline = deadline
 
             # Always start a normal worker for this chunk (in addition to any
             # prestart worker that may already be running on the same context).
@@ -960,11 +1245,21 @@ def run_pipeline(
 
             # Wait for ANY worker to find an ok candidate, OR until deadline.
             # Reserve delivery time without consuming the entire window for short chunks.
-            margin_s = min(cfg.refine_deadline_margin_seconds, time_budget_s / 2)
-            ctx.done_event.wait(timeout=max(0.0, time_budget_s - margin_s))
+            wait_s = max(0.0, deadline - _now())
+            if use_playback_deadline:
+                deadline_expired = _wait_for_refinement(ctx, deadline)
+            elif max_ref == 0:
+                # No alternative text can arrive: a completed raw synthesis is
+                # ready for selection even if its duration misses the target.
+                normal_th.join(timeout=wait_s)
+                deadline_expired = normal_th.is_alive()
+            else:
+                deadline_expired = not ctx.done_event.wait(timeout=wait_s)
             ctx.stop_event.set()
 
             total_elapsed_s = _now() - ctx.t_start_wall
+
+            ctx.raise_estimation_error()
 
             # Pick the chosen candidate
             if ctx.chosen_cand is not None and ctx.chosen_tts_out is not None:
@@ -979,15 +1274,18 @@ def run_pipeline(
                 if not snap:
                     raise RuntimeError(f"Chunk {i}: no candidates produced")
                 target_now, _, _ = ctx.get_target()
-                chosen_cand, tts_out = _pick_best_completed(snap, target_now)
-                in_range = False
-                timed_out = True
+                chosen_cand, tts_out = _pick_best_completed(snap, target_now, deadline=ctx.refinement_deadline)
+                in_range = _in_range(tts_out['audio_seconds'], *ctx.get_target(),
+                                     allow_short=not cfg.allow_expansion)
+                timed_out = deadline_expired
 
             # Speed adjustment if still out of range
             target_now, tol_now, tol_upper_now = ctx.get_target()
             audio_s = float(tts_out["audio_seconds"])
-            slack_s = time_budget_s - (_now() - chunk_t0)
-            if (not _in_range(audio_s, target_now, tol_now, tol_upper_now)
+            slack_s = (playback_end - _now() if use_playback_deadline
+                       else time_budget_s - (_now() - chunk_t0))
+            if (not _in_range(audio_s, target_now, tol_now, tol_upper_now,
+                              allow_short=not cfg.allow_expansion)
                     and slack_s >= cfg.speed_adjust_min_slack_seconds):
                 raw_speed = audio_s / target_now if target_now > 0 else 1.0
                 clamped = max(cfg.speed_adjust_min, min(cfg.speed_adjust_max, raw_speed))
@@ -1074,10 +1372,8 @@ def run_pipeline(
 
             overrun_s = max(0.0, total_elapsed_s - time_budget_s)
 
-            # Best-effort cleanup (workers will exit at next stop_event check)
-            for w in ctx.workers:
-                w.join(timeout=2)
-            ctx.executor.shutdown(wait=False)
+            # Publish the chosen candidate now. The outer lifecycle joins unused
+            # requests after delivery, rather than delaying this chunk to clean up.
 
             try:
                 seg = AudioSegment.from_file(BytesIO(mp3_bytes), format="mp3")
@@ -1086,17 +1382,53 @@ def run_pipeline(
                 warnings.warn(f"Chunk {i}: pydub decode failed: {e}")
                 seg = AudioSegment.silent(duration=int(audio_seconds * 1000))
 
-        # Normalize before budget accounting and delivery; all consumers use this duration.
+        # Normalize before local tempo and delivery; all consumers use the final duration.
+        audio_changed = False
         if cfg.normalize_seams:
             seg, seam_changed = _normalize_seam_silence(seg, cfg)
-            if seam_changed:
-                buf = BytesIO()
-                seg.export(buf, format="mp3")
-                mp3_bytes = buf.getvalue()
+            audio_changed = seam_changed
+        tempo_input_seconds = len(seg) / 1000.0
+        tempo_speed, tempo_time = 1.0, 0.0
+        tempo_status, tempo_error, tempo_clamped = 'disabled', '', False
+        if i == 0 and cfg.first_chunk_local_tempo:
+            tempo_start = _now()
+            original_seg, original_bytes = seg, mp3_bytes
+            try:
+                adjusted, tempo = fit_audio_tempo(seg, target_s,
+                    min_speed=cfg.local_tempo_min, max_speed=cfg.local_tempo_max,
+                    deadband_seconds=cfg.local_tempo_deadband_seconds)
+                tempo_status, tempo_clamped = tempo.status, tempo.clamped
+                if tempo.status == 'applied':
+                    buf = BytesIO()
+                    adjusted.export(buf, format='mp3')
+                    # The decoded artifact is authoritative for callback/profile/budget.
+                    decoded = AudioSegment.from_file(BytesIO(buf.getvalue()), format='mp3')
+                    if abs(len(decoded) / 1000 - target_s) < abs(tempo_input_seconds - target_s):
+                        seg, mp3_bytes = decoded, buf.getvalue()
+                        tempo_speed = tempo.speed
+                        audio_changed = False  # Already encoded above.
+                    else:
+                        tempo_status = 'not_improved'
+            except Exception as exc:
+                # Local processing must never trigger another paid TTS call.
+                seg, mp3_bytes = original_seg, original_bytes
+                tempo_status, tempo_error = 'failed_original_used', type(exc).__name__
+            tempo_time = _now() - tempo_start
+            total_elapsed_s += tempo_time
+            overrun_s += tempo_time
+        if audio_changed:
+            buf = BytesIO()
+            seg.export(buf, format="mp3")
+            mp3_bytes = buf.getvalue()
         audio_seconds = len(seg) / 1000.0
-        in_range = _in_range(audio_seconds, target_s, tol_s, tol_upper_s)
+        in_range = _in_range(audio_seconds, target_s, tol_s, tol_upper_s,
+                             allow_short=not cfg.allow_expansion and not (i == 0 and cfg.first_chunk_local_tempo))
 
         # ---- budget tracking ----
+        if validate_chunk is not None:
+            validate_chunk(i, refined)
+        if i > 0:
+            chosen_cand.published = True
         audio_budget_remaining -= audio_seconds
         if cfg.budget_mode == "experiment_elapsed":
             audio_budget_remaining -= overrun_s
@@ -1110,6 +1442,9 @@ def run_pipeline(
             temporary_path = chunk_path.with_suffix(".mp3.tmp")
             temporary_path.write_bytes(mp3_bytes)
             temporary_path.replace(chunk_path)
+        ready = _now()
+        playback_end = max(playback_end or ready, ready) + audio_seconds
+        if out_dir is not None:
             if on_chunk is not None:
                 on_chunk(i, chunk_path, refined, len(seg) / 1000.0)
 
@@ -1158,6 +1493,12 @@ def run_pipeline(
             normal_tts_times_s=json.dumps(normal_tts_list),
             chosen_worker_label=chosen_worker_label,
             chosen_intra_iter=chosen_intra_iter,
+            local_tempo_input_seconds=tempo_input_seconds,
+            local_tempo_speed=tempo_speed,
+            local_tempo_processing_s=tempo_time,
+            local_tempo_status=tempo_status,
+            local_tempo_clamped=tempo_clamped,
+            local_tempo_error=tempo_error,
         )
         chunk_profiles.append(cp)
 
@@ -1182,6 +1523,21 @@ def run_pipeline(
         )
 
         i += 1
+        if i == 1 and tail_supplier is not None:
+            tail = tail_supplier()
+            if isinstance(tail, RevisionStream):
+                body_stream = tail
+                stream_finished = False
+            elif not isinstance(tail, str):
+                raise ValueError('Remaining speech must be text')
+            elif tail.strip():
+                # Reuse TreeDebater's ordinary paragraph split and short-block merge.
+                # The published prefix stays separate; only its actual audio duration
+                # is deducted from the remaining body's budget.
+                tail_segments = split_body_chunks(tail, audio_budget_remaining, cfg)
+                segments_list.extend(tail_segments)
+                total_chars_initial = sum(len(c) for c in segments_list)
+            tail_supplier = None
 
     if out_dir is not None:
         sep = "\n\n" + ("=" * 80) + "\n\n"
@@ -1216,7 +1572,186 @@ def run_pipeline(
     return chunk_profiles, round_profile, combined_mp3_bytes, final_texts
 
 
+def run_pipeline(*args, **kwargs):
+    """Run synthesis and settle every worker before returning or raising.
+
+    Publishing callbacks still run immediately; cleanup does not delay playback.
+    No background rewrite/TTS request may escape a completed speech's accounting.
+    """
+    contexts = []
+    try:
+        return _run_pipeline(*args, **kwargs, _contexts=contexts)
+    finally:
+        active_error = sys.exc_info()[1]
+        for context in contexts:
+            context.stop_event.set()
+        for context in contexts:
+            for worker in context.workers:
+                worker.join()
+            context.executor.shutdown(wait=True, cancel_futures=True)
+        out_dir = kwargs.get('out_dir', args[5] if len(args) > 5 else None)
+        if out_dir is not None and contexts:
+            audits = [{'original': context.original_text, 'checks': context.rewrite_checks,
+                       'final_edit_scope': context.edit_scope().payload(),
+                       'candidates': [dict(text=c.text, source_unchanged=c.edit_scope is None,
+                            edit_scope=c.edit_scope.payload() if c.edit_scope else None,
+                            obsolete=c.obsolete, published=c.published, audio_reused=c.audio_reused)
+                            for c in context.candidates]}
+                      for context in contexts]
+            path = Path(out_dir) / 'rewrite_audit.json'
+            temporary = path.with_suffix('.json.tmp')
+            try:
+                temporary.write_text(json.dumps(audits, ensure_ascii=False, indent=2), encoding='utf-8')
+                temporary.replace(path)
+            except OSError as exc:
+                if active_error is None:
+                    raise
+                import warnings
+                warnings.warn(f'Rewrite audit could not be saved while handling {type(active_error).__name__}: {type(exc).__name__}')
+
+        if active_error is None:
+            for context in contexts:
+                context.raise_estimation_error()
+
+
 # -------- high-level API --------
+def convert_incremental_speech_to_audio(producer, output_path, total_budget_s, *, config=None, on_chunk=None):
+    """Pull one reviewed argument, publish its audio, then prepare the next.
+
+    Playback is driven by the existing callback/file bridge, independently of
+    this producer. TTS never rewrites checked text. Oversize candidates are
+    regenerated and reviewed before publication, never clipped mid-argument.
+    The publication log and combined audio retain the committed prefix on error.
+    """
+    from streaming.flat_speaking import SegmentRejected
+
+    cfg = from_mapping(OutputConfig, config)
+    if not isinstance(total_budget_s, (int, float)) or not 0 < total_budget_s < float('inf'):
+        raise ValueError('Speech budget must be positive and finite')
+    output_path = Path(output_path)
+    out_dir = output_path.parent / f'{output_path.stem}_chunks'
+    out_dir.mkdir(parents=True, exist_ok=True)
+    # A failed/repeated turn must not expose old chunks through the file bridge.
+    if any(out_dir.glob('chunk_*.mp3')):
+        raise FileExistsError(f'Speech chunks already exist: {out_dir}')
+    client = OpenAI()
+    start = _now()
+    audio_total = 0.0
+    gap_total = 0.0
+    playback_end = None  # Producer-side queue estimate; not browser playback telemetry.
+    combined = AudioSegment.silent(duration=0)
+    trace = {'mode': 'flat_incremental_speaking', 'budget_mode': cfg.budget_mode,
+             'total_budget_s': total_budget_s, 'chunks': [], 'status': 'running'}
+    trace_path = out_dir / 'speaking.json'
+
+    def save_trace():
+        trace.update(audio_seconds=audio_total, estimated_gap_seconds=gap_total,
+                     wall_seconds=_now() - start, committed_text=producer.text)
+        temporary = trace_path.with_suffix('.json.tmp')
+        temporary.write_text(json.dumps(trace, ensure_ascii=False, indent=2), encoding='utf-8')
+        temporary.replace(trace_path)
+
+    try:
+        for index in range(cfg.max_stream_chunks):
+            if producer.done:
+                break
+            elapsed_gaps = (gap_total + max(0, _now() - playback_end)) if playback_end is not None else 0
+            remaining = total_budget_s - audio_total
+            if cfg.budget_mode == 'experiment_elapsed':
+                remaining -= elapsed_gaps
+            if remaining < 3:
+                trace['status'] = 'budget_exhausted'
+                break
+            target = min(remaining, cfg.first_chunk_seconds if index == 0 else cfg.later_chunk_seconds)
+            published = False
+            # At most one shorter, fully rechecked candidate for an audio overrun.
+            for attempt in range(2):
+                final = index == cfg.max_stream_chunks - 1 or remaining <= target + 3
+                prepare_start = _now()
+                text = producer.prepare(target, final=final, max_chars=min(4000, cfg.max_chunk_chars))
+                text_ready = _now()
+                if text is None:
+                    break
+                producer.validate(text)
+                if len(text) > 4000:
+                    raise SegmentRejected('Checked paragraph exceeds the TTS input limit')
+                tts = _tts_with_retry(client, text, voice=cfg.voice, model=cfg.model)
+                seg = AudioSegment.from_file(BytesIO(tts['mp3_bytes']), format='mp3')
+                mp3_bytes = tts['mp3_bytes']
+                if cfg.normalize_seams:
+                    seg, changed = _normalize_seam_silence(seg, cfg)
+                    if changed:
+                        buf = BytesIO()
+                        seg.export(buf, format='mp3')
+                        mp3_bytes = buf.getvalue()
+                duration = len(seg) / 1000.0
+                if duration <= 0:
+                    raise ValueError('TTS returned empty audio')
+                ready = _now()
+                gap = max(0, ready - playback_end) if playback_end is not None else 0
+                remaining = total_budget_s - audio_total
+                if cfg.budget_mode == 'experiment_elapsed':
+                    remaining -= gap_total + gap
+                if duration > remaining:
+                    trace.setdefault('discarded', []).append({'index': index, 'attempt': attempt,
+                                                             'audio_seconds': duration,
+                                                             'remaining_seconds': remaining})
+                    if remaining < 3:
+                        break
+                    target = min(target * .7, remaining * .8)
+                    continue
+                # Publication is the immutability boundary, even if a player has
+                # buffered this audio and has not started playing it yet.
+                producer.validate(text)
+                chunk_path = out_dir / f'chunk_{index:03d}.mp3'
+                temporary = chunk_path.with_suffix('.mp3.tmp')
+                temporary.write_bytes(mp3_bytes)
+                (out_dir / f'chunk_{index:03d}.txt').write_text(text, encoding='utf-8')
+                producer.commit(text, publish=lambda: temporary.replace(chunk_path))
+                combined += seg
+                audio_total += duration
+                gap_total += gap
+                playback_end = max(playback_end or ready, ready) + duration
+                trace['chunks'].append({'index': index, 'text': text,
+                                        'prepare_start_seconds': prepare_start - start,
+                                        'text_ready_seconds': text_ready - start,
+                                        'audio_ready_seconds': ready - start,
+                                        'audio_seconds': duration, 'estimated_gap_seconds': gap})
+                if index == 0:
+                    trace['first_text_seconds'] = text_ready - start
+                    trace['first_audio_seconds'] = ready - start
+                save_trace()
+                if on_chunk is not None:
+                    on_chunk(index, chunk_path, text, duration)
+                published = True
+                break
+            if not published:
+                trace['status'] = 'budget_exhausted' if not producer.done else 'completed'
+                break
+        if trace['status'] == 'running':
+            trace['status'] = 'completed' if producer.done else 'chunk_limit'
+        if not producer.committed:
+            raise SegmentRejected('No complete reviewed argument fits the speech budget')
+    except Exception as exc:
+        trace['status'] = 'failed'
+        trace['error'] = f'{type(exc).__name__}: {exc}'
+        raise
+    finally:
+        # Do not mask the original generation/playback exception with diagnostics.
+        import sys
+        failure_in_flight = sys.exc_info()[0] is not None
+        try:
+            save_trace()
+            if producer.committed:
+                temporary = output_path.with_suffix('.mp3.tmp')
+                combined.export(temporary, format='mp3')
+                temporary.replace(output_path)
+        except Exception:
+            if not failure_in_flight:
+                raise
+    return producer.text, '', audio_total
+
+
 def convert_text_to_speech_streaming(
     content: str,
     output_path: str,
@@ -1228,6 +1763,10 @@ def convert_text_to_speech_streaming(
     on_chunk=None,
     motion: str = "",
     side: str = "",
+    tail_supplier=None,
+    validate_chunk=None,
+    prepared_first_audio=None,
+    prepared_body_audio=None,
 ) -> Tuple[str, str, float]:
     """
     Streaming TTS: split content into chunks, adaptively refine each chunk's
@@ -1246,12 +1785,28 @@ def convert_text_to_speech_streaming(
         (text_content, reference, duration) - same signature as
         tts.convert_text_to_speech()
     """
-    audio_content, _ = remove_citation(content)
+    audio_content, reference = remove_citation(content)
     audio_content = remove_subtitles(audio_content)
+    body_stream = None
+
+    if tail_supplier is not None:
+        original_supplier = tail_supplier
+        def tail_supplier():
+            nonlocal reference, body_stream
+            tail = original_supplier()
+            if isinstance(tail, RevisionStream):
+                body_stream = tail
+                return tail
+            if not isinstance(tail, str):
+                raise ValueError('Remaining speech must be text')
+            spoken, tail_reference = remove_citation(tail)
+            if tail_reference:
+                reference = '\n\n'.join(filter(None, (reference, tail_reference)))
+            return remove_subtitles(spoken)
 
     cfg = from_mapping(OutputConfig, config)
-    segments = (split_by_paragraphs(audio_content) if cfg.adaptive_delivery
-                else split_into_chunks(audio_content, total_budget_s, cfg))
+    segments = ([audio_content.strip()] if tail_supplier is not None else
+                split_into_chunks(audio_content, total_budget_s, cfg))
 
     client = OpenAI()
     output_path = Path(output_path)
@@ -1267,7 +1822,14 @@ def convert_text_to_speech_streaming(
         config=config,
         on_chunk=on_chunk,
         motion=motion, side=side,
+        tail_supplier=tail_supplier,
+        validate_chunk=validate_chunk,
+        prepared_first_audio=prepared_first_audio,
+        prepared_body_audio=prepared_body_audio,
     )
+
+    if body_stream is not None and body_stream.reference:
+        reference = '\n\n'.join(filter(None, (reference, body_stream.reference)))
 
     # Save combined audio
     output_path.write_bytes(combined_mp3_bytes)
@@ -1276,7 +1838,6 @@ def convert_text_to_speech_streaming(
     duration = MP3(BytesIO(combined_mp3_bytes)).info.length
 
     # Build text_content and reference matching the original API
-    _, reference = remove_citation(content, keep_main=True)
     text_content = "\n\n".join(final_texts)
 
     print(

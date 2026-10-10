@@ -1,33 +1,57 @@
-import json
-import os
-import re
-from io import BytesIO
-from typing import Dict, List
+import math
+import threading
+from typing import List, Sequence, Union, overload
 
 
 from .speech_duration import estimate_speech_seconds
 from .tool import remove_citation, remove_subtitles
 
 
+TTS_INPUT_LIMIT = 4096
+_G2P = None
+_G2P_LOCK = threading.Lock()
+
+
+def _audio_chunks(text):
+    """Cover all cleaned text within the provider limit, preferring word boundaries."""
+    while text:
+        end = min(len(text), TTS_INPUT_LIMIT)
+        if end < len(text):
+            boundary = text.rfind(' ', 0, end)
+            if boundary >= 0:
+                end = boundary + 1
+        yield text[:end]
+        text = text[end:]
+
+
 class LengthEstimator:
-    def __init__(self, mode):
+    def __init__(self, mode, *, audio_duration=None):
         self.mode = mode
+        self.audio_duration = audio_duration
         if self.mode == "fastspeech":
             from .fs_wrapper import get_shared_wrapper
             self.client = get_shared_wrapper(batch_size=8)
-        elif self.mode == "openai":
-            from openai import OpenAI
-            from .constants import openai_api_key
-            self.client = OpenAI(api_key=openai_api_key)
+        elif self.mode == "openai" and not callable(audio_duration):
+            raise ValueError('OpenAI duration estimation requires an injected audio_duration '
+                             'callable using the configured TTS client and transport')
 
-    def query_time(self, content: List[str], mode=None) -> List[float]:
+    @overload
+    def query_time(self, content: str, mode=None) -> float: ...
+
+    @overload
+    def query_time(self, content: Sequence[str], mode=None) -> List[float]: ...
+
+    def query_time(self, content: Union[str, Sequence[str]], mode=None) -> Union[float, List[float]]:
+        """Strings return a scalar; batches always return a list, including zero/one items."""
         if mode is not None and mode != self.mode:
-            return LengthEstimator(mode).query_time(content)
-
-        if isinstance(content, str):
-            content = [content]
-        clean_content = [remove_citation(c)[0] for c in content]
-        clean_content = [remove_subtitles(c) for c in clean_content]
+            return LengthEstimator(mode, audio_duration=self.audio_duration).query_time(content)
+        scalar = isinstance(content, str)
+        if not scalar and not isinstance(content, Sequence):
+            raise TypeError('content must be text or a sequence of text')
+        inputs = [content] if scalar else content
+        if any(not isinstance(c, str) for c in inputs):
+            raise TypeError('every content item must be text')
+        clean_content = [remove_subtitles(remove_citation(c)[0]) for c in inputs]
         if self.mode == "words":
             length = [LengthEstimator.count_words(c) for c in clean_content]
         elif self.mode == "syllables":
@@ -37,22 +61,23 @@ class LengthEstimator:
         elif self.mode == "time":
             length = [estimate_speech_seconds(c) for c in clean_content]
         elif self.mode == "fastspeech":
-            length = self.client.query_time(clean_content)
+            length = self.client.query_time(clean_content) if clean_content else []
             length = [l * 1.11 - 7 if l > 100 else l for l in length]  # fit openai speed
         elif self.mode == "openai":
-            from mutagen.mp3 import MP3
             length = []
-            for c in clean_content:
-                response = self.client.audio.speech.create(model="tts-1", voice="echo", input=c[:4096])
-
-                audio_bytes = BytesIO(response.content)
-
-                length.append(MP3(audio_bytes).info.length)
+            for text in clean_content:
+                total = 0.
+                for chunk in _audio_chunks(text):
+                    seconds = float(self.audio_duration(chunk))
+                    if not math.isfinite(seconds) or seconds < 0:
+                        raise ValueError('Audio duration must be finite and nonnegative')
+                    total += seconds
+                length.append(total)
         else:
             raise NotImplementedError(f"Mode {self.mode} not implemented")
-        if len(length) == 1:
-            return length[0]
-        return length
+        if len(length) != len(inputs):
+            raise ValueError('Duration estimator returned the wrong batch size')
+        return length[0] if scalar else length
 
     @staticmethod
     def count_words(text):
@@ -133,12 +158,12 @@ class LengthEstimator:
         # Split on spaces and filter out non-words
         words = [word for word in text.split() if is_word(word)]
 
-        from g2p_en import G2p
-        g2p = G2p()
-        phonemes = [x for x in g2p(" ".join(words)) if x != " "]
-        n_count = len(phonemes)
-
-        return n_count
+        global _G2P
+        with _G2P_LOCK:
+            if _G2P is None:
+                from g2p_en import G2p
+                _G2P = G2p()
+            return sum(phone != ' ' for phone in _G2P(" ".join(words)))
 
 
 if __name__ == "__main__":

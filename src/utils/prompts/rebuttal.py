@@ -6,12 +6,11 @@ context = (
     "\n"
 )
 
-
 default_rebuttal_prompt = context + (
     "Your response should be about {{n_words}} words and do not output other things than our response. When attacking, be aggresive and focus on a certain point that favors your side.\n"
 )
 
-expert_rebuttal_prompt = context + (
+rebuttal_strategy_knowledge = (
     "\n## Knowledge\n"
     "### Structure of a Rebuttal\n"
     "A complete rebuttal should consist of multiple points, with each point containing four parts:\n"
@@ -39,11 +38,34 @@ expert_rebuttal_prompt = context + (
     "\n"
 )
 
-expert_rebuttal_prompt_2 = expert_rebuttal_prompt + (
-    "## Workflow: Generate a spoken transcript for the rebuttal statement under the word budget ({{n_words}} words). \n"
+rebuttal_strategy_workflow = (
     "1. Analyze the debate flow trees to select the battlefields you will discuss from the given list of battlefields. "
     "2. Allocate your word budget among the selected battlefields based on their importance and create the rebuttal plan. The plan should include the overview of battlefields you will discuss and the word budget for each battlefield. You should allocate more words to the more important points and can ignore the less important points. \n"
     "3. Follow the rebuttal plan to generate conversational arguments. Write as you would speak, with VARIED sentence lengths. Use short and simple words and sentences that are easy to understand.\n"
+)
+
+rebuttal_strategy_notes = (
+    "## Important Notes\n"
+    "1. Organize your points logically with clear purpose statements. \n"
+    "   - Clearly mention the actions you will take in each point. For example, 'we will address [X] concerns mentioned by the opponent, which are ' for attack / rebut actions or 'after that,we will reinforce our claims that' for reinforce action.\n"
+    "   - Use clear indicators like first, second, third, etc. to organize your points.\n"
+    # "   - Among the selected battlefields, discuss the one with attack / rebut actions first. \n"
+    # "   - If the opponent's argument is not clear, you can ask the opponent to clarify it first.\n"
+    "2. Avoid restating or simply repeating the same evidence or arguments across different points.\n"
+    "3. Avoid repeating the similar arguments in your previous statement. Use the phrase 'as we have discussed' to refer to the previous statement.\n"
+    "4. Only use facts that are generally accepted and don't require specific citation. Don't hallucinate any particular experimental results, statistical findings from named studies, or quotes from specific researchers until the evidence pool is provided\n"
+    "5. When presenting alternatives or counterarguments, offer specific, implementable solutions rather than just criticism.\n"
+    "6. Address both systemic and individual factors when relevant, showing how they can complement rather than contradict each other.\n"
+    "\n"
+)
+
+rebuttal_strategy = rebuttal_strategy_knowledge + rebuttal_strategy_workflow + rebuttal_strategy_notes
+
+expert_rebuttal_prompt = context + rebuttal_strategy_knowledge
+
+expert_rebuttal_prompt_2 = expert_rebuttal_prompt + (
+    "## Workflow: Generate a spoken transcript for the rebuttal statement under the word budget ({{n_words}} words). \n"
+) + rebuttal_strategy_workflow + (
     "4. Deliver a rebuttal statement with {{n_words}} words in total. Present only the final text.\n"
     "Note that it's possible that the debate flow tree is not provided, in this case, you can just generate a rebuttal statement without following the debate flow tree.\n"
     "\n"
@@ -66,18 +88,7 @@ expert_rebuttal_prompt_2 = expert_rebuttal_prompt + (
     "**Opponent's Tree**: \n{oppo_tree}\n\n"
     "## Battlefields\n"
     "{{tips}}\n\n"
-    "## Important Notes\n"
-    "1. Organize your points logically with clear purpose statements. \n"
-    "   - Clearly mention the actions you will take in each point. For example, 'we will address [X] concerns mentioned by the opponent, which are ' for attack / rebut actions or 'after that,we will reinforce our claims that' for reinforce action.\n"
-    "   - Use clear indicators like first, second, third, etc. to organize your points.\n"
-    # "   - Among the selected battlefields, discuss the one with attack / rebut actions first. \n"
-    # "   - If the opponent's argument is not clear, you can ask the opponent to clarify it first.\n"
-    "2. Avoid restating or simply repeating the same evidence or arguments across different points.\n"
-    "3. Avoid repeating the similar arguments in your previous statement. Use the phrase 'as we have discussed' to refer to the previous statement.\n"
-    "4. Only use facts that are generally accepted and don't require specific citation. Don't hallucinate any particular experimental results, statistical findings from named studies, or quotes from specific researchers until the evidence pool is provided\n"
-    "5. When presenting alternatives or counterarguments, offer specific, implementable solutions rather than just criticism.\n"
-    "6. Address both systemic and individual factors when relevant, showing how they can complement rather than contradict each other.\n"
-    "\n"
+) + rebuttal_strategy_notes + (
     "## Output with the format (two parts, start with **Rebuttal Plan** and then **Statement**):\n"
     "**Rebuttal Plan**: First, allocate words for the overview of the rebuttal. Then, allocate the rest of the word budget among the battlefields. Explain your rationale. Briefly mention one or two rhetorical techniques to use and logical fallacies to discuss. Make sure the total words is {{n_words}}.\n"
     "**Statement**: After the rebuttal plan, generate a rebuttal statement of {{n_words}} words in total, do not include any other text\n\n"

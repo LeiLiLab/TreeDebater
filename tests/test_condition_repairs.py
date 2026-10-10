@@ -44,7 +44,7 @@ def test_limits_use_only_selected_opponent_context_claims_keep_own_sources():
         parse_state(json.dumps(state), '', tree_targets=[target])
 
 
-@pytest.mark.parametrize('mode', ['grounded_tree', 'light_tree', 'flat_tree', 'branch_tree'])
+@pytest.mark.parametrize('mode', ['flat_tree', 'branch_tree'])
 def test_empty_extracted_conditions_do_not_hide_a_keyword_free_prerequisite(mode):
     pair = trees()
     quote = 'Scanning and the listening point need separate costings.'
@@ -99,7 +99,7 @@ def test_assertion_review_covers_every_draft_unit_and_rejects_forged_or_missing_
 
 
 def test_opponent_sources_do_not_turn_our_prior_assertions_into_evidence():
-    p = player(trees(), 'grounded_linear')
+    p = player(trees(), 'linear')
     p.planner.chunks = ['A named volunteer attends.']
     history = [{'side': 'against', 'content': 'Volunteers lack training.'},
                {'side': 'for', 'content': 'A named volunteer attends.'}]
@@ -127,8 +127,8 @@ def test_real_feedback_revision_handoff_keeps_unsupported_sentence_checks_in_exi
 
 def test_provided_evidence_can_support_facts_but_not_condition_irrelevance():
     from streaming.constraint_review import supplied_evidence
-    p = player(trees(), 'grounded_linear')
-    p.high_quality_evidence_pool = [{'content': 'Staff received training.'}, {'content': ''}]
+    p = player(trees(), 'linear')
+    p.evidence_pool = [{'content': 'Staff received training.'}, {'content': ''}]
     evidence = supplied_evidence(p)
     assert evidence == ['Staff received training.']
     raw = json.dumps({'checks': [], 'assertions': [assertion(0, quote=evidence[0])], 'issues': []})

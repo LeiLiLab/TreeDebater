@@ -82,7 +82,7 @@ def test_wrong_owner_correction_and_unattributed_content_cannot_mutate_graph():
     bad=item('Remove buses.', 'revise',target)
     events=apply_statements((own,other),[bad],bad['content'],'for')
     assert target.claim=='Keep buses.' and not own.root.children
-    assert events[0]['action']=='REJECT_OWNER'
+    assert any(e['action']=='REJECT_OWNER' for e in events)
     apply_statements((own,other),[item('Invented.', 'propose')],'Actually heard.','for')
     assert not own.root.children
 

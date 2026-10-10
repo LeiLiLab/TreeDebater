@@ -22,13 +22,14 @@ def modules(monkeypatch):
     tool.remove_subtitles = lambda text: text
     constants = types.ModuleType('utils.constants')
     constants.CLOSING_TIME = constants.OPENING_TIME = constants.REBUTTAL_TIME = 60
-    estimator = types.ModuleType('utils.time_estimator')
-    estimator.LengthEstimator = Mock()
+    constants.LENGTH_MODE_FOR_DRAFT = 'words'
+    constants.TIME_MODE_FOR_STATEMENT = 'time'
+    constants.WORDRATIO = {'time': .46, 'words': 1, 'phonemes': 4.5, 'syllables': 1.75}
     fs = types.ModuleType('utils.fs_wrapper')
     fs.FastSpeechWrapper = Mock()
     mp3 = types.ModuleType("mutagen.mp3")
     mp3.MP3 = Mock()
-    for module in (tool, constants, estimator, fs, mp3):
+    for module in (tool, constants, fs, mp3):
         monkeypatch.setitem(sys.modules, module.__name__, module)
 
     def load(name, file):
@@ -38,6 +39,8 @@ def modules(monkeypatch):
         spec.loader.exec_module(module)
         return module
 
+    load('utils.time_estimator', 'utils/time_estimator.py')
+    load('utils.speech_length', 'utils/speech_length.py')
     env = load('streaming.env', 'streaming/env.py')
     bridges = load('streaming.bridges', 'streaming/bridges.py')
     overlap = load('streaming.overlap', 'streaming/overlap.py')
@@ -243,7 +246,7 @@ def test_pipeline_uses_configured_tts_and_parallelism(modules, monkeypatch):
     cfg = OutputConfig(model='custom-tts', voice='alloy', min_chunk_words=1,
                        max_parallel_tts=2, max_refinements=0)
     monkeypatch.setattr(modules.tts.LengthEstimator, 'count_words', lambda s: len(s.split()))
-    monkeypatch.setattr(modules.tts, '_estimate_duration', lambda _: 1.0)
+    monkeypatch.setattr(modules.tts, '_estimate_duration', lambda _, **kw: 1.0)
     requests = []
 
     def query(client, text, **kwargs):
@@ -341,6 +344,7 @@ def test_base_env_passes_output_config_and_budgets(modules, monkeypatch):
     for player in env.debaters.values():
         assert player.streaming_output_config.model == 'custom-tts'
         assert player.streaming_output_config.max_parallel_tts == 2
+        assert player.speech_budgets == cfg.speech_budgets
         assert player.opening_generation.call_args.kwargs['max_time'] == 12
         assert player.rebuttal_generation.call_args.kwargs['max_time'] == 23
         assert player.closing_generation.call_args.kwargs['max_time'] == 34
@@ -390,13 +394,13 @@ def test_deepseek_refinement_uses_separate_client_from_audio(modules, monkeypatc
     assert args['extra_body']['thinking']['type'] == 'disabled'
 
 
-def test_adaptive_split_preserves_text_and_short_first_chunk(modules):
+def test_paragraph_split_preserves_text_and_indivisible_sentence(modules):
     text = 'One two three four. Five six seven eight. ' + ' '.join(['long'] * 80) + '.'
-    chunks = modules.tts.split_for_adaptive_delivery([text], 2.3, 4.6)
+    chunks = modules.tts.split_into_chunks(text, 120)
     assert ' '.join(chunks).split() == text.split()
-    assert len(chunks[0].split()) <= 5
-    assert all(len(c.split()) <= 10 for c in chunks[1:])
-    assert len(chunks) > 2
+    assert chunks[-1] == ' '.join(['long'] * 80) + '.'
+    assert all(c.endswith('.') for c in chunks)
+    assert len(chunks) >= 2
 
 
 def adaptive_context(modules):
@@ -409,7 +413,7 @@ def adaptive_context(modules):
 
 def test_adaptive_adoption_checks_actual_audio_and_changed_target(modules):
     ctx = adaptive_context(modules)
-    candidate = types.SimpleNamespace(fs_estimated_s=10)
+    candidate = modules.tts._TtsCandidate(0, 'some words', 10, None)
     assert not ctx.try_adopt(candidate, {'audio_seconds': 4})
     assert ctx.try_adopt(candidate, {'audio_seconds': 10})
     ctx.update_target(25, 2, 2)
@@ -427,11 +431,12 @@ def test_adaptive_pipeline_delivers_first_audio_before_rewriting_and_fits_remain
     from streaming.config import OutputConfig
     tts = modules.tts
     monkeypatch.setattr(tts.LengthEstimator, 'count_words', lambda text: len(text.split()))
-    monkeypatch.setattr(tts, '_estimate_duration', lambda text: len(text.split()) * .46)
+    monkeypatch.setattr(tts, '_estimate_duration', lambda text, **kw: len(text.split()) * .46)
     events = []
     speech_rate = 80.352 / 215 if recorded_closing else .05
     budget = 120. if recorded_closing else 2.
-    source = " ".join(["word"] * 215) if recorded_closing else "One two. Three four five six seven. Eight nine ten eleven twelve."
+    source = ("\n\n".join(" ".join(["One two three four five."] * count) for count in (3, 20, 20))
+              if recorded_closing else "One two.\n\nThree four five six seven.\n\nEight nine ten eleven twelve.")
 
     def query(client, text, **kwargs):
         seconds = len(text.split()) * speech_rate
@@ -449,11 +454,11 @@ def test_adaptive_pipeline_delivers_first_audio_before_rewriting_and_fits_remain
                         lambda stream, **kw: AudioSegment.silent(round(float(stream.getvalue()) * 1000)))
     monkeypatch.setattr(tts.AudioSegment, 'export', lambda self, output, **kw: output.write_bytes(b'audio') if isinstance(output, Path) else output.write(b'audio'))
     cfg = OutputConfig(budget_mode="audio_duration", adaptive_delivery=True, first_chunk_seconds=12 if recorded_closing else .92,
-                       later_chunk_seconds=30 if recorded_closing else 2.3,
+                       min_chunk_words=1,
                        min_tolerance_seconds=.03, tolerance_ratio=.05,
                        last_chunk_upper_tolerance_ratio=.05, max_refinements=6)
     profiles, _, _, _ = tts.run_pipeline(
-        Mock(), [source], budget,
+        Mock(), tts.split_into_chunks(source, budget, cfg), budget,
         config=cfg, out_dir=tmp_path,
         on_chunk=lambda i, *a: events.append('first_audio' if i == 0 else 'later_audio'),
     )

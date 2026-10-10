@@ -7,25 +7,21 @@ import hashlib
 import json
 import re
 
-from .claim_constraints import constraint_ledger, source_candidates
+from .claim_constraints import source_candidates
 from .grounding import normalize
 
 
 def current_checklist(debater):
     planner = debater.planner
-    if planner.config.grounded_tree:
+    if planner.config.branch_state:
         # Always rebuild from the current bounded view, even after plan fallback.
         context = debater._planning_context()
         planner.revalidate_tree(context)
-        if planner.config.branch_state:
-            ledger = context['constraints']  # Flat targets omit contextual edges.
-            from .tree_grounding import tree_targets
-            targets = tree_targets((debater.debate_tree, debater.oppo_debate_tree), debater.oppo_side,
-                                  max_targets=planner.config.max_tree_targets,
-                                  max_context_nodes=planner.config.max_tree_context_nodes)
-        else:
-            targets = context['tree_targets']
-            ledger = constraint_ledger(targets, debater.oppo_side)
+        ledger = context['constraints']  # Flat targets omit contextual edges.
+        from .tree_grounding import tree_targets
+        targets = tree_targets((debater.debate_tree, debater.oppo_debate_tree), debater.oppo_side,
+                              max_targets=planner.config.max_tree_targets,
+                              max_context_nodes=planner.config.max_tree_context_nodes)
         ledger = ledger + source_candidates(targets, debater.oppo_side)
     else:
         ledger = []
@@ -59,9 +55,9 @@ def opponent_sources(debater, history):
 
 
 def supplied_evidence(debater):
-    """Reuse provided evidence excerpts; never treat our own speech as a source."""
+    """Reuse the native selected evidence; never treat our own speech as a source."""
     texts = []
-    for entry in getattr(debater, 'high_quality_evidence_pool', []):
+    for entry in getattr(debater, 'evidence_pool', []):
         if not isinstance(entry, dict):
             continue
         text = entry.get('content') or entry.get('raw_content')

@@ -194,9 +194,10 @@ extract_statment_with_tree_prompt = (
     "\t- **reinforce**: strengthen a Level-1 main claim in your tree. Do not use this for material whose primary role is rebutting a Level-2 attack on your tree.\n"
     "\t- **attack**: counter a Level-1 main claim in the opponent's tree; the extracted claim should oppose that Level-1 node's **claim**.\n"
     "Purposes must be consistent with the trees. A claim can combine roles (e.g. if a Level-2 node in your tree matches a Level-1 node in the opponent's tree, **rebut** and **attack** may both apply).\n"
-    "**purpose** is a JSON array of objects. Each object has exactly these keys:\n"
+    "**purpose** is a JSON array of objects. Each object has these keys:\n"
     "\t- **action**: one of propose, reinforce, rebut, attack\n"
     "\t- **targeted_debate_tree**: \"you\" or \"opponent\" (which tree the action refers to)\n"
+    "\t- **target_id**: copy the target's node_id when a node registry is supplied; otherwise null. The registry's speaker ownership takes precedence over the usual level examples below.\n"
     "\t- **target**: the **claim** field of the targeted tree node—never an argument text. Use the string `N/A` only when no node applies.\n"
     "\t  - **propose**: target is the claim to add at Level-0 of your tree; it must match this item's **claim**.\n"
     "\t  - **rebut**: target is the **claim** of the Level-2 node in your tree you are answering.\n"
@@ -275,7 +276,7 @@ select_query_prompt = (
     "Note: Include only the most relevant queries that will help {action} the claim or the logic chain."
 )
 
-audience_feedback_prompt = (
+audience_feedback_rules = (
     "## Your Task\n"
     "You are a panel of debate audience members to provide comprehensive feedback on how the statement impacts and persuades a general audience.\n\n"
     "### Audience Panel Composition\n"
@@ -325,6 +326,9 @@ audience_feedback_prompt = (
     "{history}\n\n"
     "**Current {side}'s {stage} Statement to be evaluated**:\n"
     "{statement}\n\n"
+)
+
+audience_feedback_output = (
     "### Output Format\n"
     "[Comprehensive Analysis]\n"
     "Core Message Clarity:\n"
@@ -340,6 +344,8 @@ audience_feedback_prompt = (
     "   Minimal Revision Suggestion:\n\n"
     "..."
 )
+
+audience_feedback_prompt = audience_feedback_rules + audience_feedback_output
 
 evidence_selection_prompt = (
     "From the provided list of evidence dictionaries, select the 10 most useful pieces that would best support a debate argument.\n\n"
@@ -387,7 +393,7 @@ evidence_selection_prompt = (
     "- Be careful and strict to select the evidence. Only return the evidence that is helpful and effective. If there is no such evidence, return an empty analysis object and an empty list.\n\n"
     "## Output Format\n"
     "Return a JSON object with two fields:\n"
-    "1. 'analysis': A brief analysis of why each selected piece supports your position (limit to 1-2 sentences per piece)\n"
+    "1. 'analysis': For each selected ID, name the specific claim or reasoning step it supports and explain the connection and any relevant limitation (1-2 sentences per piece). Do not invent findings.\n"
     "2. 'selected_ids': An array of at most 10 evidence IDs (the 'id' field from each selected dictionary)\n\n"
     "Format:\n"
     "{{\n"
@@ -399,29 +405,44 @@ evidence_selection_prompt = (
     "}}"
 )
 
-post_process_prompt = (
-    "## Your Task\n"
-    "Revise your current {stage} statement based on the feedback from the experts and audience. Transform the statement into a more natural and persuasive spoken argument while maintaining academic credibility. The new statement should be around {max_words} words and preserve the position expressed in the draft. \n\n"
+revision_meaning_constraints = (
     "## Non-negotiable meaning constraints\n"
     "Your assigned side is {side} on the exact motion: {motion}. FOR supports this motion; AGAINST opposes it. "
-    "The assigned side is context, not an instruction to repair the draft. Your responsibility is editing for clarity, delivery, and length while preserving the draft's position and meaning. Do not evaluate or correct existing stance contradictions. Ignore feedback that would change the draft's position. "
+    "The assigned side is context, not an instruction to repair the draft. Your responsibility is improving clarity, factual support, delivery, and length while preserving the draft's position and valid factual meaning. You may add relevant supplied evidence and explain the reasoning step it supports. Do not evaluate or correct existing stance contradictions. Ignore feedback that would change the draft's position. "
     "Preserve who made each claim and whether it is asserted, quoted, conceded, or rejected. Do not turn our claim into an opponent claim. "
     "Do not add or remove a negation in a way that reverses the position. Use a direct stance statement instead of ambiguous double negatives. "
     "Preserve the existing limits of concessions and the meaning of the conclusion. Do not add a new justification or conclusion to align the draft with the assigned side. "
     "Silently check these constraints after revising; they take priority over reaching the exact word budget.\n\n"
+)
+
+revision_task = (
+    "## Your Task\n"
+    "Revise your current {stage} statement based on the feedback from the experts and audience. Transform the statement into a more natural and persuasive spoken argument while maintaining academic credibility. The new statement should be around {max_words} words and preserve the position expressed in the draft. \n\n"
+)
+
+revision_workflow = (
     "### Workflow\n"
     "1. Based on **Feedback to consider** to fix the critical issues mentioned by experts and audience with minimal revision. \n"
     "   - You should try your best to fill in the [X] in the *Minimal Revision Suggestion* of the feedback, and use the suggested words to revise the original statements, preserve the position and meaning of the original statement. \n"
     "   - If you cannot fill in the [X], you should ignore this point. \n"
     "2. Follow the minimal revision suggestions to revise the original statements, preserve the position and meaning of the original statement. \n"
-    "3. For each point, find the most relevant evidence that can support the WHOLE LOGIC of the point, instead of partially support some arguments in this point. If you cannot find such evidence, keep the point as it is. If you find the evidence, explicitly cite the evidence following the evidence guidelines. \n"
-    "4. During the revision, DO NOT change the factual information of the original statement. \n"
+    "3. For each point, use relevant supplied evidence to support a specific factual claim or reasoning step. A source need not establish the whole argument. Explain its connection and preserve its limitations; do not generalize beyond what it establishes. If no relevant evidence is supplied, do not invent support. Attribute evidence following the evidence guidelines. \n"
+    "4. Preserve valid factual information and qualifications. You may add factual support from supplied evidence; minimal revision does not mean avoiding evidence integration. \n"
     "5. Be confident and assertive in your statement. DO NOT use words like 'may', 'possible', 'likely', 'might', etc. to express your uncertainty. \n"
+)
+
+revision_structure = (
     "6. If there is no overview in the original statement, you should add one. If there is no indication of the order of the points (such as first, second, finally, etc.) in the original statement, you should add them. \n"
+)
+
+revision_allocation = (
     "7. The new statement should also follow the allocation plan and be around {max_words} words while preserving the draft's position and meaning.\n\n"
+)
+
+revision_evidence = (
     "## Evidence Guidelines\n"
     "CRITICAL REQUIREMENT: The statement is a spoken transcript. Therefore, you MUST mention the source of the evidence in the statement instead of just citing the evidence with a number because the audience does not have access to the reference list when listening to the statement. Failing to properly attribute sources verbally will significantly undermine both your credibility and the persuasive impact of your entire presentation.\n"
-    "- Only use evidence that directly supports your complete argument, rather than evidence that only partially supports certain aspects. \n"
+    "- Use evidence for the specific aspect or reasoning step it establishes; distinguish that finding from your broader inference. \n"
     "- ALWAYS mention the source of the evidence. Never just cite evidence like 'A study shows that...' without specifying the source. \n"
     "- Integrate evidence naturally into your argument flow and clearly connect each citation to specific claims. Include the time period of the evidence for better understanding. For example:\n"
     '  - "Research from *PMC in 2023* has demonstrated that couples who perceive more financial difficulties generally report more conflicts and lower relationship satisfaction [1]."\n'
@@ -431,11 +452,17 @@ post_process_prompt = (
     '  - "According to Benjamin Karney, a social psychology professor at UCLA, whose extensive research published in the Annual Review of Psychology reveals..."\n'
     '  - "Financial experts at *American business magazine Forbes* have found that couples with large income gaps face unique challenges that can\'t be solved with simplistic approaches..."\n'
     '  - "*Stanford psychology scholars* have demonstrated through controlled studies that..."\n'
+)
+
+revision_references = (
     "- Ensure each citation clearly connects to the source in your reference list and includes sufficient publication details:\n"
     "  - List ALL your references in a standard Chicago format in the **Reference** section. Make sure each source has a clear number such as [1], [2], etc. The section should come after the statement. Include full publication information (author, title, publication, date) for each source. Do not include web links or URL information.\n"
     "  - Use correct formatting: [1], [2], etc. immediately after the claim being cited\n"
     "  - In the reference section, provide complete source information including author name(s), full title, publication name in italics, and publication date\n"
     "- Develop a robust evidence foundation with multiple sources rather than relying on just one or two studies. Be prepared to cite sources if asked."
+)
+
+revision_inputs = (
     "### Input Information\n"
     "### Feedback to Consider\n"
     "{feedback}\n\n"
@@ -452,6 +479,9 @@ post_process_prompt = (
     "### Output Format: Generate ONLY the revised statement text below in around {max_words} words. IMPORTANT: Make sure that you are following the constraint of the number of words, the above feedback for consideration, and the allocation plan. The output must NOT begin with any title, heading, or introductory phrase like '**Opening Statement: ...**' or similar. Start directly with the first sentence of the statement. No additional explanations.\n"
     "Revised Statement:\n"
 )
+
+post_process_prompt = (revision_task + revision_meaning_constraints + revision_workflow
+    + revision_structure + revision_allocation + revision_evidence + revision_references + revision_inputs)
 
 
 debate_flow_tree_action_prompt = (

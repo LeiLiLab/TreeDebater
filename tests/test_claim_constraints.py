@@ -12,7 +12,6 @@ from streaming.argument_revisions import revise_claim
 from streaming.branch_planning import LIMIT_MARKERS, parse_branch_state, planning_material
 from streaming.claim_constraints import bind_constraints, constraint_ledger, exported_constraints
 from streaming.constraint_review import audit_feedback, current_checklist
-from streaming.grounding import parse_state
 from streaming.planning import IncrementalPlanner, PlanningConfig
 from streaming.tree_grounding import tree_targets
 from streaming.tree_updates import apply_statements, target_registry
@@ -50,6 +49,8 @@ def indexed():
 
 def player(pair, mode='branch_tree'):
     p = TreeDebater.__new__(TreeDebater)
+    from agents import DebaterConfig
+    p.config = DebaterConfig(side="against")
     p.motion, p.side, p.oppo_side, p.status = 'Community services', 'against', 'for', 'rebuttal'
     p.oppo_debate_tree, p.debate_tree = pair
     p.conversation, p.high_quality_evidence_pool, p.debate_thoughts = [], [], []
@@ -61,10 +62,6 @@ def player(pair, mode='branch_tree'):
     context = p._planning_context()
     if p.planner.config.branch_state:
         p.planner.state = parse_branch_state(indexed(), p.planner.chunks[0], context)
-    elif p.planner.config.grounded_tree:
-        n = context['tree_targets'][0]
-        p.planner.state = parse_state(json.dumps({'claims': [{'node_id': n['node_id'], 'quote': n['sources'][-1]}],
-                                                'limits': [], 'rebuttals': []}), '', tree_targets=context['tree_targets'])
     p.planner.plan = json.dumps(p.planner.state)
     return p
 
@@ -86,7 +83,7 @@ def test_keyword_free_condition_survives_serialization_all_planners_and_flat_abl
         assert state['constraints'][0]['node_id'] == node.node_id
     assert 'branch_briefs' not in flat
     assert not {'ancestors', 'responses', 'unanswered', 'parent_id'} & flat['tree_targets'][0].keys()
-    for mode in ('grounded_tree', 'light_tree', 'branch_tree', 'flat_tree'):
+    for mode in ('branch_tree', 'flat_tree'):
         p = player(pair, mode)
         assert p.planner.state['constraints'][0]['kind'] == 'precondition'
         assert quote in p._current_planning_instructions(grounding=True)
@@ -140,7 +137,7 @@ def test_conditions_attach_to_actual_speaker_node(action):
         assert target.constraints == []
 
 
-@pytest.mark.parametrize('mode', ['grounded_tree', 'light_tree', 'branch_tree', 'flat_tree'])
+@pytest.mark.parametrize('mode', ['branch_tree', 'flat_tree'])
 def test_condition_only_change_invalidates_plan_and_fallback_checklist_is_fresh(mode):
     pair = trees()
     node = propose(pair, 'A trial needs separate costings.', [])
@@ -187,7 +184,7 @@ def test_audit_validates_each_row_without_certifying_semantic_judgments():
         assert audit['unverified_feedback'] == malformed and not audit['review_format_valid']
 
 
-@pytest.mark.parametrize('mode', ['grounded_tree', 'light_tree', 'branch_tree', 'flat_tree'])
+@pytest.mark.parametrize('mode', ['branch_tree', 'flat_tree'])
 @pytest.mark.parametrize('quote,conditions', [
     ('Friday until eight, or the existing closing time if no volunteer attends. A four-week trial.',
      [condition('Friday until eight, or the existing closing time if no volunteer attends.', 'timing'),
@@ -255,13 +252,3 @@ def test_revision_rebuilds_checklist_after_feedback_conditions_retire():
     fresh = json.loads(prompt.split('Fresh condition checklist (data):\n')[-1])
     assert [c['quote'] for c in fresh] == ['Trial for three weeks.']
     assert p.planner.state == {} and p.helper_client.call_count == 1
-
-
-@pytest.mark.parametrize('mode', ['grounded_linear', 'light_linear'])
-def test_linear_source_limits_are_reviewed_without_inventing_tree_ownership(mode):
-    p = player(trees(), mode)
-    p.planner.state = parse_state(json.dumps({'claims': [], 'limits': [
-        {'kind': 'exception', 'quote': 'Ambulances are exempt.'}], 'rebuttals': []}), 'Ambulances are exempt.')
-    ledger = current_checklist(p)
-    assert len(ledger) == 1 and ledger[0]['node_id'] is None and ledger[0]['source_node_id'] is None
-    assert ledger[0]['quote'] == 'Ambulances are exempt.'

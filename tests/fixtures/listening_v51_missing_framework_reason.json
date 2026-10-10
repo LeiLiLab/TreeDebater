@@ -1,0 +1,38 @@
+[
+  {
+    "call_id": 22749,
+    "candidate": {
+      "text": "The core conflict in this debate is not about whether writing is a useful skill, but whether the *manual labor* of writing remains the essential gateway to human intelligence and agency.",
+      "draft": "My opponent has spent this entire debate fighting a ghost. They have argued passionately for the sanctity of the manual struggle, yet they have failed to address the fundamental shift in how intelligence is actually applied in the modern world. \n\nConsider the battleground of human intelligence. My opponent clings to the idea that writing is a unique, recursive process that cannot be replicated by any other means. They cite the 'struggle' of composition as the only way to discover thought. But this is a fundamental error. We have shown that intelligence is not tethered to a single medium. Just as the mathematician uses a calculator to transcend arithmetic and reach calculus, the modern thinker uses AI to transcend the friction of syntax and reach the higher-order complexity of strategy. The 'discovery' of thought doesn't happen in the struggle with a comma; it happens in the iterative, high-level direction of ideas. \n\nWhat's particularly important is that my opponent failed to meet their burden of proof regarding 'cognitive offloading.' They claim we are becoming spectators, but they cannot prove that directing a complex AI system is less cognitively demanding than writing a standard essay. In fact, we have demonstrated that 'prompt literacy'—the ability to be precise, unambiguous, and logical—is a rigorous new discipline. It is not a replacement for thought; it is an evolution of it.\n\nUltimately, we have won the battleground of agency. My opponent argues that without manual mastery, we lose our authority. We argue that true authority in the age of AI comes from 'judgment density'—the ability to act as the pilot, the strategist, and the ethical guardian. You don't need to be a master bricklayer to be a master architect. The future belongs to those who can design the cathedral, not those who are stuck perfecting the individual bricks. We must embrace the evolution of thought, not the preservation of labor.",
+      "framework": {
+        "ready": true,
+        "position": "against",
+        "core_dispute": "Whether manual writing is the essential cognitive process for intelligence or if agency has shifted to high-level direction/curation.",
+        "response_axes": [
+          "Manual writing as a cognitive necessity vs. AI as a cognitive elevator",
+          "The definition of agency: execution vs. direction",
+          "The necessity of manual mastery for oversight vs. the rise of prompt literacy"
+        ],
+        "prefix_action": "keep"
+      }
+    }
+  },
+  {
+    "call_id": 22750,
+    "candidate": {
+      "text": "The core conflict in this debate is not about whether writing is a useful skill, but whether the *manual labor* of writing remains the essential gateway to human intelligence and agency.",
+      "draft": "My opponent has spent this entire debate fighting a ghost. They have argued passionately for the sanctity of the manual struggle, yet they have failed to address the fundamental shift in how intelligence is actually applied in the modern world. \n\nConsider the battleground of human intelligence. My opponent clings to the idea that writing is a unique, recursive process that cannot be replicated by any other means. They cite the 'struggle' of composition as the only way to discover thought. But this is a fundamental error. We have shown that intelligence is not tethered to a single medium. Just as the mathematician uses a calculator to transcend arithmetic and reach calculus, the modern thinker uses AI to transcend the friction of syntax and reach the higher-order complexity of strategy. The 'discovery' of thought doesn't happen in the struggle with a comma; it happens in the iterative, high-level direction of ideas. \n\nWhat's particularly important is that my opponent failed to meet their burden of proof regarding 'cognitive offloading.' They claim we are becoming spectators, but they cannot prove that directing a complex AI system is less cognitively demanding than writing a standard essay. In fact, we have demonstrated that 'prompt literacy'—the ability to be precise, unambiguous, and logical—is a rigorous new discipline. It is not a replacement for thought; it is an evolution of it.\n\nUltimately, we have won the battleground of agency. My opponent argues that without manual mastery, we lose our authority. We argue that true authority in the age of AI comes from 'judgment density'—the ability to act as the pilot, the strategist, and the ethical guardian. You don't need to be a master bricklayer to be a master architect. The future belongs to those who can design the cathedral, not those who are stuck perfecting the individual bricks. We must embrace the evolution of thought, not the preservation of labor.",
+      "framework": {
+        "ready": true,
+        "position": "against",
+        "core_dispute": "Whether manual writing is the essential cognitive process for intelligence or if agency has shifted to high-level direction/curation.",
+        "response_axes": [
+          "Manual writing as a cognitive necessity vs. AI as a cognitive elevator",
+          "The definition of agency: execution vs. direction",
+          "The necessity of manual mastery for oversight vs. the rise of prompt literacy"
+        ],
+        "prefix_action": "keep"
+      }
+    }
+  }
+]

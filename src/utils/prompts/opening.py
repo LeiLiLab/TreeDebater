@@ -19,7 +19,7 @@ expert_opening_prompt = context + (
     "- Renumber the original citations to [1],[2], ... and etc. List full references in **Reference** section. This section should start with **Reference**. Use Chicago style for the reference list and DO NOT include the web link or url information.\n\n"
 )
 
-expert_opening_prompt_2 = context + (
+opening_strategy_workflow = (
     "\n\n## Workflow \n"
     "1. Create a opening plan based on the current debate flow trees. It should include the definition, judging criteria, and the battlefields to discuss. \n"
     "- If the position is to support the topic, discuss the given definition with necessary details and address uncertainties. "
@@ -30,6 +30,24 @@ expert_opening_prompt_2 = context + (
     "\t- If the judging criteria is selected to discuss, discuss it next. \n"
     "\t- Among the selected battlefields, discuss the battlefield in the order of importance. \n"
     "3. Follow the opening plan to generate conversational arguments. Write as you would speak, with VARIED sentence lengths. Use short and simple words and sentences that are easy to understand.\n"
+)
+
+opening_strategy_notes = (
+    "## Important Notes\n"
+    "1. Organize your points logically with clear purpose statements. \n"
+    "   - Clearly mention the actions you will take in each point. For example, 'we will address [X] concerns mentioned by the opponent, which are ' for attack / rebut actions or 'after that, we will propose our claims that' for propose action.\n"
+    "   - Use clear indicators like first, second, third, etc. to organize your points.\n"
+    "2. Avoid restating or simply repeating the same evidence or arguments across different points.\n"
+    "3. Avoid repeating the similar arguments in your previous statement. Use the phrase 'as we have discussed' to refer to the previous statement.\n"
+    "4. Only use facts that are generally accepted and don't require specific citation. Don't hallucinate any particular experimental results, statistical findings from named studies, or quotes from specific researchers until the evidence pool is provided\n"
+    "5. When presenting alternatives or counterarguments, offer specific, implementable solutions rather than just criticism.\n"
+    "6. Address both systemic and individual factors when relevant, showing how they can complement rather than contradict each other.\n"
+    "\n"
+)
+
+opening_strategy = opening_strategy_workflow + opening_strategy_notes
+
+expert_opening_prompt_2 = context + opening_strategy_workflow + (
     "4. Deliver a {{n_words}}-word opening statement. Present only the final text in clear, flowing prose without bullet points, asterisks, or numbered lists. \n"
     "Note that it's possible that the debate flow tree is not provided, in this case, you can just generate a opening statement without following the debate flow tree.\n"
     "## Debate Flow Tree Structure\n"
@@ -53,21 +71,11 @@ expert_opening_prompt_2 = context + (
     "{{definition}}\n\n"
     "## Battlefields\n"
     "{{tips}}\n\n"
-    "## Important Notes\n"
-    "1. Organize your points logically with clear purpose statements. \n"
-    "   - Clearly mention the actions you will take in each point. For example, 'we will address [X] concerns mentioned by the opponent, which are ' for attack / rebut actions or 'after that, we will propose our claims that' for propose action.\n"
-    "   - Use clear indicators like first, second, third, etc. to organize your points.\n"
-    "2. Avoid restating or simply repeating the same evidence or arguments across different points.\n"
-    "3. Avoid repeating the similar arguments in your previous statement. Use the phrase 'as we have discussed' to refer to the previous statement.\n"
-    "4. Only use facts that are generally accepted and don't require specific citation. Don't hallucinate any particular experimental results, statistical findings from named studies, or quotes from specific researchers until the evidence pool is provided\n"
-    "5. When presenting alternatives or counterarguments, offer specific, implementable solutions rather than just criticism.\n"
-    "6. Address both systemic and individual factors when relevant, showing how they can complement rather than contradict each other.\n"
-    "\n"
+) + opening_strategy_notes + (
     "## Output with the format (two parts, start with **Opening Plan** and then **Statement**):\n"
     "**Opening Plan**: Allocate your word budget and explain your rationale. Briefly mention one or two rhetorical techniques and logical fallacies to discuss. Ensure the total is {{n_words}} words. \n"
     "**Statement**: Generate an opening statement of {{n_words}} words in total, with no additional text\n"
 )
-
 
 propose_definition_prompt = (
     "The debate topic is: {motion}. You side is to {act} this topic .\n"

@@ -8,12 +8,13 @@ from functools import partial
 import google.generativeai as genai
 import numpy as np
 from openai import OpenAI
-from sentence_transformers.util import cos_sim
 from tavily import TavilyClient
 
 from debate_tree import PrepareTree
 from searcher import MAX_QUERY, get_search_query, get_search_result, get_source_info, update_search_query
 from utils.constants import EMBEDDING_MODEL, google_api_key
+from utils.claim_clustering import cluster_claim_embeddings, embedding_text
+from utils.semantic_clustering import semantic_cluster_claims, materialize_groups
 from utils.llm_schemas import ResultsResponse
 from utils.model import HelperClient, reward_model
 from utils.prompts import claim_propose_prompt, propose_definition_prompt
@@ -33,11 +34,25 @@ class ClaimPool:
         max_search_depth=3,
         max_search_branch=3,
         use_rm_model=True,
+        max_claim_groups=10,
+        cluster_similarity_threshold=0.8,
+        cluster_audit_file=None,
+        clustering_method="semantic",
         **kwargs,
     ) -> None:
         self.motion = motion
         self.side = side
         self.pool_size = pool_size
+        if isinstance(max_claim_groups, bool) or not isinstance(max_claim_groups, int) or max_claim_groups < 1:
+            raise ValueError("max_claim_groups must be a positive integer")
+        if not -1 <= cluster_similarity_threshold <= 1:
+            raise ValueError("cluster_similarity_threshold must be between -1 and 1")
+        self.max_claim_groups = max_claim_groups
+        self.cluster_similarity_threshold = cluster_similarity_threshold
+        self.cluster_audit_file = cluster_audit_file
+        if clustering_method not in {"semantic", "agglomerative"}:
+            raise ValueError("Unknown clustering_method")
+        self.clustering_method = clustering_method
         self.act = "support" if side == "for" else "oppose"
         self.problem = f"The debate motion is: {self.motion}. You side is to {self.act} this motion."
         self.max_search_depth = max_search_depth
@@ -102,16 +117,21 @@ class ClaimPool:
                 }
             )
 
-        # self.grouped_pool = [[x] for x in self.pool]
-        clusters = self.cluster_claims(self.pool)
-        self.grouped_pool = []
-        for cluster in clusters:
-            group = [self.pool[i] for i in cluster]
-            group = sorted(group, key=lambda x: x["strength"], reverse=True)
-            self.grouped_pool.append(group)
-
+        if self.clustering_method == "semantic":
+            def save_audit(audit):
+                self.clustering_audit = audit
+                if self.cluster_audit_file:
+                    with open(self.cluster_audit_file, "w") as output:
+                        json.dump(audit, output, indent=2)
+            groups, audit = semantic_cluster_claims(
+                self.pool, self.client, self.motion, self.side,
+                max_groups=self.max_claim_groups, audit_sink=save_audit,
+            )
+            self.grouped_pool = materialize_groups(self.pool, groups)
+        else:
+            clusters = self.cluster_claims(self.pool)
+            self.grouped_pool = [[self.pool[i] for i in cluster] for cluster in clusters]
         self.grouped_pool = sorted(self.grouped_pool, key=lambda x: x[0]["strength"], reverse=True)
-        # main_claims = [group[0]["claim"] for group in self.grouped_pool]
 
         if need_score:
             for group in self.grouped_pool:
@@ -135,52 +155,26 @@ class ClaimPool:
         return self.grouped_pool
 
     def cluster_claims(self, pool):
-        oai_client = OpenAI()
-        resp = oai_client.embeddings.create(model="text-embedding-3-small", input=[x["claim"] for x in pool])
-        claim_embeddings = [item.embedding for item in resp.data]
-        claim_cross_sim = cos_sim(claim_embeddings, claim_embeddings)
-
-        # Group claims by similarity
-        threhold = 0.8
-        stop = False
-        max_iter = 5
-        while not stop:
-            clusters = []
-            visited = set()
-            for i in range(len(pool)):
-                if i not in visited:
-                    cluster = [i]
-                    for j in range(i + 1, len(pool)):
-                        if j not in visited and claim_cross_sim[i][j] >= threhold:
-                            cluster.append(j)
-                            visited.add(j)
-                    clusters.append(cluster)
-                    visited.add(i)
-            if len(clusters) > 10:
-                logger.debug(
-                    f"Clustered {len(pool)} claims into {len(clusters)} groups (threshold: {threhold}), continue clustering with lower threshold ..."
-                )
-                threhold -= 0.025
-                max_iter -= 1
-            elif len(clusters) < 5:
-                logger.debug(
-                    f"Clustered {len(pool)} claims into {len(clusters)} groups (threshold: {threhold}), continue clustering with higher threshold ..."
-                )
-                threhold += 0.025
-                max_iter -= 1
-            else:
-                stop = True
-                logger.debug(
-                    f"Clustered {len(pool)} claims into {len(clusters)} groups (threshold: {threhold}), stop clustering."
-                )
-            if max_iter <= 0:
-                logger.debug(
-                    f"Clustered {len(pool)} claims into {len(clusters)} groups (threshold: {threhold}), stop clustering."
-                )
-                break
-
-        logger.debug(f"Clustered {len(pool)} claims into {len(clusters)} groups (threshold: {threhold}): {clusters}")
-        return clusters
+        if not pool:
+            return []
+        texts = [embedding_text(claim) for claim in pool]
+        resp = OpenAI().embeddings.create(model=EMBEDDING_MODEL, input=texts)
+        items = sorted(resp.data, key=lambda item: item.index)
+        if [item.index for item in items] != list(range(len(pool))):
+            raise ValueError("Embedding response indices do not match claims")
+        embeddings = [item.embedding for item in items]
+        groups, audit = cluster_claim_embeddings(
+            pool, embeddings, self.max_claim_groups, self.cluster_similarity_threshold
+        )
+        self.clustering_audit = dict(audit, claims=pool, embedding_inputs=texts,
+                                    embeddings=embeddings, embedding_model=EMBEDDING_MODEL)
+        if self.cluster_audit_file:
+            with open(self.cluster_audit_file, "w") as output:
+                json.dump(self.clustering_audit, output, indent=2)
+        logger.info("Clustered %d claims into %d groups (hard cap=%d, forced merges=%d)",
+                    len(pool), len(groups), self.max_claim_groups,
+                    sum(m["forced_by_cap"] for m in audit["merges"]))
+        return groups
 
     def minimax_search(self, root_claim, motion, side, root_argument=None, max_depth=2, max_branch=3):
         tree = PrepareTree(root_claim, motion, side, self.client, self.reward_model, root_argument)
@@ -272,11 +266,16 @@ if __name__ == "__main__":
     parser.add_argument("--no_score", action="store_true", default=False)
     parser.add_argument("--pool_size", type=int, default=30)
     parser.add_argument("--save_dir", type=str, default="../results0315")
+    parser.add_argument("--clustering_method", choices=["semantic", "agglomerative"], default="semantic")
+    parser.add_argument("--max_claim_groups", type=int, default=10)
+    parser.add_argument("--cluster_similarity_threshold", type=float, default=0.8)
     parser.add_argument("--max_n", type=int, default=-1)
     parser.add_argument("--max_search_depth", type=int, default=2)
     parser.add_argument("--max_search_branch", type=int, default=3)
     parser.add_argument("--ban_rm_model", action="store_true", default=False)
     args = parser.parse_args()
+    if args.max_claim_groups < 1 or not -1 <= args.cluster_similarity_threshold <= 1:
+        parser.error("max_claim_groups must be positive; cluster_similarity_threshold must be in [-1, 1]")
 
     if args.motion_file:
         with open(args.motion_file, "r") as f:
@@ -304,7 +303,11 @@ if __name__ == "__main__":
                 logger.info(f"Create motion for {save_file_name}...")
                 t_prep = time.perf_counter()
                 claim_workspace = ClaimPool(
-                    motion=motion, side=side, model=model, pool_size=pool_size, use_rm_model=not args.ban_rm_model
+                    motion=motion, side=side, model=model, pool_size=pool_size, use_rm_model=not args.ban_rm_model,
+                    max_claim_groups=args.max_claim_groups,
+                    clustering_method=args.clustering_method,
+                    cluster_similarity_threshold=args.cluster_similarity_threshold,
+                    cluster_audit_file=save_file_name.replace(".json", "_clustering.json"),
                 )
                 claim_pool = claim_workspace.create_claim(
                     need_score=not args.no_score,

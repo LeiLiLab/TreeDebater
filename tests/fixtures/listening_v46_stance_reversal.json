@@ -1,0 +1,216 @@
+{
+  "source_calls": [
+    22226,
+    22227
+  ],
+  "source_sha256": {
+    "call_022226.json": "4035cb6b2d8f25a78eefcd1fcae07e48fb413f53da586e382746f31357a7564f",
+    "call_022227.json": "9534eb1c0a2f2c8321ee6c107abae3fc3a79e2a71845ce71dea1767999fa2537"
+  },
+  "planning_response": "{\"claims\":[{\"target\":0}],\"limits\":[],\"rebuttals\":[{\"target\":0,\"move\":\"challenge_inference\",\"point\":\"Prompt engineering lacks the cognitive resistance necessary for deep mental architecture.\",\"assumptions\":[\"Cognitive synthesis requires manual syntactic struggle\"]}],\"overview\":{\"ready\":true,\"position\":\"against\",\"core_dispute\":\"Whether cognitive development requires manual writing or can occur via AI curation.\",\"response_axes\":[\"Cognitive depth vs output efficiency\",\"Human agency vs automated noise\"],\"prefix_action\":\"replace\",\"reason\":\"Opponent's focus on utility necessitates a specific response to cognitive atrophy.\"},\"body_plan\":[{\"axis\":0,\"target\":0,\"issue\":\"Cognitive depth\",\"action\":\"challenge_inference\",\"point\":\"AI curation bypasses the mental struggle required for true thought.\",\"weight\":5},{\"axis\":1,\"target\":1,\"issue\":\"Human agency\",\"action\":\"develop_case\",\"point\":\"Manual writing preserves unique identity against automated mediocrity.\",\"weight\":3}]}",
+  "authoring_input": {
+    "motion": "Learning to be a good writer still matters in the age of AI",
+    "our_side": "against",
+    "stage": "rebuttal",
+    "our_definition": "This debate opposes the necessity of mastering traditional compositional skills (syntax, grammar, and stylistic nuance) for the general population, arguing that in the current era of LLMs, proficiency shifts from manual text production to high-level prompt engineering and editorial oversight. The scope focuses on professional and academic utility for digital-native age groups, distinguishing the act of 'writing' (manual execution) from 'being a writer' (the mastery of craft), and posits that 'mattering' is negated by the superior efficiency of AI-driven synthesis.",
+    "our_main_claims": [
+      "AI levels the playing field by decoupling effective communication from technical writing proficiency",
+      "The primary value in the workforce has shifted from writing execution to AI curation and direction",
+      "Investing time and resources into mastering manual writing yields low returns in the modern era"
+    ],
+    "our_previous_speeches": [
+      "In an era of rapid technological advancement, we must recognize that the value of communication has shifted. Effective expression no longer requires the manual mastery of syntax and grammar to achieve high-level results.\n\nTo begin, I will address the opponent's definition of writing. They argue that learning to be a good writer is the only way to master critical thinking and rhetorical structure. This is a narrow and outdated view. We define the modern necessity of communication not as the manual act of drafting sentences, but as the ability to direct, curate, and refine ideas. The battlefield of this debate is whether the cognitive benefits of writing are tied to the physical act of drafting, or if they can be achieved through higher-level oversight. Our judging criteria should be based on practical utility and cognitive efficiency in a world where AI handles the heavy lifting of syntax.\n\nFirst, I will challenge the opponent's core assumption that manual writing is the fundamental process for mastering critical thinking. My opponent claims that the struggle to select the precise word is the only way to clarify a complex idea. We argue that this is a false correlation. Critical thinking is a byproduct of many disciplines, such as logic, mathematics, and strategic planning, rather than being exclusive to prose. In the age of AI, the traditional skill of writing is being replaced by the more efficient skill of prompt engineering and logical structuring, shifting the cognitive burden from drafting to directing.\n\nPrompt engineering is not merely coding; it is the sophisticated application of logic and rhetorical structuring to extract truth from a machine. In this paradigm, you no longer need to struggle for hours with granular word choice to organize a single thought. Instead, you leverage AI to generate drafts, redirecting your mental energy toward core logic and argumentative strength. We are effectively decoupling the cognitive act of thinking from the tedious, manual act of drafting. This shift facilitates faster, more rigorous intellectual work, fostering higher-level engagement rather than causing mental atrophy.\n\nSecond, I will propose our claims regarding the shifting value of the workforce. The primary value in the modern economy has moved from writing execution to AI curation and direction. In the past, a professional was judged by their ability to produce a polished report; today, they are judged by their ability to guide an AI to produce high-quality, accurate, and strategically sound documents. The focus has shifted from technical execution to high-level direction. Consequently, if you spend years mastering the manual mechanics of grammar and style, you are investing in a skill that is rapidly becoming a commodity. In this new landscape, the ability to oversee and refine machine-generated output is far more valuable than the ability to draft prose from scratch.\n\nThird, I will demonstrate that investing time and resources into mastering manual writing yields increasingly diminishing returns. While understanding language is not inherently harmful, the intensive pursuit of prose mastery is no longer a primary competitive advantage; in the modern landscape, such skill must be paired with AI orchestration to be truly effective. The most successful individuals will not be those who labor over syntax, but those who master the art of curation—knowing how to prompt an AI, how to verify its output, and how to steer its direction to meet complex objectives. By prioritizing these higher-order skills, we achieve far greater efficiency and superior results. We must stop clinging to the outdated notion that the struggle of the pen is the only path to a sharp mind. The future belongs to the architects of ideas, not the manual builders of sentences. For these reasons, we must oppose the motion."
+    ],
+    "debate_history": [
+      {
+        "role": "user",
+        "content": "**Opponent's Opening Statement**\nLearning to be a good writer is about much more than just putting words on a page. It is the fundamental process of mastering critical thinking and rhetorical structure, which remains essential for high-level decision making. To ensure a productive debate, we must first define our terms. When we speak of learning to be a good writer, we are not talking about the mechanical act of typing or generating text. We are talking about the mastery of critical thinking, logical structure, and stylistic nuance. In this age of AI, writing is the process by which we organize our minds. Therefore, our judging criteria should be based on which side better demonstrates how writing serves as an essential pillar for human intelligence and social responsibility. First, I will propose that writing is essential for maintaining and developing human intelligence. We must understand that writing is not merely a method for recording pre-existing thoughts, rather it is the very mechanism through which we create them. The rigorous act of writing imposes a level of mental organization and cognitive discipline that the mere act of thinking does not require. In many ways, writing is akin to building the internal architecture of your own mind. While an AI can generate thousands of words in a matter of seconds, it does not truly think through the profound implications of those words. For a human being, the inherent struggle to select the precise word or construct the perfect sentence is, in reality, the struggle to clarify a complex, nebulous idea. When we bypass this essential struggle by relying on AI, we replace active cognitive synthesis with a state of passive consumption. This shift leads directly to weakened reasoning skills and a form of mental atrophy. If we abandon the practice of writing, we lose the very tool that sharpens our intellect. Without it, our capacity to engage in deep, original, and independent thought will inevitably wither. Second, we must recognize that writing is a core component of human agency and our historical legacy. Our history is not written by algorithms, it is written by people driven by intention, emotion, and lived experience. Mastery of writing allows us to exert leadership and express a unique identity, a quality that an AI can only mimic but never truly possess. Consider the profound difference between a generic, AI-generated eulogy and a heartfelt, personal tribute that captures the essence of a life lived. As AI begins to flood our world with average, bland, and repetitive content, the ability to write with distinction becomes a vital competitive advantage. It is through the deliberate, skilled use of language that we assert our presence and influence. Ultimately, writing is how we leave a mark on the world that is authentically ours, ensuring our individual voices are not lost in a sea of automated noise. Third, human writers are absolutely necessary to ensure accuracy, ethics, and quality within a landscape increasingly saturated by AI noise. We are entering an era defined by hallucinations, systemic biases, and a deluge of low-quality automated text. We simply cannot outsource our collective conscience to a machine. Instead, we require skilled writers who serve as essential editors and ethical guardians, ensuring that communication is not merely grammatically correct, but fundamentally truthful and morally sound. In summary, we support this motion because the mastery of writing is the very foundation of how we think, how we lead, and how we protect the truth in a digital age. We look forward to demonstrating why these uniquely human skills remain more crucial now than ever before."
+      },
+      {
+        "role": "assistant",
+        "content": "In an era of rapid technological advancement, we must recognize that the value of communication has shifted. Effective expression no longer requires the manual mastery of syntax and grammar to achieve high-level results.\n\nTo begin, I will address the opponent's definition of writing. They argue that learning to be a good writer is the only way to master critical thinking and rhetorical structure. This is a narrow and outdated view. We define the modern necessity of communication not as the manual act of drafting sentences, but as the ability to direct, curate, and refine ideas. The battlefield of this debate is whether the cognitive benefits of writing are tied to the physical act of drafting, or if they can be achieved through higher-level oversight. Our judging criteria should be based on practical utility and cognitive efficiency in a world where AI handles the heavy lifting of syntax.\n\nFirst, I will challenge the opponent's core assumption that manual writing is the fundamental process for mastering critical thinking. My opponent claims that the struggle to select the precise word is the only way to clarify a complex idea. We argue that this is a false correlation. Critical thinking is a byproduct of many disciplines, such as logic, mathematics, and strategic planning, rather than being exclusive to prose. In the age of AI, the traditional skill of writing is being replaced by the more efficient skill of prompt engineering and logical structuring, shifting the cognitive burden from drafting to directing.\n\nPrompt engineering is not merely coding; it is the sophisticated application of logic and rhetorical structuring to extract truth from a machine. In this paradigm, you no longer need to struggle for hours with granular word choice to organize a single thought. Instead, you leverage AI to generate drafts, redirecting your mental energy toward core logic and argumentative strength. We are effectively decoupling the cognitive act of thinking from the tedious, manual act of drafting. This shift facilitates faster, more rigorous intellectual work, fostering higher-level engagement rather than causing mental atrophy.\n\nSecond, I will propose our claims regarding the shifting value of the workforce. The primary value in the modern economy has moved from writing execution to AI curation and direction. In the past, a professional was judged by their ability to produce a polished report; today, they are judged by their ability to guide an AI to produce high-quality, accurate, and strategically sound documents. The focus has shifted from technical execution to high-level direction. Consequently, if you spend years mastering the manual mechanics of grammar and style, you are investing in a skill that is rapidly becoming a commodity. In this new landscape, the ability to oversee and refine machine-generated output is far more valuable than the ability to draft prose from scratch.\n\nThird, I will demonstrate that investing time and resources into mastering manual writing yields increasingly diminishing returns. While understanding language is not inherently harmful, the intensive pursuit of prose mastery is no longer a primary competitive advantage; in the modern landscape, such skill must be paired with AI orchestration to be truly effective. The most successful individuals will not be those who labor over syntax, but those who master the art of curation—knowing how to prompt an AI, how to verify its output, and how to steer its direction to meet complex objectives. By prioritizing these higher-order skills, we achieve far greater efficiency and superior results. We must stop clinging to the outdated notion that the struggle of the pen is the only path to a sharp mind. The future belongs to the architects of ideas, not the manual builders of sentences. For these reasons, we must oppose the motion."
+      }
+    ],
+    "current_targets": [
+      {
+        "node_id": "02d88d382b3340faa50680e63eddfd82",
+        "claim": "Writing is essential for maintaining and developing human intelligence.",
+        "arguments": [
+          "Writing is a mechanism for creating thoughts, not just recording them.",
+          "The act of writing imposes mental organization and cognitive discipline.",
+          "Writing ensures individual voices are not lost to automated noise.",
+          "Writing is the method for leaving an authentic mark on the world."
+        ],
+        "sources": [
+          "First, I will propose that writing is essential for maintaining and developing human intelligence. We must understand that writing is not merely a method for recording pre-existing thoughts, rather it is the very mechanism through which we create them. The rigorous act of writing imposes a level of mental organization and cognitive discipline that the mere act of thinking does not require.",
+          "Ultimately, writing is how we leave a mark on the world that is authentically ours, ensuring our individual voices are not lost in a sea of automated noise."
+        ],
+        "version": "43012fc7f0b012e9",
+        "constraints": []
+      },
+      {
+        "node_id": "45723a25b92f4bb1ae3a78e9cf120c2a",
+        "claim": "Learning to be a good writer refers to the mastery of critical thinking, logical structure, and stylistic nuance, rather than mechanical text generation.",
+        "arguments": [
+          "Writing mastery involves critical thinking, logical structure, and stylistic nuance.",
+          "It is distinct from the mechanical act of typing or generating text.",
+          "Writing mastery enables leadership and unique identity expression.",
+          "AI can only mimic, not possess, the human qualities found in writing.",
+          "Personal writing (like a heartfelt tribute) captures essence in a way generic AI content cannot.",
+          "Writing mastery is the foundation of thought processes.",
+          "Writing mastery is essential for leadership.",
+          "Writing mastery is necessary to protect truth in the digital age."
+        ],
+        "sources": [
+          "When we speak of learning to be a good writer, we are not talking about the mechanical act of typing or generating text. We are talking about the mastery of critical thinking, logical structure, and stylistic nuance.",
+          "Mastery of writing allows us to exert leadership and express a unique identity, a quality that an AI can only mimic but never truly possess. Consider the profound difference between a generic, AI-generated eulogy and a heartfelt, personal tribute that captures the essence of a life lived.",
+          "In summary, we support this motion because the mastery of writing is the very foundation of how we think, how we lead, and how we protect the truth in a digital age."
+        ],
+        "version": "c73b8823f98b0276",
+        "constraints": []
+      },
+      {
+        "node_id": "5c35d58a216449e28ab6405da064a8b8",
+        "claim": "The debate should be judged on which side demonstrates how writing serves as an essential pillar for human intelligence and social responsibility.",
+        "arguments": [
+          "Judging should focus on writing's role as a pillar for human intelligence and social responsibility.",
+          "Writing mastery is the foundation of thought processes.",
+          "Writing mastery is essential for leadership.",
+          "Writing mastery is necessary to protect truth in the digital age."
+        ],
+        "sources": [
+          "Therefore, our judging criteria should be based on which side better demonstrates how writing serves as an essential pillar for human intelligence and social responsibility.",
+          "In summary, we support this motion because the mastery of writing is the very foundation of how we think, how we lead, and how we protect the truth in a digital age."
+        ],
+        "version": "fb75d342bbe35e9b",
+        "constraints": []
+      },
+      {
+        "node_id": "625a2e1a5d8249ba81c651fb6bd15dcd",
+        "claim": "The ability to write with distinction provides a vital competitive advantage in an AI-saturated world.",
+        "arguments": [
+          "AI produces average, bland, and repetitive content.",
+          "Skilled writing provides a competitive advantage by allowing individuals to assert presence and influence."
+        ],
+        "sources": [
+          "As AI begins to flood our world with average, bland, and repetitive content, the ability to write with distinction becomes a vital competitive advantage. It is through the deliberate, skilled use of language that we assert our presence and influence."
+        ],
+        "version": "bab0acbd96f91a5a",
+        "constraints": []
+      },
+      {
+        "node_id": "714ae2d94a3444a588bdf9fd5aff9ea8",
+        "claim": "Human writers are necessary to ensure accuracy, ethics, and quality in an AI-saturated landscape.",
+        "arguments": [
+          "AI produces hallucinations, systemic biases, and low-quality text.",
+          "Human writers are needed to act as essential editors and ethical guardians.",
+          "Human oversight ensures communication is truthful and morally sound rather than just grammatically correct."
+        ],
+        "sources": [
+          "Third, human writers are absolutely necessary to ensure accuracy, ethics, and quality within a landscape increasingly saturated by AI noise. We are entering an era defined by hallucinations, systemic biases, and a deluge of low-quality automated text. We simply cannot outsource our collective conscience to a machine. Instead, we require skilled writers who serve as essential editors and ethical guardians, ensuring that communication is not merely grammatically correct, but fundamentally truthful and morally sound."
+        ],
+        "version": "0d11ab3bcdeaecd7",
+        "constraints": []
+      },
+      {
+        "node_id": "84aa535d2d554957a590dfb78a6045ae",
+        "claim": "The opponent confuses output efficiency with cognitive efficiency.",
+        "arguments": [
+          "AI increases production speed but decreases cognitive depth.",
+          "Bypassing the resistance of writing prevents the refinement of ideas."
+        ],
+        "sources": [
+          "However, the opponent confuses output efficiency with cognitive efficiency. While AI increases the speed of production, it decreases the cognitive depth of the producer by bypassing the very resistance required to refine an idea."
+        ],
+        "version": "422ab1e976c7fe82",
+        "constraints": []
+      },
+      {
+        "node_id": "90c564bab02942b3bd3da99876c02713",
+        "claim": "Writing is a fundamental process for mastering critical thinking and rhetorical structure.",
+        "arguments": [
+          "Writing involves mastering critical thinking and rhetorical structure.",
+          "These skills are essential for high-level decision making.",
+          "Writing is a mechanism for creating thoughts, not just recording them.",
+          "The act of writing imposes mental organization and cognitive discipline.",
+          "AI lacks the ability to think through the implications of the words it generates.",
+          "The struggle of writing is necessary to clarify complex ideas.",
+          "Using AI replaces active cognitive synthesis with passive consumption, causing mental atrophy and weakened reasoning.",
+          "Writing mastery is the foundation of thought processes.",
+          "Writing mastery is essential for leadership.",
+          "Writing mastery is necessary to protect truth in the digital age.",
+          "Cognitive synthesis is achieved through the difficult process of drafting sentences.",
+          "Drafting sentences helps build mental architecture."
+        ],
+        "sources": [
+          "Learning to be a good writer is about much more than just putting words on a page. It is the fundamental process of mastering critical thinking and rhetorical structure, which remains essential for high-level decision making.",
+          "First, I will propose that writing is essential for maintaining and developing human intelligence. We must understand that writing is not merely a method for recording pre-existing thoughts, rather it is the very mechanism through which we create them. The rigorous act of writing imposes a level of mental organization and cognitive discipline that the mere act of thinking does not require.",
+          "While an AI can generate thousands of words in a matter of seconds, it does not truly think through the profound implications of those words. For a human being, the inherent struggle to select the precise word or construct the perfect sentence is, in reality, the struggle to clarify a complex, nebulous idea. When we bypass this essential struggle by relying on AI, we replace active cognitive synthesis with a state of passive consumption. This shift leads directly to weakened reasoning skills and a form of mental atrophy.",
+          "In summary, we support this motion because the mastery of writing is the very foundation of how we think, how we lead, and how we protect the truth in a digital age.",
+          "True cognitive synthesis requires the active, difficult struggle of drafting sentences to build mental architecture."
+        ],
+        "version": "853345250ba2b387",
+        "constraints": []
+      },
+      {
+        "node_id": "f6ccf8cb378748e1b3a66957f703ac57",
+        "claim": "Prioritizing speed over the rigorous process of drafting leads to faster consumption of mediocre content rather than efficient thinking.",
+        "arguments": [
+          "Prioritizing speed over drafting results in mediocre content consumption rather than efficient thinking.",
+          "Syntactic efficiency is not equivalent to intellectual efficiency."
+        ],
+        "sources": [
+          "If we prioritize speed over the rigorous process of drafting, we aren't becoming more efficient thinkers. We are simply becoming faster consumers of mediocre content. Efficiency in syntax does not equal efficiency in intelligence."
+        ],
+        "version": "979d48bbf3393249",
+        "constraints": []
+      }
+    ],
+    "current_plan": "{\"claims\": [{\"node_id\": \"02d88d382b3340faa50680e63eddfd82\", \"quote\": \"Ultimately, writing is how we leave a mark on the world that is authentically ours, ensuring our individual voices are not lost in a sea of automated noise.\", \"text\": \"Writing is essential for maintaining and developing human intelligence.\", \"target_version\": \"43012fc7f0b012e9\"}], \"limits\": [], \"rebuttals\": [{\"target\": 0, \"point\": \"Prompt engineering lacks the cognitive resistance necessary for deep mental architecture.\", \"assumptions\": [\"Cognitive synthesis requires manual syntactic struggle\"], \"target_node_id\": \"02d88d382b3340faa50680e63eddfd82\", \"target_version\": \"43012fc7f0b012e9\", \"move\": \"challenge_inference\"}], \"constraints\": [], \"position_limits\": [\"First, I will propose that writing is essential for maintaining and developing human intelligence.\", \"We must understand that writing is not merely a method for recording pre-existing thoughts, rather it is the very mechanism through which we create them.\", \"The rigorous act of writing imposes a level of mental organization and cognitive discipline that the mere act of thinking does not require.\", \"Ultimately, writing is how we leave a mark on the world that is authentically ours, ensuring our individual voices are not lost in a sea of automated noise.\", \"When we speak of learning to be a good writer, we are not talking about the mechanical act of typing or generating text.\", \"We are talking about the mastery of critical thinking, logical structure, and stylistic nuance.\", \"Mastery of writing allows us to exert leadership and express a unique identity, a quality that an AI can only mimic but never truly possess.\", \"Consider the profound difference between a generic, AI-generated eulogy and a heartfelt, personal tribute that captures the essence of a life lived.\", \"In summary, we support this motion because the mastery of writing is the very foundation of how we think, how we lead, and how we protect the truth in a digital age.\", \"Therefore, our judging criteria should be based on which side better demonstrates how writing serves as an essential pillar for human intelligence and social responsibility.\", \"As AI begins to flood our world with average, bland, and repetitive content, the ability to write with distinction becomes a vital competitive advantage.\", \"It is through the deliberate, skilled use of language that we assert our presence and influence.\", \"Third, human writers are absolutely necessary to ensure accuracy, ethics, and quality within a landscape increasingly saturated by AI noise.\", \"We are entering an era defined by hallucinations, systemic biases, and a deluge of low-quality automated text.\", \"We simply cannot outsource our collective conscience to a machine.\", \"Instead, we require skilled writers who serve as essential editors and ethical guardians, ensuring that communication is not merely grammatically correct, but fundamentally truthful and morally sound.\", \"However, the opponent confuses output efficiency with cognitive efficiency.\", \"While AI increases the speed of production, it decreases the cognitive depth of the producer by bypassing the very resistance required to refine an idea.\", \"Learning to be a good writer is about much more than just putting words on a page.\", \"It is the fundamental process of mastering critical thinking and rhetorical structure, which remains essential for high-level decision making.\", \"While an AI can generate thousands of words in a matter of seconds, it does not truly think through the profound implications of those words.\", \"For a human being, the inherent struggle to select the precise word or construct the perfect sentence is, in reality, the struggle to clarify a complex, nebulous idea.\", \"When we bypass this essential struggle by relying on AI, we replace active cognitive synthesis with a state of passive consumption.\", \"This shift leads directly to weakened reasoning skills and a form of mental atrophy.\", \"True cognitive synthesis requires the active, difficult struggle of drafting sentences to build mental architecture.\", \"If we prioritize speed over the rigorous process of drafting, we aren't becoming more efficient thinkers.\", \"We are simply becoming faster consumers of mediocre content.\", \"Efficiency in syntax does not equal efficiency in intelligence.\"], \"correction_history\": [], \"material_version\": \"cf94c932279759a3\", \"overview\": {\"ready\": true, \"position\": \"against\", \"core_dispute\": \"Whether cognitive development requires manual writing or can occur via AI curation.\", \"response_axes\": [\"Cognitive depth vs output efficiency\", \"Human agency vs automated noise\"], \"prefix_action\": \"replace\", \"reason\": \"Opponent's focus on utility necessitates a specific response to cognitive atrophy.\"}, \"body_plan\": [{\"issue\": \"Cognitive depth\", \"action\": \"challenge_inference\", \"point\": \"AI curation bypasses the mental struggle required for true thought.\", \"weight\": 5, \"covers\": [\"Cognitive depth vs output efficiency\"], \"target\": {\"node_id\": \"02d88d382b3340faa50680e63eddfd82\", \"version\": \"43012fc7f0b012e9\", \"quote\": \"Ultimately, writing is how we leave a mark on the world that is authentically ours, ensuring our individual voices are not lost in a sea of automated noise.\"}}, {\"issue\": \"Human agency\", \"action\": \"develop_case\", \"point\": \"Manual writing preserves unique identity against automated mediocrity.\", \"weight\": 3, \"covers\": [\"Human agency vs automated noise\"], \"target\": {\"node_id\": \"45723a25b92f4bb1ae3a78e9cf120c2a\", \"version\": \"c73b8823f98b0276\", \"quote\": \"In summary, we support this motion because the mastery of writing is the very foundation of how we think, how we lead, and how we protect the truth in a digital age.\"}}]}",
+    "body_plan": [
+      {
+        "issue": "Cognitive depth",
+        "action": "challenge_inference",
+        "point": "AI curation bypasses the mental struggle required for true thought.",
+        "weight": 5,
+        "covers": [
+          "Cognitive depth vs output efficiency"
+        ],
+        "target": {
+          "node_id": "02d88d382b3340faa50680e63eddfd82",
+          "version": "43012fc7f0b012e9",
+          "quote": "Ultimately, writing is how we leave a mark on the world that is authentically ours, ensuring our individual voices are not lost in a sea of automated noise."
+        }
+      },
+      {
+        "issue": "Human agency",
+        "action": "develop_case",
+        "point": "Manual writing preserves unique identity against automated mediocrity.",
+        "weight": 3,
+        "covers": [
+          "Human agency vs automated noise"
+        ],
+        "target": {
+          "node_id": "45723a25b92f4bb1ae3a78e9cf120c2a",
+          "version": "c73b8823f98b0276",
+          "quote": "In summary, we support this motion because the mastery of writing is the very foundation of how we think, how we lead, and how we protect the truth in a digital age."
+        }
+      }
+    ],
+    "framework": {
+      "ready": true,
+      "position": "against",
+      "core_dispute": "Whether cognitive development requires manual writing or can occur via AI curation.",
+      "response_axes": [
+        "Cognitive depth vs output efficiency",
+        "Human agency vs automated noise"
+      ],
+      "prefix_action": "replace",
+      "reason": "Opponent's focus on utility necessitates a specific response to cognitive atrophy."
+    },
+    "heard_transcript": "The idea that we can achieve deep thought simply by curating and refining AI-generated ideas is fundamentally flawed. True cognitive synthesis requires the active, difficult struggle of drafting sentences to build mental architecture. First, I will address the opponent's claim that we should judge this debate based on practical utility and cognitive efficiency. My opponent argues that prompt engineering replaces the need for manual writing because AI handles the heavy lifting of syntax. However, the opponent confuses output efficiency with cognitive efficiency. While AI increases the speed of production, it decreases the cognitive depth of the producer by bypassing the very resistance required to refine an idea. If we prioritize speed over the rigorous process of drafting, we aren't becoming more efficient thinkers. We are simply becoming faster consumers of mediocre content. Efficiency in syntax does not equal efficiency in intelligence.",
+    "supplied_evidence": [],
+    "turn": "for:rebuttal"
+  },
+  "prefix_response": "{ \"text\": \"The idea that we can achieve deep thought simply by curating AI-generated ideas is fundamentally flawed. True cognitive synthesis requires the active, difficult struggle of drafting sentences to build mental architecture.\", \"target_ids\": [], \"framework\": { \"ready\": true, \"position\": \"against\", \"core_dispute\": \"Whether cognitive development requires manual writing or can occur via AI curation.\", \"response_axes\": [ \"Cognitive depth vs output efficiency\", \"Human agency vs automated noise\" ], \"prefix_action\": \"keep\", \"reason\": \"The opening directly addresses the core dispute regarding cognitive depth and the necessity of the writing process.\" } }"
+}

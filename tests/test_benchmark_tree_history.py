@@ -17,11 +17,11 @@ def test_prior_history_is_shared_but_tree_analysis_is_not_hidden(monkeypatch):
     def factory(config, motion):
         p = SimpleNamespace(side=config.side, use_debate_flow_tree=False, _add_message=Mock(),
                             _analyze_statement=Mock(), simulated_audience=[],
-                            planner=SimpleNamespace(config=SimpleNamespace(corrections=config.planning['mode']=='grounded_tree')))
+                            planner=SimpleNamespace(config=SimpleNamespace(corrections=config.planning['mode'] in ('branch_tree', 'flat_tree'))))
         players.append(p)
         return p
     monkeypatch.setattr('ouragents.TreeDebater', factory)
-    for mode in ('grounded_linear', 'grounded_tree'):
+    for mode in ('linear', 'flat_tree'):
         make_player(case(), mode, Mock())
     assert players[0]._add_message.call_args_list == players[1]._add_message.call_args_list
     assert len(players[0]._add_message.call_args_list) == 3
@@ -60,7 +60,7 @@ def test_saved_pre_generation_tree_is_not_mutated_by_own_speech_analysis(monkeyp
     client.summary.return_value = dict.fromkeys(('calls', 'input_tokens', 'output_tokens',
                                                 'reported_usage_estimate_usd', 'reserved_upper_usd'), 0)
     sample = case();sample.update(id='offline', kind='regression')
-    result = run_case(sample, 'grounded_tree', 0, client)
+    result = run_case(sample, 'flat_tree', 0, client)
     assert result['before_generation']['opponent_tree']['structure']['children'][0]['argument'] == ['Initial reason']
     assert result['before_generation']['state'] == {'limits': []}
     assert len(result['after_generation']['opponent_tree']['structure']['children'][0]['argument']) == 2

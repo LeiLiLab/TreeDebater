@@ -8,6 +8,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from debate_tree import DebateTree
+from streaming.tree_updates import apply_statements, target_registry
 from utils.helper import extract_statement
 from utils.model import HelperClient
 from utils.tool import logger
@@ -31,45 +32,18 @@ def analyze_statement(llm, motion, status, statements, side, pro_debate_tree, co
         tree=[tree.print_tree(include_status=True), oppo_tree.print_tree(include_status=True)],
         side=side,
         stage=status,
+        relation_targets=target_registry((tree, oppo_tree)),
     )
 
-    for x in claims:
-        for p in x["purpose"]:
-            target_tree = tree if p["targeted_debate_tree"] == "you" else oppo_tree
-            if p["target"] == "N/A" and target_tree.max_level == 0:
-                if p["action"] == "propose" or p["action"] == "rebut" or p["action"] == "reinforce":
-                    p["target"] = x["claim"]
-
-    for x in claims:
-        claim = x["claim"]
-        arguments = x["arguments"]
-        if isinstance(x["purpose"], dict):
-            purpose = [x["purpose"]]
-        else:
-            purpose = x["purpose"]
-        if status == "opening":
-            if "propose" not in [p["action"] for p in purpose]:
-                purpose.append({"action": "propose", "targeted_debate_tree": "you", "target": claim})
-        for p in purpose:
-            action = p["action"]
-            target = p["target"]
-            target_tree = p["targeted_debate_tree"]
-            if action == "propose" or action == "reinforce" or action == "rebut":
-                if target_tree != "you":
-                    logger.warning(
-                        f"Propose or reinforce action is not allowed for the opponent's debate tree: {target}"
-                    )
-                    continue
-            elif action == "attack":
-                if target_tree == "you":
-                    logger.warning(f"Attack action is not allowed for your own debate tree: {target}")
-                    continue
-            else:
-                logger.warning(f"Unknown action: {action}")
-                continue
-
-            target_tree = tree if target_tree == "you" else oppo_tree
-            target_tree.update_node(action, new_claim=claim, new_argument=arguments, target=target)
+    if status == "opening":
+        for item in claims:
+            purposes = item.get("purpose") or []
+            if isinstance(purposes, dict):
+                purposes = [purposes]
+            if not any(p["action"] == "propose" for p in purposes):
+                purposes.append({"action": "propose", "targeted_debate_tree": "you", "target": item["claim"]})
+            item["purpose"] = purposes
+    apply_statements((tree, oppo_tree), claims, statements, side, allow_corrections=False)
 
     return claims
 

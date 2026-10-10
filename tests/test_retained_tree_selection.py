@@ -1,6 +1,7 @@
 """Retained history must survive serialization without entering current tree views."""
 import json
 from unittest.mock import Mock
+from types import SimpleNamespace
 
 import pytest
 
@@ -10,7 +11,7 @@ from streaming.argument_revisions import revise_claim
 from streaming.branch_planning import planning_material, parse_branch_state
 from streaming.planning import IncrementalPlanner, PlanningConfig
 from streaming.tree_grounding import attach_source, tree_targets
-from streaming.tree_selection import select_nodes, selection_status, render_selected_tree
+from streaming.tree_selection import select_nodes, selection_status
 from streaming.tree_updates import apply_statements, target_registry
 
 
@@ -45,7 +46,6 @@ def test_withdrawal_keeps_complete_path_but_selects_independent_live_branch_afte
     targets = tree_targets([restored], 'for')
     assert [n['node_id'] for n in targets] == [independent.node_id]
     assert 'HISTORICAL_' not in json.dumps(targets)
-    assert 'HISTORICAL_' not in render_selected_tree(restored, 'for')
     assert 'HISTORICAL_RESPONSE_TO_STORM' in restored.print_tree(include_status=True)
     assert 'Selection: needs_review' in restored.print_tree(include_status=True)
     statuses = {n['node_id']: n['selection_status'] for n in target_registry([restored])}
@@ -159,9 +159,10 @@ def test_omitted_responses_are_reported_without_claiming_branch_is_unanswered():
     assert not view[0]['unanswered'] and answer in target.children
 
 
-@pytest.mark.parametrize('mode', ['grounded_tree', 'light_tree', 'branch_tree', 'flat_tree'])
+@pytest.mark.parametrize('mode', ['branch_tree', 'flat_tree'])
 def test_generation_never_appends_retained_full_tree_even_when_selected_state_is_valid(mode):
     p = TreeDebater.__new__(TreeDebater)
+    p.config = SimpleNamespace(streaming_tts=False)
     p.motion, p.side, p.oppo_side = 'Transport', 'against', 'for'
     p.act, p.counter_act, p.status = 'oppose', 'support', 'rebuttal'
     p.debate_tree, p.oppo_debate_tree = DebateTree(p.motion, p.side), DebateTree(p.motion, p.oppo_side)
@@ -175,55 +176,13 @@ def test_generation_never_appends_retained_full_tree_even_when_selected_state_is
     p.planner.version = p.planner.plan_version = 1
     p.debate_tree.print_tree = p.oppo_debate_tree.print_tree = Mock(side_effect=AssertionError('Full tree leaked'))
     material = p._planning_context()
-    if p.planner.config.branch_state:
-        p.planner.state = parse_branch_state('{"claims":[{"target":0}],"limits":[],"rebuttals":[]}', new.claim, material)
-    else:
-        from streaming.grounding import parse_state
-        p.planner.state = parse_state(json.dumps({'claims': [{'node_id': new.node_id, 'quote': new.claim}],
-                                     'limits': [], 'rebuttals': []}), new.claim, tree_targets=material['tree_targets'])
+    p.planner.state = parse_branch_state('{"claims":[{"target":0}],"limits":[],"rebuttals":[]}', new.claim, material)
     p.planner.plan = json.dumps(p.planner.state)
     p.listen, p.speak, p._analyze_statement = Mock(), Mock(return_value='Delivered.'), Mock()
     p.rebuttal_generation([], 60)
     prompt = p.speak.call_args.args[0]
     assert new.claim in prompt and 'HISTORICAL_TARGET_MUST_NOT_BE_DELIVERED' not in prompt
     assert old in p.oppo_debate_tree.get_all_nodes()
-
-
-@pytest.mark.parametrize('mode', ['corrected_tree', 'tree_plan', 'adaptive_tree'])
-def test_older_corrected_policies_also_render_only_selected_current_nodes(mode):
-    p = TreeDebater.__new__(TreeDebater)
-    p.debate_tree, p.oppo_debate_tree = DebateTree('Transport', 'against'), DebateTree('Transport', 'for')
-    old = add(p.oppo_debate_tree, 'HISTORICAL_TARGET')
-    amend([p.oppo_debate_tree], old, 'retract', 'I no longer support this.')
-    current = add(p.oppo_debate_tree, 'Current limited proposal.')
-    p.planner = IncrementalPlanner(PlanningConfig(mode=mode))
-    own_view, opponent_view = p._generation_tree_context()
-    assert current.claim in opponent_view and 'HISTORICAL_TARGET' not in own_view + opponent_view
-    assert old in p.oppo_debate_tree.root.children
-
-
-def test_endpoint_action_planner_cannot_bypass_selection_through_battlefield_helper(monkeypatch):
-    p = TreeDebater.__new__(TreeDebater)
-    p.motion, p.side, p.status = 'Transport', 'against', 'rebuttal'
-    p.debate_tree, p.oppo_debate_tree = DebateTree(p.motion, p.side), DebateTree(p.motion, 'for')
-    old = add(p.oppo_debate_tree, 'HISTORICAL_ACTION_TARGET')
-    add(p.oppo_debate_tree, 'HISTORICAL_CHILD_ARGUMENT', old, 'against', 'attack')
-    amend([p.oppo_debate_tree], old, 'retract', 'No longer proposed.')
-    current = add(p.oppo_debate_tree, 'A limited current proposal.')
-    p.planner = IncrementalPlanner(PlanningConfig(mode='corrected_tree'))
-    p.main_claims_content, p.use_debate_flow_tree, p.helper_client = [], True, Mock()
-    p._retrieve_on_prepared_tree = Mock(return_value='')
-    p.debate_tree.print_tree = p.oppo_debate_tree.print_tree = Mock(side_effect=AssertionError('Full tree leaked'))
-    helper = Mock(return_value=[])
-    monkeypatch.setattr('ouragents.get_battlefields_from_actions', helper)
-    p._add_additional_info('{tips}', [], planned_actions=[])
-    actions = helper.call_args.args[4]
-    assert [a['target_claim'] for a in actions] == [current.claim]
-    assert 'HISTORICAL_' not in json.dumps(helper.call_args.kwargs['tree_views'])
-    amend([p.oppo_debate_tree], current, 'retract', 'I no longer propose the limited version.')
-    helper.reset_mock()
-    assert p._add_additional_info('{tips}', [], planned_actions=[]) == ''
-    helper.assert_not_called()
 
 
 def test_optional_retrieval_uses_selected_current_query_and_exemplar_nodes(monkeypatch):

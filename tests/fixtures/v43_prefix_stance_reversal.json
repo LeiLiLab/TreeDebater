@@ -1,0 +1,25 @@
+{
+  "source_run": "listening-motion-live-v43-completion-v1",
+  "draft_call": 21460,
+  "review_call": 21461,
+  "motion": "Social media companies should be required to label AI-generated content",
+  "our_side": "for",
+  "stage": "closing",
+  "candidate": {
+    "text": "Ultimately, this debate comes down to a choice between a proactive defense and a dangerous illusion of safety. We have shown that an imperfect, easily bypassed labeling system does not protect users; it actively misleads them.",
+    "target_ids": [],
+    "framework": {
+      "ready": true,
+      "position": "against",
+      "core_dispute": "Whether mandatory labeling provides genuine digital safety or merely creates a false sense of security while sacrificing privacy.",
+      "response_axes": [],
+      "prefix_action": "keep",
+      "reason": "The speaker is delivering a closing statement for the AGAINST side, framing the final verdict around the failure of the opponent's imperfect system."
+    }
+  },
+  "original_review": {
+    "ready_to_speak_ok": true,
+    "latest_input_ok": true,
+    "conflicts": []
+  }
+}

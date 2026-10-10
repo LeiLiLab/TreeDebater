@@ -1,10 +1,10 @@
 import copy
 import json
 import logging
-import math
 import os
 import random
 import re
+import threading
 import time
 import traceback
 from dataclasses import dataclass
@@ -18,7 +18,8 @@ from openai import OpenAI
 from evaluator import eval_surprise, extract_claims, extract_obj_aspect
 from tts import convert_text_to_speech, trim_audio_by_sentences
 from tts_streaming import convert_text_to_speech_streaming
-from utils.constants import CLOSING_TIME, OPENING_TIME, REBUTTAL_TIME, WORDRATIO, deepseek_api_key
+from utils.constants import CLOSING_TIME, OPENING_TIME, REBUTTAL_TIME, deepseek_api_key
+from utils import speech_length
 from utils.model import HelperClient, normalize_deepseek_litellm_model, safety_setting
 from utils.prompts import *
 from utils.timing_log import (
@@ -67,6 +68,11 @@ class DebaterConfig(AgentConfig):
     single_pass_revision: bool = False
     helper_model: str | None = None
     planning: dict | None = None
+    claim_selection_strategy: str = 'native'
+
+    def __post_init__(self):
+        if self.claim_selection_strategy not in ('native', 'saved_scores'):
+            raise ValueError('claim_selection_strategy must be native or saved_scores')
 
 
 @dataclass
@@ -147,6 +153,7 @@ class Agent:
             self._add_message("system", self.config.system_prompt)
 
         self.client_cost = 0
+        self._cost_lock = threading.Lock()
 
     def speak(self, prompt, **kwargs):
         self._add_message("user", prompt)
@@ -257,6 +264,8 @@ class Agent:
         return statement
 
     def _get_response(self, messages, **kwargs):
+        completion = kwargs.pop('_completion', None)
+        request_context = kwargs.pop('_request_context', None) or {}
         kwargs.pop("max_time", None)
         kwargs.pop("history", None)
         kwargs.pop("max_words", None)
@@ -267,25 +276,28 @@ class Agent:
         while retry < 3:
             try:
                 t0 = time.perf_counter()
-                response = self.client(messages=messages, **kwargs)
+                response = (completion or self.client)(messages=messages, **kwargs)
                 elapsed = time.perf_counter() - t0
                 hidden = getattr(response, "_hidden_params", None) or {}
-                cost = hidden.get("response_cost")
+                cost = getattr(response, 'response_cost', None) if completion else hidden.get("response_cost")
                 if cost is not None:
-                    self.client_cost += cost
+                    with self._cost_lock:
+                        self.client_cost += cost
                 log_timing(
                     logger,
                     "debater_litellm_completion",
                     elapsed,
-                    stage=getattr(self, "status", None),
-                    side=getattr(self, "side", None),
-                    model=self.config.model,
+                    stage=request_context.get('stage', getattr(self, "status", None)),
+                    side=request_context.get('side', getattr(self, "side", None)),
+                    model=request_context.get('model', getattr(self.config, 'model', None)),
                     retry_attempt=retry,
                 )
-                response = [choice.message.content for choice in response.choices]
+                response = list(response) if completion else [choice.message.content for choice in response.choices]
                 if len(response) == 1:
                     response = response[0]
             except Exception as e:
+                if completion is not None:
+                    raise
                 logger.error(f"Error in getting response: {e}")
                 traceback.print_exc()
                 response = None
@@ -330,7 +342,9 @@ class Debater(Agent):
         self.status = "opening"
         self.listen(history)
         prompt = default_opening_prompt.format(motion=self.motion, act=self.act)
-        prompt = prompt.replace("{n_words}", str(math.ceil(kwargs.get("max_time", OPENING_TIME) / WORDRATIO["time"])))
+        max_words = speech_length.draft_word_budget(kwargs.get("max_time", OPENING_TIME))
+        prompt = prompt.replace("{n_words}", str(max_words))
+        prompt += "\n" + speech_length.draft_length_instruction(max_words)
         response = self.speak(prompt, **kwargs)
         return response
 
@@ -339,7 +353,9 @@ class Debater(Agent):
         self.listen(history)
         opponent = history[-1]["content"]
         prompt = default_rebuttal_prompt.format(counter_act=self.counter_act, opponent=opponent, act=self.act, motion=self.motion)
-        prompt = prompt.replace("{n_words}", str(math.ceil(kwargs.get("max_time", REBUTTAL_TIME) / WORDRATIO["time"])))
+        max_words = speech_length.draft_word_budget(kwargs.get("max_time", REBUTTAL_TIME))
+        prompt = prompt.replace("{n_words}", str(max_words))
+        prompt += "\n" + speech_length.draft_length_instruction(max_words)
         response = self.speak(prompt, **kwargs)
         return response
 
@@ -348,7 +364,9 @@ class Debater(Agent):
         self.listen(history)
         opponent = history[-1]["content"]
         prompt = default_closing_prompt.format(counter_act=self.counter_act, opponent=opponent, act=self.act)
-        prompt = prompt.replace("{n_words}", str(math.ceil(kwargs.get("max_time", CLOSING_TIME) / WORDRATIO["time"])))
+        max_words = speech_length.draft_word_budget(kwargs.get("max_time", CLOSING_TIME))
+        prompt = prompt.replace("{n_words}", str(max_words))
+        prompt += "\n" + speech_length.draft_length_instruction(max_words)
         response = self.speak(prompt, **kwargs)
         return response
 
@@ -409,19 +427,7 @@ class Debater(Agent):
                 logger.info("[Response] " + st.replace("\n", " ||| "))
             return statement
 
-        # NOTE the below part is time-consuming, can comment them and add "new_statement = statement" when developing
-        # Resolve audio output directory from log file path
-        _log_path = log_file_path
-        if not _log_path:
-            # Fallback: extract path from logger's file handler
-            for h in logger.handlers:
-                if isinstance(h, logging.FileHandler):
-                    _log_path = h.baseFilename
-                    break
-        prefix = _log_path.replace(".log", "")
-        audio_dir = getattr(self, "audio_output_dir", None) or prefix + "_outputs"
-        os.makedirs(audio_dir, exist_ok=True)
-        audio_file = os.path.join(audio_dir, f"{self.config.type}_{self.status}_{self.side}.mp3")
+        audio_file = self._speech_audio_file()
         logger.info(f"[TTS-Start] Starting TTS for {self.config.type} {self.status} {self.side} (streaming={streaming_tts}, budget={max_time}s)")
         log_llm_io(
             logger,
@@ -523,6 +529,19 @@ class Debater(Agent):
 
         return new_statement
 
+    def _speech_audio_file(self, stage=None):
+        """Shared naming contract for batch, streaming TTS and incremental speech."""
+        _log_path = log_file_path
+        if not _log_path:
+            for handler in logger.handlers:
+                if isinstance(handler, logging.FileHandler):
+                    _log_path = handler.baseFilename
+                    break
+        prefix = (_log_path or 'log_files/debate').replace('.log', '')
+        audio_dir = getattr(self, 'audio_output_dir', None) or prefix + '_outputs'
+        os.makedirs(audio_dir, exist_ok=True)
+        return os.path.join(audio_dir, f'{self.config.type}_{stage or self.status}_{self.side}.mp3')
+
     def listen(self, history):
         if len(history) == 0:
             return
@@ -562,8 +581,9 @@ class HumanDebater(Debater):
     def opening_generation(self, **kwargs):
         self.status = "opening"
         max_time = kwargs.get("max_time", OPENING_TIME)
-        max_words = math.ceil(max_time / WORDRATIO["time"])
+        max_words = speech_length.draft_word_budget(max_time)
         response = self.get_multiline_input(
+            speech_length.draft_length_instruction(max_words) +
             f"Please give an opening statement using three claims with {max_words} words, do not output other things. Please input the response in the command."
         )
         response = self.post_process(response, **kwargs)
@@ -572,8 +592,9 @@ class HumanDebater(Debater):
     def rebuttal_generation(self, history, **kwargs):
         self.status = "rebuttal"
         max_time = kwargs.get("max_time", REBUTTAL_TIME)
-        max_words = math.ceil(max_time / WORDRATIO["time"])
+        max_words = speech_length.draft_word_budget(max_time)
         response = self.get_multiline_input(
+            speech_length.draft_length_instruction(max_words) +
             f"Now it comes the rebuttal phase, where you respond to your opponent. You should stand firm on your position and attack the opponent's weak points. Give your response within {max_words} words and do not output other things than our response. Please input the response in the command."
         )
         response = self.post_process(response, **kwargs)
@@ -582,8 +603,9 @@ class HumanDebater(Debater):
     def closing_generation(self, history, **kwargs):
         self.status = "closing"
         max_time = kwargs.get("max_time", CLOSING_TIME)
-        max_words = math.ceil(max_time / WORDRATIO["time"])
+        max_words = speech_length.draft_word_budget(max_time)
         response = self.get_multiline_input(
+            speech_length.draft_length_instruction(max_words) +
             f"Now it comes the closing statement, where you summarize your key points and reaffirm your position. Give your response within {max_words} words and do not output other things than our response. Please input the response in the command."
         )
         response = self.post_process(response, **kwargs)
@@ -844,6 +866,29 @@ class Audience(Agent):
         scores, explanations = eval_surprise(self.helper_client, motion, side, claims, n=1)
         return scores, explanations
 
-    def feedback(self, prompt, **kwargs):
+    def feedback(self, prompt, *, isolated=False, completion=None, **kwargs):
+        if isolated:
+            # Concurrent reviews must not append to a shared audience conversation.
+            reviewer = copy.copy(self)
+            reviewer.config = copy.deepcopy(self.config)
+            reviewer.reset()
+            reviewer.client_cost = 0
+            if completion is not None:
+                original_response = reviewer._get_response
+                def transport(*, messages, **options):
+                    systems = [m['content'] for m in messages if m['role'] == 'system']
+                    return completion(prompt=messages[-1]['content'],
+                        sys='\n\n'.join(systems) or None, model=reviewer.config.model,
+                        temperature=reviewer.config.temperature,
+                        max_tokens=reviewer.config.max_tokens, json_mode=False, **options)
+                def respond(messages, **options):
+                    return original_response(messages, _completion=transport, **options)
+                reviewer._get_response = respond
+            try:
+                return reviewer.feedback(prompt, **kwargs)
+            finally:
+                owner = getattr(self, '_cost_owner', self)
+                with owner._cost_lock:
+                    owner.client_cost += reviewer.client_cost
         response = self.speak(prompt, **kwargs)
         return response
