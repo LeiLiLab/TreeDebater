@@ -190,7 +190,6 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
                 # Advance cursor - listener can now access this audio
                 playback_cursor[0] += sleep_time
                 elapsed_in_chunk += sleep_time
-                # logger.debug(f"[PlaybackMain] cursor={playback_cursor[0]:.1f}s (chunk {next_idx}, elapsed={elapsed_in_chunk:.1f}s/{chunk_duration:.1f}s)")
 
             # End playback of this chunk
             logger.debug(

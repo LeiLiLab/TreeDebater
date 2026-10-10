@@ -78,10 +78,8 @@ def test_recorded_truncated_closing_gets_only_one_repair_before_publication(tmp_
 
 @pytest.mark.parametrize('feedback', ['Explain the selected evidence.', 'No changes'])
 @pytest.mark.parametrize('parallel', [True, False])
-@pytest.mark.parametrize('supplement', [True, False])
-def test_native_evidence_selection_and_revision_run_once_across_handoff(audio, tmp_path, monkeypatch, feedback, parallel, supplement):
+def test_prepared_evidence_reuse_and_revision_run_once_across_handoff(audio, tmp_path, monkeypatch, feedback, parallel):
     import tts_streaming
-    monkeypatch.setattr('streaming.listening_prefix.ENABLE_ENDPOINT_EVIDENCE_SUPPLEMENT', supplement)
     # The body already fits the remaining 58 seconds: evidence alone must be
     # enough to trigger revision when the review reports no corrections.
     monkeypatch.setattr(tts_streaming, 'estimate_statement_seconds', lambda *a, **kw: 58)
@@ -132,13 +130,12 @@ def test_native_evidence_selection_and_revision_run_once_across_handoff(audio, t
     result = p.rebuttal_generation(history, 60, time_control=True, listening_handoff=handoff,
         listening_input_completion=complete, listening_recognized_input=lambda: copy.deepcopy(history))
     assert result == PREFIX + '\n\n' + revised_tail
-    assert len(selections) == int(supplement)
+    assert not selections
     assert len(revisions) == 1
     assert p.used_evidence == {'e0', 'e2'}
     saved = trace(tmp_path)
-    if not supplement:
-        assert saved['prepared_evidence']['mode'] == 'reuse_only'
-        assert saved['prepared_evidence']['selected_ids'] == ['e2']
+    assert saved['prepared_evidence']['mode'] == 'reuse_only'
+    assert saved['prepared_evidence']['selected_ids'] == ['e2']
     if parallel:
         assert saved['parallel_body_revision']['reused']
         assert saved['parallel_evidence_selection']['selected_ids'] == ['e2']

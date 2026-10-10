@@ -1,4 +1,4 @@
-"""Shared body revision formatter using the v55 B evidence-rewrite prompt."""
+"""Shared body revision formatter for evidence-grounded speech continuation."""
 import json
 
 from utils.evidence_material import writing_evidence

@@ -389,14 +389,10 @@ def test_endpoint_revision_and_tree_work_overlap_with_exact_reuse(audio, tmp_pat
 
 @pytest.mark.parametrize(('blocked_work', 'change'), [
     ('feedback', 'history'), ('revision', 'history'),
-    ('revision', 'evidence'), ('revision', 'system'), ('evidence', 'evidence'),
+    ('revision', 'evidence'), ('revision', 'system'),
 ])
-def test_obsolete_body_work_does_not_block_first_body_audio(audio, tmp_path, change, blocked_work, monkeypatch):
+def test_obsolete_body_work_does_not_block_first_body_audio(audio, tmp_path, change, blocked_work):
     """Release obsolete work only AFTER final-input body audio has been emitted."""
-    if blocked_work == 'evidence':
-        # Keep exercising the retained supplement implementation while its
-        # production dispatch is temporarily disabled.
-        monkeypatch.setattr('streaming.listening_prefix.ENABLE_ENDPOINT_EVIDENCE_SUPPLEMENT', True)
     import json
     from types import MethodType
     from ouragents import TreeDebater
@@ -415,20 +411,7 @@ def test_obsolete_body_work_does_not_block_first_body_audio(audio, tmp_path, cha
     stale_started, body_emitted, first_audio = (threading.Event() for _ in range(3))
     base = p.helper_client
     feedbacks, revisions, gates = [], [], []
-    if blocked_work == 'evidence':
-        p.high_quality_evidence_pool = [dict(id=str(i), content=f'Old evidence {i}') for i in range(11)]
-        # A thread-ordering assertion must fail immediately, not enter the native
-        # model-format retry loop and its 30-second backoff.
-        def select_once(helper, prompt, key, **kwargs):
-            raw = helper(prompt=prompt, **kwargs)[0]
-            return json.loads(raw)[key], raw
-        monkeypatch.setattr('ouragents.get_response_with_retry', select_once)
-
     def helper(*, prompt, **kwargs):
-        if blocked_work == 'evidence' and prompt.startswith('From the provided list of evidence dictionaries'):
-            stale_started.set()
-            assert body_emitted.wait(3), 'Obsolete evidence selection blocked final body audio'
-            return [json.dumps(dict(selected_ids=['0']))]
         if 'LISTENING WHOLE SPEECH FEEDBACK:' in prompt:
             feedbacks.append(prompt)
             assert first_audio.wait(3)

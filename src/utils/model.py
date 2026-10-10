@@ -124,8 +124,6 @@ def HelperClient(
         # Reduce max_tokens for moonshot models to avoid exceeding limits
         max_tokens = min(max_tokens, 4096)
         kwargs = {"api_key": os.environ.get("MOONSHOT_API_KEY", ""), "api_base": "https://api.moonshot.cn/v1"}
-        # print(f"[HelperClient] Using Moonshot model: {model_name}")
-        # print(f"Moonshot API Key: {kwargs['api_key'][:5]}****")
     else:
         raise NotImplementedError(f"{model} is not supported.")
 

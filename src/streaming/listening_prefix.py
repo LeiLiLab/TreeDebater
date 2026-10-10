@@ -35,11 +35,6 @@ from utils.time_estimator import LengthEstimator
 from utils.tool import logger
 
 
-# Temporarily bypass final-feedback supplements. Listening-time preparation stays
-# enabled; keep the old dispatch below for a direct, reversible comparison.
-ENABLE_ENDPOINT_EVIDENCE_SUPPLEMENT = False
-
-
 def next_stage(side, stage, first_side='for'):
     """The next speaker follows the configured order, including reversed debates."""
     stages = ('opening', 'rebuttal', 'closing')
@@ -910,8 +905,7 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
             and config.listening_single_body_revision
             and (prepared_audio is not None or pending_prefix_audio is not None))
         snapshot_delivery = bool(config.listening_body_snapshot_delivery and parallel_revision
-            and handoff and body_preparation and callable(recognized_input)
-            and not ENABLE_ENDPOINT_EVIDENCE_SUPPLEMENT)
+            and handoff and body_preparation and callable(recognized_input))
         trace['body_publication_mode'] = ('complete_asr_snapshot' if snapshot_delivery else 'final_analysis')
 
         # Capture only values and the stateless provider callable. The observer
@@ -924,42 +918,26 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
             audience._cost_owner = original
         authoring_system = debater_system(player)
         writing_options = authoring_options(player, **kwargs)
-        select_evidence = player._select_revision_evidence
         evidence_cache = (preparation.evidence.snapshot() if preparation is not None
                           and preparation.evidence is not None
                           and preparation.evidence.scope == (stage, data['turn']) else None)
         initial_evidence = copy.deepcopy(getattr(player, 'evidence_pool', []))
 
         def cached_selection(statement, guidance, candidates, *, stage, call_id=None):
-            if not ENABLE_ENDPOINT_EVIDENCE_SUPPLEMENT:
-                from utils.evidence_material import EvidenceSelection
-                # Reuse only unchanged, still-eligible sources. No final-input
-                # selector fallback, including cold starts and changed pools.
-                available = {e['id']: e for e in candidates} if stage != 'closing' else {}
-                prepared = evidence_cache.selected if evidence_cache is not None else initial_evidence
-                selected = EvidenceSelection(
-                    [e for e in prepared if available.get(e['id']) == e],
-                    evidence_cache.analysis if evidence_cache is not None else {})
-                trace['prepared_evidence'] = dict(
-                    mode='reuse_only', endpoint_supplement_enabled=False,
-                    source='listening' if evidence_cache is not None else 'initial_pool',
-                    calls=evidence_cache.calls if evidence_cache is not None else 0,
-                    events=copy.deepcopy(evidence_cache.events) if evidence_cache is not None else [],
-                    selected_ids=[e['id'] for e in selected])
-                return selected
-            if evidence_cache is None:
-                return select_evidence(statement, guidance, candidates, stage=stage,
-                                       **({'call_id': call_id} if call_id is not None else {}))
-            # Each endpoint attempt owns its state; an obsolete worker cannot
-            # overwrite a corrected final-input request.
-            state = copy.deepcopy(evidence_cache)
-            selected = state.select(select_evidence, statement, guidance, candidates, stage=stage,
-                candidate_limit=config.listening_evidence_candidates,
-                reserve=lambda: preparation.evidence.reserve(endpoint=True))
-            trace['prepared_evidence'] = dict(calls=state.calls,
-                                             rounds_reserved=preparation.evidence.snapshot().calls,
-                                             events=state.events,
-                                             selected_ids=[e['id'] for e in selected])
+            from utils.evidence_material import EvidenceSelection
+            # Reuse only unchanged, still-eligible sources. No final-input
+            # selector fallback, including cold starts and changed pools.
+            available = {e['id']: e for e in candidates} if stage != 'closing' else {}
+            prepared = evidence_cache.selected if evidence_cache is not None else initial_evidence
+            selected = EvidenceSelection(
+                [e for e in prepared if available.get(e['id']) == e],
+                evidence_cache.analysis if evidence_cache is not None else {})
+            trace['prepared_evidence'] = dict(
+                mode='reuse_only', endpoint_supplement_enabled=False,
+                source='listening' if evidence_cache is not None else 'initial_pool',
+                calls=evidence_cache.calls if evidence_cache is not None else 0,
+                events=copy.deepcopy(evidence_cache.events) if evidence_cache is not None else [],
+                selected_ids=[e['id'] for e in selected])
             return selected
         evidence_candidates = copy.deepcopy([e for e in player.high_quality_evidence_pool
             if e['id'] not in player.used_evidence]) if stage != 'closing' else []

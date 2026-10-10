@@ -13,6 +13,7 @@ Key features vs the serial pipeline in tts.py:
 import concurrent.futures
 import csv
 import json
+import logging
 import os
 import sys
 import threading
@@ -34,6 +35,8 @@ from streaming.config import OutputConfig, from_mapping
 from streaming.audio_tempo import fit_audio_tempo
 from streaming.delivery_edit import EditScope
 from streaming.revision_stream import RevisionStream
+
+logger = logging.getLogger(__name__)
 
 # Compatibility aliases; canonical defaults live in streaming.config.OutputConfig.
 TOLERANCE_RATIO = OutputConfig.tolerance_ratio
@@ -1023,7 +1026,7 @@ def _run_pipeline(
             triggers.append(f"ratio={ratio:.2f}x")
         if abs_trigger:
             triggers.append(f"abs={target_chars}c>={cfg.abs_prestart_chars}")
-        print(
+        logger.debug(
             f"  [ratio-prestart] chunk {target_idx} kicked off at start of iter {iter_i}, "
             f"trigger=[{', '.join(triggers)}], target_est={tgt_s_est:.1f}s"
         )
@@ -1066,7 +1069,7 @@ def _run_pipeline(
         th = threading.Thread(target=_refine_worker, args=(ctx, "prestart"), daemon=True)
         ctx.workers.append(th)
         th.start()
-        print(
+        logger.debug(
             f"  [last-prestart] chunk {last_idx} kicked off at start of iter {iter_i}, "
             f"target_est={tgt_s_est:.1f}s"
         )
@@ -1106,7 +1109,7 @@ def _run_pipeline(
                     chunk_words = LengthEstimator.count_words(chunk)
                     remaining_chars_total = sum(len(c) for c in segments_list[i:]) + unseen_chars
                     target_s = audio_budget_remaining * (chunk_chars / remaining_chars_total)
-                    print(f"  chunk {i:03d} | early-cut: fs_pre={fs_pre:.1f}s > {early_cut_ratio}x target={target_s:.1f}s → split into head({len(head)}c)+tail({len(tail)}c)")
+                    logger.debug(f"  chunk {i:03d} | early-cut: fs_pre={fs_pre:.1f}s > {early_cut_ratio}x target={target_s:.1f}s → split into head({len(head)}c)+tail({len(tail)}c)")
 
         if (i == 1 and has_listening_prefix and cfg.first_body_chunk_seconds > 0
                 and (not stream_finished or i + 1 < n_chunks)):
@@ -1348,7 +1351,7 @@ def _run_pipeline(
                     )
                 # subtract lead from elapsed for reporting parity with the old design
                 total_elapsed_s = max(0.0, total_elapsed_s - chunk_lead_s)
-                print(
+                logger.debug(
                     f"  [{chunk_prestart_kind}-prestart] adopted for chunk {i}: "
                     f"lead={chunk_lead_s:.1f}s, effective_elapsed={total_elapsed_s:.1f}s"
                 )
@@ -1513,7 +1516,7 @@ def _run_pipeline(
                     w.writeheader()
                 w.writerow(asdict(cp))
 
-        print(
+        logger.debug(
             f"  chunk {i:03d} | target={target_s:.1f}s | tol=[{-tol_s:.1f},{tol_upper_s:+.1f}] | "
             f"max_ref={max_ref} | n_ref={n_ref_used} | "
             f"fs_est={fs_estimated_s:.1f}s | actual={audio_seconds:.1f}s | "
@@ -1840,7 +1843,7 @@ def convert_text_to_speech_streaming(
     # Build text_content and reference matching the original API
     text_content = "\n\n".join(final_texts)
 
-    print(
+    logger.debug(
         f"  => audio_total={round_profile.audio_seconds_total:.2f}s | "
         f"overrun_total={round_profile.overrun_total_s:.2f}s | "
         f"budget_remaining={round_profile.budget_remaining_s:.2f}s | "
