@@ -9,7 +9,7 @@ engine: treedebater
 ai_model: google.gemma-4-26b-a4b
 helper_model: google.gemma-4-26b-a4b
 planning:
-  mode: adaptive_tree
+  mode: flat_tree
   max_plan_tokens: 700
   max_gate_tokens: 120
   max_updates: 24

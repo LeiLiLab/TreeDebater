@@ -44,11 +44,13 @@ class ArtifactTests(unittest.TestCase):
                 other = pool_dir / f"{motion.replace(' ', '_').lower()}_pool_{opponent}.json"
                 player = SimpleNamespace(
                     pool_file=str(pool), side=side, oppo_side=opponent,
+                    config=SimpleNamespace(claim_pool_limit=8),
+                    _listening_prefix_enabled=lambda: False,
                     helper_client=Mock(side_effect=AssertionError('Must not generate claims')),
                 )
                 generate(player, 4)
                 self.assertEqual(player.claim_pool, json.loads(pool.read_text())[:8])
-                self.assertEqual(player.oppo_claim_pool, json.loads(other.read_text())[:8])
+                self.assertEqual(player.oppo_claim_pool, json.loads(other.read_text()))
                 player.helper_client.assert_not_called()
 
     def test_claim_pools_contain_the_generated_side_and_support_arbitrary_motions(self):
@@ -59,6 +61,7 @@ class ArtifactTests(unittest.TestCase):
                 player = SimpleNamespace(
                     motion=motion, side='for', oppo_side='against', act='support',
                     config=SimpleNamespace(model='test'), pool_file=None,
+                    _listening_prefix_enabled=lambda: False,
                     claim_pool=[], oppo_claim_pool=[], helper_client=lambda **kw: ['None'],
                 )
                 try:

@@ -1,0 +1,41 @@
+# Server environment: DEBATE_LLM_API_BASE=http://127.0.0.1:4000/v1
+# Complete Flat Tree draft; natural opening TTS overlaps remaining-text revision.
+# Adjust the synthesized opening locally with pitch-preserving tempo before publication.
+# The natural opening is preserved; 8 seconds is a soft audio target. TTS text rewrites are disabled because
+# the tested meaning checker missed lost qualifiers. Experimental: set early_max_refinements
+# to 1 and max_refinements to 2 only after validating compression quality.
+motion: Learning to be a good writer still matters in the age of AI
+mode: human_ai
+human_side: for
+first_side: for
+engine: treedebater
+ai_model: google.gemma-4-26b-a4b
+helper_model: google.gemma-4-26b-a4b
+planning:
+  mode: flat_tree
+  max_plan_tokens: 700
+  max_gate_tokens: 120
+  max_updates: 24
+  max_wait_chunks: 3
+claim_pool_size: 4
+budgets:
+  opening: 60
+  rebuttal: 60
+  closing: 60
+streaming:
+  output:
+    speech_mode: overlap_prefix
+    budget_mode: audio_duration
+    adaptive_delivery: true
+    first_chunk_seconds: 8
+    first_chunk_local_tempo: true
+    local_tempo_min: 0.85
+    local_tempo_max: 1.15
+    local_tempo_deadband_seconds: 0.10
+    later_chunk_seconds: 30
+    allow_expansion: false
+    refinement_model: google.gemma-4-26b-a4b
+    early_max_refinements: 0
+    max_refinements: 0
+    max_parallel_tts: 1
+evaluation: false

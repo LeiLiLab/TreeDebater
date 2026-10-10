@@ -9,6 +9,12 @@ class Model(BaseModel):
     )
 
 
+class RehearsalSettings(Model):
+    enabled: bool = False
+    pool_name: Literal['gemma-4-26b-a4b', 'deepseek-chat'] = 'gemma-4-26b-a4b'
+    mode: Literal['hybrid', 'local'] = 'hybrid'
+
+
 class SessionSettings(Model):
     motion: str = Field(min_length=3, max_length=2000)
     mode: Literal["human_ai", "ai_ai"] = "human_ai"
@@ -18,7 +24,9 @@ class SessionSettings(Model):
     ai_model: str = Field(default="gpt-4o-mini", min_length=1, max_length=200)
     helper_model: Optional[str] = None
     planning: dict = Field(default_factory=dict)
+    rehearsal: RehearsalSettings = Field(default_factory=RehearsalSettings)
     claim_pool_size: int = Field(default=4, ge=1, le=50)
+    claim_selection_strategy: Literal['native', 'saved_scores'] = 'native'
     budgets: dict[str, float] = Field(
         default_factory=lambda: {"opening": 60.0, "rebuttal": 60.0, "closing": 30.0}
     )

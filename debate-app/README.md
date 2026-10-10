@@ -3,30 +3,23 @@
 ## Incremental rebuttal preparation (experimental branch)
 
 `planning.mode` selects `legacy` (default), `end_of_turn`, `linear`,
-`corrected_tree`, `adaptive_linear`, `tree_plan`, `adaptive_tree`, `structured_linear`,
-`grounded_linear`, `light_linear`, `grounded_tree`, `light_tree`, `branch_tree`, or
-`flat_tree` in session YAML.
+`adaptive_linear`, `branch_tree`, or `flat_tree` in session YAML.
 See [`configs/gemma-incremental.yml`](configs/gemma-incremental.yml) for an example.
 For command-line debaters, put the same `planning` mapping in the debater configuration.
 
 Linear policies maintain explicit notes without a debate tree. Tree policies keep the
 existing claim graph; corrected modes support speaker-owned revision/retraction and
-retain the original nodes and response paths when a position changes. Adaptive policies use a separate
-semantic WAIT/UPDATE call and force remaining input through preparation at the endpoint.
+retain the original nodes and response paths when a position changes. `adaptive_linear` uses a separate
+semantic WAIT/UPDATE call and forces remaining input through preparation at the endpoint.
 `max_updates` limits speculative updates; endpoint draining still runs after that limit.
 All modes keep final speaking under the existing turn controller. Preparation does not
 consume evidence, commit assistant messages or invoke TTS. Engine checkpoints include
 the speculative state so recording recovery discards abandoned work.
 
-The three newer Linear variants form an additive ablation: `structured_linear`
-validates quoted source spans and current rebuttal targets in compact JSON state;
-`grounded_linear` additionally directs the existing feedback/revision calls toward
-scope preservation and unsupported premises; `light_linear` also skips adjacent
-exact repetitions, buffers obviously unfinished clauses, and uses a semantic gate
-only for near-repetition. Pending uncertain material always drains at the endpoint.
-An invalid state response falls back to the verbatim heard prefix without reusing
-invalid model notes. Quote validation does not establish semantic entailment or
-factual truth. All variants are opt-in; the default remains `legacy`.
+`branch_tree` and `flat_tree` validate quoted sources and response targets in
+compact JSON state. Invalid state falls back to the verbatim heard prefix. Existing
+feedback/revision calls check scope preservation and unsupported premises. Quote
+validation establishes attribution, not semantic entailment or factual truth.
 
 To use an OpenAI-compatible text proxy, set `DEBATE_LLM_API_BASE` before starting the
 backend, for example `http://127.0.0.1:4000/v1`. Optionally set
@@ -85,15 +78,12 @@ stage and speaker to read that turn, or use **Back to live** / **Follow current 
 to return to ongoing transcription. Recording and playback continue while you read
 an earlier turn, and live updates preserve your selection.
 
-The tree-centered follow-up keeps the original argument trees. `grounded_tree`
-selects source-attributed current nodes, prioritizes recent updates, unanswered branches and attacks
-on our claims, and binds each response to a stable node ID plus a branch version.
-Withdrawn/superseded nodes remain stored; ineligible or changed targets invalidate old
-notes. Existing feedback/revision calls check source fidelity. `light_tree` adds
-the same bounded scheduling as `light_linear`. Source spans survive checkpoints
-and JSON serialization, including prior turns. These checks establish attribution
-and target identity, not semantic entailment. See the continually maintained
-[all-variant table](../process.md#方案总表持续维护包含所有已尝试方案) for evaluation status.
+`branch_tree` and `flat_tree` keep the original argument trees and select
+source-attributed current nodes. Both bind each response to a stable node ID and
+version; `branch_tree` also supplies branch relationships. Withdrawn/superseded
+nodes remain stored, while ineligible or changed targets invalidate old notes.
+Source spans survive checkpoints and JSON serialization, including prior turns.
+The [all-variant table](../docs/history/process.md#方案总表持续维护包含所有已尝试方案) retains historical evaluation results.
 
 Correction-enabled tree modes now apply source-checked updates by actual speaker
 and node ID. A replacement is applied once instead of retracting its target first;
@@ -457,6 +447,12 @@ the key is a recovery capability and must stay private. Changed settings with th
 same key are rejected. Requests without a key remain supported for older API clients.
 
 ## Tests
+
+The listening preset explicitly sets `claim_selection_strategy: saved_scores`
+and `streaming.output.audience_feedback_mode: compact`. Other sessions default
+to native TreeDebater claim selection and full audience feedback. These choices
+are independent of speech mode; compact feedback preserves enabled retrieval.
+See the [shared capability and extension contract](../src/streaming/README.md#modules).
 
 ```bash
 cd backend

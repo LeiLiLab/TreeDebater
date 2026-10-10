@@ -104,7 +104,7 @@ class TreeDebaterEngine:
         sys.path.insert(0, str(ENGINE_ROOT / "src"))
         from agents import DebaterConfig
         from ouragents import TreeDebater
-        from streaming.config import OutputConfig
+        from streaming.config import OutputConfig, SpeechBudgets
 
         sides = (
             ["for", "against"]
@@ -114,9 +114,13 @@ class TreeDebaterEngine:
         if self.config.get("worker_side"):
             sides = [self.config["worker_side"]]
         for side in sides:
-            # Reuse the supplied DeepSeek pools when both sides exist. The
-            # engine loads the opponent file by replacing the side suffix.
-            pool_dir = ENGINE_ROOT / "results" / "deepseek-chat"
+            # Pool selection is explicit when local rehearsal retrieval is enabled.
+            rehearsal = self.config.get('rehearsal', {})
+            use_rehearsal = rehearsal.get('enabled', False)
+            pool_name = rehearsal.get('pool_name', 'gemma-4-26b-a4b') if use_rehearsal else 'deepseek-chat'
+            if pool_name not in ('gemma-4-26b-a4b', 'deepseek-chat'):
+                raise ValueError('Unknown prepared rehearsal pool')
+            pool_dir = ENGINE_ROOT / 'results' / pool_name
             motion_name = self.config["motion"].replace(" ", "_").lower()
             pool_names = {
                 s: f"{motion_name}_pool_{s}.json" for s in ("for", "against")
@@ -125,7 +129,10 @@ class TreeDebaterEngine:
                 Path(name).name == name and (pool_dir / name).is_file()
                 for name in pool_names.values()
             )
+            if use_rehearsal and not has_saved_pools:
+                raise ValueError(f'Prepared {pool_name} pools for both sides are required for this motion')
             cfg = DebaterConfig(
+                claim_selection_strategy=self.config.get('claim_selection_strategy', 'native'),
                 side=side,
                 pool_file=str(pool_dir / pool_names[side]) if has_saved_pools else None,
                 type="treedebater",
@@ -134,18 +141,24 @@ class TreeDebaterEngine:
                 streaming_tts=True,
                 streaming_listen=True,
                 use_retrieval=False,
-                use_rehearsal_tree=False,
+                use_rehearsal_tree=use_rehearsal,
+                rehearsal_mode=rehearsal.get('mode', 'hybrid'),
+                rehearsal_index_cache_dir=str(pool_dir / 'retrieval_indexes'),
                 add_retrieval_feedback=False,
                 single_pass_revision=True,
                 planning=self.config.get("planning"),
             )
             player = TreeDebater(cfg, self.config["motion"])
             player.streaming_output_config = OutputConfig(**self.config["streaming"]["output"])
+            player.speech_budgets = SpeechBudgets(**self.config['budgets'])
+            player.debate_first_side = self.config['first_side']
             # The local reward scorer loads Llama checkpoints with device_map=auto.
             # This app uses the configured API model for claim scoring instead.
             player.claim_generation(
                 self.config["claim_pool_size"], temperature=1, use_rm_model=False
             )
+            if use_rehearsal and cfg.rehearsal_mode == 'hybrid':
+                player._warm_rehearsal_indexes()
             self.players[side] = player
         return self.trees()
 
@@ -158,6 +171,9 @@ class TreeDebaterEngine:
     def restore(self):
         for side, values in self.saved.items():
             p = self.players[side]
+            discard = getattr(p, 'discard_listening_prefix', None)
+            if discard is not None:
+                discard()
             for key in self.CHECKPOINT_FIELDS:
                 if key in values:
                     setattr(p, key, copy.deepcopy(values[key]))
