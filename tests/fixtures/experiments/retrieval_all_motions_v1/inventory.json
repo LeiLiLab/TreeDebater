@@ -1,0 +1,274 @@
+{
+  "motions": [
+    {
+      "motion": "Social media companies should be required to label AI-generated content",
+      "slug": "social_media_companies_should_be_required_to_label_ai-generated_content",
+      "log_sources": [
+        {
+          "path": "emnlp_res/120.log",
+          "line": 2
+        },
+        {
+          "path": "emnlp_res/123.log",
+          "line": 2
+        }
+      ],
+      "json_sources": [
+        "emnlp_res/120.json"
+      ],
+      "pool_sources": {
+        "for": {
+          "kind": "serialized_pool",
+          "path": "results/deepseek-chat/social_media_companies_should_be_required_to_label_ai-generated_content_pool_for.json",
+          "trees": 7
+        },
+        "against": {
+          "kind": "serialized_pool",
+          "path": "results/deepseek-chat/social_media_companies_should_be_required_to_label_ai-generated_content_pool_against.json",
+          "trees": 8
+        }
+      },
+      "limitations": [],
+      "historical_candidates": 57,
+      "selected_historical_queries": 15,
+      "generated_queries": 0
+    },
+    {
+      "motion": "Genetic enhancement of human embryos should be permitted",
+      "slug": "genetic_enhancement_of_human_embryos_should_be_permitted",
+      "log_sources": [
+        {
+          "path": "emnlp_res/121.log",
+          "line": 3
+        },
+        {
+          "path": "emnlp_res/125.log",
+          "line": 2
+        }
+      ],
+      "json_sources": [
+        "emnlp_res/125.json"
+      ],
+      "pool_sources": {
+        "for": {
+          "kind": "serialized_pool",
+          "path": "results/deepseek-chat/genetic_enhancement_of_human_embryos_should_be_permitted_pool_for.json",
+          "trees": 11
+        },
+        "against": {
+          "kind": "unavailable",
+          "trees": 0
+        }
+      },
+      "limitations": [
+        "against: no separate root pool; only that side's descendants in the other pool are searchable"
+      ],
+      "historical_candidates": 35,
+      "selected_historical_queries": 15,
+      "generated_queries": 0
+    },
+    {
+      "motion": "Learning to be a good writer still matters in the age of ai",
+      "slug": "learning_to_be_a_good_writer_still_matters_in_the_age_of_ai",
+      "log_sources": [
+        {
+          "path": "emnlp_res/121.log",
+          "line": 18
+        },
+        {
+          "path": "emnlp_res/124.log",
+          "line": 2
+        }
+      ],
+      "json_sources": [
+        "emnlp_res/121.json",
+        "emnlp_res/123.json"
+      ],
+      "pool_sources": {
+        "for": {
+          "kind": "serialized_pool",
+          "path": "results/deepseek-chat/learning_to_be_a_good_writer_still_matters_in_the_age_of_ai_pool_for.json",
+          "trees": 8
+        },
+        "against": {
+          "kind": "serialized_pool",
+          "path": "results/deepseek-chat/learning_to_be_a_good_writer_still_matters_in_the_age_of_ai_pool_against.json",
+          "trees": 9
+        }
+      },
+      "limitations": [],
+      "historical_candidates": 122,
+      "selected_historical_queries": 15,
+      "generated_queries": 0
+    },
+    {
+      "motion": "Social media should be required to verify user identities",
+      "slug": "social_media_should_be_required_to_verify_user_identities",
+      "log_sources": [
+        {
+          "path": "emnlp_res/122.log",
+          "line": 2
+        }
+      ],
+      "json_sources": [
+        "emnlp_res/122.json"
+      ],
+      "pool_sources": {
+        "for": {
+          "kind": "serialized_pool",
+          "path": "results/deepseek-chat/social_media_should_be_required_to_verify_user_identities_pool_for.json",
+          "trees": 8
+        },
+        "against": {
+          "kind": "serialized_pool",
+          "path": "results/deepseek-chat/social_media_should_be_required_to_verify_user_identities_pool_against.json",
+          "trees": 10
+        }
+      },
+      "limitations": [],
+      "historical_candidates": 56,
+      "selected_historical_queries": 15,
+      "generated_queries": 0
+    },
+    {
+      "motion": "Developed countries should impose a fat tax.",
+      "slug": "developed_countries_should_impose_a_fat_tax.",
+      "log_sources": [
+        {
+          "path": "emnlp_res/126.log",
+          "line": 2
+        }
+      ],
+      "json_sources": [
+        "emnlp_res/124.json"
+      ],
+      "pool_sources": {
+        "for": {
+          "kind": "printed_tree_recovery",
+          "trees": 8,
+          "path": "emnlp_res/126_io.log",
+          "offset": 0,
+          "nodes": 320
+        },
+        "against": {
+          "kind": "unavailable",
+          "trees": 0
+        }
+      },
+      "limitations": [
+        "for: only trees printed in claim-selection prompt are available; original full pool unavailable",
+        "against: no separate root pool; only that side's descendants in the other pool are searchable"
+      ],
+      "historical_candidates": 41,
+      "selected_historical_queries": 15,
+      "generated_queries": 0
+    },
+    {
+      "motion": "AI will kill the future of creative arts",
+      "slug": "ai_will_kill_the_future_of_creative_arts",
+      "log_sources": [
+        {
+          "path": "emnlp_res/127.log",
+          "line": 2
+        }
+      ],
+      "json_sources": [],
+      "pool_sources": {
+        "for": {
+          "kind": "printed_tree_recovery",
+          "trees": 8,
+          "path": "emnlp_res/127_io.log",
+          "offset": 0,
+          "nodes": 320
+        },
+        "against": {
+          "kind": "unavailable",
+          "trees": 0
+        }
+      },
+      "limitations": [
+        "for: only trees printed in claim-selection prompt are available; original full pool unavailable",
+        "against: no separate root pool; only that side's descendants in the other pool are searchable",
+        "No historical attack/reinforce/rebut queries:15 generated supplemental requests will be reported separately"
+      ],
+      "historical_candidates": 0,
+      "selected_historical_queries": 0,
+      "generated_queries": 15
+    },
+    {
+      "motion": "Self-driving cars will increase safety and should replace human drivers",
+      "slug": "self-driving_cars_will_increase_safety_and_should_replace_human_drivers",
+      "log_sources": [
+        {
+          "path": "emnlp_res/128.log",
+          "line": 2
+        }
+      ],
+      "json_sources": [],
+      "pool_sources": {
+        "for": {
+          "kind": "printed_tree_recovery",
+          "trees": 6,
+          "path": "emnlp_res/128_io.log",
+          "offset": 0,
+          "nodes": 240
+        },
+        "against": {
+          "kind": "unavailable",
+          "trees": 0
+        }
+      },
+      "limitations": [
+        "for: only trees printed in claim-selection prompt are available; original full pool unavailable",
+        "against: no separate root pool; only that side's descendants in the other pool are searchable",
+        "No historical attack/reinforce/rebut queries:15 generated supplemental requests will be reported separately"
+      ],
+      "historical_candidates": 0,
+      "selected_historical_queries": 0,
+      "generated_queries": 15
+    },
+    {
+      "motion": "We should increase the use of telemedicine",
+      "slug": "we_should_increase_the_use_of_telemedicine",
+      "log_sources": [
+        {
+          "path": "emnlp_res/129.log",
+          "line": 2
+        }
+      ],
+      "json_sources": [],
+      "pool_sources": {
+        "for": {
+          "kind": "printed_tree_recovery",
+          "trees": 6,
+          "path": "emnlp_res/129_io.log",
+          "offset": 0,
+          "nodes": 240
+        },
+        "against": {
+          "kind": "unavailable",
+          "trees": 0
+        }
+      },
+      "limitations": [
+        "for: only trees printed in claim-selection prompt are available; original full pool unavailable",
+        "against: no separate root pool; only that side's descendants in the other pool are searchable",
+        "No historical attack/reinforce/rebut queries:15 generated supplemental requests will be reported separately"
+      ],
+      "historical_candidates": 0,
+      "selected_historical_queries": 0,
+      "generated_queries": 15
+    }
+  ],
+  "unidentified_or_auxiliary_logs": [
+    "emnlp_res/12.log",
+    "emnlp_res/122.a.log",
+    "emnlp_res/122.b.log",
+    "emnlp_res/123.a.log",
+    "emnlp_res/123.b.log",
+    "emnlp_res/124.a.log",
+    "emnlp_res/124.b.log",
+    "emnlp_res/125.a.log",
+    "emnlp_res/125.b.log"
+  ]
+}

@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT/'src'))
 from streaming.experiment_accounting import (MODEL_RATES, SETTLEMENT_MARGIN, accounted_exposure,
                                              initialize_accounting, reconcile_success,
-                                             successful_charge, verify_record)
+                                             successful_charge, successful_audio_charge, verify_record)
 
 
 def fingerprint(value):
@@ -34,7 +34,7 @@ def audit(directory, apply=False):
                                      usage_estimate_usd=0., original_reservations_usd=0.))
     candidate_exposure = 0.
     artifacts, candidates, retained, issues, response_ids = {}, [], [], [], set()
-    audio_calls = 0
+    audio_calls = audio_candidates = 0
     for row in rows:
         try:
             path = directory/f"call_{row['id']:06}.json"
@@ -62,7 +62,9 @@ def audit(directory, apply=False):
                 if not math.isclose(estimate, row['estimated_usd'], abs_tol=1e-10):
                     raise ValueError('Audio ledger estimate mismatch')
                 m['usage_estimate_usd'] += estimate
-                charge = None
+                charge = successful_audio_charge(row, a)
+                if charge is not None:
+                    audio_candidates += 1
             else:
                 usage = verify_record(row, a)
                 if usage:
@@ -81,7 +83,8 @@ def audit(directory, apply=False):
                   artifacts_manifest_sha256=fingerprint(artifacts), artifacts_checked=len(artifacts),
                   model_totals=dict(models), original_reservations_usd=sum(r['reserved'] for r in rows),
                   usage_estimate_usd=sum(m['usage_estimate_usd'] for m in models.values()),
-                  candidate_successful_text_settlements=len(candidates), retained_full_reservations=retained,
+                  candidate_successful_text_settlements=len(candidates)-audio_candidates,
+                  candidate_successful_audio_settlements=audio_candidates, retained_full_reservations=retained,
                   settlement_margin=SETTLEMENT_MARGIN, proposed_accounted_exposure_usd=candidate_exposure,
                   proposed_available_budget_usd=cap-candidate_exposure, external_audio_http_calls=audio_calls,
                   unknown_usage_request_ids=[r['id'] for r in rows if r['estimated_usd'] is None],
@@ -91,13 +94,13 @@ def audit(directory, apply=False):
                                    'https://docs.aws.amazon.com/en_en/bedrock/latest/userguide/model-card-openai-gpt-56-sol.html',
                                    'https://developers.openai.com/api/docs/models/tts-1',
                                    'https://developers.openai.com/api/docs/models/whisper-1'],
-                  policy='4x verified cost for successful text responses; all failed/unknown/audio requests retain full original reservations. Originals are never rewritten.',
+                  policy='4x verified text cost; completed audio retains recorded per-request4x bounds. Failed/unknown requests retain full original reservations. Originals are never rewritten.',
                   limitations=['Usage estimates are not settled invoices; no provider billing statement was available.',
                                'Request logs cannot independently rule out unreported upstream retries; 4x accrual is a conservative allowance, not a proof of a billing upper bound.'])
     if apply:
         if issues or report['pending']:
             raise ValueError('Audit issues or pending work prevent bulk reconciliation: '+json.dumps(issues))
-        backup_path = directory/'cost-before-success-reconciliation.sqlite'
+        backup_path = directory/('cost-before-reconciliation-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%f')+'.sqlite')
         if not backup_path.exists():
             backup = sqlite3.connect(backup_path);db.backup(backup);backup.close()
         initialize_accounting(db)

@@ -1,0 +1,188 @@
+{
+  "status": "approved",
+  "created_utc": "2026-10-09T07:10:47.048453+00:00",
+  "run_id": "listening-motion-live-v52-refactor-evidence-v53",
+  "motion": "Learning to be a good writer still matters in the age of AI",
+  "model": "google.gemma-4-26b-a4b",
+  "turns": [
+    [
+      "opening",
+      "for",
+      240.0
+    ],
+    [
+      "opening",
+      "against",
+      240.0
+    ],
+    [
+      "rebuttal",
+      "for",
+      240.0
+    ],
+    [
+      "rebuttal",
+      "against",
+      240.0
+    ],
+    [
+      "closing",
+      "for",
+      120.0
+    ],
+    [
+      "closing",
+      "against",
+      120.0
+    ]
+  ],
+  "output_config": {
+    "speech_mode": "listening_prefix",
+    "listening_prefix_max_updates": null,
+    "listening_prefix_max_rewrites": 2,
+    "listening_prefix_max_calls": 48,
+    "listening_body_words": 240,
+    "listening_body_update_words": 100,
+    "listening_prefix_pre_synthesize": true,
+    "listening_prefix_overlap_final_update": true,
+    "listening_parallel_body_feedback": true,
+    "listening_parallel_endpoint_revision": true,
+    "listening_single_body_revision": true,
+    "listening_planning_timeout_seconds": 30,
+    "budget_mode": "audio_duration",
+    "model": "tts-1",
+    "voice": "echo",
+    "refinement_model": "google.gemma-4-26b-a4b",
+    "allow_expansion": true,
+    "max_refinements": 10,
+    "early_max_refinements": 3,
+    "max_parallel_tts": 8,
+    "min_chunk_words": 50,
+    "tolerance_ratio": 0.1,
+    "last_chunk_upper_tolerance_ratio": 0.05,
+    "min_tolerance_seconds": 1.0,
+    "enable_early_cut": false,
+    "adaptive_delivery": true,
+    "first_chunk_seconds": 16,
+    "first_chunk_local_tempo": false,
+    "local_tempo_min": 0.85,
+    "local_tempo_max": 1.15,
+    "local_tempo_deadband_seconds": 0.1,
+    "later_chunk_seconds": 30.0,
+    "early_cut_ratio": 1.25,
+    "ratio_prestart_threshold": 2.0,
+    "abs_prestart_chars": 1000,
+    "speed_adjust_min": 1,
+    "speed_adjust_max": 1,
+    "refine_deadline_margin_seconds": 2.0,
+    "speed_adjust_min_slack_seconds": 4.0,
+    "max_chunk_chars": 900,
+    "target_chunk_seconds": 40.0,
+    "min_stream_chunks": 3,
+    "max_stream_chunks": 5,
+    "normalize_seams": true,
+    "seam_head_ms": 60,
+    "seam_tail_ms": 250,
+    "seam_fade_ms": 10,
+    "audience_feedback_mode": "compact",
+    "listening_prepare_evidence": true,
+    "listening_evidence_max_calls": 3,
+    "listening_evidence_candidates": 20
+  },
+  "input_config": {
+    "min_audio_seconds": 15.0,
+    "min_text_words": 100,
+    "poll_interval": 1.0,
+    "audio_format": "mp3",
+    "max_audio_wait_seconds": 0.0,
+    "max_text_wait_seconds": 60,
+    "max_total_audio_seconds": 0.0
+  },
+  "claim_selection_strategy": "saved_scores",
+  "use_rehearsal_tree": true,
+  "rehearsal_mode": "hybrid",
+  "use_retrieval": true,
+  "add_retrieval_feedback": false,
+  "tts_model": "tts-1",
+  "asr_model": "whisper-1",
+  "independent_paid_grading": false,
+  "automatic_restart": false,
+  "estimate_usd": {
+    "expected_new": [
+      1,
+      3
+    ],
+    "proposed_cumulative_cap": 20,
+    "prior_usage_usd": 0.8243800800000001,
+    "prior_conservative_exposure_usd": 6.21514032,
+    "remaining_conservative_headroom_usd": 13.78485968,
+    "assumptions": {
+      "input_tokens": [
+        1000000,
+        5000000
+      ],
+      "output_tokens": [
+        50000,
+        200000
+      ],
+      "tts_characters": [
+        30000,
+        100000
+      ],
+      "asr_minutes": [
+        20,
+        30
+      ],
+      "rented_compute_storage": "No new rental; existing workspace costs excluded"
+    }
+  },
+  "rates": {
+    "input_per_million": 0.13,
+    "output_per_million": 0.4,
+    "tts_per_million_characters": 15,
+    "asr_per_minute": 0.006
+  },
+  "rate_sources": [
+    "https://aws.amazon.com/bedrock/pricing/",
+    "https://developers.openai.com/api/docs/models/tts-1",
+    "https://developers.openai.com/api/docs/models/whisper-1"
+  ],
+  "existing_ledger": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/cost.sqlite",
+  "prior_exposure_usd": {
+    "global_total": 324.063169469,
+    "study": 232.61771156400002,
+    "combined_validation": 13.342732043
+  },
+  "existing_caps_usd": {
+    "global_total": 370.0,
+    "study": 280.0,
+    "combined_validation": 60.0
+  },
+  "guard_plan": "Reuse existing persistent USD20 cumulative prefix guard, including both v52 attempts and this v53 run. Preserve global USD370, study USD280 and combined USD60 guards; reserve before all text/audio dispatches, retain uncertain/in-flight exposure. Stop latch on budget failure; no automatic restart.",
+  "source_digest": "dba702c7be3fea29478675f7a8088ca0c042151383dfbe5971bcc0bd14638a8c",
+  "harness_sha256": "db033c0a6523d36bbeeccfc192e2a39d823d98063758127bd289c6d0d689356a",
+  "audio_guard_sha256": "d3118a9a6f9ccc19e405eccab1617c5037827f2039bba1ba8163e9d86654932b",
+  "input_sources": {
+    "/mnt/data4/danqingwang/workspace/clone/TreeDebater/results/gemma-4-26b-a4b/learning_to_be_a_good_writer_still_matters_in_the_age_of_ai_pool_for.json": "c30fdd6020b4f37d82175c519896b9905264c55dbffe676eda38c8ed9ed50784",
+    "/mnt/data4/danqingwang/workspace/clone/TreeDebater/results/gemma-4-26b-a4b/learning_to_be_a_good_writer_still_matters_in_the_age_of_ai_pool_against.json": "22eccd64bd01e5533ca8516ec45b890a494a39eba21f3e836747dc11a00bf4fa"
+  },
+  "output_directory": "/mnt/data4/danqingwang/workspace/clone/TreeDebater/experiments/incremental_planning/run/listening-motion-live-v52-refactor-evidence-v53",
+  "preflight": {
+    "output_directory_unused": true,
+    "pending_ledger_requests": 0
+  },
+  "currency": "USD",
+  "prior_attempts": [
+    "listening-motion-live-v52-refactor",
+    "listening-motion-live-v52-refactor-recovery1"
+  ],
+  "budget_group_prefix": "listening-motion-live-v52-refactor",
+  "measurement_plan": [
+    "Compare with completed v52 recovery baseline (not a paired deterministic ablation)",
+    "Six turn first-audio delay, body playback gaps, evidence calls and cache reuse, costs, transcript applicability"
+  ],
+  "price_check_utc": "2026-10-09T07:10:47.054063+00:00",
+  "approved_cap_usd": 20,
+  "approved_at_utc": "2026-10-09T07:18:03.786487+00:00",
+  "authorization": "User explicitly confirmed 是 to this new evidence-preparation six-turn motion validation sharing the original cumulative USD20 cap, after seeing USD1–3 incremental estimate."
+}

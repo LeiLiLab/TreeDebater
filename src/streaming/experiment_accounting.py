@@ -2,7 +2,9 @@
 
 Original reservations and call rows remain intact. Successful text responses with
 verified usage may replace their *active* reservation with 4x reported cost.
-Failures, incomplete records and audio bundles keep their entire reservation.
+Completed audio bundles retain their recorded per-request 4x bounds; unused
+bundle capacity can be released after verification. Failures and incomplete
+records keep their entire reservation.
 This is conservative accrual, not a provider invoice or a guaranteed billing bound.
 """
 from datetime import datetime, timezone
@@ -99,12 +101,61 @@ def successful_charge(row, artifact):
     return usage[2]*SETTLEMENT_MARGIN
 
 
+def successful_audio_charge(row, artifact):
+    """Release unused capacity only after all recorded audio calls have settled.
+
+    Keep each request's original 4x bound, including UTF-8 or ASR headroom.
+    A tiny positive floor preserves the existing append-only table constraint
+    for completed bundles that dispatched no requests.
+    """
+    if artifact['label'] != row['label'] or artifact['reservation_usd'] != row['reserved']:
+        raise AuditMismatch('Audio identity/reservation differs')
+    if artifact['request']['model'] != 'bounded-audio-bundle':
+        raise AuditMismatch('Expected an audio bundle')
+    if row['state'] != 'ok':
+        return None
+    calls = artifact['external_calls']
+    limit = artifact.get('max_requests', 24)
+    if (type(limit) is not int or not 1 <= limit <= 128
+            or not isinstance(calls, list) or len(calls) > limit):
+        raise AuditMismatch('Invalid audio request list')
+    if any(c.get('state') != 'ok' for c in calls):
+        return None
+    estimate = bound = 0.
+    for call in calls:
+        if call['model'] == 'tts-1':
+            size = call['characters']
+            if type(size) is not int or not 0 < size <= 4096:
+                raise AuditMismatch('Invalid TTS character count')
+            cost = size * 15 / 1e6
+        elif call['model'] == 'whisper-1':
+            seconds = call['seconds']
+            if not isinstance(seconds, (int, float)) or not 0 < seconds <= 120:
+                raise AuditMismatch('Invalid ASR duration')
+            cost = math.ceil(seconds) / 60 * .006
+        else:
+            raise AuditMismatch('Unknown audio price')
+        reserve = call['reserved_usd']
+        if (not math.isfinite(reserve) or reserve + 1e-12 < 4 * cost
+                or not math.isclose(call['estimated_usd'], cost, abs_tol=1e-12)
+                or call.get('response_bytes', 0) <= 0):
+            raise AuditMismatch('Invalid audio receipt or bound')
+        estimate += cost
+        bound += reserve
+    if (row['estimated_usd'] is None
+            or not math.isclose(estimate, row['estimated_usd'], abs_tol=1e-10)
+            or bound > row['reserved'] + 1e-10
+            or 'seconds' not in artifact
+            or not math.isclose(artifact['seconds'], row['seconds'], abs_tol=1e-10)):
+        raise AuditMismatch('Audio bundle does not match its completed ledger record')
+    return min(row['reserved'], max(1e-9, bound))
+
+
 def reconcile_success(db, request_id, artifact_path):
     """Append a verified settlement atomically; repeat calls never release twice."""
     raw = artifact_path.read_bytes()
     artifact = json.loads(raw)
-    if artifact['request']['model'] == 'bounded-audio-bundle':
-        return False
+    is_audio = artifact['request']['model'] == 'bounded-audio-bundle'
     digest = hashlib.sha256(raw).hexdigest()
     db.execute('BEGIN IMMEDIATE')
     try:
@@ -113,7 +164,7 @@ def reconcile_success(db, request_id, artifact_path):
         if record is None:
             raise AuditMismatch('No call record for artifact')
         row = dict(zip((c[0] for c in cursor.description), record))
-        charge = successful_charge(row, artifact)
+        charge = (successful_audio_charge if is_audio else successful_charge)(row, artifact)
         if charge is None:
             db.commit()
             return False
@@ -126,7 +177,8 @@ def reconcile_success(db, request_id, artifact_path):
             return False
         db.execute('INSERT INTO budget_settlements VALUES(?,?,?,?,?,?)',
                    (request_id, charge, row['reserved'], digest,
-                    '4x verified reported text cost; original reservation retained for audit',
+                    ('Verified completed audio: retain original per-request 4x bounds; release unused bundle capacity'
+                     if is_audio else '4x verified reported text cost; original reservation retained for audit'),
                     datetime.now(timezone.utc).isoformat()))
         db.commit()
         return True

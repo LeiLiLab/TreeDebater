@@ -54,7 +54,11 @@ class BudgetedClient:
                     uncertain_calls=row[3] or 0, input_tokens=row[4], output_tokens=row[5],
                     cap_usd=self.db.execute("SELECT cap FROM budget WHERE id=1").fetchone()[0])
 
-    def complete(self, messages, *, max_tokens=700, temperature=0, json_mode=False, model=MODEL):
+    def complete(self, messages, *, max_tokens=700, temperature=0, json_mode=False, model=MODEL,
+                 request_timeout=120):
+        import math
+        if isinstance(request_timeout, bool) or not math.isfinite(request_timeout) or request_timeout <= 0:
+            raise ValueError('request_timeout must be finite and positive')
         if model not in MODEL_RATES:
             raise ValueError("No verified price/budget bound for model: " + model)
         if not 0 < max_tokens <= 4096:
@@ -90,14 +94,14 @@ class BudgetedClient:
             raise
         t0 = time.perf_counter()
         artifact = {"request": body, "reservation_usd": reservation, "label": self.label,
-                    "rates_per_million": MODEL_RATES[model]}
+                    "rates_per_million": MODEL_RATES[model], "request_timeout_seconds": request_timeout}
         headers = {"Content-Type": "application/json"}
         key = os.environ.get("DEBATE_LLM_API_KEY")
         if key:
             headers["Authorization"] = "Bearer " + key
         input_tokens = output_tokens = estimate = None
         try:
-            with urlopen(Request(self.base_url + "/chat/completions", data=raw, headers=headers), timeout=120) as r:
+            with urlopen(Request(self.base_url + "/chat/completions", data=raw, headers=headers), timeout=request_timeout) as r:
                 result = json.load(r)
             artifact["response"] = result
             usage = result.get("usage", {})

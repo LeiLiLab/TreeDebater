@@ -35,22 +35,26 @@ class AudioGuard(httpx.BaseTransport):
     dispatch. A provider error latches the transport closed; built-in TTS retries
     cannot cause further requests. Credentials/headers/audio bytes are not logged.
     """
-    def __init__(self, directory, label, inner=None, allowance=1.0):
-        if not 0 < allowance <= 1:
-            raise ValueError("Audio allowance must be within (0, 1] USD")
+    def __init__(self, directory, label, inner=None, allowance=1.0, *, approved_cap=200.0, max_requests=24):
+        if not 0 < allowance <= approved_cap:
+            raise ValueError("Audio allowance must be positive and within the approved cumulative cap")
+        if type(max_requests) is not int or not 1 <= max_requests <= 128:
+            raise ValueError("Audio request limit must be an integer within [1, 128]")
         self.allowance = allowance
+        self.max_requests = max_requests
         self.directory = Path(directory)
         self.label = label
         self.lock = threading.Lock()
         self.db = sqlite3.connect(self.directory / "cost.sqlite", timeout=30, check_same_thread=False)
         self.inner = inner or httpx.HTTPTransport(retries=0)
         self.failed = False
+        self.finished = False
         initialize_accounting(self.db)
         self.db.execute("BEGIN IMMEDIATE")
         try:
             cap = self.db.execute("SELECT cap FROM budget WHERE id=1").fetchone()[0]
             used = accounted_exposure(self.db)
-            if cap != 200 or used + allowance > cap:
+            if cap != approved_cap or used + allowance > cap:
                 raise BudgetExceeded("No room for the audio sub-budget")
             self.request_id = self.db.execute(
                 "INSERT INTO calls(label,created,reserved,state) VALUES(?,?,?,'pending')",
@@ -61,7 +65,8 @@ class AudioGuard(httpx.BaseTransport):
             raise
         self.started = time.perf_counter()
         self.artifact = {"label": label, "request": {"model": "bounded-audio-bundle"},
-                         "reservation_usd": allowance, "external_calls": []}
+                         "reservation_usd": allowance, "max_requests": max_requests,
+                         "external_calls": [], "blocked_dispatches": []}
         self.path = self.directory / f"call_{self.request_id:06}.json"
         self.persist()
 
@@ -90,14 +95,22 @@ class AudioGuard(httpx.BaseTransport):
             if not 0 < seconds <= 120:
                 raise ValueError("ASR input outside the prepared duration bound")
             estimate = math.ceil(seconds) / 60 * .006
-            bound = .012  # reserve the entire permitted 120 seconds before the 4x margin
+            # Reserve the complete decoded upload, rounded up to a second.
+            # The same 4x margin is applied below, including unknown responses.
+            bound = estimate
             detail = {"model": "whisper-1", "seconds": seconds}
         else:
             raise ValueError("Unbudgeted endpoint blocked: " + request.url.path)
         with self.lock:
+            if self.finished:
+                raise BudgetExceeded('Audio bundle already finished; no dispatch')
             used = sum(c["reserved_usd"] for c in self.artifact["external_calls"])
-            if self.failed or len(self.artifact["external_calls"]) >= 24 or used + 4*bound > self.allowance:
-                raise BudgetExceeded("Audio transport closed or its bounded/24-request sub-budget exhausted")
+            if self.failed or len(self.artifact["external_calls"]) >= self.max_requests or used + 4*bound > self.allowance:
+                self.artifact['blocked_dispatches'].append(dict(
+                    failed_latch=self.failed, requests_used=len(self.artifact['external_calls']),
+                    requested_bound_usd=4*bound, already_reserved_usd=used))
+                self.persist()
+                raise BudgetExceeded("Audio transport closed or its bounded/request-count sub-budget exhausted")
             entry = dict(detail, reserved_usd=4*bound, estimated_usd=estimate, state="pending")
             self.artifact["external_calls"].append(entry)
             self.persist()
@@ -106,6 +119,19 @@ class AudioGuard(httpx.BaseTransport):
             response = self.inner.handle_request(request)
             response.read()
             if response.status_code >= 400:
+                # Preserve the diagnostic status without logging credentials or
+                # provider response bodies. The SDK may wrap this exception.
+                with self.lock:
+                    entry['http_status'] = response.status_code
+                    try:
+                        details = response.json().get('error', {})
+                        for field in ('code', 'type'):
+                            value = details.get(field)
+                            if (isinstance(value, str) and len(value) <= 80
+                                    and value.replace('_', '').isalnum()):
+                                entry['provider_error_' + field] = value
+                    except (ValueError, AttributeError, TypeError):
+                        pass
                 raise RuntimeError("Audio HTTP status " + str(response.status_code))
             with self.lock:
                 entry.update(state="ok", elapsed_seconds=time.perf_counter()-t0,
@@ -121,7 +147,11 @@ class AudioGuard(httpx.BaseTransport):
 
     def finish(self):
         with self.lock:
+            if self.finished:
+                return
             calls = self.artifact["external_calls"]
+            if any(c['state'] == 'pending' for c in calls):
+                raise RuntimeError('Cannot finish an audio bundle with in-flight requests')
             self.artifact["seconds"] = time.perf_counter()-self.started
             estimate = sum(c["estimated_usd"] for c in calls if c["state"] == "ok")
             self.db.execute("UPDATE calls SET state=?,estimated_usd=?,seconds=? WHERE id=?",
@@ -129,6 +159,7 @@ class AudioGuard(httpx.BaseTransport):
                              estimate, self.artifact["seconds"], self.request_id))
             self.db.commit()
             self.persist()
+            self.finished = True
         self.inner.close()
 
     def close(self):
@@ -137,114 +168,7 @@ class AudioGuard(httpx.BaseTransport):
 
 
 def main():
-    import openai
-    from debate_app.engine_adapter import TreeDebaterEngine
-    from streaming.config import OutputConfig
-
-    run_id = "grounded-audio-v1"
-    directory = ROOT / "experiments/incremental_planning"
-    output = directory / "run" / run_id
-    output.mkdir(exist_ok=False)
-    keys = ROOT / "src/configs/api_key.json"
-    if keys.exists():
-        for key, value in json.loads(keys.read_text()).items():
-            os.environ.setdefault(key, value)
-    if not os.environ.get("OPENAI_API_KEY"):
-        raise RuntimeError("Existing OpenAI audio credential unavailable")
-    os.environ["DEBATE_LLM_API_BASE"] = "http://127.0.0.1:4000/v1"
-    os.environ["DEBATE_LOG_PROMPTS"] = "0"
-    BudgetedClient(directory / "run")  # validate existing shared budget
-    guard = AudioGuard(directory / "run", run_id + "/external-audio", allowance=.5)
-    real_openai = openai.OpenAI
-    def client_factory(**kwargs):
-        kwargs.update(http_client=httpx.Client(transport=guard, timeout=60), max_retries=0,
-                      base_url="https://api.openai.com/v1", timeout=60)
-        return real_openai(**kwargs)
-    openai.OpenAI = client_factory
-    import tts_streaming
-    tts_streaming.OpenAI = client_factory
-    import litellm
-    from utils.tool import logger
-    import logging
-    logger.setLevel(logging.WARNING)
-    def blocked(*args, **kwargs):
-        raise RuntimeError("Unmetered model/refinement call blocked by audio probe")
-    litellm.completion = blocked
-    # All text preparation/generation remains on Gemma; separate TTS rewrites are off.
-    tts_streaming._revise_to_n_words = blocked
-    cfg = OutputConfig(budget_mode="audio_duration", adaptive_delivery=True,
-                       first_chunk_seconds=6, later_chunk_seconds=15, min_chunk_words=1,
-                       max_refinements=0, early_max_refinements=0, max_parallel_tts=1,
-                       speed_adjust_min=1, speed_adjust_max=1)
-    case = next(c for c in json.loads((directory / "cases_v2.json").read_text())
-                if c["id"] == "dev_v2_plastics_split")
-    modes = ("linear", "light_linear")
-    executors = {mode: ThreadPoolExecutor(max_workers=1) for mode in modes}
-    engines, events = {}, {mode: [] for mode in modes}
-    def prepare(mode):
-        client = BudgetedClient(directory / "run", label=run_id + "/" + mode)
-        player = make_player(case, mode, client)
-        player.config.streaming_tts = True
-        player.streaming_output_config = cfg
-        engine = TreeDebaterEngine({"model_timeout_seconds": 60, "budgets": {"rebuttal": 60}}, output / mode)
-        engine.players = {player.side: player}
-        return engine
-    try:
-        for mode in modes:
-            engines[mode] = executors[mode].submit(prepare, mode).result()
-        source = []
-        with client_factory() as client:
-            for i, chunk in enumerate(case["chunks"]):
-                result = client.audio.speech.create(model="tts-1", voice="echo", input=chunk)
-                path = output / f"input_{i}.mp3"
-                path.write_bytes(result.content)
-                duration = len(AudioSegment.from_file(path)) / 1000
-                source.append((path, duration))
-        atomic_json(output / "metadata.json", {"source_digest": code_digest(), "case": case,
-                    "modes": modes, "input": "paced synthesized recording, shared real Whisper transcripts",
-                    "metric": "server first playable TTS chunk after actual recorded-audio endpoint; no browser transport/playback",
-                    "output_settings": vars(cfg), "shared_cap_usd": 200, "audio_subbudget_usd": .5})
-        start = time.perf_counter()
-        endpoint = start + sum(seconds for _, seconds in source)
-        transcripts, arrivals = [], []
-        arrival = start
-        analysis_futures = []
-        for path, seconds in source:
-            arrival += seconds
-            time.sleep(max(0, arrival-time.perf_counter()))
-            text = engines["linear"].transcribe(path)
-            if not text:
-                raise ValueError("Empty ASR transcript")
-            transcripts.append(text)
-            arrivals.append({"input_end_seconds": arrival-start, "asr_ready_seconds": time.perf_counter()-start,
-                             "transcript": text})
-            for mode in modes:
-                analysis_futures.append(executors[mode].submit(engines[mode].analyze, text, "for", "opening"))
-        history = [{"stage": "opening", "side": "against", "content": case["own_opening"]},
-                   {"stage": "opening", "side": "for", "content": " ".join(transcripts), "tree_via_streaming": True}]
-        def emit(mode, chunk):
-            at = time.perf_counter()
-            decoded = AudioSegment.from_file(chunk["path"])
-            if len(decoded) == 0:
-                raise ValueError("Emitted audio is not playable")
-            events[mode].append(dict(chunk, endpoint_to_chunk_seconds=at-endpoint, decoded_ms=len(decoded)))
-        futures = {mode: executors[mode].submit(engines[mode].generate, "against", "rebuttal", history,
-                                               output / mode, lambda chunk, m=mode: emit(m, chunk)) for mode in modes}
-        for future in analysis_futures:
-            future.result()
-        results = {}
-        for mode, future in futures.items():
-            generated = future.result(timeout=240)
-            if not events[mode]:
-                raise ValueError("No first audio chunk emitted")
-            results[mode] = {"first_playable_chunk_seconds": events[mode][0]["endpoint_to_chunk_seconds"],
-                             "chunks": events[mode], "answer": generated["text"]}
-        atomic_json(output / "result.json", {"input_seconds": endpoint-start, "asr_arrivals": arrivals, "results": results})
-        print(json.dumps({mode: result["first_playable_chunk_seconds"] for mode, result in results.items()}), flush=True)
-    finally:
-        for ex in executors.values():
-            ex.shutdown(wait=True, cancel_futures=True)
-        guard.finish()
+    raise SystemExit('Archived comparison includes a retired mode; use its saved source snapshot for reproduction.')
 
 
 if __name__ == "__main__":

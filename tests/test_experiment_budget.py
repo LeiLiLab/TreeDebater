@@ -117,3 +117,14 @@ def test_empty_completion_retains_reported_usage_and_truncation(tmp_path, monkey
     assert summary["uncertain_calls"] == 1 and summary["reserved_upper_usd"] > .0207152
     assert json.loads((tmp_path / "call_000001.json").read_text())["truncated"] is True
     assert http.call_count == 1
+
+
+def test_short_request_deadline_keeps_unknown_charge_and_never_retries(tmp_path, monkeypatch):
+    http = Mock(side_effect=TimeoutError('Deadline'))
+    monkeypatch.setattr('streaming.experiment_client.urlopen', http)
+    client = BudgetedClient(tmp_path, cap=1)
+    with pytest.raises(TimeoutError):
+        client.complete([{'role': 'user', 'content': 'Plan'}], max_tokens=100, request_timeout=3)
+    assert http.call_count == 1 and http.call_args.kwargs['timeout'] == 3
+    assert client.summary()['uncertain_calls'] == 1
+    assert client.summary()['accounted_exposure_usd'] == client.summary()['reserved_upper_usd']

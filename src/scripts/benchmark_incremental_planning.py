@@ -57,7 +57,11 @@ def make_player(case, mode, client, tree_limits=None):
                                  new_argument=[case["own_opening"]], target=case["own_claim"])
 
     def main_response(this, messages, **kwargs):
-        return client.complete(messages, max_tokens=1600, temperature=0.3)
+        if '_completion' in kwargs:
+            from agents import Agent
+            return Agent._get_response(this, messages, **kwargs)
+        return client.complete(messages, max_tokens=1600, temperature=0.3,
+                               json_mode=kwargs.get('response_format', {}).get('type') == 'json_object')
 
     def helper(prompt, sys=None, response_model=None, max_tokens=1600, **kwargs):
         messages = []

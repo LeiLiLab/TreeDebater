@@ -593,7 +593,7 @@ def load_final_audio_durations(log_path: Path) -> Dict[Tuple[str, str], float]:
     out: Dict[Tuple[str, str], float] = {}
     with log_path.open("r", encoding="utf-8", errors="replace") as f:
         for line in f:
-            if "phase=tts_trim_wall_clock" not in line:
+            if "phase=tts_trim_wall_clock" not in line and "phase=tts_wall_clock" not in line:
                 continue
             idx = line.find("[timing]")
             if idx < 0:
@@ -727,6 +727,7 @@ def apply_batch_sequential_metrics(
             "audio_duration": audio,
             "speaker_bubble_total": speaker_bubble,
             "time_to_first_chunk": None,  # No observed audio transition in synthetic batch metrics.
+            "estimated_batch_preparation_gap_s": time_to_first,
             "time_between_chunks": 0.0,
             "listener_bubble": listener_bubble,
             "listener_bubble_pct": 0.0,
@@ -1418,9 +1419,18 @@ def print_summary(summary: Dict, verbose: bool = False):
 
         if turn.get("batch_sequential"):
             if turn.get("planning_time") is not None:
+                audio_label = (
+                    f"{turn['audio_duration']:.2f}s"
+                    if turn.get("audio_duration") is not None else "N/A"
+                )
                 print(
                     f"\n  (batch) planning time (log turn wall): {turn['planning_time']:.2f}s; "
-                    f"total = audio {turn.get('audio_duration', 0):.2f}s + planning"
+                    f"total = audio {audio_label} + planning"
+                )
+            if turn.get("estimated_batch_preparation_gap_s") is not None:
+                print(
+                    f"  (batch) estimated preparation gap: {turn['estimated_batch_preparation_gap_s']:.2f}s "
+                    "(generation + TTS, not an observed playback transition)"
                 )
             if turn.get("wait_opponent_s"):
                 print(
