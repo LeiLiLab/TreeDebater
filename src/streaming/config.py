@@ -87,6 +87,7 @@ class OutputConfig(Validated):
     listening_body_snapshot_delivery: bool = True
     listening_planning_timeout_seconds: float = 0.0
     budget_mode: str = 'experiment_elapsed'
+    tts_backend: str = 'openai'
     model: str = 'tts-1'
     voice: str = 'echo'
     refinement_model: str = 'gpt-5-mini'
@@ -129,6 +130,8 @@ class OutputConfig(Validated):
 
     def __post_init__(self):
         super().__post_init__()
+        if self.tts_backend not in ('openai', 'fastspeech'):
+            raise ValueError('tts_backend must be openai or fastspeech')
         if self.audience_feedback_mode not in ('full', 'compact'):
             raise ValueError('audience_feedback_mode must be full or compact')
         if self.listening_prefix_max_updates is not None:

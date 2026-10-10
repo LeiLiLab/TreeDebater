@@ -54,20 +54,20 @@ def draft_length_instruction(words):
             f'(roughly {words} words). ')
 
 
-def statement_estimator(*, audio_duration=None):
+def statement_estimator(*, audio_duration=None, tts_backend="openai"):
     mode = _settings().TIME_MODE_FOR_STATEMENT
     if mode not in ('time', 'fastspeech', 'openai'):
         raise ValueError(f'Unsupported TIME_MODE_FOR_STATEMENT: {mode}; expected a seconds estimator')
-    return LengthEstimator(mode, audio_duration=audio_duration)
+    return LengthEstimator(mode, audio_duration=audio_duration, tts_backend=tts_backend)
 
 
-def estimate_seconds(text, *, measured_seconds_per_word=None, audio_duration=None):
+def estimate_seconds(text, *, measured_seconds_per_word=None, audio_duration=None, tts_backend="openai"):
     """Return estimated seconds without overriding an explicitly chosen backend.
 
 Only the word-rate ('time') backend uses an observed speaking rate. FastSpeech
 and OpenAI modes always run their selected estimator, even after audio arrives.
 """
-    estimator = statement_estimator(audio_duration=audio_duration)
+    estimator = statement_estimator(audio_duration=audio_duration, tts_backend=tts_backend)
     if estimator.mode == 'time' and measured_seconds_per_word is not None:
         rate = float(measured_seconds_per_word)
         if not math.isfinite(rate) or rate <= 0:

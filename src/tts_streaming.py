@@ -122,12 +122,13 @@ def duration_estimator(config=None):
     """
     cfg = from_mapping(OutputConfig, config)
     def audio_duration(text):
-        client = OpenAI()
+        client = create_tts_client(cfg)
         try:
-            return _query_time_profiled(client, text, voice=cfg.voice, model=cfg.model)['audio_seconds']
+            return synthesize_audio(client, text, cfg)['audio_seconds']
         finally:
-            client.close()
-    return speech_length.statement_estimator(audio_duration=audio_duration)
+            if client is not None:
+                client.close()
+    return speech_length.statement_estimator(audio_duration=audio_duration, tts_backend=cfg.tts_backend)
 
 
 def estimate_statement_seconds(text, config=None):
@@ -136,10 +137,9 @@ def estimate_statement_seconds(text, config=None):
 
 def _estimate_duration(text: str, *, measured_seconds_per_word=None, client=None, config=None, voice=None) -> float:
     cfg = from_mapping(OutputConfig, config)
-    audio_duration = (lambda chunk: _query_time_profiled(client, chunk,
-        voice=voice or cfg.voice, model=cfg.model)['audio_seconds']) if client is not None else None
+    audio_duration = lambda chunk: synthesize_audio(client, chunk, cfg, voice=voice)['audio_seconds']
     return speech_length.estimate_seconds(text, measured_seconds_per_word=measured_seconds_per_word,
-                                         audio_duration=audio_duration)
+                                         audio_duration=audio_duration, tts_backend=cfg.tts_backend)
 
 
 def _text_request(client, model, messages, max_tokens, *, json_mode=False):
@@ -155,6 +155,8 @@ def _text_request(client, model, messages, max_tokens, *, json_mode=False):
                        api_key=os.environ.get('DEBATE_LLM_API_KEY') or 'local-proxy')
     elif model == 'gpt-5-mini':
         options['reasoning_effort'] = 'minimal'
+    if owned is None and client is None:
+        owned = OpenAI()
     if json_mode:
         options['response_format'] = {'type': 'json_object'}
     try:
@@ -234,6 +236,31 @@ def _revise_to_n_words(client, text: str, n_words: int, prev_texts: List[str], n
 def _validate_tts_input(content):
     if len(content) > TTS_INPUT_LIMIT:
         raise ValueError(f'TTS input exceeds {TTS_INPUT_LIMIT} characters; split it before synthesis')
+
+
+def create_tts_client(config):
+    """Local synthesis needs no OpenAI credentials; rewrite clients are lazy."""
+    return OpenAI() if config.tts_backend == 'openai' else None
+
+
+def synthesize_audio(client, content, config, *, voice=None, retry=False):
+    """Common audio contract for regular chunks and speculative prefix/body audio."""
+    _validate_tts_input(content)
+    if config.tts_backend == 'openai':
+        render = _tts_with_retry if retry else _query_time_profiled
+        return render(client, content, voice=voice or config.voice, model=config.model)
+    from utils.fs_wrapper import get_shared_wrapper
+    t0 = _now()
+    waveform, sample_rate = get_shared_wrapper().synthesize_waveform(content)
+    t1 = _now()
+    seg = AudioSegment(waveform.astype('<i2').tobytes(), frame_rate=sample_rate,
+                       sample_width=2, channels=1)
+    with BytesIO() as output:
+        seg.export(output, format='mp3')
+        mp3_bytes = output.getvalue()
+    seconds = MP3(BytesIO(mp3_bytes)).info.length
+    return dict(audio_seconds=float(seconds), tts_api_s=t1 - t0,
+                mp3_parse_s=_now() - t1, mp3_bytes=mp3_bytes)
 
 
 def _query_time_profiled(client, content: str, voice: str = "echo", speed: float = 1.0, model: str = OutputConfig.model) -> Dict[str, Any]:
@@ -539,7 +566,7 @@ class _ChunkRefineContext:
                     raise concurrent.futures.CancelledError('Candidate missed playback deadline')
                 try:
                     if intra_iter == 0 and self.prepared_audio is not None:
-                        future = self.prepared_audio.match(text, self.voice, self.config.model)
+                        future = self.prepared_audio.match(text, self.voice, self.config.model, self.config.tts_backend)
                         if future is not None:
                             try:
                                 result = future.result()
@@ -549,7 +576,7 @@ class _ChunkRefineContext:
                                 cand.audio_reused = True
                                 self.prepared_audio.mark_reused()
                                 return result
-                    return _tts_with_retry(self.client, text, self.voice, model=self.config.model)
+                    return synthesize_audio(self.client, text, self.config, voice=self.voice, retry=True)
                 finally:
                     cand.completed_at = _now()
             # Audio is immutable and can be shared after a NEW contextual review.
@@ -1169,11 +1196,11 @@ def _run_pipeline(
             for attempt in range(10):
                 try:
                     if prepared_first_audio and (prepared_first_audio['text'], prepared_first_audio['voice'],
-                            prepared_first_audio['model']) == (refined, voice, cfg.model):
+                            prepared_first_audio['model'], prepared_first_audio.get('tts_backend', 'openai')) == (refined, voice, cfg.model, cfg.tts_backend):
                         tts_out = dict(prepared_first_audio['tts_out'], tts_api_s=0.)
                         prepared_first_audio = None
                     else:
-                        tts_out = _query_time_profiled(client, refined, voice=voice, model=cfg.model)
+                        tts_out = synthesize_audio(client, refined, cfg, voice=voice)
                     audio_seconds = float(tts_out["audio_seconds"])
                     tts_api_s = float(tts_out["tts_api_s"])
                     mp3_parse_s = float(tts_out["mp3_parse_s"])
@@ -1289,6 +1316,7 @@ def _run_pipeline(
                        else time_budget_s - (_now() - chunk_t0))
             if (not _in_range(audio_s, target_now, tol_now, tol_upper_now,
                               allow_short=not cfg.allow_expansion)
+                    and cfg.tts_backend == 'openai'
                     and slack_s >= cfg.speed_adjust_min_slack_seconds):
                 raw_speed = audio_s / target_now if target_now > 0 else 1.0
                 clamped = max(cfg.speed_adjust_min, min(cfg.speed_adjust_max, raw_speed))
@@ -1637,7 +1665,7 @@ def convert_incremental_speech_to_audio(producer, output_path, total_budget_s, *
     # A failed/repeated turn must not expose old chunks through the file bridge.
     if any(out_dir.glob('chunk_*.mp3')):
         raise FileExistsError(f'Speech chunks already exist: {out_dir}')
-    client = OpenAI()
+    client = create_tts_client(cfg)
     start = _now()
     audio_total = 0.0
     gap_total = 0.0
@@ -1678,7 +1706,7 @@ def convert_incremental_speech_to_audio(producer, output_path, total_budget_s, *
                 producer.validate(text)
                 if len(text) > 4000:
                     raise SegmentRejected('Checked paragraph exceeds the TTS input limit')
-                tts = _tts_with_retry(client, text, voice=cfg.voice, model=cfg.model)
+                tts = synthesize_audio(client, text, cfg, retry=True)
                 seg = AudioSegment.from_file(BytesIO(tts['mp3_bytes']), format='mp3')
                 mp3_bytes = tts['mp3_bytes']
                 if cfg.normalize_seams:
@@ -1811,7 +1839,7 @@ def convert_text_to_speech_streaming(
     segments = ([audio_content.strip()] if tail_supplier is not None else
                 split_into_chunks(audio_content, total_budget_s, cfg))
 
-    client = OpenAI()
+    client = create_tts_client(cfg)
     output_path = Path(output_path)
 
     chunk_profiles, round_profile, combined_mp3_bytes, final_texts = run_pipeline(

@@ -78,9 +78,10 @@ def test_adaptive_text_edits_and_reviews_use_same_gemma_meter():
 
 
 @pytest.mark.parametrize('fatal', [False, True])
-def test_full_motion_records_bad_timing_but_still_stops_on_fatal_error(tmp_path, monkeypatch, fatal):
+@pytest.mark.parametrize('backend', ['openai', 'fastspeech'])
+def test_full_motion_records_bad_timing_but_still_stops_on_fatal_error(tmp_path, monkeypatch, fatal, backend):
     from dataclasses import replace
-    monkeypatch.setattr(live, 'CONFIG', replace(live.CONFIG, listening_prefix_overlap_final_update=False))
+    monkeypatch.setattr(live, 'CONFIG', replace(live.CONFIG, listening_prefix_overlap_final_update=False, tts_backend=backend))
     import sys
     import openai
     from debate_tree import Tree
@@ -120,7 +121,12 @@ def test_full_motion_records_bad_timing_but_still_stops_on_fatal_error(tmp_path,
         players['for'].debate_thoughts.append({'played': index})
         # Only ASR and already needed turns are reserved, never all six upfront.
         labels = [call.args[1] for call in live.AudioGuard.call_args_list]
-        assert labels == [f'{live.RUN}/asr'] + [f'{live.RUN}/turn_{i}/tts' for i in seen]
+        expected = [f'{live.RUN}/asr']
+        if backend == 'openai':
+            expected += [f'{live.RUN}/turn_{i}/tts' for i in seen]
+        else:
+            assert args[5] is None  # Local TTS has no paid audio guard.
+        assert labels == expected
         if fatal and index == 1:
             raise RuntimeError('Body gate failed')
         return dict(answer='Our speech.', listener_transcript='Heard speech.',

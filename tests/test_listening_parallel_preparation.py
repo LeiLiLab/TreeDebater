@@ -55,7 +55,7 @@ def test_body_update_finishes_while_initial_tts_is_blocked(audio, tmp_path):
         prep.offer(changed(data))
         assert body.wait(3), 'Body update waited for initial TTS'
         wait_for(lambda: prep._body_latest is not None and prep._body_latest['source_stamp'] == source_stamp(changed(data)))
-        assert not prep._audio_futures[(PREFIX, config.voice, config.model)].done()
+        assert not prep._audio_futures[(PREFIX, config.voice, config.model, config.tts_backend)].done()
     finally:
         release.set()
         prep.close()

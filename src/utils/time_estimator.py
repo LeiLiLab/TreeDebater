@@ -25,7 +25,8 @@ def _audio_chunks(text):
 
 
 class LengthEstimator:
-    def __init__(self, mode, *, audio_duration=None):
+    def __init__(self, mode, *, audio_duration=None, tts_backend="openai"):
+        self.tts_backend = tts_backend
         self.mode = mode
         self.audio_duration = audio_duration
         if self.mode == "fastspeech":
@@ -44,7 +45,7 @@ class LengthEstimator:
     def query_time(self, content: Union[str, Sequence[str]], mode=None) -> Union[float, List[float]]:
         """Strings return a scalar; batches always return a list, including zero/one items."""
         if mode is not None and mode != self.mode:
-            return LengthEstimator(mode, audio_duration=self.audio_duration).query_time(content)
+            return LengthEstimator(mode, audio_duration=self.audio_duration, tts_backend=self.tts_backend).query_time(content)
         scalar = isinstance(content, str)
         if not scalar and not isinstance(content, Sequence):
             raise TypeError('content must be text or a sequence of text')
@@ -62,7 +63,8 @@ class LengthEstimator:
             length = [estimate_speech_seconds(c) for c in clean_content]
         elif self.mode == "fastspeech":
             length = self.client.query_time(clean_content) if clean_content else []
-            length = [l * 1.11 - 7 if l > 100 else l for l in length]  # fit openai speed
+            if self.tts_backend == "openai":
+                length = [l * 1.11 - 7 if l > 100 else l for l in length]  # fit openai speed
         elif self.mode == "openai":
             length = []
             for text in clean_content:

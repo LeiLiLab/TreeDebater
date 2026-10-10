@@ -342,11 +342,12 @@ class PreparationStopped(RuntimeError):
 def synthesize_prefix(text, config):
     """Prepare matching audio bytes without publishing them."""
     import tts_streaming
-    client = tts_streaming.OpenAI()
+    client = tts_streaming.create_tts_client(config)
     try:
-        return tts_streaming._query_time_profiled(client, text, voice=config.voice, model=config.model)
+        return tts_streaming.synthesize_audio(client, text, config)
     finally:
-        client.close()
+        if client is not None:
+            client.close()
 
 
 class PrefixPreparation:
@@ -401,7 +402,7 @@ class PrefixPreparation:
     def prepared_audio(self, text, config):
         with self._lock:
             value = self._audio_latest
-            if value and (value['text'], value['voice'], value['model']) == (text, config.voice, config.model):
+            if value and (value['text'], value['voice'], value['model'], value.get('tts_backend', 'openai')) == (text, config.voice, config.model, config.tts_backend):
                 return copy.deepcopy(value)
         return None
 
@@ -549,7 +550,7 @@ class PrefixPreparation:
                 self._body_thread.start()
 
     def _start_audio(self, candidate):
-        key = (candidate['text'], self.config.voice, self.config.model)
+        key = (candidate['text'], self.config.voice, self.config.model, self.config.tts_backend)
         with self._lock:
             if self._stopped or not self._audio_preparer or key in self._audio_attempted:
                 return
@@ -563,11 +564,11 @@ class PrefixPreparation:
             thread.start()
 
     def _audio_run(self, key, future):
-        text, voice, model = key
+        text, voice, model, backend = key
         event = dict(kind='prefix_audio', start=time.perf_counter(), text=text)
         try:
             audio = self._audio_preparer(text, self.config)
-            completed = dict(text=text, voice=voice, model=model, tts_out=audio,
+            completed = dict(text=text, voice=voice, model=model, tts_backend=backend, tts_out=audio,
                              ready_monotonic=time.perf_counter())
             future.set_result(completed)
             with self._lock:
@@ -693,7 +694,7 @@ class PrefixPreparation:
             candidates = copy.deepcopy(self._candidates)
             futures = dict(self._audio_futures)
         for ready in reversed(candidates):
-            future = futures.get((ready['text'], self.config.voice, self.config.model))
+            future = futures.get((ready['text'], self.config.voice, self.config.model, self.config.tts_backend))
             if (ready['stage'] == stage and ready['turn'] == turn
                     and _valid_candidate(ready, self.config, max_time)
                     and not self.initial_review.invalidated(ready)
@@ -711,14 +712,14 @@ class PrefixPreparation:
                 or not _valid_candidate(candidate, self.config, max_time)):
             return None
         audio = self.prepared_audio(candidate['text'], self.config)
-        ready_future = futures.get((candidate['text'], self.config.voice, self.config.model))
+        ready_future = futures.get((candidate['text'], self.config.voice, self.config.model, self.config.tts_backend))
         if ready_future is not None and ready_future.done() and ready_future.exception() is None:
             audio = copy.deepcopy(ready_future.result())
         audio_future = None
         if audio is None:
             with self._lock:
                 audio_future = self._audio_futures.get(
-                    (candidate['text'], self.config.voice, self.config.model))
+                    (candidate['text'], self.config.voice, self.config.model, self.config.tts_backend))
             if audio_future is None:
                 return None
         return dict(candidate=candidate, data=data, audio=audio, audio_future=audio_future,
@@ -1260,7 +1261,7 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
                     save()
                     try:
                         prepared_audio = pending_prefix_audio.result()
-                        if (prepared_audio['text'], prepared_audio['voice'], prepared_audio['model']) != (prefix, config.voice, config.model):
+                        if (prepared_audio['text'], prepared_audio['voice'], prepared_audio['model'], prepared_audio.get('tts_backend', 'openai')) != (prefix, config.voice, config.model, config.tts_backend):
                             raise SegmentRejected('Transferred prefix audio does not match the reviewed text/voice/model')
                     except Exception as exc:
                         trace['prefix_audio_transfer'].update(status='failed', error=f'{type(exc).__name__}: {exc}')

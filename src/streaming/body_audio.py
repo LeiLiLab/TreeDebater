@@ -36,14 +36,14 @@ class FirstBodyAudio:
             if self._future is not None:
                 return
             tts._validate_tts_input(text)
-            key = (text, self.config.voice, self.config.model)
+            key = (text, self.config.voice, self.config.model, self.config.tts_backend)
             self._update(status='running', text=text, start_seconds=time.perf_counter() - self.start)
 
             def synthesize():
                 client = None
                 try:
-                    client = tts.OpenAI()
-                    result = tts._query_time_profiled(client, text, voice=key[1], model=key[2])
+                    client = tts.create_tts_client(self.config)
+                    result = tts.synthesize_audio(client, text, self.config)
                     self._update(status='ready', ready_seconds=time.perf_counter() - self.start)
                     return result
                 except Exception as exc:
@@ -62,10 +62,10 @@ class FirstBodyAudio:
         except Exception as exc:
             self._update(status='failed', error=f'{type(exc).__name__}: {exc}')
 
-    def match(self, text, voice, model):
+    def match(self, text, voice, model, tts_backend="openai"):
         """Compare against the FINAL chunk (after native splitting/early cuts)."""
         with self._lock:
-            matched = self._future is not None and self._key == (text, voice, model)
+            matched = self._future is not None and self._key == (text, voice, model, tts_backend)
             self._trace['matched'] = matched
             return self._future if matched else None
 

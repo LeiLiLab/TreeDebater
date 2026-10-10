@@ -16,7 +16,7 @@ import fastspeech2.transformer.Models as _fs_models
 from fastspeech2.synthesize import preprocess_english, read_lexicon
 from fastspeech2.text import text_to_sequence
 from fastspeech2.utils.model import get_model_2, get_vocoder
-from fastspeech2.utils.tools import get_mask_from_lengths, synth_samples, synth_samples_for_length, to_device
+from fastspeech2.utils.tools import get_mask_from_lengths, to_device
 from g2p_en import G2p
 
 root = f"{fastspeech_path}/fastspeech2/"
@@ -137,30 +137,36 @@ class FastSpeechWrapper:
 
             data = to_device(data, self.device)
             with self._lock, torch.no_grad():
-                if self.vocoder is None:
-                    # Duration-only path: encoder + variance adaptor give mel_len;
-                    # the decoder/postnet/vocoder do not change it. Same value
-                    # synth_samples_for_length() returns (wav len == mel_len * hop).
-                    hop = preprocess_config["preprocessing"]["stft"]["hop_length"]
-                    sr = preprocess_config["preprocessing"]["audio"]["sampling_rate"]
-                    mel_lens = self._predict_mel_lens(
-                        *(data[2:]), p_control=pitch_control, e_control=energy_control, d_control=duration_control
-                    )
-                    length = [float(m) * hop / sr for m in mel_lens]
-                else:
-                    output = self.model(
-                        *(data[2:]), p_control=pitch_control, e_control=energy_control, d_control=duration_control
-                    )
-                    length = synth_samples_for_length(
-                        data,
-                        output,
-                        self.vocoder,
-                        model_config,
-                        preprocess_config,
-                        train_config["path"]["result_path"],
-                    )
+                # Duration-only path: encoder + variance adaptor give mel_len;
+                # the decoder/postnet/vocoder do not change it. Same value
+                # synth_samples_for_length() returns (wav len == mel_len * hop).
+                hop = preprocess_config["preprocessing"]["stft"]["hop_length"]
+                sr = preprocess_config["preprocessing"]["audio"]["sampling_rate"]
+                mel_lens = self._predict_mel_lens(
+                    *(data[2:]), p_control=pitch_control, e_control=energy_control, d_control=duration_control
+                )
+                length = [float(m) * hop / sr for m in mel_lens]
                 lengths.extend(length)
         return lengths
+
+    def synthesize_waveform(self, text):
+        """Render one utterance at native speed, sharing the duration model safely."""
+        from fastspeech2.utils.model import vocoder_infer
+
+        preprocess_config, model_config, _ = self.configs
+        batch = self.process_text([text])
+        ids, raw_text, speaker, tokens, text_len = batch[0]
+        data = to_device(([ids], [raw_text], np.array([speaker]),
+                          pad_1D([tokens]), np.array([text_len]), text_len), self.device)
+        with self._lock, torch.no_grad():
+            if self.vocoder is None:
+                self.vocoder = get_vocoder(model_config, self.device)
+            predictions = self.model(*(data[2:]), p_control=1.0, e_control=1.0, d_control=1.0)
+            hop = preprocess_config["preprocessing"]["stft"]["hop_length"]
+            waveforms = vocoder_infer(predictions[1].transpose(1, 2), self.vocoder,
+                                      model_config, preprocess_config,
+                                      lengths=predictions[9] * hop)
+        return waveforms[0], preprocess_config["preprocessing"]["audio"]["sampling_rate"]
 
     def _predict_mel_lens(self, speakers, texts, src_lens, max_src_len, p_control=1.0, e_control=1.0, d_control=1.0):
         """First half of FastSpeech2.forward (encoder + variance adaptor), returning predicted mel lengths."""

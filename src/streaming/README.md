@@ -62,6 +62,30 @@ Unknown settings are rejected. Compatibility fields such as
 `listening_prefix_max_updates` and `listening_body_words` remain accepted for
 existing configs; the latter no longer sets the body budget.
 
+Select the synthesis backend once for regular chunks, prefix preparation and
+body preparation (the default remains `openai`):
+
+```yaml
+streaming:
+  output:
+    tts_backend: fastspeech  # openai | fastspeech
+```
+
+`model` and `voice` select the OpenAI model/voice. The FastSpeech backend uses the
+existing local LJSpeech checkpoint and HiFi-GAN vocoder under
+`dependencies/fastspeech2`, at native speed. It lazily loads the vocoder, shares
+one locked model instance with estimation, and exports MP3 through ffmpeg to
+preserve the playback interface. It requires no OpenAI credentials for synthesis;
+LLM rewriting retains its separately configured model and credentials.
+
+`TIME_MODE_FOR_STATEMENT` still selects the estimator. With `fastspeech`
+estimation, the historical `1.11 * seconds - 7` correction for predictions above
+100 seconds applies only to OpenAI output; FastSpeech output uses raw predicted
+seconds. The legacy `openai` estimator mode measures synthesized audio through
+the selected output backend. Prepared audio is reusable only for the same backend.
+FastSpeech does not perform provider-side speed adjustment; optional existing
+local audio tempo processing remains a separate setting.
+
 Supported modes remain separate:
 
 - `full_script`: write the full speech before paragraph TTS.

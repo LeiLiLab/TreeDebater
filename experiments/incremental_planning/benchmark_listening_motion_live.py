@@ -497,7 +497,7 @@ def play_turn(index, speaker, listener, history, budget, endpoint, guard, asr_cl
         # ASR completion alone must not transfer ownership of mutable debate state.
         for job in analysis_jobs:
             job.result()
-        if guard.artifact['blocked_dispatches']:
+        if guard is not None and guard.artifact['blocked_dispatches']:
             raise BudgetExceeded('TTS guard recorded a blocked dispatch')
         record.update(status='completed', returned_text=returned,
             answer='\n\n'.join(c['text'] for c in chunks),
@@ -645,6 +645,8 @@ def main():
         tts_guards, reservation_lock = [None] * len(TURNS), threading.Lock()
 
         def tts_guard(index):
+            if CONFIG.tts_backend == 'fastspeech':
+                return None
             # Reserve before the first client can dispatch, including preparation
             # for the next turn. Do not tie up budget for untouched future turns.
             with reservation_lock:
@@ -672,6 +674,8 @@ def main():
             def prepare_audio(text, config, player=player):
                 if meter.stopped.is_set():
                     raise BudgetExceeded('Stopped before preparatory TTS')
+                if config.tts_backend == 'fastspeech':
+                    return tts_streaming.synthesize_audio(None, text, config)
                 from streaming.listening_prefix import next_stage
                 opponent, heard_stage = player.planner.turn.split(':', 1)
                 upcoming = next_stage(opponent, heard_stage, player.debate_first_side)
@@ -680,7 +684,7 @@ def main():
                 client = openai.OpenAI(http_client=httpx.Client(transport=tts_guard(turn_index), timeout=60),
                     max_retries=0, base_url='https://api.openai.com/v1', timeout=60)
                 clients.append(client)
-                return tts_streaming._query_time_profiled(client, text, voice=config.voice, model=config.model)
+                return tts_streaming.synthesize_audio(client, text, config)
             player.listening_prefix_audio_preparer = prepare_audio
         m.update(status='running', launched_utc=datetime.now(timezone.utc).isoformat())
         atomic_json(MANIFEST, m)
@@ -689,6 +693,8 @@ def main():
             other = 'against' if side == 'for' else 'for'
             guard = tts_guard(index)
             def factory(**kwargs):
+                if guard is None:
+                    raise RuntimeError('OpenAI TTS is disabled for the local FastSpeech run')
                 client = openai.OpenAI(http_client=httpx.Client(transport=guard, timeout=60),
                     max_retries=0, base_url='https://api.openai.com/v1', timeout=60)
                 clients.append(client)
@@ -703,8 +709,9 @@ def main():
                                    for side, p in players.items()}
             stage, side, budget = TURNS[index]
             other = 'against' if side == 'for' else 'for'
-            tts_guards[index].finish()
-            reconcile_success(tts_guards[index].db, tts_guards[index].request_id, tts_guards[index].path)
+            if tts_guards[index] is not None:
+                tts_guards[index].finish()
+                reconcile_success(tts_guards[index].db, tts_guards[index].request_id, tts_guards[index].path)
             results.append(r)
             exact = dict(stage=stage, side=side, content=r['answer'])
             history.append(exact)
