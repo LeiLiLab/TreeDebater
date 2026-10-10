@@ -1,0 +1,28 @@
+# Local experiment artifacts. Version selected inputs/results explicitly when
+# they are part of a reproducible test or baseline; never commit the live ledger.
+*.json
+*.jsonl
+*.csv
+*.txt
+*.sqlite*
+*.pid
+*.lock
+*.png
+*.pdf
+*.svg
+*.xml
+*.patch
+*.preflight-failed
+STOP
+pid
+requests/
+source/
+source_snapshot/
+source_before/
+source_after/
+local_history/
+
+# Frozen baselines contain reviewed provenance and an authoritative archive.
+!incremental_planning/CURRENT_BASELINE.json
+!incremental_planning/baselines/*/*.json
+!incremental_planning/baselines/*/*.txt

@@ -29,3 +29,7 @@ dependencies
 
 # Local experiment request/response traces and persistent cost accounting.
 experiments/incremental_planning/run/
+
+# Local playback reports and historical input exports.
+debate-app/reports/
+emnlp_res/

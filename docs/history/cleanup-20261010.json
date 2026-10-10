@@ -1,0 +1,29 @@
+{
+  "scope": "Cleanup after frozen v70; baseline source archive unchanged.",
+  "committed_baseline": "9dd87b3",
+  "runtime_integration": "c393c6e",
+  "runtime_cleanup": "0717dc8",
+  "web_adapter": "d31d352",
+  "experiment_support": "0e1a440",
+  "changes": [
+    "Remove disabled endpoint evidence-supplement experiment; preserve reuse-only behavior.",
+    "Replace verbose TTS stdout diagnostics with DEBUG logging; retain structured profiles.",
+    "Update stale test fixtures and stage-specific prompt expectations without changing runtime budget policy.",
+    "Move historical development prose out of current guides.",
+    "Archive 63 unreferenced one-off scripts with original-path hashes.",
+    "Isolate historical replay inputs from local run outputs."
+  ],
+  "validation": {
+    "core_tests": 1042,
+    "core_subtests": 3,
+    "backend_tests": 91,
+    "backend_subtests": 39,
+    "fixture_tests": 13,
+    "committed_export_core_tests": 1042,
+    "committed_export_subtests": 3,
+    "export_environment": "Only committed files, placeholder credentials, existing local FastSpeech assets and package environment; external model downloads disabled."
+  },
+  "baseline_limitations_preserved": true,
+  "new_paid_experiments": 0,
+  "out_of_scope": "Independent frontend repository and unrelated historical experiment work remain untouched."
+}

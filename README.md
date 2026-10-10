@@ -115,6 +115,78 @@ Outputs (examples):
 
 Logs are written to `log_files/`.
 
+Claim grouping defaults to `--clustering_method semantic`. The configured LLM groups
+claims by shared contention and causal mechanism, with `--max_claim_groups 10` as
+a hard cap per side. It writes a grounded common root for each multi-claim group
+and retains every original member. Valid singletons retain their source text;
+being alone or verbatim is never a reason to reject a group.
+
+A separate same-model request reviews every group and records each member's mechanism,
+connection to the root, and whether it fits. A negative fit requires a concrete issue.
+Issues must identify source
+members, their mechanism, the group's mechanism, a concrete mismatch, and a repair
+action. Moves/merges must name a target group and explain the mechanism fit.
+Semantic issues trigger a local replacement of only the affected groups (including
+explicit move/merge targets); the repair request receives only those groups and their
+source members, with allowed IDs listed explicitly. Unaffected groups remain unchanged. Partition coverage,
+unique source IDs, and the group cap are rechecked before reviewing the result.
+
+There are at most three semantic review rounds. Proposal, review, and local-repair
+responses each have a separate limit of three format/contract attempts. A malformed
+review retries only that review on the same partition, with the invalid response and
+validation error in the retry prompt. It never triggers a fresh grouping. Exhausted
+format attempts or unresolved semantic issues stop preparation before any trees are
+built. `initial_proposal` in the Python helper validates and reviews an existing saved
+partition without regenerating it.
+
+`*_pool_<side>_clustering.json` records phase-tagged calls, validation failures,
+review issues, affected groups, before/after partitions, and acceptance status.
+Synthetic roots carry `synthetic_group_root`, `source_claim_ids`, and coverage
+metadata. Their initial strength is the maximum source strength, explicitly marked
+as inherited; tree evaluation scores the root afterward. Same-model review is a
+consistency check, not independent factual validation or a guarantee of semantic quality.
+
+`--clustering_method agglomerative` retains the embedding-only alternative using
+`claim + explanation`, average-linkage cosine similarity, and
+`--cluster_similarity_threshold 0.8`. It enforces the same cap and records forced
+merges and embeddings in its audit. This method can mix unrelated topics to meet
+the cap; semantic mode does not silently fall back to it.
+
+In each TreeDebater YAML entry, `claim_pool_limit: 10` controls the number of
+candidate groups used for main-claim selection (previously fixed at 8), and the
+construction cap when generating pools on demand. Complete loaded rehearsal pools
+remain available for retrieval. Use a new preparation output directory when changing
+clustering settings: existing pool files are still skipped.
+
+Rehearsal retrieval defaults to `rehearsal_mode: hybrid`. It combines a separate
+index of the claim being answered with material text, using lexical matching and
+a resident local sentence encoder. The default model is
+`sentence-transformers/all-MiniLM-L6-v2` (`rehearsal_local_model`); its files must
+already exist locally or in the Hugging Face cache. Loading never downloads a
+model or falls back to an API. Missing files produce an error; set
+`rehearsal_mode: local` for the model-free lexical/cache-only alternative.
+
+Claim selection preloads both rehearsal pools and encodes their materials. This
+preparation can take seconds and is outside the steady-state retrieval budget.
+A caller skipping preparation pays that startup cost on its first lookup. New
+queries are encoded locally in a CPU worker with `rehearsal_encoder_threads: 2`;
+the worker does not change the debate process's Torch thread settings. Model
+vectors are kept separate from existing API embedding caches. Text changes rebuild
+the affected index, and stale nodes and cached negative verdicts remain excluded.
+
+`rehearsal_local_min_score: 0.25` and `rehearsal_semantic_min_score: 0.35` are
+lexical/semantic admission thresholds; `rehearsal_candidate_k: 20` and
+`rehearsal_max_results: 3` cap selection. The thresholds are initial defaults,
+not calibrated quality guarantees. Experimental `rehearsal_max_per_anchor: 1`
+limits unverified replies to one per normalized parent claim across both pools;
+`null` (the default) preserves the fully graded baseline. Grounded positive cached
+verdicts are exempt from this diversity limit. This can replace useful sibling
+responses as well as irrelevant ones, so new outputs require separate evaluation. Similarity ranks candidates; it does not prove
+that a reply supports or challenges the current target. Obvious polarity checks
+and exact-context cached verdicts still apply. Set `rehearsal_mode: llm` to opt
+into the slower, billable semantic-validation path. These settings affect rehearsal
+lookup only, not debate generation latency.
+
 ### 🛠️ Create Debate Configs
 Generate configs for End-to-End and Head-to-Head settings:
 ```bash
@@ -151,29 +223,21 @@ Example with DeepSeek config (if created):
 python compare_env.py --config test2/case1/compare_deepseek-chat.yml
 ```
 
-### 🔊 Streaming TTS (Optional)
-By default, the TTS pipeline generates audio serially and trims sentences that exceed the time budget. With `streaming_tts: true` on a debater’s config entry, a **streaming pipeline** is used instead:
+### 🔊 Streaming speech and listening
 
-- **Chunk-based processing**: the debate speech is split into paragraph-level chunks, each assigned a proportional share of the total time budget (opening: 240s, rebuttal: 240s, closing: 120s).
-- **Adaptive refinement**: FastSpeech2 estimates each chunk's duration; if off-target, an LLM rewrites the chunk to hit the target word count. Multiple TTS candidates are submitted in parallel and the closest-to-target is picked.
-- **Streaming overlap**: while chunk N plays, chunk N+1 is being refined and TTS-generated, minimizing gaps.
-- **No information loss**: instead of trimming sentences, text is rewritten to fit the budget.
+The current listening pipeline prepares a reviewed first paragraph while the
+opponent speaks, then revises the remaining body using the complete transcript.
+See [the streaming guide](src/streaming/README.md) for modes, configuration,
+concurrency, timing and tests.
 
-To enable, set `streaming_tts: true` on each **debater** entry in your config (per-agent):
-```yaml
-debater:
-  - side: for
-    type: treedebater
-    streaming_tts: true
-  - side: against
-    type: treedebater
-    streaming_tts: true
-```
+The fixed experimental reference is
+[v70-20261010](experiments/incremental_planning/baselines/v70-20261010/baseline.json).
+Its source archive remains unchanged during cleanup. It covers the server-paced
+motion harness; it is not a web application acceptance result.
 
-After a streaming run, each speech produces a `*_chunks/` directory containing per-chunk audio, text, and a `chunk_profile.csv` with timing details. To visualize the overlap timeline:
-```bash
-bash src/scripts/overlap_viz.sh "log_files/<run>_outputs/*_chunks"
-```
+Historical experiments are preserved in
+[development notes](docs/history/streaming-development.md) and
+[the experiment journal](docs/history/process.md).
 
 ### 🤖 Optional: Agent4Debate Backend
 If you wish to use Agent4Debate as a baseline or component, install and run its backend server following their documentation:
