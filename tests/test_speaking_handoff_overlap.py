@@ -24,6 +24,65 @@ def configure(p):
     p.high_quality_evidence_pool, p.used_evidence = [], set()
 
 
+def test_repeated_trace_failure_releases_revision_waiter(audio, tmp_path, monkeypatch):
+    """Logging can fail twice after offering a Future; neither may strand it."""
+    import streaming.listening_prefix as module
+    p, history, _ = prepared_player(tmp_path)
+    _, encoded = audio
+    _, handoff = ready_handoff(p, history, encoded, snapshot_delivery=True)
+    configure(p)
+    base = p.helper_client
+
+    def helper(*, prompt, **kwargs):
+        if 'LISTENING WHOLE SPEECH FEEDBACK:' in prompt:
+            return [json.dumps(dict(points=[], other_corrections=['Keep the qualification.']))]
+        if kwargs.get('json_mode') is False:
+            return [TAIL]
+        return base(prompt=prompt, **kwargs)
+
+    p.helper_client = Mock(side_effect=helper)
+    original_dumps = module.json.dumps
+    failures = []
+
+    def dumps(value, *args, **kwargs):
+        if (isinstance(value, dict) and value.get('mode') == 'listening_prefix'
+                and 'parallel_body_revision' in value
+                and threading.current_thread().name.startswith('listening-tail')):
+            failures.append(True)
+            raise RuntimeError('Injected trace write failure')
+        return original_dumps(value, *args, **kwargs)
+
+    monkeypatch.setattr(module.json, 'dumps', dumps)
+    finished, errors = threading.Event(), []
+
+    def run():
+        try:
+            p.rebuttal_generation(history, 60, time_control=True,
+                listening_handoff=handoff, listening_recognized_input=lambda: history,
+                listening_input_completion=lambda: history)
+        except BaseException as exc:
+            errors.append(exc)
+        finally:
+            finished.set()
+
+    thread = threading.Thread(target=run, daemon=True)
+    thread.start()
+    assert finished.wait(5), 'Failed trace write stranded a revision Future'
+    thread.join(timeout=1)
+    assert len(failures) >= 2
+    assert errors and 'Injected trace write failure' in str(errors[0])
+
+
+def test_trace_snapshot_detaches_nested_containers():
+    from streaming.listening_prefix import _trace_snapshot
+    source = {'chunks': [{'text': 'published'}], 'revision': {'reused': False}}
+    snapshot = _trace_snapshot(source)
+    source['chunks'][0]['text'] = 'changed'
+    source['chunks'].append({'text': 'next'})
+    source['revision']['end'] = 1
+    assert snapshot == {'chunks': [{'text': 'published'}], 'revision': {'reused': False}}
+
+
 @pytest.mark.parametrize('outcome', ['success', 'tts_failure', 'binding_mismatch'])
 def test_feedback_starts_before_pending_prefix_audio_and_failure_releases_workers(audio, tmp_path, outcome):
     p, history, _ = prepared_player(tmp_path)

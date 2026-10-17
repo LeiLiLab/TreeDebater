@@ -338,15 +338,16 @@ def test_new_limits_validate_and_old_config_maps_to_semantic_rewrites():
 
 
 
-def test_invalid_source_selection_cannot_publish_overview_and_resets_on_next_turn(tmp_path):
+def test_invalid_source_selection_preserves_valid_overview_and_resets_on_next_turn(tmp_path):
     p, _, _ = prepared_player(tmp_path)
     context = p._planning_context()
     raw = dict(claims=[{'target': 9999}], limits=[], rebuttals=[], overview=FRAMEWORK)
     p.planner.observe('Further explanation.', llm=lambda *args: json.dumps(raw),
                       analyze=lambda *args: None, context=lambda: context)
-    assert not p.planner.state
-    assert p.planner.overview is None
-    assert material(p, 'opening')['framework'] is None
+    assert p.planner.state['claims'] == []
+    assert p.planner.overview['ready']
+    assert material(p, 'opening')['framework']['ready']
+    assert any(e['action'] == 'RECOVERED_STATE' for e in p.planner.events)
     p.planner.start('for:rebuttal')
     assert p.planner.overview is None
 
@@ -449,7 +450,8 @@ def test_planning_timeout_retains_final_words_and_invalidates_private_notes(tmp_
     final_words = 'The proposed trial is now withdrawn; private access remains permitted.'
     p.planner.observe(final_words, llm=p._planning_llm, analyze=Mock(), context=p._planning_context)
     assert final_words in p.planner.instructions()
-    assert not p.planner.state
+    assert not p.planner.overview['ready']
+    assert p.planner.state['recovery_issues']
     assert p.planner.processed == len(p.planner.chunks)
     assert any(e['action'] == 'PLANNING_TIMEOUT' for e in p.planner.events)
     assert p.helper_client.call_args.kwargs['request_timeout'] == 3

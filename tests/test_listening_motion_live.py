@@ -217,7 +217,8 @@ def test_failed_asr_preserves_failure_and_latches_dispatch_closed(tmp_path, monk
     assert row['heard'][0]['error'] == 'RuntimeError: ASR unavailable'
 
 
-def test_live_helper_respects_explicit_plain_speech_mode(tmp_path, monkeypatch):
+@pytest.mark.parametrize('planning_mode', ['flat_tree', 'linear', 'adaptive_linear'])
+def test_live_helper_respects_explicit_plain_speech_mode(tmp_path, monkeypatch, planning_mode):
     from ouragents import TreeDebater
     player = SimpleNamespace(status='closing', simulated_audience=[], claim_preparation={'claims': []},
                              use_retrieval=True, use_rehearsal_tree=True,
@@ -226,7 +227,9 @@ def test_live_helper_respects_explicit_plain_speech_mode(tmp_path, monkeypatch):
                              claim_generation=Mock(), _warm_rehearsal_indexes=Mock(), definition='Motion.',
                              rehearsal_claim_pool=[[dict(claim='Low saved case.', minimax_search_score=1)],
                                                    [dict(claim='High saved case.', minimax_search_score=4)]])
-    monkeypatch.setattr('ouragents.TreeDebater', Mock(return_value=player))
+    factory = Mock(return_value=player)
+    monkeypatch.setattr('ouragents.TreeDebater', factory)
+    monkeypatch.setattr(live, 'PLANNING_MODE', planning_mode)
     monkeypatch.setattr(live, 'LEDGER', tmp_path)
     monkeypatch.setattr(live, 'OUT', tmp_path)
     monkeypatch.setattr(live, 'REHEARSAL_POOL_DIR', tmp_path)
@@ -237,6 +240,7 @@ def test_live_helper_respects_explicit_plain_speech_mode(tmp_path, monkeypatch):
     (claims/'motion_01_for_claims.json').write_text(json.dumps(dict(definition='Motion.', claims=[])))
     meter = SimpleNamespace(complete=Mock(return_value='Body.'))
     p = live.new_player('for', 'Motion.', meter)
+    assert factory.call_args.args[0].planning['mode'] == planning_mode
     meter.complete.assert_not_called()
     p.claim_generation.assert_called_once_with(4)
     saved = json.loads((tmp_path/'claims_for.json').read_text())

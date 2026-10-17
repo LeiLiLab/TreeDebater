@@ -132,12 +132,16 @@ def test_generated_pool_uses_same_common_selection(tmp_path):
     assert p.claim_preparation['claims'][0]['minimax_search_score'] is None
 
 
-@pytest.mark.parametrize('mode', ['listening_prefix', 'overlap_prefix', 'incremental'])
-def test_nonflat_speech_configuration_is_rejected_instead_of_ignored(tmp_path, mode):
+@pytest.mark.parametrize('mode,planner_mode', [
+    ('listening_prefix', 'branch_tree'),
+    ('overlap_prefix', 'linear'),
+    ('incremental', 'linear'),
+])
+def test_unsupported_speech_configuration_is_rejected_instead_of_ignored(tmp_path, mode, planner_mode):
     p, history, _ = prepared_player(tmp_path)
-    p.planner.config.mode = 'linear'
+    p.planner.config.mode = planner_mode
     p.streaming_output_config = OutputConfig(speech_mode=mode)
-    with pytest.raises(ValueError, match='requires planning mode flat_tree'):
+    with pytest.raises(ValueError, match='requires planning mode'):
         p.rebuttal_generation(history, 60, time_control=True)
     p._get_response.assert_not_called()
 

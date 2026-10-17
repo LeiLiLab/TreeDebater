@@ -212,17 +212,10 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
 
         logger.debug(f"[Turn] turn_start stage={stage_key} side={side} t={time.time():.3f}")
 
-        if listener_deb.type != "treedebater":
-            logger.debug(
-                f"[Turn] mode_config stage={stage_key} side={side} streaming_tts=False "
-                f"streaming_listen=False mode=sequential_baseline t={time.time():.3f}"
-            )
-            response = generate_fn()
-            self._env.debate_process.append({"stage": stage_key, "side": side, "content": response})
-            logger.debug(f"[Turn] turn_end stage={stage_key} side={side} t={time.time():.3f}")
-            return
-
-        use_streaming_listen = getattr(listener_deb.config, "streaming_listen", False)
+        # Speaker delivery must run for every opponent type. Listener capability
+        # controls only incremental input, never whether audio is delivered.
+        use_streaming_listen = (listener_deb.type == "treedebater"
+                                and getattr(listener_deb.config, "streaming_listen", False))
         use_streaming_tts = self._env.time_control and getattr(player.config, "streaming_tts", False)
 
         # Log mode configuration
@@ -355,7 +348,7 @@ class OverlappingStreamingDebateEnv(StreamingDebateEnv):
 
         wt.join(timeout=self._listener_join_timeout)
         if wt.is_alive():
-            logger.warning("[OverlappingStreamingDebateEnv] Speaker thread still alive after join timeout.")
+            raise TimeoutError("Speaker thread did not finish before the join timeout")
 
         stream_succeeded = False
         if use_streaming_listen:
@@ -480,11 +473,7 @@ def main() -> None:
         },
     }
     json.dump(record, open(save_file, "w"), indent=2)
-    if not args.debug:
-        evaluation, side_into = sde.eval()
-        logger.info(f"Result: {evaluation}")
-        record.update({"evaluation": evaluation, "eval_side_info": side_into})
-        json.dump(record, open(save_file, "w"), indent=2)
+    logger.info("Generation saved; evaluate separately with DeepDebater and Debatrix.")
 
 
 if __name__ == "__main__":

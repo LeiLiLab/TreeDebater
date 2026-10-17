@@ -1,7 +1,7 @@
 import argparse
 import json
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import List
 
 import yaml
@@ -10,7 +10,7 @@ from agents import Audience, AudienceConfig, BaselineDebater, Debater, DebaterCo
 from ouragents import TreeDebater
 from utils.timing_log import log_timing
 from utils.tool import logger
-from streaming.config import StreamingConfig, SpeechBudgets, from_mapping, resolve_config
+from streaming.config import OutputConfig, StreamingConfig, SpeechBudgets, from_mapping, resolve_config
 
 
 @dataclass
@@ -69,17 +69,18 @@ class Env:
                 raise ValueError(f"Type {conf.type} is not supported.")
 
         for player in self.debaters.values():
-            player.streaming_output_config = config.streaming.output
+            output = asdict(config.streaming.output)
+            output.update(getattr(player.config, "streaming_output", None) or {})
+            player.streaming_output_config = from_mapping(OutputConfig, output)
+            if player.streaming_output_config.speech_mode == 'vanilla_streaming' and type(player) is not Debater:
+                raise ValueError('vanilla_streaming requires the default Debater')
             player.speech_budgets = config.speech_budgets
             player.debate_first_side = 'against' if self.reverse else 'for'
 
-        # init judge
-        if config.judge_num > 1:
-            print("Multiple judges are not supported yet.")
-        self.judge = Judge(config.judge_config)
-
-        # init audience
-        self.audiences = [Audience(config.audience_config) for _ in range(config.audience_num)]
+        # Generation does not construct the legacy evaluation clients. Archived
+        # evaluations remain available only through an explicit eval call.
+        self.judge = None
+        self.audiences = []
 
         self.debate_process = []
         self.debate_process.append(
@@ -87,8 +88,8 @@ class Env:
                 "stage": "settings",
                 "motion": self.motion,
                 "debaters": {side: debater.config for side, debater in self.debaters.items()},
-                "judges": self.judge.config,
-                "audiences": [audience.config for audience in self.audiences],
+                "judges": [],
+                "audiences": [],
             }
         )
 
@@ -139,7 +140,15 @@ class Env:
                 if response.lower() == "n":
                     break
 
+    def _initialize_legacy_evaluation(self):
+        """Opt-in only; generation and streaming entry points never call this."""
+        if self.judge is None:
+            self.judge = Judge(self.config.judge_config)
+            self.audiences = [Audience(self.config.audience_config)
+                              for _ in range(self.config.audience_num)]
+
     def eval(self, process=None):
+        self._initialize_legacy_evaluation()
         logger.info("[Evaluation] Start")
         t0 = time.perf_counter()
         output = {}
@@ -184,6 +193,7 @@ class Env:
         return output, side_info
 
     def compare_debate(self, comparison_process, order_reverse=False):
+        self._initialize_legacy_evaluation()
         logger.info("[Comparison Evaluation] Start")
         t_cmp = time.perf_counter()
         order = ["baseline_response", "test_response"] if not order_reverse else ["test_response", "baseline_response"]
@@ -343,8 +353,4 @@ if __name__ == "__main__":
         }
         json.dump(record, open(save_file, "w"), indent=2)
 
-        if not args.debug:
-            evaluation, side_into = env.eval()
-            logger.info(f"Result: {evaluation}")
-            record.update({"evaluation": evaluation, "eval_side_info": side_into})
-            json.dump(record, open(save_file, "w"), indent=2)
+        logger.info("Generation saved; evaluate separately with DeepDebater and Debatrix.")

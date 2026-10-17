@@ -181,9 +181,11 @@ def test_local_repair_explicitly_returns_candidate_not_input_envelope(tmp_path):
     helper = Mock(side_effect=[[json.dumps(wrong)], [json.dumps(valid)], [json.dumps(passing(PREFIX, 'against'))]])
     assert prepare(material(p, p.status, history), helper, p.streaming_output_config)['text'] == PREFIX
     prompt = helper.call_args_list[1].kwargs['prompt']
-    assert 'Return ONLY the repaired output object with this exact schema:' in prompt
+    assert 'Return ONLY the repaired JSON object with this exact schema:' in prompt
     assert '"draft":"all remaining spoken paragraphs"' in prompt
     assert 'Repair the complete unpublished speech together' in prompt
     assert 'Your assigned side is against: oppose this exact motion.' in prompt
-    assert 'hard maximum 26 word equivalents' in prompt
+    assert 'soft target' in prompt
+    assert 'hard maximum' not in prompt
+    assert 'maximum_word_equivalents' not in prompt
     assert helper.call_count == 3

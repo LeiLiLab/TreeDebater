@@ -242,7 +242,13 @@ For local development, place the two checkouts alongside each other; alternative
 set `DEBATE_ENGINE_ROOT` in the application to this checkout's absolute path.
 Run the application's startup commands from its own repository.
 
-Engine tests do not require an application checkout.
+Engine tests do not require an application checkout. To run the optional native
+handoff integration with a matching app checkout:
+
+```bash
+DEBATE_APP_ROOT=/absolute/path/to/TreeDebater-app PYTHONPATH=src \
+  python -m pytest -q tests/test_web_handoff.py
+```
 
 ### 🤖 Optional: Agent4Debate Backend
 If you wish to use Agent4Debate as a baseline or component, install and run its backend server following their documentation:

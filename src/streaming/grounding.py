@@ -20,8 +20,9 @@ def parse_state(raw, prefix, *, tree_targets=None):
     data = json.loads(raw.strip().removeprefix("```json").removesuffix("```").strip())
     if not isinstance(data, dict) or set(data) != {"claims", "limits", "rebuttals"}:
         raise ValueError("Expected claims, limits and rebuttals")
-    for key, maximum in (("claims", 3), ("limits", 6), ("rebuttals", 2)):
-        if not isinstance(data[key], list) or len(data[key]) > maximum:
+    # Qualifications may grow with the source; each still requires attribution.
+    for key in ("claims", "limits", "rebuttals"):
+        if not isinstance(data[key], list):
             raise ValueError("Invalid state list: " + key)
     heard = normalize(prefix)
     linked = None
@@ -70,7 +71,7 @@ def parse_state(raw, prefix, *, tree_targets=None):
             raise ValueError("Rebuttal must target a current claim index")
         if not isinstance(item["point"], str) or not item["point"].strip():
             raise ValueError("Missing proposed response")
-        if (not isinstance(item["assumptions"], list) or len(item["assumptions"]) > 3
+        if (not isinstance(item["assumptions"], list)
                 or any(not isinstance(a, str) or not a.strip() for a in item["assumptions"])):
             raise ValueError("Invalid assumptions")
         if linked is not None:

@@ -43,15 +43,15 @@ def parse_overview(value):
     if value['prefix_action'] not in ('wait', 'keep', 'replace'):
         errors.append('framework.prefix_action must be wait, keep or replace')
     for key in ('position', 'core_dispute', 'reason'):
-        if not isinstance(value[key], str) or len(value[key]) > 800:
-            errors.append(f'framework.{key} must be a string of at most 800 characters')
+        if not isinstance(value[key], str):
+            errors.append(f'framework.{key} must be a string')
     axes = value['response_axes']
-    if not isinstance(axes, list) or len(axes) > 3:
-        errors.append('framework.response_axes must be an array of at most 3 strings')
+    if not isinstance(axes, list):
+        errors.append('framework.response_axes must be an array of strings')
     else:
         for index, axis in enumerate(axes):
-            if not isinstance(axis, str) or not axis.strip() or len(axis) > 400:
-                errors.append(f'framework.response_axes[{index}] must be a nonempty string of at most 400 characters')
+            if not isinstance(axis, str) or not axis.strip():
+                errors.append(f'framework.response_axes[{index}] must be a nonempty string')
     for key in ('reason', 'position', 'core_dispute'):
         if (key == 'reason' or value['ready'] is True) and isinstance(value[key], str) and not value[key].strip():
             errors.append(f'framework.{key} must not be empty')

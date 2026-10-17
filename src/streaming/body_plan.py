@@ -5,8 +5,55 @@ import json
 ACTIONS = ('develop_case', 'challenge_support', 'challenge_inference',
            'answer_objection', 'concede_then_distinguish', 'weigh')
 
+AUTHOR_PLAN_SCHEMA = '[{"axis":0,"target":null,"issue":"issue","action":"answer_objection","point":"specific response","weight":2}]'
+
+
+def author_plan_instruction(data):
+    """The speech author owns tactics; the listener still only selects sources."""
+    selected = set(data.get('selected_target_ids', []))
+    targets = [dict(target_index=i, node_id=t['node_id'])
+               for i, t in enumerate(data.get('current_targets', []))
+               if t.get('sources') and (not selected or t['node_id'] in selected)]
+    return ('\nIn this SAME response, output body_plan before the spoken text/draft. '
+        'This is private authoring metadata, never spoken text or evidence. Use the items needed to cover the speech. '
+        'axis indexes the response_axes of the returned framework (or supplied framework for a continuation). '
+        'target copies a target_index below, or null for developing our own case or general weighing. '
+        'Bind specific opponent responses to targets; do not merely list broad topics. '
+        'Choose action from ' + ', '.join(ACTIONS) + '. '
+        'Use integer weight 1–5 for importance. Cover each promised response axis. '
+        'In point, identify the latest reply, the remaining gap and the response or evidence needed. '
+        'In closing, compare surviving benefits and harms; do not just assert that we won. '
+        'Write the speech from our assigned side, applying this plan and the full transcript. '
+        'Keep metadata outside text and draft. body_plan shape: ' + AUTHOR_PLAN_SCHEMA
+        + '\nAuthor plan targets (data): ' + json.dumps(targets, ensure_ascii=False)
+        + '\nAuthor plan framework (data): ' + json.dumps(data.get('framework'), ensure_ascii=False))
+
+
+def read_author_plan(value, data, framework):
+    """Validate against the author's exact source snapshot, without a repair call."""
+    try:
+        if not value:
+            raise ValueError('Author omitted a nonempty body_plan')
+        targets = data.get('current_targets', [])
+        plan = parse_body_plan(value, framework, targets)
+        selected = set(data.get('selected_target_ids', []))
+        if any(p['target'] and selected and p['target']['node_id'] not in selected for p in plan):
+            raise ValueError('Author selected a target outside the supplied selection')
+        resolved = resolve_body_plan(dict(data, body_plan=plan), framework)
+        return resolved, dict(status='authored', authored_items=len(plan),
+                              fallback_items=sum(p not in plan and 'response_chain' not in p for p in resolved))
+    except (ValueError, TypeError, KeyError, IndexError) as exc:
+        return resolve_body_plan(dict(data, body_plan=[]), framework), dict(
+            status='fallback', reason=str(exc))
+
+
+def prepared_body_plan(data, framework, preparation=None):
+    """Revalidate authored bindings against current sources before reuse."""
+    preparation = preparation or {}
+    return resolve_body_plan(dict(data, body_plan=preparation.get('body_plan', data.get('body_plan', []))), framework)
+
 PLAN_INSTRUCTIONS = (
-    'Also return body_plan: an array of at most4 items, each with '
+    'Also return body_plan: an array of relevant items, each with '
     '{"axis":0,"target":null,"issue":"short issue","action":"answer_objection",'
     '"point":"specific response direction","weight":2}. '
     'axis is an index in overview.response_axes, or null for an additional issue. '
@@ -35,7 +82,7 @@ DELIVERY_INSTRUCTIONS = (
 
 
 def parse_body_plan(items, framework, targets):
-    if not isinstance(items, list) or len(items) > 4:
+    if not isinstance(items, list):
         raise ValueError('Invalid body plan size')
     axes = framework['response_axes']
     result = []
@@ -51,7 +98,7 @@ def parse_body_plan(items, framework, targets):
             raise ValueError('Invalid body plan weight')
         if not isinstance(item['action'], str) or item['action'] not in ACTIONS:
             raise ValueError('Invalid body plan action')
-        if any(not isinstance(item[k], str) or not item[k].strip() or len(item[k]) > 300
+        if any(not isinstance(item[k], str) or not item[k].strip()
                for k in ('issue', 'point')):
             raise ValueError('Invalid body plan text')
         source = targets[target] if target is not None else None

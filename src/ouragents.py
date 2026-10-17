@@ -120,7 +120,7 @@ class TreeDebater(Debater):
                                 for e in getattr(self, 'evidence_pool', [])],
                    "prior_debate": self.conversation}
         if self._listening_prefix_enabled():
-            context['listening_source_selection'] = True
+            context['listening_source_selection'] = not self.planner.config.linear
             # Generation prompts and private preparation are not spoken history.
             context['prior_debate'] = [m for m in self.conversation
                 if m['role'] == 'assistant' or (m['role'] == 'user'
@@ -129,6 +129,8 @@ class TreeDebater(Debater):
                 minimax_search_score=group[0].get('minimax_search_score'))
                 for group in getattr(self, 'claim_pool', [])[:10]
                 if isinstance(group, list) and group and isinstance(group[0], dict)]
+            if self.planner.config.linear:
+                context['linear_listening'] = True
         if not self.planner.config.linear and not self.planner.config.branch_state:
             context["our_tree"], context["opponent_tree"] = self._generation_tree_context()
         if self.planner.config.branch_state:
@@ -145,7 +147,7 @@ class TreeDebater(Debater):
             context.update(planning_material(context["tree_targets"],
                            (self.debate_tree, self.oppo_debate_tree), self.oppo_side,
                            topology=self.planner.config.mode == "branch_tree"))
-        if self._listening_prefix_enabled():
+        if self._listening_prefix_enabled() and self.planner.config.branch_state:
             from streaming.clash_records import exchange_records, prompt_records
             selected = [item['target']['node_id'] for item in self.planner.state.get('body_plan', [])
                         if item.get('target')]
@@ -168,7 +170,7 @@ class TreeDebater(Debater):
     def _generation_tree_context(self):
         """Storage keeps all nodes; prompts receive only the policy's selected view."""
         config = getattr(getattr(self, 'planner', None), 'config', None)
-        if config is not None and config.branch_state:
+        if config is not None and (config.branch_state or config.linear):
             # Validated selected plans (or the heard-text fallback) enter via tips.
             # Never bypass selection by appending the complete retained trees.
             return '', ''
@@ -270,8 +272,8 @@ class TreeDebater(Debater):
         from streaming.config import OutputConfig, from_mapping
         planner = getattr(self, 'planner', None)
         mode = from_mapping(OutputConfig, getattr(self, 'streaming_output_config', None)).speech_mode
-        if mode != 'full_script' and (planner is None or planner.config.mode != 'flat_tree'):
-            raise ValueError(f'speech_mode={mode} requires planning mode flat_tree')
+        from streaming.config import validate_tree_speech_mode
+        validate_tree_speech_mode(mode, planner.config.mode if planner is not None else None)
         return mode == 'listening_prefix' and self._supports_speculative_speech()
 
     def _supports_speculative_speech(self):
@@ -616,6 +618,12 @@ class TreeDebater(Debater):
         handoff = kwargs.pop('listening_handoff', None)
         recognized_input = kwargs.pop('listening_recognized_input', None)
         if complete_input is not None:
+            if handoff is None and callable(recognized_input) and time_control and max_time > 0:
+                preparation = getattr(self, '_listening_prefix', None)
+                if self._listening_prefix_enabled() and preparation is not None:
+                    # The observer owns mutable trees until completion. Draft from
+                    # its last immutable snapshot instead of waiting for analysis.
+                    handoff = preparation.cold_handoff(stage)
             if handoff is not None:
                 if not callable(recognized_input):
                     raise ValueError('Early handoff requires listening_recognized_input for complete-input body processing')
@@ -816,7 +824,7 @@ class TreeDebater(Debater):
                     from streaming.full_speech import speak_with_overlap_prefix
                     return speak_with_overlap_prefix(self, max_time, history, output_config, call_id, kwargs)
 
-                if flat_audio and listening_mode:
+                if listening_mode and streaming_tts and time_control and max_time > 0:
                     from streaming.listening_prefix import speak_with_listening_prefix
                     try:
                         return speak_with_listening_prefix(self, max_time, history or [], output_config, kwargs)

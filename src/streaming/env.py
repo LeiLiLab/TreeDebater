@@ -910,11 +910,7 @@ def main() -> None:
             },
         }
         json.dump(record, open(save_file, "w"), indent=2)
-        if not args.debug:
-            evaluation, side_into = sde.eval()
-            logger.info(f"Result: {evaluation}")
-            record.update({"evaluation": evaluation, "eval_side_info": side_into})
-            json.dump(record, open(save_file, "w"), indent=2)
+        logger.info("Generation saved; evaluate separately with DeepDebater and Debatrix.")
         return
 
     if not args.watch_dir or not args.debater_side:

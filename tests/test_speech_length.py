@@ -49,14 +49,14 @@ def test_initial_draft_prompt_uses_configured_length_unit(monkeypatch, mode, uni
     assert f'approximately {unit_target} {mode}' in prompt
 
 
-def test_prefix_length_guard_uses_draft_mode_not_whitespace(monkeypatch, tmp_path):
+def test_soft_prefix_target_does_not_reject_valid_text(monkeypatch, tmp_path):
     player, history, node = prepared_player(tmp_path)
     data = material(player, player.status, history)
     candidate = dict(text=PREFIX, target_ids=[node.node_id], framework=FRAMEWORK)
     assert _valid_candidate(candidate, player.streaming_output_config)
     monkeypatch.setattr(constants, 'LENGTH_MODE_FOR_DRAFT', 'phonemes')
     monkeypatch.setattr(LengthEstimator, 'count_phonemes', lambda text: 450)
-    assert not _valid_candidate(candidate, player.streaming_output_config)
+    assert _valid_candidate(candidate, player.streaming_output_config)
 
 
 def test_fastspeech_is_not_replaced_by_observed_word_rate(monkeypatch):

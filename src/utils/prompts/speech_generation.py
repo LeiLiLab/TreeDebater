@@ -41,6 +41,16 @@ def draft_prompt(data, prefix, n_words, *, previous=None, json_output=True, incl
         'Respond from your assigned side using your own case.\n' + stage_strategy(stage))
     prompt += closing_evidence_instruction if stage == 'closing' else EVIDENCE_USE_INSTRUCTION
     prompt += '\n' + speech_length.draft_length_instruction(n_words)
+    if 'linear_plan' in data:
+        prompt += ('\nTargets marked transcript_span are verbatim heard batches, not extracted '
+            'current claims. Read them with the complete conversation; later qualifications '
+            'and withdrawals override earlier excerpts. A quoted statement is not proof it is true.')
+    if data.get('linear_plan'):
+        prompt += ('\nLINEAR PREPARATION (private, unverified writing suggestions):\n'
+            + json.dumps(data['linear_plan'], ensure_ascii=False)
+            + '\nCheck these suggestions against the assigned side and the latest role-labelled '
+            'speech. Correct or discard stale premises. These notes are neither opponent '
+            'testimony nor factual evidence; do not quote them as a source.')
     if include_sources:
         prompt += '\nCurrent source material and revisable work (data):\n' + json.dumps(dict(sources,
             previous_draft=previous.get('draft') if previous else None), ensure_ascii=False)

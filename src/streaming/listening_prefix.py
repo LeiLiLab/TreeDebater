@@ -20,7 +20,8 @@ import time
 
 from .constraint_review import current_checklist, opponent_sources, supplied_evidence
 from .body_task import BodyTask
-from .body_plan import resolve_body_plan
+from .body_plan import (resolve_body_plan, author_plan_instruction, AUTHOR_PLAN_SCHEMA,
+                        read_author_plan, prepared_body_plan)
 from .clash_records import exchange_records
 from .config import SpeechBudgets, from_mapping
 from .flat_speaking import SegmentRejected, _json_object
@@ -33,6 +34,20 @@ from utils.prompts.authoring import DEFAULT_DEBATER_SYSTEM, authoring_options, d
 from utils import speech_length
 from utils.time_estimator import LengthEstimator
 from utils.tool import logger
+
+
+def _trace_snapshot(value):
+    """Detach diagnostic containers before traversing them across worker threads.
+
+    Capture each built-in container in one shallow copy before recursively
+    visiting its children; a writer may add fields while those children copy.
+    This is diagnostic state, not an atomic publication/authoring snapshot.
+    """
+    if isinstance(value, dict):
+        return {key: _trace_snapshot(item) for key, item in value.copy().items()}
+    if isinstance(value, (list, tuple)):
+        return [_trace_snapshot(item) for item in value[:]]
+    return value
 
 
 def next_stage(side, stage, first_side='for'):
@@ -62,7 +77,7 @@ def material(player, stage, history=None, *, include_rehearsal=True):
         private_claim_candidates=context.get('private_claim_candidates', []),
         debate_history=history or context['prior_debate'],
         framework=player.planner.overview or player.planner.state.get('overview'),
-        current_targets=context['tree_targets'], condition_candidates=conditions,
+        current_targets=context.get('tree_targets', []), condition_candidates=conditions,
         selected_target_ids=[c['node_id'] for c in player.planner.state.get('claims', [])],
         clash_records=context.get('clash_records', []),
         body_plan=[] if context.get('listening_source_selection') else player.planner.state.get('body_plan', []),
@@ -70,13 +85,30 @@ def material(player, stage, history=None, *, include_rehearsal=True):
         supplied_evidence=supplied_evidence(player), final_transcript=transcript,
         feedback_context=player._feedback_context(stage),
         heard_transcript=' '.join(player.planner.chunks), turn=player.planner.turn)
+    if player.planner.config.linear:
+        from .linear_listening import source_targets
+        data['current_targets'] = source_targets(data['debate_history'], player.side,
+            player.planner.turn, player.planner.chunks, player.planner.config.max_tree_targets,
+            transcript=transcript)
+        current = (player.planner.plan_version == player.planner.version
+                   and ' '.join(transcript.split()) == ' '.join(data['heard_transcript'].split()))
+        data['linear_plan'] = player.planner.plan if current else ''
+        data['planning_pending'] = not current or player.planner.overview is None
+        if not current:
+            data['framework'] = None
     if include_rehearsal and getattr(player, 'use_rehearsal_tree', False):
         data['prepared_rehearsal_materials'] = player._listening_rehearsal_materials(data)
+    preparation = getattr(player, '_listening_prefix', None)
+    if preparation is not None and hasattr(preparation, 'authored_plan'):
+        authored = preparation.authored_plan(stage, data['turn'])
+        if authored is not None:
+            data['body_plan'] = prepared_body_plan(data, authored['framework'], authored)
     return copy.deepcopy(data)
 
 
 def source_stamp(data, *, include_rehearsal=True):
-    # Private plan formatting must not invalidate unchanged input.
+    # Tree plan formatting is excluded. Linear notes are an explicit authoring
+    # input, so their changes invalidate a draft even with unchanged sources.
     sources = {k: data[k] for k in ('current_targets', 'opponent_sources',
                                    'heard_transcript', 'final_transcript', 'turn')}
     sources['conditions'] = [{k: v for k, v in c.items() if k != 'planned_target'}
@@ -85,6 +117,8 @@ def source_stamp(data, *, include_rehearsal=True):
     sources['authoring_material'] = {key: data.get(key) for key in (
         'our_definition', 'our_main_claims', 'our_tree', 'opponent_tree',
         'supplied_evidence', 'prepared_rehearsal_materials', 'max_time')}
+    if 'linear_plan' in data:
+        sources['authoring_material']['linear_plan'] = data['linear_plan']
     if not include_rehearsal:
         sources['authoring_material'].pop('prepared_rehearsal_materials')
     return hashlib.sha256(json.dumps(sources, sort_keys=True).encode()).hexdigest()
@@ -96,11 +130,12 @@ def opponent_input_stamp(data):
         [data['opponent_sources'], data['heard_transcript']], ensure_ascii=False).encode()).hexdigest()
 
 
-def prefix_limits(config, max_time=None):
+def prefix_target_words(config, max_time=None):
+    """Soft drafting target, never a publication length ceiling."""
     seconds = min(config.first_chunk_seconds, max_time) if max_time else config.first_chunk_seconds
     target = max(config.listening_prefix_min_words,
                  config.listening_prefix_target_words or speech_length.draft_word_budget(seconds, rounding='floor'))
-    return target, max(target, math.ceil(target * 1.5))
+    return target
 
 
 def preparation_time(data):
@@ -113,6 +148,18 @@ def body_word_budget(data, prefix):
     return max(1, math.floor(total - speech_length.draft_word_count(prefix)))
 
 
+def normalize_prefix(candidate):
+    """Normalize presentation locally; never regenerate prose for whitespace/punctuation."""
+    text = candidate.get('text')
+    if not isinstance(text, str) or not text.strip():
+        return []
+    cleaned = ' '.join(text.split())
+    if cleaned[-1] not in '.?!。？！':
+        cleaned += '.'
+    candidate['text'] = cleaned
+    return [dict(field='text', action='normalize_whitespace_and_terminal_punctuation')] if cleaned != text else []
+
+
 def _prefix_format_errors(candidate, config, max_time=None):
     text = candidate.get('text')
     if not isinstance(text, str) or not text.strip():
@@ -120,7 +167,7 @@ def _prefix_format_errors(candidate, config, max_time=None):
     errors = []
     if text != text.strip() or '\n' in text:
         errors.append('text must be one paragraph without surrounding whitespace or newlines')
-    if text[-1:] not in '.?!':
+    if text[-1:] not in '.?!。？！':
         errors.append('text must end with a complete sentence (. ? or !)')
     if any(mark in text for mark in ('**', '```', '**Reference**')):
         errors.append('text must be spoken prose without Markdown headings or code fences')
@@ -128,9 +175,6 @@ def _prefix_format_errors(candidate, config, max_time=None):
         errors.append(f'text exceeds {config.max_chunk_chars} characters')
     if len(text.split()) < config.listening_prefix_min_words:
         errors.append(f'text must contain at least {config.listening_prefix_min_words} words; develop the existing point without filler')
-    maximum = prefix_limits(config, max_time)[1]
-    if speech_length.draft_word_count(text) > maximum:
-        errors.append(f'text exceeds {maximum} word equivalents')
     return errors
 
 
@@ -140,6 +184,14 @@ def _valid_candidate(candidate, config, max_time=None):
 
 class PrefixFormatRejected(SegmentRejected):
     """No structurally usable candidate; does not establish a framing conflict."""
+
+
+class PrefixReviewPending(SegmentRejected):
+    """Reviewer output was malformed; retain the speech without granting approval."""
+    def __init__(self, candidate, verdict):
+        super().__init__('Prefix review unavailable; candidate retained for review retry')
+        self.candidate = copy.deepcopy(candidate)
+        self.verdict = copy.deepcopy(verdict)
 
 
 class InitialPrefixReview:
@@ -169,6 +221,8 @@ class InitialPrefixReview:
             verdict = review(candidate, data, helper, endpoint=endpoint, max_attempts=3)
         except BaseException as exc:
             result.set_exception(exc)
+            with self._lock:
+                self._results.pop(key, None)
             raise
         with self._lock:
             if verdict['accepted']:
@@ -176,6 +230,9 @@ class InitialPrefixReview:
             elif verdict.get('review_format_valid'):
                 self._invalidated_texts.add(candidate['text'])
         result.set_result(verdict)
+        if not verdict.get('review_format_valid'):
+            with self._lock:
+                self._results.pop(key, None)  # Retry the reviewer, not the speech author.
         return copy.deepcopy(verdict)
 
     def invalidated(self, candidate):
@@ -207,14 +264,14 @@ class InitialPrefixReview:
 
 def prepare(data, helper, config, *, endpoint=False, max_time=None,
             system_prompt=DEFAULT_DEBATER_SYSTEM, writing_options=None, author=None, prompt_builder=None,
-            initial_review=None):
+            initial_review=None, candidate_override=None):
     initial_review = initial_review if initial_review is not None else InitialPrefixReview()
     from utils.speech_context import authoring_sources
     max_time = preparation_time(data) if max_time is None else max_time
     data = dict(data, endpoint=endpoint, max_time=max_time)
     if config.listening_prefix_overlap_final_update:
         data = dict(data, prefix_handoff=True)
-    target, maximum = prefix_limits(config, max_time)
+    target = prefix_target_words(config, max_time)
     total_words = speech_length.draft_word_budget(max_time)
     context = authoring_sources(data)
     if data.get('previous_speech'):
@@ -223,23 +280,25 @@ def prepare(data, helper, config, *, endpoint=False, max_time=None,
     framework_schema = ('{"ready":true,"position":"our assigned side",'
         '"core_dispute":"central issue","response_axes":[],"prefix_action":"keep",'
         '"reason":"brief explanation"}')
-    schema = ('{"text":"first spoken paragraph","draft":"all remaining spoken paragraphs",'
-              '"framework":' + framework_schema + '}')
+    schema = ('{"framework":' + framework_schema + ',"body_plan":' + AUTHOR_PLAN_SCHEMA
+              + ',"text":"first spoken paragraph","draft":"all remaining spoken paragraphs"}')
     prompt = ('LISTENING PREFIX DRAFT: Write the opening and body together as one complete speech. '
         + build_draft(data, '', total_words, prompt_builder=prompt_builder,
             previous={'draft': data['previous_speech']} if data.get('previous_speech') else None,
             include_sources=False, output_contract=False)
-        + f'\nThe first paragraph should be about {target} words, maximum {maximum}; '
+        + f'\nThe first paragraph should be about {target} words as a soft target; '
         'the remaining paragraphs develop the same argument under the total word budget. '
         'Return the first paragraph in text and every subsequent paragraph in draft, '
         'without repeating the first paragraph. Both fields belong to ONE speech by the '
-        'assigned speaker. Return ONLY JSON with this schema: ' + schema
+        'assigned speaker. ' + author_plan_instruction(data)
+        + '\nReturn ONLY JSON with this schema: ' + schema
         + '\n' + json.dumps(dict(context=context, endpoint=endpoint), ensure_ascii=False))
     writing_options = dict(writing_options or {})
     history_messages = authoring_history(data)
     author = author or helper
-    raw = author(prompt=prompt, sys=system_prompt, history_messages=history_messages,
-                 json_mode=True, **writing_options)[0]
+    raw = (json.dumps(candidate_override) if candidate_override is not None else
+           author(prompt=prompt, sys=system_prompt, history_messages=history_messages,
+                  json_mode=True, **writing_options)[0])
     audits = []
     for attempt in range(2):
         parse_issue = None
@@ -251,6 +310,7 @@ def prepare(data, helper, config, *, endpoint=False, max_time=None,
         # Target selection belongs to the planner. Legacy writer metadata is
         # neither a publication condition nor an authority to choose tree nodes.
         candidate.pop('target_ids', None)
+        normalizations = normalize_prefix(candidate)
         speech_errors = _prefix_format_errors(candidate, config, max_time)
         if not isinstance(candidate.get('draft'), str) or not candidate['draft'].strip():
             speech_errors.append('draft must contain the nonempty remaining spoken paragraphs')
@@ -263,7 +323,6 @@ def prepare(data, helper, config, *, endpoint=False, max_time=None,
                 speech_errors.append('draft: ' + str(exc))
         # This explanation is diagnostic metadata, not a speech or stance claim.
         # Preserve the authored speech when only its explanation was omitted.
-        normalizations = []
         framework = candidate.get('framework')
         if isinstance(framework, dict) and 'reason' not in framework:
             framework['reason'] = 'Author did not provide a framework explanation.'
@@ -289,13 +348,17 @@ def prepare(data, helper, config, *, endpoint=False, max_time=None,
             if verdict is not None:
                 audit = dict(verdict, kind='initial_prefix_review', semantic_review=True)
                 valid = audit['accepted']
+        if audit['semantic_review'] and not audit.get('review_format_valid'):
+            raise PrefixReviewPending(candidate, audit)
         if normalizations:
             audit['normalizations'] = normalizations
         audits.append(audit)
         if valid:
+            plan, plan_audit = read_author_plan(candidate.pop('body_plan', None), data, candidate['framework'])
             body = dict(draft=candidate.pop('draft'), feedback=None,
                 feedback_status='deferred_to_final_input', needs_fit=False,
-                body_plan=[], prefix_text=candidate['text'], clash_records=[],
+                body_plan=plan, body_plan_audit=plan_audit,
+                prefix_text=candidate['text'], clash_records=copy.deepcopy(data.get('clash_records', [])),
                 framework=copy.deepcopy(candidate['framework']), source_stamp=source_stamp(data),
                 heard_transcript=data['heard_transcript'], ready_monotonic=time.perf_counter(),
                 stage=data['stage'], turn=data['turn'], source='shared_speech_draft')
@@ -305,6 +368,29 @@ def prepare(data, helper, config, *, endpoint=False, max_time=None,
                 handoff_prechecked=bool(data.get('prefix_handoff')),
                 reviewed_context=copy.deepcopy(data) if data.get('prefix_handoff') else None)
         if not attempt:
+            if (not parse_issue and not framework_errors and
+                    (not isinstance(candidate.get('text'), str) or not candidate.get('text', '').strip()) and
+                    (not isinstance(candidate.get('draft'), str) or not candidate.get('draft', '').strip())):
+                # A metadata-only response is not a speech. Keep its valid framework
+                # and ask for only the missing prose, under the same one-repair cap.
+                raw = author(prompt='LISTENING PREFIX REPAIR: The previous response contained only '
+                    'planning metadata and omitted the entire spoken speech. Write the speech now. '
+                    + build_draft(data, '', total_words, prompt_builder=prompt_builder,
+                                  include_sources=False, output_contract=False)
+                    + f'\ntext must be one spoken first paragraph, aim for about {target} words (soft target). '
+                    'draft must contain all remaining spoken paragraphs, without repeating text. '
+                    'Do not return framework or body_plan. Return ONLY JSON with exactly these two '
+                    'nonempty string fields: {"text":"spoken first paragraph","draft":"remaining spoken paragraphs"}'
+                    + '\n' + json.dumps(dict(context=context, existing_framework=candidate['framework'],
+                        existing_plan=candidate.get('body_plan'), issues=audit['issues']), ensure_ascii=False),
+                    sys=system_prompt, history_messages=history_messages, json_mode=True, **writing_options)[0]
+                try:
+                    prose = _json_object(raw)
+                except SegmentRejected:
+                    pass
+                else:
+                    raw = json.dumps(dict(candidate, text=prose.get('text'), draft=prose.get('draft')), ensure_ascii=False)
+                continue
             if not parse_issue and not speech_errors and framework_errors:
                 raw = helper(prompt='LISTENING FRAMEWORK REPAIR: Correct only the framework metadata '
                     'for this unchanged speech. Do not rewrite text or draft. Resolve each listed field error. '
@@ -323,16 +409,17 @@ def prepare(data, helper, config, *, endpoint=False, max_time=None,
             raw = author(prompt='LISTENING PREFIX REPAIR: Repair the complete unpublished speech together. '
                 + build_draft(data, '', total_words, prompt_builder=prompt_builder,
                               include_sources=False, output_contract=False)
-                + f'\nKeep text to one first paragraph: target {target}, hard maximum {maximum} word equivalents. '
+                + f'\nKeep text to one first paragraph: aim for about {target} words (soft target). '
                 'Return the remaining coherent speech in draft. Do not change just the side label. '
-                'Return ONLY the repaired output object with this exact schema: ' + schema
+                + author_plan_instruction(data)
+                + '\nReturn ONLY the repaired JSON object with this exact schema: ' + schema
                 + '\n' + json.dumps(dict(context=context, draft=candidate,
                     issues=audit['issues'] + audit.get('format_errors', []),
-                    target_words=target, maximum_word_equivalents=maximum), ensure_ascii=False),
+                    target_words=target), ensure_ascii=False),
                 sys=system_prompt, history_messages=history_messages, json_mode=True, **writing_options)[0]
     if audits[-1]['semantic_review']:
         raise SegmentRejected('Opening failed publication review after one repair')
-    raise PrefixFormatRejected('Opening failed local format checks after one repair')
+    raise PrefixFormatRejected('Opening failed local format checks after one repair: ' + '; '.join(audits[-1]['issues']))
 
 
 class PreparationStopped(RuntimeError):
@@ -375,6 +462,7 @@ class PrefixPreparation:
         self._has_prepared_prefix = False
         self.initial_review = InitialPrefixReview()
         self._failed_frameworks = set()
+        self._pending_review = None
         # Retry a format-only failure once after new speech, within the shared call cap.
         self._format_failures = {}
         self._last_body_stamp = None
@@ -398,6 +486,10 @@ class PrefixPreparation:
     def peek(self):
         with self._lock:
             return copy.deepcopy(self._latest)
+
+    def pending_review(self):
+        with self._lock:
+            return copy.deepcopy(self._pending_review)
 
     def prepared_audio(self, text, config):
         with self._lock:
@@ -425,6 +517,14 @@ class PrefixPreparation:
                 return copy.deepcopy(self._context_latest)
         return None
 
+    def authored_plan(self, stage, turn):
+        """Expose only completed writer metadata to existing evidence-selection calls."""
+        with self._lock:
+            body = self._body_latest or (self._latest or {}).get('body_preparation')
+            if body and (body['stage'], body['turn']) == (stage, turn):
+                return copy.deepcopy(body)
+        return None
+
     def offer(self, data):
         with self._lock:
             scope = (data['stage'], data['turn'])
@@ -434,6 +534,11 @@ class PrefixPreparation:
             # Freeze stops speculative requests, not completed observer snapshots.
             self._context_latest = copy.deepcopy(data)
             if self._stopped or self._calls >= self.config.listening_prefix_max_calls:
+                return
+            if data.get('planning_pending'):
+                # WAIT retains new input, but cannot launch drafts from stale
+                # notes. Already running workers own their earlier snapshots.
+                self._pending = self._body_pending = None
                 return
             self._pending = copy.deepcopy(data)
             if self._thread is None:
@@ -488,17 +593,23 @@ class PrefixPreparation:
                                                    system_prompt=self.system_prompt,
                                                    writing_options=self.writing_options,
                                                    author=self._author_complete, prompt_builder=self.prompt_builder,
-                                                   initial_review=self.initial_review)
+                                                   initial_review=self.initial_review,
+                                                   candidate_override=self.pending_review())
+                            except PrefixReviewPending as exc:
+                                with self._lock:
+                                    self._pending_review = exc.candidate
+                                raise
                             except PrefixFormatRejected:
                                 self._format_failures[stamp] = dict(heard_transcript=data['heard_transcript'],
                                     attempts=(format_failure['attempts'] if format_failure else 0) + 1)
                                 raise
-                            except Exception:
+                            except SegmentRejected:
                                 self._failed_frameworks.add(stamp)
                                 raise
                             prepared['ready_monotonic'] = time.perf_counter()
                             with self._lock:
                                 if not self._stopped:
+                                    self._pending_review = None
                                     self._latest = prepared
                                     self._candidates.append(copy.deepcopy(prepared))
                                     self._has_prepared_prefix = True
@@ -606,6 +717,8 @@ class PrefixPreparation:
                         and initial['prefix_text'] == candidate['text']
                         and initial['framework'] == candidate['framework']):
                     draft = initial['draft']
+                    plan = prepared_body_plan(data, candidate['framework'], initial)
+                    plan_audit = initial.get('body_plan_audit', {'status': 'legacy'})
                     event['source'] = 'shared_speech_draft'
                 else:
                     writing_data = data
@@ -616,12 +729,16 @@ class PrefixPreparation:
                         writing_data = dict(data, prepared_revision_evidence=writing_evidence(
                             selected, evidence_context, json.dumps(plan, ensure_ascii=False), n_words=body_words))
                     prompt = 'LISTENING BODY DRAFT: ' + build_draft(
-                        writing_data, candidate['text'], body_words, previous=previous, prompt_builder=self.prompt_builder)
+                        writing_data, candidate['text'], body_words, previous=previous,
+                        prompt_builder=self.prompt_builder, output_contract=False)
+                    prompt += author_plan_instruction(dict(data, framework=candidate['framework']))
+                    prompt += '\nReturn ONLY JSON {"body_plan":' + AUTHOR_PLAN_SCHEMA + ',"draft":"remaining spoken speech"}.'
                     parsed = _json_object(self._complete(body=True, authoring=True,
                         prompt=prompt,
                         sys=self.system_prompt, history_messages=authoring_history(data),
                         json_mode=True, **self.writing_options)[0])
                     draft = parsed.get('draft')
+                    plan, plan_audit = read_author_plan(parsed.get('body_plan'), data, candidate['framework'])
                 if not isinstance(draft, str) or not draft.strip():
                     raise SegmentRejected('Invalid speculative body draft')
                 draft = remaining_text(draft, candidate['text'])
@@ -632,7 +749,7 @@ class PrefixPreparation:
                 feedback_status = 'deferred_to_final_input'
                 event['feedback_status'] = feedback_status
                 prepared = dict(draft=draft, feedback=None, feedback_status=feedback_status,
-                    needs_fit=needs_fit, body_plan=plan, prefix_text=candidate['text'],
+                    needs_fit=needs_fit, body_plan=plan, body_plan_audit=plan_audit, prefix_text=candidate['text'],
                     clash_records=data.get('clash_records', []),
                     framework=candidate['framework'], source_stamp=source_stamp(data),
                     heard_transcript=data['heard_transcript'], ready_monotonic=time.perf_counter(),
@@ -682,6 +799,17 @@ class PrefixPreparation:
         for thread in threads:
             if thread is not None:
                 thread.join()
+
+    def cold_handoff(self, stage):
+        """Transfer an immutable listening snapshot even when prefix preparation failed."""
+        self.freeze()
+        with self._lock:
+            data = copy.deepcopy(self._context_latest)
+        if (not self.config.listening_prefix_overlap_final_update or not data
+                or data['stage'] != stage or data['turn'] != self.turn):
+            return None
+        return dict(candidate=None, data=data, audio=None, audio_future=None,
+                    body_future=None, cold_snapshot=True)
 
     def handoff(self, stage, turn, max_time):
         """Freeze reviewed text and completed or in-flight matching audio."""
@@ -777,7 +905,7 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
             trace['committed_text'] = '\n\n'.join(c['text'] for c in trace['chunks'])
             path = directory / 'listening_prefix.json'
             temporary = path.with_suffix('.json.tmp')
-            temporary.write_text(json.dumps(trace, ensure_ascii=False, indent=2), encoding='utf-8')
+            temporary.write_text(json.dumps(_trace_snapshot(trace), ensure_ascii=False, indent=2), encoding='utf-8')
             temporary.replace(path)
 
     def record(index, path, text, duration):
@@ -830,6 +958,8 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
                 or candidate.get('review_stamp') != review_stamp(candidate, gate_data)):
             checked = review(candidate, gate_data, player.helper_client, endpoint=True)
             trace['endpoint_reviews'].append(checked)
+            if not checked.get('review_format_valid'):
+                raise PrefixReviewPending(candidate, checked)
             if not checked['accepted']:
                 gate_data = dict(gate_data, previous_speech=candidate['text'] + '\n\n'
                     + candidate.get('body_preparation', {}).get('draft', ''),
@@ -842,7 +972,8 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
                                 system_prompt=debater_system(player),
                                 writing_options=authoring_options(player, **kwargs),
                                 author=player._authoring_client(stage=stage), prompt_builder=player._prepare_stage_prompt,
-                                max_time=max_time, initial_review=initial_review)
+                                max_time=max_time, initial_review=initial_review,
+                                candidate_override=preparation.pending_review() if preparation is not None else None)
             trace['endpoint_reviews'].extend(candidate['audits'])
         else:
             trace['cold_prefix'] = False
@@ -947,7 +1078,7 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
             # Full source history is authoritative; plan/records are derived hints.
             return BodyTask.create(motion=feedback_motion, side=feedback_side, stage=stage,
                 history=final_history, prefix=prefix, framework=candidate['framework'], draft=draft,
-                preparation=body_preparation, body_plan=resolve_body_plan(snapshot, candidate['framework']),
+                preparation=body_preparation, body_plan=prepared_body_plan(snapshot, candidate['framework'], body_preparation),
                 clash_records=snapshot.get('clash_records', []),
                 feedback_context=snapshot.get('feedback_context'))
 
@@ -1034,13 +1165,15 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
                     raw_result.set_result(raw)
                     save()
             except BaseException as exc:
+                # Unblock every dependent task before fallible diagnostics or
+                # cleanup. A second logging failure must never strand a Future.
+                for pending in (feedback_task, feedback_result, evidence_result, revision_offer, raw_result):
+                    if pending is not None and not pending.done():
+                        pending.set_exception(exc)
                 if raw_result is not None and offer is not None and 'stream' in offer:
                     offer['stream'].fail(exc)
                 trace.setdefault('parallel_body_feedback', {})['worker_error'] = f'{type(exc).__name__}: {exc}'
                 save()
-                for pending in (feedback_task, feedback_result, evidence_result, revision_offer, raw_result):
-                    if pending is not None and not pending.done():
-                        pending.set_exception(exc)
                 raise
 
         def snapshot_tail():
@@ -1061,6 +1194,7 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
             trace['body_task_binding'] = dict(source='complete_asr_snapshot', context=context,
                 allocation=json.loads(task.allocation), final_derived_context_changed=None)
             trace['body_plan'] = context['body_plan']
+            trace['body_plan_audit'] = (body_preparation or {}).get('body_plan_audit', {'status': 'legacy'})
             trace['clash_records'] = context['clash_records']
             trace['parallel_body_feedback']['reused'] = True
             trace['parallel_evidence_selection']['reused'] = True
@@ -1111,7 +1245,7 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
             save()
 
         def tail_work():
-            nonlocal history, data, stamp
+            nonlocal history, data, stamp, body_preparation
             if snapshot_delivery:
                 return snapshot_tail()
             began = time.perf_counter() - start
@@ -1130,7 +1264,7 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
             trace['body_transfer']['selection_seconds'] = time.perf_counter() - start
             # Consume the existing planner output directly. Legacy stage setup
             # performed another opening selection whose prompt was discarded.
-            plan = resolve_body_plan(data, candidate['framework'])
+            plan = prepared_body_plan(data, candidate['framework'], body_preparation)
             trace['body_plan'] = plan
             trace['clash_records'] = exchange_records(
                 (player.debate_tree, player.oppo_debate_tree), player.side)
@@ -1140,12 +1274,20 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
             else:
                 trace['body_preparation_source'] = 'cold_draft'
                 final_data = dict(data, endpoint=True)
-                instruction = build_draft(final_data, prefix, target_words, json_output=False,
+                instruction = 'LISTENING BODY DRAFT: ' + build_draft(final_data, prefix, target_words, output_contract=False,
                                           prompt_builder=player._prepare_stage_prompt)
+                instruction += author_plan_instruction(dict(final_data, framework=candidate['framework']))
+                instruction += '\nReturn ONLY JSON {"body_plan":' + AUTHOR_PLAN_SCHEMA + ',"draft":"remaining spoken speech"}.'
                 player._add_message('user', instruction)
-                draft = player._authoring_client(stage=stage)(prompt=instruction, sys=debater_system(player),
-                    history_messages=authoring_history(final_data), json_mode=False, **writing_options)[0]
+                raw = player._authoring_client(stage=stage)(prompt=instruction, sys=debater_system(player),
+                    history_messages=authoring_history(final_data), json_mode=True, **writing_options)[0]
+                parsed = _json_object(raw)
+                draft = parsed['draft']
+                plan, plan_audit = read_author_plan(parsed.get('body_plan'), final_data, candidate['framework'])
+                body_preparation = dict(body_plan=plan, body_plan_audit=plan_audit)
             task = body_task(draft, history, data)
+            trace['body_plan'] = json.loads(task.context)['body_plan']
+            trace['body_plan_audit'] = (body_preparation or {}).get('body_plan_audit', {'status': 'legacy'})
             matched_feedback = False
             speculative_revision = None
             if feedback_future is not None:
@@ -1295,6 +1437,9 @@ def speak_with_listening_prefix(player, max_time, history, config, kwargs, *, st
                      estimated_total_gap_seconds=sum(c['estimated_gap_seconds'] for c in trace['chunks']))
         response = Debater.post_process(player, text, max_time, time_control=False)
     except Exception as exc:
+        if isinstance(exc, PrefixReviewPending):
+            trace['review_pending_candidate'] = exc.candidate
+            trace['review_unavailable'] = exc.verdict
         trace.update(status='failed', error=f'{type(exc).__name__}: {exc}')
         if snapshot_delivery and not snapshot_state_synced:
             # Do not write conversation/state while the observer still owns it,

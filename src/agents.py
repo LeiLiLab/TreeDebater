@@ -68,6 +68,7 @@ class DebaterConfig(AgentConfig):
     single_pass_revision: bool = False
     helper_model: str | None = None
     planning: dict | None = None
+    streaming_output: dict | None = None
     claim_selection_strategy: str = 'native'
 
     def __post_init__(self):
@@ -325,6 +326,17 @@ class Agent:
 
 
 class Debater(Agent):
+    def speak(self, prompt, **kwargs):
+        from streaming.config import OutputConfig, from_mapping
+        output = from_mapping(OutputConfig, getattr(self, 'streaming_output_config', None)
+                              or self.config.streaming_output)
+        if output.speech_mode == 'vanilla_streaming':
+            if type(self) is not Debater:
+                raise ValueError('vanilla_streaming requires the default Debater')
+            from streaming.vanilla import speak
+            return speak(self, prompt, output, **kwargs)
+        return super().speak(prompt, **kwargs)
+
     def __init__(self, config, motion) -> None:
         super().__init__(config)
 

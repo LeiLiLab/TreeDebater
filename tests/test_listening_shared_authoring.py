@@ -64,6 +64,24 @@ def test_previous_reversed_tactics_are_not_recirculated(tmp_path):
     assert payload['heard_prefix'] == player.planner.chunks
 
 
+@pytest.mark.parametrize('count', [7, 38, 44])
+def test_many_source_boundaries_preserve_ready_overview(tmp_path, count):
+    player, _, _ = prepared_player(tmp_path)
+    context = player._planning_context()
+    context['position_limits'] = [f'Exception {i} remains applicable.' for i in range(count)]
+    raw = selection()
+    raw['limits'] = list(range(count))
+    ListeningSelectionResponse.model_validate(raw)
+    state = parse_branch_state(json.dumps(raw), ' '.join(player.planner.chunks), context)
+    assert [item['quote'] for item in state['limits']] == context['position_limits']
+    assert state['overview']['ready'] is True
+    assert 'up to 6' not in branch_prompt(context, player.planner.chunks, {})
+    for invalid in (count, -1, True, '0'):
+        raw['limits'] = [*range(count), invalid]
+        with pytest.raises(ValueError, match='Invalid indexed source limit'):
+            parse_branch_state(json.dumps(raw), ' '.join(player.planner.chunks), context)
+
+
 @pytest.mark.parametrize('stage', ['opening', 'rebuttal', 'closing'])
 @pytest.mark.parametrize('side', ['for', 'against'])
 def test_recorded_planner_arguments_never_become_authoring_instructions(stage, side):
@@ -86,7 +104,7 @@ def test_recorded_planner_arguments_never_become_authoring_instructions(stage, s
 
 def test_repair_replaces_opening_and_body_as_one_unpublished_draft(tmp_path):
     player, history, _ = prepared_player(tmp_path)
-    bad = dict(text='word ' * 90 + 'end.', draft='Obsolete body.', target_ids=[], framework=FRAMEWORK)
+    bad = dict(text='**Heading** This is not plain spoken prose.', draft='Obsolete body.', target_ids=[], framework=FRAMEWORK)
     good = dict(text=PREFIX, draft=TAIL, target_ids=[], framework=FRAMEWORK)
     from test_overview_review_gate import passing
     helper = Mock(side_effect=[[json.dumps(bad)], [json.dumps(good)], [json.dumps(passing(PREFIX, 'against'))]])

@@ -58,23 +58,19 @@ def test_endpoint_override_and_format_repair_keep_the_same_total_budget(tmp_path
     assert result['body_preparation']['draft'] == TAIL
 
 
-def test_overlong_prefix_gets_one_local_format_repair(tmp_path):
+@pytest.mark.parametrize('word_count', [33, 76, 90])
+def test_prefix_above_soft_word_target_is_reviewed_without_length_repair(tmp_path, word_count):
+    from test_overview_review_gate import passing
     p, history, node = prepared_player(tmp_path)
-    long_text = ' '.join(['word'] * 32) + ' end.'
-    base = prefix_helper(node)
-    calls = []
-    def complete(*, prompt, **kwargs):
-        calls.append(prompt)
-        if 'LISTENING PREFIX DRAFT:' in prompt:
-            return [json.dumps(dict(text=long_text, draft=TAIL, target_ids=[node.node_id], framework=FRAMEWORK))]
-        if 'LISTENING PREFIX REPAIR:' in prompt:
-            assert prompt_data(prompt)['maximum_word_equivalents'] == 26
-            assert 'text exceeds 26 word equivalents' in prompt_data(prompt)['issues']
-        return base(prompt=prompt, **kwargs)
-    result = prepare(material(p, p.status, history), complete, p.streaming_output_config, endpoint=True)
-    assert result['text'] == PREFIX
-    assert len(calls) == 3 and 'LISTENING PREFIX REPAIR:' in calls[1]
-    assert not result['audits'][0]['accepted'] and result['audits'][-1]['accepted']
+    long_text = ' '.join(['word'] * (word_count - 1)) + ' end.'
+    candidate = dict(text=long_text, draft=TAIL, target_ids=[node.node_id], framework=FRAMEWORK)
+    helper = Mock(side_effect=[[json.dumps(candidate)], [json.dumps(passing(long_text, 'against'))]])
+    result = prepare(material(p, p.status, history), helper, p.streaming_output_config, endpoint=True)
+    assert result['text'] == long_text
+    assert helper.call_count == 2  # Draft and semantic review; no length repair.
+    assert result['audits'][-1]['accepted']
+    assert all('LISTENING PREFIX REPAIR:' not in call.kwargs['prompt'] for call in helper.call_args_list)
+    assert 'soft target' in helper.call_args_list[0].kwargs['prompt']
 
 
 def test_underlength_prefix_is_repaired_before_publication(tmp_path):
@@ -85,6 +81,9 @@ def test_underlength_prefix_is_repaired_before_publication(tmp_path):
     repaired = PREFIX + ' The published cost estimate leaves this proposal without a credible funding path.'
     calls = []
     def complete(*, prompt, **kwargs):
+        # OpenAI JSON mode rejects requests without an explicit JSON instruction,
+        # including the second (repair) request after a draft fails validation.
+        assert kwargs['json_mode'] is True and 'json' in prompt.lower()
         calls.append(prompt)
         text = PREFIX if len(calls) == 1 else repaired
         if len(calls) == 2:
@@ -272,7 +271,7 @@ def test_speculation_coalesces_updates_without_redrafting_stable_overview(tmp_pa
     p, history, _ = prepared_player(tmp_path)
     started, release = threading.Event(), threading.Event()
     seen = []
-    def work(data, helper, config, *, system_prompt, writing_options, author, prompt_builder, initial_review):
+    def work(data, helper, config, *, system_prompt, writing_options, author, prompt_builder, initial_review, candidate_override=None):
         from utils.prompts.authoring import DEFAULT_DEBATER_SYSTEM
         assert system_prompt == DEFAULT_DEBATER_SYSTEM
         seen.append(copy.deepcopy(data))
@@ -454,3 +453,22 @@ def test_disabled_prefix_review_skips_model_gate_and_delivers_audio(audio, tmp_p
     assert saved['chunks'][0]['text'] == PREFIX
     assert PREFIX in result and TAIL in result
     assert all(not row.get('semantic_review') for row in saved['endpoint_reviews'])
+
+
+def test_metadata_only_speech_repairs_only_missing_prose(tmp_path):
+    p, history, node = prepared_player(tmp_path)
+    base = prefix_helper(node)
+    calls = []
+    def complete(*, prompt, **kwargs):
+        calls.append(prompt)
+        if prompt.startswith('LISTENING PREFIX DRAFT:'):
+            return [json.dumps(dict(framework=FRAMEWORK, body_plan=[]))]
+        if prompt.startswith('LISTENING PREFIX REPAIR:'):
+            assert 'Do not return framework or body_plan' in prompt
+            return [json.dumps(dict(text=PREFIX, draft=TAIL))]
+        return base(prompt=prompt, **kwargs)
+    result = prepare(material(p, p.status, history), complete, p.streaming_output_config, endpoint=True)
+    assert result['text'] == PREFIX
+    assert result['body_preparation']['draft'] == TAIL
+    assert not result['audits'][0]['accepted']
+    assert sum(x.startswith('LISTENING PREFIX REPAIR:') for x in calls) == 1

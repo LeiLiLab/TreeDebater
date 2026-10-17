@@ -60,3 +60,15 @@ def test_budget_wait_and_identical_pending_input_are_still_drained():
     assert p.processed == 1
     p.finalize("Restrict cars. Except ambulances. Except ambulances.", reset_tree=Mock(), **cb)
     assert p.processed == 3 and cb["llm"].call_count == 2
+
+
+def test_many_limits_still_require_source_attribution_and_valid_shape():
+    quotes = [f'Exception {i} remains applicable.' for i in range(44)]
+    data = dict(claims=[], limits=[dict(kind='scope', quote=q) for q in quotes], rebuttals=[])
+    assert parse_state(json.dumps(data), ' '.join(quotes))['limits'] == data['limits']
+    with pytest.raises(ValueError, match='Source quote'):
+        parse_state(json.dumps(data), ' '.join(quotes[:-1]))
+    for invalid in (None, {}, 'limits'):
+        data['limits'] = invalid
+        with pytest.raises(ValueError, match='Invalid state list: limits'):
+            parse_state(json.dumps(data), ' '.join(quotes))

@@ -51,7 +51,7 @@ def test_initial_rejection_repairs_once_and_reviews_repair(tmp_path):
     assert sum('LISTENING PREFIX REVIEW:' in c.kwargs['prompt'] for c in checked.call_args_list) == 2
 
 
-def test_invalid_review_response_stops_after_three_attempts(tmp_path):
+def test_invalid_review_response_allows_new_review_after_three_attempts(tmp_path):
     p, history = once_player(tmp_path)
     base = p.helper_client
     def helper(*, prompt, **kwargs):
@@ -65,8 +65,11 @@ def test_invalid_review_response_stops_after_three_attempts(tmp_path):
     verdict = state.check(candidate, data, checked)
     assert len(verdict['format_attempts']) == 3
     assert not verdict['review_format_valid'] and not verdict['accepted']
-    assert state.check(candidate, data, checked) == verdict
     assert checked.call_count == 3
+    # A malformed verdict is unavailable, not a cached rejection of this text.
+    assert state.check(candidate, data, checked) == verdict
+    assert checked.call_count == 6
+    assert not state.invalidated(candidate)
 
 
 @pytest.mark.parametrize('success_attempt', [2, 3])

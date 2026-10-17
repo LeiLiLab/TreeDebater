@@ -122,7 +122,10 @@ def test_endpoint_overview_repair_keeps_system_and_strategy(tmp_path, wire, stag
     def reply(*, prompt):
         result = base(prompt=prompt)
         if prompt.startswith('LISTENING PREFIX DRAFT:'):
-            draft = json.loads(result[0]); draft['text'] = 'word ' * 40 + 'end.'
+            draft = json.loads(result[0])
+            # A soft word target is not a rejection condition. A conflicting
+            # stance must trigger the repair whose authoring context we inspect.
+            draft['framework']['position'] = 'for' if p.side == 'against' else 'against'
             return [json.dumps(draft)]
         return result
 

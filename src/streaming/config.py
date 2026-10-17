@@ -63,6 +63,8 @@ class PlaybackConfig(Validated):
 @dataclass
 class OutputConfig(Validated):
     speech_mode: str = 'full_script'
+    vanilla_chunk_words: int = 30
+    vanilla_max_chunk_chars: int = 1000
     # Legacy setting maps total draft attempts to initial + semantic rewrites.
     listening_prefix_max_updates: object = None
     # Optional legacy repeated review; default policy caches reviews per text/context.
@@ -138,8 +140,8 @@ class OutputConfig(Validated):
             if type(self.listening_prefix_max_updates) is not int or self.listening_prefix_max_updates < 1:
                 raise ValueError('listening_prefix_max_updates must be a positive integer')
             self.listening_prefix_max_rewrites = self.listening_prefix_max_updates - 1
-        if self.speech_mode not in ('full_script', 'overlap_prefix', 'listening_prefix', 'incremental'):
-            raise ValueError('speech_mode must be full_script, overlap_prefix, listening_prefix or incremental')
+        if self.speech_mode not in ('full_script', 'overlap_prefix', 'listening_prefix', 'incremental', 'vanilla_streaming'):
+            raise ValueError('Unknown speech_mode; expected full_script, overlap_prefix, listening_prefix, incremental or vanilla_streaming')
         if self.budget_mode not in ("experiment_elapsed", "audio_duration"):
             raise ValueError("budget_mode must be experiment_elapsed or audio_duration")
         if self.speed_adjust_min > self.speed_adjust_max:
@@ -230,3 +232,14 @@ def resolve_config(full_config, args=None, *, overlap=True):
     full_config['env']['speech_budgets'] = asdict(budgets)
     full_config['streaming'] = asdict(settings)
     return settings
+
+
+def validate_tree_speech_mode(speech_mode, planning_mode):
+    """Validate TreeDebater's supported output/planner pairs before model work."""
+    if speech_mode == 'full_script':
+        return
+    supported = ('flat_tree', 'linear', 'adaptive_linear') if speech_mode == 'listening_prefix' else ('flat_tree',)
+    if speech_mode == 'vanilla_streaming':
+        raise ValueError('vanilla_streaming requires a default Debater, not TreeDebater')
+    if planning_mode not in supported:
+        raise ValueError(f'speech_mode={speech_mode} requires planning mode ' + ', '.join(supported))

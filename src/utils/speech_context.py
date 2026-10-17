@@ -59,6 +59,14 @@ def authoring_history(data):
                           opponent_statement=transcript, opponent_stage=stage)
 
 
+def _authoring_target(target, opponent):
+    common = dict(node_id=target['node_id'], side=opponent, sources=target.get('sources', []))
+    if target.get('source_kind') == 'transcript_span':
+        # A batch is quoted once, without repeating it as an inferred claim.
+        return dict(common, source_kind='transcript_span')
+    return dict(common, claim=target['claim'], constraints=target.get('constraints', []))
+
+
 def authoring_sources(data):
     """Project spoken evidence and owned preparation, never listener-authored tactics."""
     side = data['our_side']
@@ -72,8 +80,7 @@ def authoring_sources(data):
         **{key: data[key] for key in ('our_tree', 'opponent_tree') if data.get(key)},
         clash_records=data.get('clash_records', []),
         opponent_statement=dict(side=opponent, complete=bool(data.get('endpoint', False))),
-        opponent_targets=[dict(node_id=t['node_id'], side=opponent, claim=t['claim'],
-            sources=t.get('sources', []), constraints=t.get('constraints', []))
+        opponent_targets=[_authoring_target(t, opponent)
             for t in data.get('current_targets', []) if not selected or t['node_id'] in selected],
         supplied_evidence=data.get('supplied_evidence', []),
         prepared_materials=data.get('prepared_rehearsal_materials', []),
