@@ -476,7 +476,8 @@ class Debater(Agent):
         else:
             # ---- Original serial TTS + trim ----
             wall_t0 = time.perf_counter()
-            content, reference, duration = convert_text_to_speech(statement, audio_file)
+            tts_backend = getattr(getattr(self, "streaming_output_config", None), "tts_backend", "openai")
+            content, reference, duration = convert_text_to_speech(statement, audio_file, tts_backend=tts_backend)
             wall_s = time.perf_counter() - wall_t0
             logger.debug(f"[Time-Control] Save Audio: {audio_file}")
             logger.debug(f"[Time-Control] Original Time: {duration:0.2f}")
@@ -497,7 +498,7 @@ class Debater(Agent):
                 save_file = audio_file.replace(".mp3", "_trimmed.mp3")
                 logger.debug(f"[Time-Control] Save Trimmed Audio: {save_file}")
                 trim_t0 = time.perf_counter()
-                duration, new_sentences = trim_audio_by_sentences(audio_file, save_file, max_duration=max_time * 1000)
+                duration, new_sentences = trim_audio_by_sentences(audio_file, save_file, max_duration=max_time * 1000, tts_backend=tts_backend)
                 log_timing(
                     logger,
                     "tts_trim_wall_clock",
@@ -506,19 +507,16 @@ class Debater(Agent):
                     side=self.side,
                     audio_duration_s=float(duration),
                 )
-                last_sentence = new_sentences[-1]
-                idx = content.lower().find(last_sentence[:-1].lower())  # remove the punctuation
-                if idx == -1:
-                    print(f"Last sentence not found in content")
-                    new_content = " ".join(new_sentences)
-                else:
-                    new_content = content[: idx + len(last_sentence)]
+                if not new_sentences:
+                    raise ValueError("No transcript for audio inside the speech budget")
+                # New batch TTS supplies exact synthesized parts; archived ASR trims
+                # also return only what was retained. Never restore the original tail.
+                new_content = "".join(new_sentences)
 
                 logger.debug(f"[Time-Control] Final Time: {duration:0.2f}")
 
         if new_content is None or len(new_content) == 0:
-            logger.warning(f"[Time-Control] Trimmed Content is None. Use the original content as the transcript.")
-            new_content = content
+            raise ValueError("No delivered speech inside the time budget")
 
         new_statement = new_content + "\n\n**Reference**\n" + reference
         # new_statement = statement

@@ -29,38 +29,19 @@ def get_options():
 
 # I find different voices have very similar speech duration, so just use one voice for estimation
 def query_time(content):
+    from utils.batch_audio import render, split_text
     client = OpenAI()
-    response = client.audio.speech.create(model="tts-1", voice="echo", input=content[:4096])
-    audio_bytes = BytesIO(response.content)
-
-    return MP3(audio_bytes).info.length
-
-    # speech_file_path = "temp.mp3"
-    # response.stream_to_file(speech_file_path)
-    # return MP3(speech_file_path).info.length
+    return sum(len(render(client, part)) for part in split_text(content)) / 1000
 
 
-def convert_text_to_speech(content, output_path, voice="echo"):
-    client = OpenAI()
+def convert_text_to_speech(content, output_path, voice="echo", *, tts_backend="openai"):
+    from utils.batch_audio import synthesize, synthesis_options
     audio_content, reference = remove_citation(content)
-    audio_content = remove_subtitles(audio_content)
-
-    response = client.audio.speech.create(
-        model="tts-1",
-        voice=voice,
-        input=audio_content[:4096],  # 4096 is the max limit
-        # instructions=instructions,
-        response_format="mp3",
-    )
-
-    response.stream_to_file(output_path)
-
-    audio_bytes = BytesIO(response.content)
-    duration = MP3(audio_bytes).info.length
-
-    text_content, reference = remove_citation(content, keep_main=True)
-
-    return text_content, reference, duration
+    audio_content = remove_subtitles(audio_content).strip()
+    client, renderer = synthesis_options(tts_backend)
+    duration = synthesize(client, audio_content, output_path, voice, renderer=renderer)
+    # Transcript describes exactly the text sent to synthesis; references stay separate.
+    return audio_content, reference, duration
 
 
 BUDGET_BY_STAGE = {
@@ -115,7 +96,7 @@ from pydub import AudioSegment
 from pydub.silence import split_on_silence
 
 
-def trim_audio_by_sentences(input_file, output_file, max_duration=240000):  # 240000 ms = 4 minutes
+def trim_audio_by_sentences(input_file, output_file, max_duration=240000, *, tts_backend="openai"):  # 240000 ms = 4 minutes
     """
     Trim an MP3 file to contain complete sentences within the max duration.
 
@@ -126,6 +107,14 @@ def trim_audio_by_sentences(input_file, output_file, max_duration=240000):  # 24
     Returns:
         str: Path to the trimmed output file
     """
+    from utils.batch_audio import metadata_path, trim_measured, synthesis_options
+    if metadata_path(input_file).is_file():
+        client, renderer = synthesis_options(tts_backend)
+        return trim_measured(client, input_file, output_file, max_duration, renderer=renderer)
+    if tts_backend != "openai":
+        raise ValueError("Local audio trimming requires text/audio metadata")
+
+    # Compatibility for archived audio without synthesis metadata only.
     # Load the MP3 file
     audio = AudioSegment.from_mp3(input_file)
 
