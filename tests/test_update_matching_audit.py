@@ -1,9 +1,13 @@
 """Guard historical audit ownership and ensure it uses pre-extraction snapshots."""
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/debugging/tree_update_matching/validate.py', module=True)
+
 import importlib.util
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('matching_audit', ROOT / 'experiments/tree_update_matching/validate.py')
+spec = importlib.util.spec_from_file_location('matching_audit', ROOT / 'experiments/debugging/tree_update_matching/validate.py')
 audit = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(audit)
 

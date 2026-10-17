@@ -43,7 +43,10 @@ def test_natural_opening_is_not_shortened_and_tail_overlaps(audio, tmp_path):
 
 
 def test_experiment_contexts_have_no_future_and_audio_controls(historical_motion_archive, monkeypatch):
-    sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'experiments/incremental_planning'))
+    sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'experiments/tools/incremental_planning'))
+    from optional_experiments import require_local_experiment
+    require_local_experiment("experiments/tools/incremental_planning/benchmark_motion_overlap_v2.py")
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments/tools/incremental_planning"))
     import benchmark_motion_overlap_v2 as run
     root, motion_file = historical_motion_archive
     monkeypatch.setattr(run, 'ROOT', root)
@@ -61,6 +64,9 @@ def test_experiment_contexts_have_no_future_and_audio_controls(historical_motion
 
 
 def test_generated_reasoning_is_not_misrepresented_as_sourced_evidence(tmp_path, monkeypatch):
+    from optional_experiments import require_local_experiment
+    require_local_experiment("experiments/tools/incremental_planning/benchmark_motion_overlap_v2.py")
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments/tools/incremental_planning"))
     import benchmark_motion_overlap_v2 as run
     plan={'definition':'A test motion.', 'claims':[{'claim':f'Claim {i}.','argument':'Logical hypothesis.'} for i in range(3)]}
     client=Mock()

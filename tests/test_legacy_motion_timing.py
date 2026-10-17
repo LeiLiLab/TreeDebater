@@ -1,4 +1,8 @@
 """First-audio probes preserve Legacy prestarts and drain them on cancellation."""
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/tools/incremental_planning', module=True)
+
 import sys
 import threading
 from dataclasses import replace
@@ -9,7 +13,7 @@ import pytest
 from test_full_speech import audio as audio
 import tts_streaming as tts
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'experiments/incremental_planning'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'experiments/tools/incremental_planning'))
 import benchmark_legacy_motion_timing as probe
 
 

@@ -1,11 +1,15 @@
 """Source alignment and parsing checks for all-motion replay preparation."""
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/debugging/retrieval_all_motions_v1', module=True)
+
 import importlib.util
 import json
 from pathlib import Path
 import sys
 import pytest
 ROOT=Path(__file__).resolve().parents[1]
-HERE=ROOT/'experiments/retrieval_all_motions_v1'
+HERE=ROOT/'experiments/debugging/retrieval_all_motions_v1'
 FIXTURES=Path(__file__).parent/'fixtures/experiments'
 spec=importlib.util.spec_from_file_location('allmotion_data',HERE/'data.py')
 data=importlib.util.module_from_spec(spec);spec.loader.exec_module(data)

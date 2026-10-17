@@ -1,10 +1,14 @@
 """Frozen grading coverage and publication/approval gates (no API access)."""
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/debugging/retrieval_hybrid_grading', module=True)
+
 import importlib.util
 import json
 from pathlib import Path
 import pytest
 ROOT=Path(__file__).resolve().parents[1]
-HERE=ROOT/'experiments/retrieval_hybrid_grading'
+HERE=ROOT/'experiments/debugging/retrieval_hybrid_grading'
 FIXTURES=Path(__file__).parent/'fixtures/experiments/retrieval_hybrid_grading'
 
 

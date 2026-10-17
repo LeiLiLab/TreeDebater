@@ -1,4 +1,8 @@
 """Budget invariants with mocked transport: these tests make no paid requests."""
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/historical/baselines/debater_baseline_gemma4/gateway.py', module=True)
+
 import asyncio
 import importlib.util
 import json
@@ -12,7 +16,7 @@ from fastapi import HTTPException
 
 @pytest.fixture
 def gateway(tmp_path, monkeypatch):
-    path = Path(__file__).resolve().parents[1]/'experiments/debater_baseline_gemma4/gateway.py'
+    path = Path(__file__).resolve().parents[1]/'experiments/historical/baselines/debater_baseline_gemma4/gateway.py'
     spec = importlib.util.spec_from_file_location('test_experiment_gateway',path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

@@ -5,23 +5,11 @@ reviewed first paragraph can start playback before complete ASR and final tree
 analysis finish. The remaining body uses complete recognized input, a fixed
 writing task, one streamed revision and the native duration/TTS loop.
 
-## Fixed reference and current source
+## Source and validation scope
 
-The [v70-20261010 baseline](../../experiments/incremental_planning/baselines/v70-20261010/baseline.json)
-contains the exact experimental source archive, settings, environment inventory,
-validation results and known limits. The current source removes unused experiment
-branches and console diagnostics; the baseline archive remains unchanged.
-
-Check the archive without API calls:
-
-```bash
-python experiments/incremental_planning/baselines/v70-20261010/verify.py
-```
-
-Use `--workspace /path/to/TreeDebater` to compare a checkout with that original
-snapshot. A cleaned checkout intentionally differs from the archived baseline.
-The archive does not include credentials, the local API gateway or model weights.
-Provider model aliases are not a guarantee of identical future model outputs.
+Local experiment archives and historical reports are not distributed with this
+repository. Historical measurements below describe their original runs, not a
+reproducibility guarantee for the current source or changing provider models.
 
 ## Listening and handoff
 
@@ -164,10 +152,9 @@ Run offline regression tests in the configured development environment:
 
 ```bash
 PYTHONPATH=src python -m pytest -q tests
-PYTHONPATH=src:debate-app/backend python -m pytest -q debate-app/backend/tests
 ```
 
-[Historical design notes](../../docs/history/streaming-design-notes.md),
-[development results](../../docs/history/streaming-development.md) and the
-[experiment journal](../../docs/history/process.md) preserve earlier alternatives.
-Their old settings and instructions are not the current runtime contract.
+The core tests use fixtures and injected clients. Tests for optional local
+experiment harnesses explicitly skip when those harnesses are absent; core
+speech and planning tests still run. No experiment archive, model
+weights or real provider credentials are required for these offline tests.

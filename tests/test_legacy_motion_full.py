@@ -1,4 +1,8 @@
 """The full experiment must deliver every callback, not stop at first audio."""
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/tools/incremental_planning', module=True)
+
 import sys
 import importlib
 from pathlib import Path
@@ -8,7 +12,7 @@ from unittest.mock import Mock
 from pydub import AudioSegment
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'experiments/incremental_planning'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'experiments/tools/incremental_planning'))
 import benchmark_legacy_motion_full as run
 
 

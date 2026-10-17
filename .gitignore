@@ -9,6 +9,13 @@ tmp*
 *.DS_Store
 
 api_key.json
+api_keys.json
+credentials.json
+secrets.json
+secrets.yaml
+secrets.yml
+token.json
+tokens.json
 *.mp3
 
 # dir
@@ -27,8 +34,36 @@ src/configs/*/case*
 
 dependencies
 
-# Local experiment request/response traces and persistent cost accounting.
-experiments/incremental_planning/run/
+# Local experiments and submission materials; keep out of version control.
+/experiments/
+/submit/
+# The web application is a separate sibling repository. This also ignores the
+# optional local compatibility symlink at the former application path.
+/debate-app
+
+# Local validation scripts and workspace planning notes.
+/debate-app/scripts/live_audio_smoke.py
+/debate-app/scripts/live_handoff_smoke.py
+/debate-app/scripts/live_model_duration.py
+/plan.md
+/process.md
+/docs/history/
+/run_batch.sh
+/debate-app/DEBUG_REPORT.md
+/debate-app/PUBLIC_WEBSITE.md
+/debate-app/scripts/benchmark_adaptive_delivery.py
+/debate-app/scripts/replay_stance_prompts.py
+/debate-app/scripts/run-public-backend.sh
+
+# Private environment files and generated development state.
+.env
+.env.*
+!.env.example
+.venv/
+.pytest_cache/
+*.egg-info/
+*.pem
+*.key
 
 # Local playback reports and historical input exports.
 debate-app/reports/

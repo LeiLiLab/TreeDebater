@@ -1,4 +1,8 @@
 """Preflight the real speech harness without any provider requests."""
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/tools/incremental_planning/benchmark_flat_speech.py', module=True)
+
 import copy
 import importlib.util
 from pathlib import Path
@@ -7,7 +11,7 @@ from unittest.mock import Mock
 import pytest
 
 spec = importlib.util.spec_from_file_location('flat_speech_benchmark', Path(__file__).resolve().parents[1]
-                                             / 'experiments/incremental_planning/benchmark_flat_speech.py')
+                                             / 'experiments/tools/incremental_planning/benchmark_flat_speech.py')
 benchmark = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(benchmark)
 

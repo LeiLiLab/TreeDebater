@@ -16,7 +16,6 @@ from streaming.listening_prefix import PrefixPreparation, material
 from utils import constants, time_estimator
 from utils.time_estimator import LengthEstimator
 import tts_streaming as tts
-from test_audio_probe_budget import AudioGuard
 from test_full_speech import audio as audio
 from test_listening_prefix import PREFIX, FRAMEWORK, prepared_player
 
@@ -99,6 +98,7 @@ def test_openai_estimation_reuses_current_pipeline_client_and_voice_override(mon
 
 
 def test_openai_estimation_cannot_bypass_audio_budget_guard(monkeypatch, tmp_path):
+    from test_audio_probe_budget import AudioGuard
     monkeypatch.setattr(constants, 'TIME_MODE_FOR_STATEMENT', 'openai')
     ledger = BudgetedClient(tmp_path)
     provider_calls = []

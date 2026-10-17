@@ -1,3 +1,7 @@
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/tools/incremental_planning/audio_probe.py', module=True)
+
 import importlib.util
 from pathlib import Path
 
@@ -7,7 +11,7 @@ import pytest
 from streaming.experiment_client import BudgetedClient, BudgetExceeded
 
 spec = importlib.util.spec_from_file_location("audio_probe", Path(__file__).resolve().parents[1]
-                                            / "experiments/incremental_planning/audio_probe.py")
+                                            / "experiments/tools/incremental_planning/audio_probe.py")
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 AudioGuard = module.AudioGuard

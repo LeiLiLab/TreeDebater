@@ -1,10 +1,14 @@
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/debugging/retrieval_eval_v2/judging.py', module=True)
+
 import importlib.util
 import json
 from pathlib import Path
 
 import pytest
 
-path = Path(__file__).resolve().parents[1] / 'experiments/retrieval_eval_v2/judging.py'
+path = Path(__file__).resolve().parents[1] / 'experiments/debugging/retrieval_eval_v2/judging.py'
 spec = importlib.util.spec_from_file_location('rehearsal_judging', path)
 judging = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(judging)

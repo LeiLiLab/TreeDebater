@@ -1,4 +1,8 @@
 """Corrected policy keeps the native refinement loop and raw fallback semantics."""
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/tools/incremental_planning', module=True)
+
 import json
 from pathlib import Path
 import sys
@@ -6,7 +10,7 @@ from unittest.mock import Mock
 
 import pytest
 
-D=Path(__file__).resolve().parents[1]/'experiments/incremental_planning'
+D=Path(__file__).resolve().parents[1]/'experiments/tools/incremental_planning'
 sys.path.insert(0,str(D))
 import compare_native_revision_v57 as probe
 from streaming.config import OutputConfig

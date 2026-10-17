@@ -1,3 +1,7 @@
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/debugging/retrieval_eval_v2/run.py', module=True)
+
 import importlib.util
 import json
 from pathlib import Path
@@ -5,7 +9,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('retrieval_eval_v2', ROOT/'experiments/retrieval_eval_v2/run.py')
+spec = importlib.util.spec_from_file_location('retrieval_eval_v2', ROOT/'experiments/debugging/retrieval_eval_v2/run.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 

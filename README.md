@@ -230,14 +230,19 @@ opponent speaks, then revises the remaining body using the complete transcript.
 See [the streaming guide](src/streaming/README.md) for modes, configuration,
 concurrency, timing and tests.
 
-The fixed experimental reference is
-[v70-20261010](experiments/incremental_planning/baselines/v70-20261010/baseline.json).
-Its source archive remains unchanged during cleanup. It covers the server-paced
-motion harness; it is not a web application acceptance result.
+Local experiment archives, evaluation reports and development journals are not
+distributed with this repository. See the streaming guide above for the current
+runtime behavior and offline regression commands.
 
-Historical experiments are preserved in
-[development notes](docs/history/streaming-development.md) and
-[the experiment journal](docs/history/process.md).
+### Web application
+
+The browser frontend and Python session/API service are maintained together in
+the separate `TreeDebater-app` repository. This repository owns the debate engine.
+For local development, place the two checkouts alongside each other; alternatively,
+set `DEBATE_ENGINE_ROOT` in the application to this checkout's absolute path.
+Run the application's startup commands from its own repository.
+
+Engine tests do not require an application checkout.
 
 ### 🤖 Optional: Agent4Debate Backend
 If you wish to use Agent4Debate as a baseline or component, install and run its backend server following their documentation:

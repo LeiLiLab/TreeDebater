@@ -227,7 +227,7 @@ def main():
         ap.error("run-id must contain only letters, digits, underscores and hyphens")
     if not 0 <= args.worker_index < args.workers or args.repeats < 1:
         ap.error("Invalid worker/repeat settings")
-    directory = ROOT / "experiments/incremental_planning"
+    directory = ROOT / "experiments/tools/incremental_planning"
     cases_path = args.cases_file or directory / "cases.json"
     cases = [c for c in json.loads(cases_path.read_text()) if c["split"] == args.split]
     if args.case_id:

@@ -13,7 +13,6 @@ from streaming.listening_prefix import PrefixPreparation, material
 from streaming.flat_speaking import SegmentRejected
 from test_full_speech import audio as audio
 from test_listening_prefix import PREFIX, TAIL, prepared_player, prefix_helper, conflict, trace
-from test_listening_motion_live import live, fake_turn
 
 pytestmark = pytest.mark.usefixtures('word_length_modes')
 
@@ -139,6 +138,7 @@ def test_unprepared_prefix_waits_for_complete_input(audio, tmp_path):
 @pytest.mark.parametrize('fail_previous', [False, True])
 @pytest.mark.parametrize('parallel_feedback', [False, True])
 def test_motion_starts_next_prefix_before_collecting_last_asr(monkeypatch, fail_previous, parallel_feedback):
+    from test_listening_motion_live import live, fake_turn
     monkeypatch.setattr(live, 'TURNS', [('opening', 'for', 240), ('opening', 'against', 240)])
     monkeypatch.setattr(live, 'CONFIG', replace(live.CONFIG, listening_prefix_overlap_final_update=True, listening_parallel_body_feedback=parallel_feedback))
     ready = {'frozen': True}
@@ -185,6 +185,7 @@ def test_motion_starts_next_prefix_before_collecting_last_asr(monkeypatch, fail_
 
 
 def test_playback_endpoint_is_signaled_before_final_asr_drains(tmp_path, monkeypatch):
+    from test_listening_motion_live import live, fake_turn
     speaker, listener, asr, _ = fake_turn(tmp_path, monkeypatch)
     endpoint = Future()
     original = asr.audio.transcriptions.create
@@ -266,6 +267,7 @@ def test_body_feedback_overlaps_analysis_and_reuses_only_exact_input(audio, tmp_
 
 
 def test_complete_asr_is_published_before_last_tree_update(tmp_path, monkeypatch):
+    from test_listening_motion_live import live, fake_turn
     speaker, listener, asr, _ = fake_turn(tmp_path, monkeypatch)
     recognized = Future()
     def observe(text, side, stage):
@@ -279,6 +281,7 @@ def test_complete_asr_is_published_before_last_tree_update(tmp_path, monkeypatch
 
 
 def test_failed_asr_releases_recognition_waiter(tmp_path, monkeypatch):
+    from test_listening_motion_live import live, fake_turn
     speaker, listener, asr, _ = fake_turn(tmp_path, monkeypatch, fail_asr=True)
     recognized = Future()
     with pytest.raises(RuntimeError):

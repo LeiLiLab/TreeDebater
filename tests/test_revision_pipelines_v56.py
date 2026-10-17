@@ -1,4 +1,8 @@
 """Offline protocol/budget checks for the isolated streaming comparison."""
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/tools/incremental_planning', module=True)
+
 import importlib.util
 from io import BytesIO
 import json
@@ -8,7 +12,7 @@ from unittest.mock import patch
 
 import pytest
 
-D=Path(__file__).resolve().parents[1]/'experiments/incremental_planning'
+D=Path(__file__).resolve().parents[1]/'experiments/tools/incremental_planning'
 sys.path.insert(0,str(D))
 import compare_revision_pipelines_v56 as probe
 from streaming.experiment_client import BudgetedClient

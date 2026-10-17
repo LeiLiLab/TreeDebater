@@ -1,4 +1,8 @@
 """No paid requests: guard transactions and real-time audio-before-ASR ordering."""
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/tools/incremental_planning/benchmark_listening_motion_live.py', module=True)
+
 import importlib.util
 import json
 from pathlib import Path
@@ -14,7 +18,7 @@ from streaming.experiment_client import BudgetedClient
 from test_experiment_budget import response
 
 SPEC = importlib.util.spec_from_file_location('listening_live_test',
-    Path(__file__).resolve().parents[1]/'experiments/incremental_planning/benchmark_listening_motion_live.py')
+    Path(__file__).resolve().parents[1]/'experiments/tools/incremental_planning/benchmark_listening_motion_live.py')
 live = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(live)
 

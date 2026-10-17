@@ -93,7 +93,12 @@ def test_fastspeech_waveform_uses_vocoder_and_shared_lock(monkeypatch):
     # Exercise tensor shapes and lazy vocoder wiring without loading model weights.
     import threading
     import torch
-    import utils.fs_wrapper as fs
+    try:
+        import utils.fs_wrapper as fs
+    except ModuleNotFoundError as exc:
+        if exc.name != 'fastspeech2':
+            raise
+        pytest.skip('Optional local FastSpeech backend is not installed')
     import fastspeech2.utils.model as models
     wrapper = fs.FastSpeechWrapper.__new__(fs.FastSpeechWrapper)
     wrapper.configs = ({'preprocessing': {'stft': {'hop_length': 256}, 'audio': {'sampling_rate': 22050}}}, {}, {})

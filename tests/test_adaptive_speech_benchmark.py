@@ -1,4 +1,8 @@
 """Offline accounting and model-routing tests for overlapping speech work."""
+
+from optional_experiments import require_local_experiment
+require_local_experiment('experiments/tools/incremental_planning/benchmark_adaptive_speech.py', module=True)
+
 from concurrent.futures import ThreadPoolExecutor
 import importlib.util
 from pathlib import Path
@@ -7,7 +11,7 @@ from unittest.mock import Mock
 import pytest
 
 spec = importlib.util.spec_from_file_location('adaptive_speech_benchmark', Path(__file__).resolve().parents[1]
-                                             / 'experiments/incremental_planning/benchmark_adaptive_speech.py')
+                                             / 'experiments/tools/incremental_planning/benchmark_adaptive_speech.py')
 benchmark = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(benchmark)
 
