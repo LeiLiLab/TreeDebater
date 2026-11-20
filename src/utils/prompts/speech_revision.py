@@ -16,6 +16,23 @@ Aim for the supplied remaining_word_target for the entire unpublished body. Afte
 
 STREAMING_DELIVERY = """\nDeliver complete paragraphs in final spoken order, separated by blank lines. Each completed paragraph may be spoken immediately and cannot be revised later. Let each paragraph develop one complete reasoning step. Keep the source attribution, finding and its relevant qualification together. Avoid repeating an earlier paragraph's point. Use the supplied remaining_word_target for the whole body, not for each paragraph.\n"""
 
+# Default wording: same evidence discipline, but no on-air recital of caveats and
+# no self-labelled inferences. DEBATE_VOICED_QUALIFICATIONS=1 restores the old
+# wording (REVISION_TASK / STREAMING_DELIVERY) for ablation.
+REVISION_TASK_PLAIN = (REVISION_TASK
+    .replace("Preserve the material's qualifications. A finding need not prove the whole motion.",
+             "A finding need not prove the whole motion. Speak with conviction: state what the source "
+             "found and use it; do not recite the source's caveats, methods or limitations aloud.")
+    .replace(" Clearly distinguish our inference from what the source reports.",
+             " Draw inferences in your own voice without labelling them as inferences.")
+    .replace("explain how the supplied evidence supports the argument and its limits",
+             "explain how the supplied evidence supports the argument"))
+assert REVISION_TASK_PLAIN.count('conviction') == 1 and 'labelling them' in REVISION_TASK_PLAIN and 'its limits' not in REVISION_TASK_PLAIN
+STREAMING_DELIVERY_PLAIN = STREAMING_DELIVERY.replace(
+    'Keep the source attribution, finding and its relevant qualification together.',
+    'Keep the source attribution and finding together.')
+assert STREAMING_DELIVERY_PLAIN != STREAMING_DELIVERY
+
 CLOSING_REVISION_TASK = """Revise the unpublished body of our closing speech within the remaining word budget. Focus on the core clashes, weigh established impacts and reaffirm our assigned position using the actual debate history.
 Only the already spoken prefix is immutable. Do not output, repeat or contradict it, or add another introduction. Feedback and draft wording are revisable suggestions, not factual sources. Remove repetition while preserving the existing argument's scope and qualifications. Aim for the supplied remaining_word_target for the entire unpublished body. After cuts, replenish the removed length by developing the comparison of established clashes and impacts, explaining why the replies already made matter, and weighing existing tradeoffs. If the draft is already short, expand this synthesis to approach the target. Use only arguments and evidence already discussed; do not add new evidence, new lines of attack or repetitive padding. Return only natural spoken body text, without headings, a bibliography or a separate plan.
 """
@@ -29,9 +46,11 @@ def revision_prompt(*, motion, side, stage, statement, feedback, allocation_plan
         allocation_plan=allocation_plan,
         evidence=[] if stage == 'closing' else writing_evidence(evidence, statement, feedback, n_words=n_words),
     )
+    from utils.evidence_material import voiced_qualifications
+    plain = not voiced_qualifications()
     task = (stage_strategy(stage) + CLOSING_REVISION_TASK + closing_evidence_instruction
-            if stage == 'closing' else REVISION_TASK)
-    delivery = STREAMING_DELIVERY
+            if stage == 'closing' else (REVISION_TASK_PLAIN if plain else REVISION_TASK))
+    delivery = STREAMING_DELIVERY_PLAIN if plain else STREAMING_DELIVERY
     if stage == 'closing':
         delivery = delivery.replace('Keep the source attribution, finding and its relevant qualification together. ', '')
     return task + (delivery if streaming else '') + '\nContext and material (data):\n' + json.dumps(material, ensure_ascii=False)

@@ -146,6 +146,14 @@ class Agent:
                 temperature=self.config.temperature,
                 max_tokens=self.config.max_tokens,
             )
+        elif "claude" in self.config.model.lower():
+            # Amazon Bedrock; sampling parameters are stripped by the wrapper.
+            from utils.model import bedrock_claude_completion, bedrock_claude_model
+            self.client = partial(
+                bedrock_claude_completion,
+                model=bedrock_claude_model(self.config.model),
+                max_tokens=self.config.max_tokens,
+            )
         else:
             raise ValueError(f"Invalid model: {self.config.model}")
 

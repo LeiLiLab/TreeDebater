@@ -92,8 +92,8 @@ def test_prepared_evidence_reuse_and_revision_run_once_across_handoff(audio, tmp
     p._get_revision_suggestion = MethodType(TreeDebater._get_revision_suggestion, p)
     p._length_adjust = MethodType(TreeDebater._length_adjust, p)
     p.high_quality_evidence_pool = [dict(id=f'e{i}', content=f'EVIDENCE_{i}', raw_content='RAW') for i in range(12)]
-    # The cold-start reuse path retains initial sources, filtering already-used
-    # IDs and documents that no longer match the current candidate pool.
+    # Cold start: no listening evidence exists, so the native selector must run
+    # once over the unused candidate pool; the initial pool is not reused.
     p.evidence_pool = [p.high_quality_evidence_pool[0], p.high_quality_evidence_pool[2],
                        dict(p.high_quality_evidence_pool[3], content='OBSOLETE_CONTENT')]
     p.used_evidence = {'e0'}
@@ -130,11 +130,11 @@ def test_prepared_evidence_reuse_and_revision_run_once_across_handoff(audio, tmp
     result = p.rebuttal_generation(history, 60, time_control=True, listening_handoff=handoff,
         listening_input_completion=complete, listening_recognized_input=lambda: copy.deepcopy(history))
     assert result == PREFIX + '\n\n' + revised_tail
-    assert not selections
+    assert len(selections) == 1
     assert len(revisions) == 1
     assert p.used_evidence == {'e0', 'e2'}
     saved = trace(tmp_path)
-    assert saved['prepared_evidence']['mode'] == 'reuse_only'
+    assert saved['prepared_evidence']['mode'] == 'native_cold_start'
     assert saved['prepared_evidence']['selected_ids'] == ['e2']
     if parallel:
         assert saved['parallel_body_revision']['reused']

@@ -1,6 +1,7 @@
 """Owned selection annotations and local, verbatim writing material. No API calls."""
 import copy
 import json
+import os
 import re
 
 
@@ -114,3 +115,24 @@ EVIDENCE_USE_INSTRUCTION = (
     'research for available relevant findings. Attribute sources verbally using only supplied metadata; '
     'do not invent dates, credentials or findings. Missing metadata is unknown.\n'
 )
+
+
+# The spoken instruction no longer asks the writer to recite source caveats or to
+# label its own inferences on air (Claude Sonnet 5.5 followed that literally and
+# judges read it as a weaker argument); the ban on inventing or overstating
+# evidence is unchanged. DEBATE_VOICED_QUALIFICATIONS=1 restores the old wording
+# for ablation.
+EVIDENCE_USE_INSTRUCTION_PLAIN = EVIDENCE_USE_INSTRUCTION.replace(
+    'establish what the source actually says, retain qualifications, and explain which specific '
+    'reasoning step it supports.',
+    'establish what the source actually says and explain which specific reasoning step it supports; '
+    'do not voice the source\'s caveats on air or label our own inferences as inferences.')
+assert EVIDENCE_USE_INSTRUCTION_PLAIN != EVIDENCE_USE_INSTRUCTION
+
+
+def voiced_qualifications():
+    return os.environ.get('DEBATE_VOICED_QUALIFICATIONS', '0') == '1'
+
+
+def evidence_use_instruction():
+    return EVIDENCE_USE_INSTRUCTION if voiced_qualifications() else EVIDENCE_USE_INSTRUCTION_PLAIN

@@ -155,6 +155,12 @@ def _text_request(client, model, messages, max_tokens, *, json_mode=False):
                        api_key=os.environ.get('DEBATE_LLM_API_KEY') or 'local-proxy')
     elif model == 'gpt-5-mini':
         options['reasoning_effort'] = 'minimal'
+    if 'claude' in model.lower() and not os.environ.get('DEBATE_LLM_API_BASE'):
+        # Amazon Bedrock through the shared wrapper; litellm's response exposes
+        # the same choices[0].message.content surface as the OpenAI client.
+        from utils.model import bedrock_claude_completion, bedrock_claude_model
+        return bedrock_claude_completion(model=bedrock_claude_model(model), messages=messages,
+            max_tokens=max_tokens, **({'response_format': {'type': 'json_object'}} if json_mode else {}))
     if owned is None and client is None:
         owned = OpenAI()
     if json_mode:

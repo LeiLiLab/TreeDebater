@@ -2,7 +2,7 @@
 import json
 
 from utils import speech_length
-from utils.evidence_material import EVIDENCE_USE_INSTRUCTION
+from utils.evidence_material import evidence_use_instruction
 from utils.speech_context import authoring_sources
 from .authoring import stage_strategy
 from .closing import closing_evidence_instruction
@@ -39,7 +39,7 @@ def draft_prompt(data, prefix, n_words, *, previous=None, json_output=True, incl
         'Earlier assistant messages are YOUR delivered speeches. Messages headed Opponent\'s '
         'Statement are the OTHER speaker\'s words, including their uses of "we" and "my opponent". '
         'Respond from your assigned side using your own case.\n' + stage_strategy(stage))
-    prompt += closing_evidence_instruction if stage == 'closing' else EVIDENCE_USE_INSTRUCTION
+    prompt += closing_evidence_instruction if stage == 'closing' else evidence_use_instruction()
     prompt += '\n' + speech_length.draft_length_instruction(n_words)
     if 'linear_plan' in data:
         prompt += ('\nTargets marked transcript_span are verbatim heard batches, not extracted '

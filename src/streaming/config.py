@@ -128,6 +128,20 @@ class OutputConfig(Validated):
     seam_fade_ms: int = 10
     audience_feedback_mode: str = 'full'
     listening_prepare_evidence: bool = True
+    # Evidence for a cold-start turn (nothing heard, so listening-time selection
+    # never ran). 'draft_free' (default) mirrors the non-streaming TreeDebater
+    # opening: the draft is written without evidence and the handoff revision
+    # selects from the full pool keyed on the draft. Ablation values:
+    # 'claim_keyed' gives the draft one native selection keyed on our definition
+    # and main claims; 'native' gives the draft the number-ranked initial pool but
+    # still selects natively at revision; 'initial_pool' reuses the number-ranked
+    # initial pool at revision too (the pre-2026-11 behaviour).
+    listening_cold_start_evidence: str = 'draft_free'
+    # Claude thinking while a listening-prefix speech is delivered: 'off' keeps the
+    # handoff chain (feedback, body revision, chunk rewrites) short enough for the
+    # first body chunk to be ready before the prefix ends; 'model_default' leaves
+    # adaptive thinking on (measured +5 s to the first body paragraph with Sonnet 5.5).
+    listening_speaking_thinking: str = 'off'
     listening_evidence_candidates: int = 20
 
     def __post_init__(self):
@@ -136,6 +150,10 @@ class OutputConfig(Validated):
             raise ValueError('tts_backend must be openai or fastspeech')
         if self.audience_feedback_mode not in ('full', 'compact'):
             raise ValueError('audience_feedback_mode must be full or compact')
+        if self.listening_speaking_thinking not in ('off', 'model_default'):
+            raise ValueError('listening_speaking_thinking must be off or model_default')
+        if self.listening_cold_start_evidence not in ('native', 'initial_pool', 'draft_free', 'claim_keyed'):
+            raise ValueError('listening_cold_start_evidence must be native, initial_pool, draft_free or claim_keyed')
         if self.listening_prefix_max_updates is not None:
             if type(self.listening_prefix_max_updates) is not int or self.listening_prefix_max_updates < 1:
                 raise ValueError('listening_prefix_max_updates must be a positive integer')

@@ -1,3 +1,6 @@
+import contextlib
+import json
+import threading
 import time
 import math
 import os
@@ -118,6 +121,12 @@ def HelperClient(
         kwargs = {"api_key": google_api_key, "safety_settings": safety_setting}
     elif "gpt" in model.lower() or "o1" in model.lower():
         model_name = model
+    elif "claude" in model.lower():
+        # Amazon Bedrock inference profile, authenticated with AWS_BEARER_TOKEN_BEDROCK.
+        # The Claude 5.5 family on Bedrock rejects sampling parameters and forced
+        # tool choice, so _completion_text strips them and asks for JSON in text.
+        model_name = bedrock_claude_model(model)
+        kwargs = {}
     elif "moonshot" in model.lower() or "kimi" in model.lower():
         # Kimi/Moonshot API support
         model_name = f"moonshot/{model}"
@@ -126,6 +135,11 @@ def HelperClient(
         kwargs = {"api_key": os.environ.get("MOONSHOT_API_KEY", ""), "api_base": "https://api.moonshot.cn/v1"}
     else:
         raise NotImplementedError(f"{model} is not supported.")
+    if response_model is not None and _is_bedrock_claude(model_name):
+        # No tool-enforced schema on this path: state it in the prompt instead.
+        schema = json.dumps(response_model.model_json_schema(), ensure_ascii=False)
+        messages = helper_messages(prompt + "\nReturn ONLY a JSON object matching this JSON schema:\n" + schema,
+                                   sys=sys, history_messages=history_messages)
 
     if request_timeout is not None:
         if isinstance(request_timeout, bool) or not math.isfinite(request_timeout) or request_timeout <= 0:
@@ -195,8 +209,86 @@ def _deepseek_thinking_model(model_name: str) -> bool:
     return any(marker in name for marker in ("v4", "reasoner", "deepseek-r1", "/r1"))
 
 
+def _is_bedrock_claude(model_name: str) -> bool:
+    name = model_name.lower()
+    return name.startswith("bedrock/") and "claude" in name
+
+
+JSON_ONLY_INSTRUCTION = "Return ONLY one valid JSON object: no code fences, no commentary before or after it."
+
+
+def bedrock_claude_model(model: str) -> str:
+    """litellm model string for a Claude model served by Amazon Bedrock."""
+    profile = os.environ.get("DEBATE_BEDROCK_CLAUDE_PROFILE") or ("us.anthropic." + model)
+    return f"bedrock/converse/{profile}"
+
+
+class ThinkingPolicy:
+    """Process-wide switch used by the speaking phase: while a listening-prefix
+    speech is being delivered, Claude calls run with thinking off (between_tools)
+    so the first body chunk is ready before the prefix ends."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self.depth = 0
+
+    @property
+    def critical(self):
+        return self.depth > 0
+
+    @contextlib.contextmanager
+    def latency_critical(self, enabled=True):
+        if not enabled:
+            yield
+            return
+        with self._lock:
+            self.depth += 1
+        try:
+            yield
+        finally:
+            with self._lock:
+                self.depth -= 1
+
+
+THINKING = ThinkingPolicy()
+
+
+def bedrock_claude_completion(**call_kwargs):
+    """litellm.completion for Claude on Bedrock.
+
+    The Claude 5.5 family rejects sampling parameters and forced tool choice, so
+    temperature is dropped, blank stop sequences are removed, and json_object
+    mode (which litellm implements as a forced tool call) is expressed as a
+    system instruction. Authentication uses AWS_BEARER_TOKEN_BEDROCK.
+    """
+    call_kwargs.pop("temperature", None)
+    call_kwargs.pop("top_p", None)
+    # Adaptive thinking shares the output budget with the answer; a 4096-token
+    # cap truncated long JSON replies (the original Sonnet runs used 16384).
+    call_kwargs["max_tokens"] = max(int(call_kwargs.get("max_tokens") or 0), 16384)
+    stops = [x for x in (call_kwargs.get("stop") or []) if isinstance(x, str) and x.strip()]
+    call_kwargs["stop"] = stops or None
+    response_format = call_kwargs.pop("response_format", None)
+    if isinstance(response_format, dict) and response_format.get("type") == "json_object":
+        messages = [dict(m) for m in call_kwargs["messages"]]
+        if messages and messages[0].get("role") == "system":
+            messages[0]["content"] = f"{messages[0]['content']}\n\n{JSON_ONLY_INSTRUCTION}"
+        else:
+            messages.insert(0, {"role": "system", "content": JSON_ONLY_INSTRUCTION})
+        call_kwargs["messages"] = messages
+    call_kwargs.setdefault("aws_region_name", os.environ.get("AWS_REGION_NAME", "us-east-1"))
+    # Thinking: an explicit `thinking` argument wins; DEBATE_CLAUDE_THINKING=off turns
+    # it off everywhere; otherwise it is off only inside THINKING.latency_critical()
+    # (the speaking phase). Claude 5.5 accepts only between_tools as the off value.
+    if os.environ.get("DEBATE_CLAUDE_THINKING", "").lower() == "off" or THINKING.critical:
+        call_kwargs.setdefault("thinking", {"type": "between_tools"})
+    return litellm.completion(**call_kwargs)
+
+
 def _supports_structured_output(model_name: str) -> bool:
     name = model_name.lower()
+    if _is_bedrock_claude(name):
+        return False  # instructor forces tool_choice, which Claude 5.5 rejects; parse JSON text instead
     if _deepseek_thinking_model(name):
         return False
     if "deepseek" in name:
@@ -215,12 +307,13 @@ def _completion_text(model_name: str, messages, wants_json: bool, temperature: f
     )
     if wants_json:
         call_kwargs["response_format"] = {"type": "json_object"}
+    complete = bedrock_claude_completion if _is_bedrock_claude(model_name) else litellm.completion
     retries = call_kwargs.pop('num_retries', 3)
     if on_text is not None:
         # A retry after any delivered delta would repeat already committed speech.
         call_kwargs.setdefault('timeout', 60)
-        stream = litellm.completion(num_retries=0, stream=True,
-                                    stream_options={'include_usage': True}, **call_kwargs)
+        stream = complete(num_retries=0, stream=True,
+                          stream_options={'include_usage': True}, **call_kwargs)
         chunks = []
         finished = False
         try:
@@ -251,7 +344,7 @@ def _completion_text(model_name: str, messages, wants_json: bool, temperature: f
             close = getattr(stream, 'close', None)
             if close is not None:
                 close()
-    return litellm.completion(num_retries=retries, **call_kwargs)
+    return complete(num_retries=retries, **call_kwargs)
 
 
 def _completion_structured(
